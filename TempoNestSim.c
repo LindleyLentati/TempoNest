@@ -245,10 +245,10 @@ void TNSimRedfromTim(int argc, char **commandLine, pulsar *psr, char timFile[][M
 			}
 		}
 	}
-
+	double *DMVec = new double[psr->nobs]; 
 	if(doDM ==1){
 		//Get vector of frequencies
-		double *DMVec = new double[psr->nobs]; 
+		
 		double DMKappa = 2.410*pow(10.0,-16);
 		for(int o1=0;o1<psr->nobs; o1++){
 			DMVec[o1]=1.0/(DMKappa*pow((double)psr->obsn[o1].freqSSB,2));
@@ -318,18 +318,18 @@ void TNSimRedfromTim(int argc, char **commandLine, pulsar *psr, char timFile[][M
 
 
 			if(o1==o2){
-				double whitenoise = pow(psr->obsn[o1].toaErr*pow(10.0,-6)*EFAC,2) + EQUAD;
+				double whitenoise = pow(psr->obsn[o1].toaErr*pow(10.0,-6)*EFAC,2) + pow(EQUAD,2);
 				CovMatrix[o1][o2] += whitenoise;
 				if(updateEFAC==1 && updateEQUAD==0){
 					psr[0].obsn[o1].origErr=psr->obsn[o1].toaErr*EFAC;
 				}
 				if(updateEFAC==0 && updateEQUAD==1){
-					psr[0].obsn[o1].origErr=sqrt(pow(psr->obsn[o1].toaErr*pow(10.0,-6),2) + EQUAD)*pow(10.0,6);
+					psr[0].obsn[o1].origErr=sqrt(pow(psr->obsn[o1].toaErr*pow(10.0,-6),2) + pow(EQUAD,2))*pow(10.0,6);
 				}
 				if(updateEFAC==1 && updateEQUAD==1){
 					psr[0].obsn[o1].origErr=sqrt(whitenoise)*pow(10.0,6);
 				}
-				printf("%i %i %g \n",o1,o2,whitenoise);
+				//printf("%i %i %g \n",o1,o2,whitenoise);
 			}
 			
 
@@ -368,12 +368,14 @@ void TNSimRedfromTim(int argc, char **commandLine, pulsar *psr, char timFile[][M
 		NoiseVec[o1]-= sum/psr->nobs;
 		bats[o1]=(double)psr[0].obsn[o1].bat;		
 	}
-
+	for(int o1=0;o1 < psr->nobs; o1++){
+	//	printf("BNoiseVec: %i %g %g %g %g\n",o1,(double)psr[0].obsn[o1].bat,NoiseVec[o1],(double)psr->obsn[o1].freqSSB, DMVec[o1]);	
+	}
 	TKremovePoly_d(bats,NoiseVec,psr[0].nobs,2); // remove a quadratic to reduce the chances of phase wraps
 
 	for(int o1=0;o1 < psr->nobs; o1++){
 		psr[0].obsn[o1].sat +=	NoiseVec[o1]/(24*60*60);
-		printf("NoiseVec: %i %g \n",o1,NoiseVec[o1]);	
+	//	printf("ANoiseVec: %i %g %g %g %g\n",o1,(double)psr[0].obsn[o1].bat,NoiseVec[o1],(double)psr->obsn[o1].freqSSB, DMVec[o1]);	
 	}
 
 	for(int o=0;o<psr->nobs;o++){delete[] CovMatrix[o];}
@@ -385,6 +387,5 @@ void TNSimRedfromTim(int argc, char **commandLine, pulsar *psr, char timFile[][M
 	writeTim(str, psr, "tempo2");
 
 }
-
 
 

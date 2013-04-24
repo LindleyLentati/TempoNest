@@ -297,7 +297,7 @@ void TNtextOutput(pulsar *psr, int npsr, int newpar, long double *Tempo2Fit, voi
 			pcount++;
 		}
 		else if(incRED ==2){	
-			printf("Model Independant Red Noise, %i Coefficients used:\n");
+			printf("Model Independant Red Noise, %i Coefficients used:\n",((MNStruct *)context)->numFitRedCoeff);
 			int coeff=1;
 			for(int i =0; i < ((MNStruct *)context)->numFitRedCoeff; i++){
 				printf("Log Amplitude Coefficient %i: %g +/- %g\n", coeff,paramlist[pcount],paramlist[pcount+ndim]);	

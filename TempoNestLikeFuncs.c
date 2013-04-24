@@ -438,20 +438,20 @@ void WhiteLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *conte
 		noiseval=pow(((((MNStruct *)context)->pulse->obsn[o].toaErr)*pow(10.0,-6))*EFAC[((MNStruct *)context)->sysFlags[o]],2) + EQUAD;
 		Chisq += pow((((MNStruct *)context)->pulse->obsn[o].residual),2)/noiseval;
 		detN += log(noiseval);
-// 		printf("detn: %g %g \n",noiseval,detN);
+ 	//	printf("like: %i %.25Lg %g %g %g \n",o,LDparams[2], Cube[2], (double)(((MNStruct *)context)->pulse->obsn[o].residual), Chisq);
 	}
 
 	if(isnan(detN) || isinf(detN) || isnan(Chisq) || isinf(Chisq)){
 
 		lnew=-pow(10.0,200);
 // 		printf("red amp and alpha %g %g\n",redamp,redalpha);
-// 		printf("Like: %g %g %g \n",lnew,Chisq,covdet);
+ 	//	printf("Like: %g %g %g \n",lnew,Chisq,detN);
 		
 	}
 	else{
 		lnew = -0.5*(((MNStruct *)context)->pulse->nobs*log(2*M_PI) + detN + Chisq);	
 // 		printf("red amp and alpha %g %g\n",redamp,redalpha);
-// 		printf("Like: %g %g %g \n",lnew,Chisq,covdet);
+ 	//	printf("Like: %g %g %g \n",lnew,Chisq,detN);
 
 	}
 
@@ -928,16 +928,6 @@ void LRedMarginLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *
 	int FitCoeff=2*(((MNStruct *)context)->numFitRedCoeff);
 	double *powercoeff=new double[FitCoeff];
 
-	double freqdet=0;
-	for (int i=0; i<FitCoeff/2; i++){
-		int pnum=pcount;
-		double pc=Cube[pcount];
-		
-		powercoeff[i]=pow(10.0,pc)/(365.25*24*60*60)/4;
-		powercoeff[i+FitCoeff/2]=powercoeff[i];
-		freqdet=freqdet+2*log(powercoeff[i]);
-		pcount++;
-	}
 
 	double *Noise=new double[((MNStruct *)context)->pulse->nobs];
 	double *Res=new double[((MNStruct *)context)->pulse->nobs];
@@ -1022,6 +1012,16 @@ void LRedMarginLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *
 // 	printf("Total time span = %.6f days = %.6f years\n",end-start,(end-start)/365.25);
 	double maxtspan=end-start;
 
+	double freqdet=0;
+	for (int i=0; i<FitCoeff/2; i++){
+		int pnum=pcount;
+		double pc=Cube[pcount];
+		
+		powercoeff[i]=pow(10.0,pc)/(maxtspan*24*60*60);///(365.25*24*60*60)/4;
+		powercoeff[i+FitCoeff/2]=powercoeff[i];
+		freqdet=freqdet+2*log(powercoeff[i]);
+		pcount++;
+	}
 
 	int coeffsize=FitCoeff/2;
 	std::vector<double>freqs(FitCoeff/2);
@@ -1220,16 +1220,6 @@ void LRedDMMarginLogLike(double *Cube, int &ndim, int &npars, double &lnew, void
 	int FitCoeff=2*(((MNStruct *)context)->numFitRedCoeff);
 	double *powercoeff=new double[FitCoeff];
 
-	double freqdet=0;
-	for (int i=0; i<FitCoeff/2; i++){
-		int pnum=pcount;
-		double pc=Cube[pcount];
-		
-		powercoeff[i]=pow(10.0,pc)/(365.25*24*60*60)/4;
-		powercoeff[i+FitCoeff/2]=powercoeff[i];
-		freqdet=freqdet+2*log(powercoeff[i]);
-		pcount++;
-	}
 
 	double *Noise=new double[((MNStruct *)context)->pulse->nobs];
 	double *Res=new double[((MNStruct *)context)->pulse->nobs];
@@ -1313,6 +1303,18 @@ void LRedDMMarginLogLike(double *Cube, int &ndim, int &npars, double &lnew, void
 	  }
 // 	printf("Total time span = %.6f days = %.6f years\n",end-start,(end-start)/365.25);
 	double maxtspan=end-start;
+
+
+	double freqdet=0;
+	for (int i=0; i<FitCoeff/2; i++){
+		int pnum=pcount;
+		double pc=Cube[pcount];
+		
+		powercoeff[i]=pow(10.0,pc)/(maxtspan*24*60*60);///(365.25*24*60*60)/4;
+		powercoeff[i+FitCoeff/2]=powercoeff[i];
+		freqdet=freqdet+2*log(powercoeff[i]);
+		pcount++;
+	}
 
 
 	int coeffsize=FitCoeff/2;

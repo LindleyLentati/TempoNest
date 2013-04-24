@@ -13,13 +13,13 @@ double *TNFactorialList = new double[21];
 
 
 extern "C" void WhiteMarginGPUWrapper_(double *Noise, double *Res, double *likeInfo, int N, int G);
+
 extern "C" void vHRedGPUWrapper_(double *SpecInfo, double *BatVec, double *Res, double *NoiseVec, double *likeInfo, int N);
-extern "C" void vHRedMarginGPUWrapper_(double *CovMatrix, double *Res, double *likeInfo, int N, int G);
+extern "C" void vHRedMarginGPUWrapper_(double *Res, double *BATvec, double *Noisevec, double *SpecParm, double *likeInfo,double *FactorialList, int N, int G);
+
 extern "C" void LRedGPUWrapper_(double *Freqs, double *resvec, double *BATvec, double *Noise, double **FNF, double *NFd, int N, int F);
 extern "C" void LRedMarginGPUWrapper_(double *Freqs, double *resvec, double *BATvec, double *Noise, double **FNF, double *NFd, double *likeVals, int N, int F, int G);
 
-extern "C" void vHRedGPUWrapper2_(double *Res, double *BATvec, double *Noisevec, double *SpecParm, double *likeInfo, int N);
-extern "C" void vHRedMarginGPUWrapper2_(double *Res, double *BATvec, double *Noisevec, double *SpecParm, double *likeInfo,double *FactorialList, int N, int G);
 
 void store_factorial(){
 
@@ -223,7 +223,7 @@ void vHRedMarginGPULogLike(double *Cube, int &ndim, int &npars, double &lnew, vo
 	
 	double *likeInfo=new double[2];
 	//printf("Entering %g %g \n", SpecParm[0], SpecParm[1]);
-	vHRedMarginGPUWrapper2_(Res, BATvec, Noisevec, SpecParm, likeInfo, TNFactorialList, ((MNStruct *)context)->pulse->nobs, ((MNStruct *)context)->Gsize);
+	vHRedMarginGPUWrapper_(Res, BATvec, Noisevec, SpecParm, likeInfo, TNFactorialList, ((MNStruct *)context)->pulse->nobs, ((MNStruct *)context)->Gsize);
 
 	double covdet=likeInfo[0];
 	double Chisq=likeInfo[1];
@@ -330,7 +330,7 @@ void vHRedGPULogLike(double *Cube, int &ndim, int &npars, double &lnew, void *co
 
 
 	double *likeInfo=new double[2];
-	double *SpecInfo=new double[2];
+	double *SpecInfo=new double[3];
 	
 	SpecInfo[0]=redamp;
 	SpecInfo[1]=redalpha;
@@ -430,19 +430,9 @@ void LRedGPULogLike(double *Cube, int &ndim, int &npars, double &lnew, void *con
 	double *WorkNoise=new double[((MNStruct *)context)->pulse->nobs];
 	double *powercoeff=new double[FitCoeff];
 
-	double freqdet=0;
 	double tdet=0;
 	double timelike=0;
-	for (int i=0; i<FitCoeff/2; i++){
-		int pnum=pcount;
-		double pc=Cube[pcount];
-		
-		powercoeff[i]=pow(10.0,pc)/(365.25*24*60*60)/4;
-		powercoeff[i+FitCoeff/2]=powercoeff[i];
-		freqdet=freqdet+2*log(powercoeff[i]);
-		pcount++;
-		//prior=prior+pc;
-	}
+
 
 	double *resvec=new double[((MNStruct *)context)->pulse->nobs];
 	double *BATvec=new double[((MNStruct *)context)->pulse->nobs];
@@ -490,6 +480,18 @@ void LRedGPULogLike(double *Cube, int &ndim, int &npars, double &lnew, void *con
 	  }
 
 	double maxtspan=end-start;
+
+
+	double freqdet=0;
+	for (int i=0; i<FitCoeff/2; i++){
+		int pnum=pcount;
+		double pc=Cube[pcount];
+		
+		powercoeff[i]=pow(10.0,pc)/(maxtspan*24*60*60);///(365.25*24*60*60)/4;
+		powercoeff[i+FitCoeff/2]=powercoeff[i];
+		freqdet=freqdet+2*log(powercoeff[i]);
+		pcount++;
+	}
 
 
 	int coeffsize=FitCoeff/2;
@@ -639,16 +641,7 @@ void LRedMarginGPULogLike(double *Cube, int &ndim, int &npars, double &lnew, voi
 	int FitCoeff=2*(((MNStruct *)context)->numFitRedCoeff);
 	double *powercoeff=new double[FitCoeff];
 
-	double freqdet=0;
-	for (int i=0; i<FitCoeff/2; i++){
-		int pnum=pcount;
-		double pc=Cube[pcount];
-		
-		powercoeff[i]=pow(10.0,pc)/(365.25*24*60*60)/4;
-		powercoeff[i+FitCoeff/2]=powercoeff[i];
-		freqdet=freqdet+2*log(powercoeff[i]);
-		pcount++;
-	}
+
 
 	double *Noise=new double[((MNStruct *)context)->pulse->nobs];
 	double *Res=new double[((MNStruct *)context)->pulse->nobs];
@@ -690,6 +683,17 @@ void LRedMarginGPULogLike(double *Cube, int &ndim, int &npars, double &lnew, voi
 	  }
 
 	double maxtspan=end-start;
+
+	double freqdet=0;
+	for (int i=0; i<FitCoeff/2; i++){
+		int pnum=pcount;
+		double pc=Cube[pcount];
+		
+		powercoeff[i]=pow(10.0,pc)*maxtspan;///(365.25*24*60*60)/4;
+		powercoeff[i+FitCoeff/2]=powercoeff[i];
+		freqdet=freqdet+2*log(powercoeff[i]);
+		pcount++;
+	}
 
 
 	int coeffsize=FitCoeff/2;

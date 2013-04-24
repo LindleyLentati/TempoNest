@@ -667,19 +667,10 @@ void LRedLogLikeMax(double *Cube, int &ndim, int &npars, double &lnew, void *con
 	double *WorkNoise=new double[((MNStruct *)context)->pulse->nobs];
 	double *powercoeff=new double[FitCoeff];
 
-	double freqdet=0;
+
 	double tdet=0;
 	double timelike=0;
-	for (int i=0; i<FitCoeff/2; i++){
-		int pnum=pcount;
-		double pc=Cube[pcount];
-		
-		powercoeff[i]=pow(10.0,pc)/(365.25*24*60*60)/4;
-		powercoeff[i+FitCoeff/2]=powercoeff[i];
-		freqdet=freqdet+2*log(powercoeff[i]);
-		pcount++;
-		//prior=prior+pc;
-	}
+
 
 	double *resvec=new double[((MNStruct *)context)->pulse->nobs];
 	for(int o=0;o<((MNStruct *)context)->pulse->nobs; o++){
@@ -735,6 +726,18 @@ void LRedLogLikeMax(double *Cube, int &ndim, int &npars, double &lnew, void *con
 	  }
 // 	printf("Total time span = %.6f days = %.6f years\n",end-start,(end-start)/365.25);
 	double maxtspan=end-start;
+
+
+	double freqdet=0;
+	for (int i=0; i<FitCoeff/2; i++){
+		int pnum=pcount;
+		double pc=Cube[pcount];
+		
+		powercoeff[i]=pow(10.0,pc)/(maxtspan*24*60*60);///(365.25*24*60*60)/4;
+		powercoeff[i+FitCoeff/2]=powercoeff[i];
+		freqdet=freqdet+2*log(powercoeff[i]);
+		pcount++;
+	}
 
 
 	int coeffsize=FitCoeff/2;
@@ -917,17 +920,6 @@ void LRedMarginLogLikeMax(double *Cube, int &ndim, int &npars, double &lnew, voi
 	int FitCoeff=2*(((MNStruct *)context)->numFitRedCoeff);
 	double *powercoeff=new double[FitCoeff];
 
-	double freqdet=0;
-	for (int i=0; i<FitCoeff/2; i++){
-		int pnum=pcount;
-		double pc=Cube[pcount];
-		
-		powercoeff[i]=pow(10.0,pc)/(365.25*24*60*60)/4;
-		powercoeff[i+FitCoeff/2]=powercoeff[i];
-		freqdet=freqdet+2*log(powercoeff[i]);
-		pcount++;
-	}
-
 	double *Noise=new double[((MNStruct *)context)->pulse->nobs];
 	double *Res=new double[((MNStruct *)context)->pulse->nobs];
 	double *GRes=new double[((MNStruct *)context)->Gsize];
@@ -1007,6 +999,18 @@ void LRedMarginLogLikeMax(double *Cube, int &ndim, int &npars, double &lnew, voi
 	  }
 // 	printf("Total time span = %.6f days = %.6f years\n",end-start,(end-start)/365.25);
 	double maxtspan=end-start;
+
+
+	double freqdet=0;
+	for (int i=0; i<FitCoeff/2; i++){
+		int pnum=pcount;
+		double pc=Cube[pcount];
+		
+		powercoeff[i]=pow(10.0,pc)/(maxtspan*24*60*60);///(365.25*24*60*60)/4;
+		powercoeff[i+FitCoeff/2]=powercoeff[i];
+		freqdet=freqdet+2*log(powercoeff[i]);
+		pcount++;
+	}
 
 
 	int coeffsize=FitCoeff/2;
@@ -1163,13 +1167,13 @@ double negloglikelihood(const gsl_vector *pvP, void *context) {
 	if(((MNStruct *)context)->JumpMargin != 0 || ((MNStruct *)context)->TimeMargin != 0 ){
 		//printf("Margin \n");
 		if(((MNStruct *)context)->incRED==0){
-			WhiteMarginLogLikeMax(pdParameters, ndims, ndims, lval, context);
+			WhiteLogLikeMax(pdParameters, ndims, ndims, lval, context);
 		}
 		else if(((MNStruct *)context)->incRED==1){
-			vHRedMarginLogLikeMax(pdParameters, ndims, ndims, lval, context);
+			vHRedLogLikeMax(pdParameters, ndims, ndims, lval, context);
 		}
 		else if(((MNStruct *)context)->incRED==2){
-			LRedMarginLogLikeMax(pdParameters, ndims, ndims, lval, context);
+			LRedLogLikeMax(pdParameters, ndims, ndims, lval, context);
 		}
 	}
 
@@ -1201,7 +1205,7 @@ double negloglikelihood(const gsl_vector *pvP, void *context) {
  * Output:
  * pdParameters:	The maximum likelihood value of the parameters
  * */
-void NelderMeadOptimum(int nParameters, double *pdParameters, void *context) {
+void NelderMeadOptimum(int nParameters, long double *LdParameters, void *context) {
 
 	printf("\n\n Performing Minimisation over current model parameters \n\n");
 
@@ -1279,7 +1283,7 @@ void NelderMeadOptimum(int nParameters, double *pdParameters, void *context) {
     nStatus = gsl_multimin_test_size(dSize, 1e-3);
 
       for(int i=0; i<nParameters; i++) {
-	pdParameters[i] = gsl_vector_get(pmMinimiser->x, i);
+	pdParameterEstimates[i] = gsl_vector_get(pmMinimiser->x, i);
 	//printf("%i %g \n", i,pdParameters[i]);
       } // for i
 
@@ -1291,33 +1295,50 @@ void NelderMeadOptimum(int nParameters, double *pdParameters, void *context) {
 	if(nIteration % 100 ==0){
     		printf("Step[%i]: Convergence: %g Current Minimum: %g \n", nIteration,dSize,gsl_multimin_fminimizer_minimum(pmMinimiser));
 	}
-  } while (nStatus == GSL_CONTINUE && nIteration < 7000);
+  } while (nStatus == GSL_CONTINUE);
 
-	printf("\n");
-		
 
-	for(int i=0; i<((MNStruct *)context)->numdims; i++) {
-		printf("%i %g \n", i,pdParameters[i]);
-		pcount++;
-	} 
 	printf("\n");
 
 	pcount=0;
 	for(int j=0;j<((MNStruct *)context)->numFitTiming;j++){
 	
-		long double value=pdParameters[j]*(((MNStruct *)context)->LDpriors[j][1])+(((MNStruct *)context)->LDpriors[j][0]);
-		pdParameters[pcount]=value;
-		printf("Max Param: %i %.10Lg \n", pcount,value);
+		long double value=pdParameterEstimates[j]*(((MNStruct *)context)->LDpriors[j][1])+(((MNStruct *)context)->LDpriors[j][0]);
+		LdParameters[pcount]=value;
+		printf("   Max %s : %.20Lg \n", ((MNStruct *)context)->pulse->param[((MNStruct *)context)->TempoFitNums[pcount][0]].shortlabel[((MNStruct *)context)->TempoFitNums[pcount][1]], value);
 		pcount++;
 	}
 
 	for(int j=0;j<((MNStruct *)context)->numFitJumps;j++){
 
-		long double value=pdParameters[pcount]*(((MNStruct *)context)->LDpriors[pcount][1])+(((MNStruct *)context)->LDpriors[pcount][0]);
-		pdParameters[pcount]=value;
-		printf("Param:  %.10Lg \n", pcount,value);
+		long double value=pdParameterEstimates[pcount]*(((MNStruct *)context)->LDpriors[pcount][1])+(((MNStruct *)context)->LDpriors[pcount][0]);
+		LdParameters[pcount]=value;
+		printf("   Max Jump %i :  %.10Lg \n", j,value);
 		pcount++;
 	}
+	
+	  for(int i =0; i< ((MNStruct *)context)->numFitEFAC; i++){
+		printf("   Max EFAC %i :  %.10g \n", i,pdParameterEstimates[pcount]);
+		pcount++;
+	}
+  for(int i =0; i< ((MNStruct *)context)->numFitEQUAD; i++){
+		printf("   Max EQUAD %i :  %.10g \n", i,pdParameterEstimates[pcount]);
+		pcount++;
+	}
+	if(((MNStruct *)context)->incRED == 1){
+		printf("   Max Red Amp :  %.10g \n", pdParameterEstimates[pcount]);
+		pcount++;
+		printf("   Max Red Index :  %.10g \n",pdParameterEstimates[pcount]);
+		pcount++;
+	}
+
+	if(((MNStruct *)context)->incRED == 2){
+		for(int i =0; i< ((MNStruct *)context)->numFitRedCoeff; i++){
+			printf("   Max Red Coeff %i :  %.10g \n", i,pdParameterEstimates[pcount]);
+			pcount++;
+		}
+	}	
+
 
 
   gsl_vector_free(vStart);
@@ -1325,3 +1346,4 @@ void NelderMeadOptimum(int nParameters, double *pdParameters, void *context) {
   gsl_multimin_fminimizer_free(pmMinimiser);
   delete[] pdParameterEstimates;
 } // NelderMeadOptimum
+

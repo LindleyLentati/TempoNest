@@ -598,7 +598,7 @@ int main(int argc, char *argv[])
 	int incRED;
 	int doTimeMargin;
 	int doJumpMargin;
-	int FitSig;
+	double FitSig;
 	int customPriors;
 	int Reddims=0;
 	double *EFACPrior;
@@ -966,7 +966,7 @@ int main(int argc, char *argv[])
   		Dpriors = new double*[ndims+1]; for(int i = 0; i < ndims+1; i++){Dpriors[i]=new double[2];};
   	}
   	
-    double *TNMaxParameters = new double[ndims];
+    long double *TNMaxParameters = new long double[ndims];
     //If using custompriors for errors incase T2 doesnt converge, get those values before doing anything else
     if(customPriors == 1){
 		setTNPriors(Dpriors, TempoPriors);

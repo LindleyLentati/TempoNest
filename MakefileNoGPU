@@ -4,7 +4,7 @@ CXX = g++
 FFLAGS += -O3 
 CFLAGS += -O3 -DHAVE_CONFIG_H  
 
-LAPACKLIB =  -llapack
+LAPACKLIB =  -llapack -lblas
 
 NESTLIBDIR = /data/ltl21/Code/Tempo2Fit/TempoNestRelease/MultiNest
 TEMPO2LIB = /data/ltl21/Code/Tempo2Fit/Tempo2-2013.3.1Install/lib

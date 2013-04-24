@@ -13,7 +13,8 @@
 double *GlobalGmat_d;
 float *GlobalGmatFloat_d;
 
-// Matrices are stored in row-major order:// M(row, col) = *(M.elements + row * M.width + col)
+// Matrices are stored in row-major order:
+// M(row, col) = *(M.elements + row * M.width + col)
 
 double iter_factorialGPU(unsigned int n)
 {
@@ -120,40 +121,6 @@ __global__ void calc_detFloat(float *a, double *det, int N)
    		
 }
 
-void CPUMakecov(double *A_d, double *BATvec, double *NoiseVec, double *SpecParm, int Aheight, int Awidth, double *FactorialList) {
-	// Each thread computes one element of C	// by accumulating results into Cvalue
-	
-
-	double LongestPeriod=1.0/pow(10.0,-5);
-	double flo=1.0/LongestPeriod;
-
-	double modelalpha=SpecParm[1];
-	double gwampsquared=SpecParm[0];
-	double covconst=SpecParm[2];
-	double CovVal=0;	for(int row=0;row<Aheight; row++){
-		for(int col=0;col<Awidth; col++){
-			double timdiff= BATvec[row] - BATvec[col];	
-			double tau=2.0*M_PI*fabs(timdiff);
-			double covsum=0;
-
-			for(int k=0; k <=10; k++){
-		
-					covsum=covsum+pow(-1.0,k)*(pow(flo*tau,2*k))/(FactorialList[2*k]*(2*k+1-modelalpha));
-
-			}
-
-			//A_d[row * Awidth + col]=gwampsquared*(covconst*pow((flo*tau),(modelalpha-1)) - covsum);
-			CovVal=gwampsquared*(covconst*pow((flo*tau),(modelalpha-1)) - covsum);
-
-			if(row==col){
-				//A_d[row * Awidth + col] += NoiseVec[row];
-				CovVal += NoiseVec[row];
-				
-			}
-				//printf("Make: %i %i %g %i %g  \n", row,col,CovVal,row+col, A_d[row * Awidth + col]);
-		}
-	}}
-
 __global__ void Makecov(double *A_d, double *BATvec, double *NoiseVec, double *SpecParm, int Aheight, int Awidth) {
 
 	// Each thread computes one element of C
@@ -218,21 +185,6 @@ __global__ void MatMulKernel(int Arow,int Acol,int Brow, int Bcol,double *A,doub
 	  // 
 }
 
-__global__ void NoiseMulKernel(double *A_d,double *B_d,double *C_d, int Aheight, int Awidth, int Bheight, int Bwidth) {
-	// Each thread computes one element of C	// by accumulating results into Cvalue
-	
-	int Cwidth=Bwidth;
-	int Cheight=Aheight;	double Cvalue = 0.0;	int row = blockIdx.y * blockDim.y + threadIdx.y;	int col = blockIdx.x * blockDim.x + threadIdx.x;	if(row > Aheight || col > Bwidth) return;	Cvalue = (A_d[row]) * (B_d[row * Bwidth + col]);			C_d[row * Cwidth + col] = Cvalue;}
-
-
-// simple kernel function that does diag mult for noise
-__global__ void mult_noise(double *Mat_d,double *Noise_d,double *NM_d,int N, int M)
-{
-
-	int Bidx = blockIdx.x;
-	for(int i=0;i<M; i++){NM_d[i*N + Bidx]=Mat_d[i*N + Bidx]*Noise_d[Bidx];}
-   		
-}
 
 
 extern "C" void WhiteMarginGPUWrapper_(double *Noise, double *Res, double *likeInfo, int N, int G)
@@ -286,9 +238,12 @@ extern "C" void WhiteMarginGPUWrapper_(double *Noise, double *Res, double *likeI
      err = cudaMemcpy( Res_d, Res, sizeof(double)*N, cudaMemcpyHostToDevice );
  	 checkCudaError(err);
 
- 	dim3 dimBlock(BLOCK_SIZE, BLOCK_SIZE);	dim3 dimGrid((N + dimBlock.x - 1) / dimBlock.x,	(N + dimBlock.y - 1) / dimBlock.y);	NoiseMulKernel<<<dimGrid, dimBlock>>>(Noise_d,GlobalGmat_d,NG_d,N,N,N,G);
- 	
- //	mult_noise<<< N, 1 >>>(GlobalGmat_d,Noise_d,NG_d,N,G);
+  	 dim3 dimBlock(BLOCK_SIZE, BLOCK_SIZE);
+	 dim3 dimGrid;
+	 dimGrid.x=(N + dimBlock.x - 1)/dimBlock.x;
+	 dimGrid.y = (N + dimBlock.y - 1)/dimBlock.y;
+
+	 MatMulKernel<<<dimGrid, dimBlock>>>(N,N,N, G,Noise_d,GlobalGmat_d,NG_d);
  	
  	double alpha=1.0;
  	double beta=0.0; 
@@ -335,14 +290,14 @@ extern "C" void WhiteMarginGPUWrapper_(double *Noise, double *Res, double *likeI
 }
 
 
-extern "C" void vHRedMarginGPUWrapper2_(double *Res, double *BatVec, double *NoiseVec, double *SpecInfo, double *likeInfo, double *FactorialList, int N, int G)
+extern "C" void vHRedMarginGPUWrapper_(double *Res, double *BatVec, double *NoiseVec, double *SpecInfo, double *likeInfo, double *FactorialList, int N, int G)
 {
 
 
-    cudaError_t err;
-    culaStatus status;
-    
-    double secday=24*60*60;
+	cudaError_t err;
+	culaStatus status;
+	
+	double secday=24*60*60;
 	double LongestPeriod=1.0/pow(10.0,-5);
 	double flo=1.0/LongestPeriod;
 
@@ -384,28 +339,14 @@ extern "C" void vHRedMarginGPUWrapper2_(double *Res, double *BatVec, double *Noi
  	 checkCudaError(err);
 
  	 
-  	 dim3 dimBlock(BLOCK_SIZE, BLOCK_SIZE);	 dim3 dimGrid;//((G + dimBlock.x - 1) / dimBlock.x,(N + dimBlock.y - 1) / dimBlock.y);
+  	 dim3 dimBlock(BLOCK_SIZE, BLOCK_SIZE);
+	 dim3 dimGrid;//((G + dimBlock.x - 1) / dimBlock.x,(N + dimBlock.y - 1) / dimBlock.y);
 	 dimGrid.x=(N + dimBlock.x - 1)/dimBlock.x;
 	 dimGrid.y = (N + dimBlock.y - 1)/dimBlock.y;
 	 
 	 Makecov<<<dimGrid, dimBlock>>>(CovMatrix_d, BatVec_d, NoiseVec_d, SpecInfo_d, N,N);
 	 
-	// 	double *CovMatrix;
-//	CovMatrix = (double*)malloc(sizeof(double)*N*N);
- //	err = cudaMemcpy( CovMatrix, CovMatrix_d, sizeof(double)*N*N, cudaMemcpyDeviceToHost );
- 	//checkCudaError(err);
-	  
 
-	//CPUMakecov(CovMatrix, BatVec, NoiseVec, SpecInfo, N,N, FactorialList);
-	//err = cudaMemcpy( CovMatrix_d, CovMatrix, sizeof(double)*N*N, cudaMemcpyHostToDevice );
- 	//checkCudaError(err);
- 	//free(CovMatrix);
- 	 
-	//double *CovMatrix;
-	//CovMatrix = (double*)malloc(sizeof(double)*N*N);	
-  //   err = cudaMemcpy( CovMatrix, CovMatrix_d, sizeof(double)*N*N, cudaMemcpyDeviceToHost );
- //	 checkCudaError(err);
-//	printf("%g \n",CovMatrix[0]);
 	double *dettemp;
 	dettemp = (double*)malloc(sizeof(double));
 	dettemp[0]=0;
@@ -455,39 +396,39 @@ extern "C" void vHRedMarginGPUWrapper2_(double *Res, double *BatVec, double *Noi
 	checkStatus(status);
 
 	 status = culaDeviceDgemv('T', N, G, alpha, GlobalGmat_d, N, Res_d, 1, beta, GRes_d, 1);
-     checkStatus(status);
+     	checkStatus(status);
  	 err = cudaMemcpy(GRes, GRes_d, sizeof(double)*G, cudaMemcpyDeviceToHost);
   	 checkCudaError(err);	 
  	 //	printf("do chol\n");
 		
  	 status = culaDeviceDpotrf('L', G, GCG_d, G);
-     checkStatusCarryOn(status,carryOn);
+     	checkStatusCarryOn(status,carryOn);
 
-     calc_det<<< 1, 1 >>>( GCG_d, dettemp_d, G);
-     err = cudaMemcpy( dettemp, dettemp_d, sizeof(double), cudaMemcpyDeviceToHost);
-  	 checkCudaError(err);
-     likeInfo[0]=dettemp[0];
+	calc_det<<< 1, 1 >>>( GCG_d, dettemp_d, G);
+	err = cudaMemcpy( dettemp, dettemp_d, sizeof(double), cudaMemcpyDeviceToHost);
+	checkCudaError(err);
+     	likeInfo[0]=dettemp[0];
     // printf("det: %g \n",likeInfo[0]);
     
-              if(carryOn == 1){
+	if(carryOn == 1){
      	// printf("Bad chol\n");
      	 
-     	 	 cudaFree(dettemp_d);
- 	 cudaFree(Res_d);
- 	 cudaFree(BatVec_d);
- 	 cudaFree(NoiseVec_d);
- 	 cudaFree(SpecInfo_d);
-	 cudaFree(CovMatrix_d);
- 	 cudaFree(CG_d);
-	 cudaFree(GCG_d);
-	 cudaFree(GRes_d);
-
-  	 free(dettemp);
-   	 free(GRes);
-  	 free(WorkingGRes);
-  	 
-  	 
-  	 return;
+		cudaFree(dettemp_d);
+		cudaFree(Res_d);
+		cudaFree(BatVec_d);
+		cudaFree(NoiseVec_d);
+		cudaFree(SpecInfo_d);
+		cudaFree(CovMatrix_d);
+		cudaFree(CG_d);
+		cudaFree(GCG_d);
+		cudaFree(GRes_d);
+	
+		free(dettemp);
+		free(GRes);
+		free(WorkingGRes);
+		
+		
+		return;
 
   	 }
 
@@ -523,47 +464,58 @@ extern "C" void vHRedMarginGPUWrapper2_(double *Res, double *BatVec, double *Noi
 extern "C" void vHRedGPUWrapper_(double *SpecInfo, double *BatVec, double *Res, double *NoiseVec, double *likeInfo, int N)
 {
 
+	cudaError_t err;
+	culaStatus status;
+
 	double secday=24*60*60;
 	double LongestPeriod=1.0/pow(10.0,-5);
 	double flo=1.0/LongestPeriod;
 
 	double modelalpha=SpecInfo[1];
+	double covconst=gsl_sf_gamma(1-modelalpha)*sin(0.5*M_PI*modelalpha);
+	
 	double gwamp=pow(10.0,SpecInfo[0]);
 	double gwampsquared=gwamp*gwamp*(pow((365.25*secday),2)/(12*M_PI*M_PI))*(pow(365.25,(1-modelalpha)))/(pow(flo,(modelalpha-1)));
-
-	double timdiff=0;
-
-	double covconst=gsl_sf_gamma(1-modelalpha)*sin(0.5*M_PI*modelalpha);
-// 	printf("constants: %g %g \n",gwampsquared,covconst);
-
-
 	
-	double *CovMatrix = new double[N*N];
-
-	for(int o1=0;o1<N; o1++){
-
-		for(int o2=0;o2<N; o2++){
-			timdiff=BatVec[o1]-BatVec[o2];	
-			double tau=2.0*M_PI*fabs(timdiff);
-			double covsum=0;
-
-			for(int k=0; k <=4; k++){
-				
-				covsum=covsum+pow(-1.0,k)*(pow(flo*tau,2*k))/(iter_factorialGPU(2*k)*(2*k+1-modelalpha));
-				//printf("Fac: %i %.10g \n", k, covsum);
-
-			}
-
-			CovMatrix[o1*N + o2]=gwampsquared*(covconst*pow((flo*tau),(modelalpha-1)) - covsum);
-// 			printf("%i %i %g %g %g\n",o1,o2,CovMatrix[o1][o2],fabs(timdiff),covsum);
-
-			if(o1==o2){
-				CovMatrix[o1*N + o2] += NoiseVec[o1];
-			}
-
-		}
-	}
+	SpecInfo[0]=gwampsquared;
+	SpecInfo[2]=covconst;
 	
+	double *Res_d;
+	double *BatVec_d;
+	double *NoiseVec_d;
+	double *SpecInfo_d;
+	double *CovMatrix_d;
+
+  
+  	 err = cudaMalloc( (void **)&Res_d, sizeof(double)*N );
+	 checkCudaError(err);
+	 err = cudaMalloc( (void **)&BatVec_d, sizeof(double)*N );
+	 checkCudaError(err);
+	 err = cudaMalloc( (void **)&NoiseVec_d, sizeof(double)*N );
+	 checkCudaError(err);
+	 err = cudaMalloc( (void **)&SpecInfo_d, sizeof(double)*3 );
+	 checkCudaError(err);
+  	 err = cudaMalloc( (void **)&CovMatrix_d, sizeof(double)*N*N );
+	 checkCudaError(err);
+	 
+
+     	 err = cudaMemcpy( Res_d, Res, sizeof(double)*N, cudaMemcpyHostToDevice );
+ 	 checkCudaError(err);
+ 	 err = cudaMemcpy( BatVec_d, BatVec, sizeof(double)*N, cudaMemcpyHostToDevice );
+ 	 checkCudaError(err);
+ 	 err = cudaMemcpy( NoiseVec_d, NoiseVec, sizeof(double)*N, cudaMemcpyHostToDevice );
+ 	 checkCudaError(err);
+ 	 err = cudaMemcpy(SpecInfo_d, SpecInfo, sizeof(double)*3, cudaMemcpyHostToDevice );
+ 	 checkCudaError(err);
+
+ 	 
+  	 dim3 dimBlock(BLOCK_SIZE, BLOCK_SIZE);
+	 dim3 dimGrid;//((G + dimBlock.x - 1) / dimBlock.x,(N + dimBlock.y - 1) / dimBlock.y);
+	 dimGrid.x=(N + dimBlock.x - 1)/dimBlock.x;
+	 dimGrid.y = (N + dimBlock.y - 1)/dimBlock.y;
+	 
+	 Makecov<<<dimGrid, dimBlock>>>(CovMatrix_d, BatVec_d, NoiseVec_d, SpecInfo_d, N,N);
+	 
 
 	double *dettemp;
 	dettemp = (double*)malloc(sizeof(double));
@@ -575,211 +527,73 @@ extern "C" void vHRedGPUWrapper_(double *SpecInfo, double *BatVec, double *Res, 
 	WorkingRes = (double*)malloc(sizeof(double)*N);
 
 	// declare GPU copies
-	double *Res_d;
-	double *CovMatrix_d;
 	double *dettemp_d;
 
-    cudaError_t err;
-    culaStatus status;
+
 
    // Allocate memory on GPU
   	 err = cudaMalloc( (void **)&dettemp_d, sizeof(double) );
-	 checkCudaError(err);
- 	 err = cudaMalloc( (void **)&Res_d, sizeof(double)*N );
-	 checkCudaError(err);
-  	 err = cudaMalloc( (void **)&CovMatrix_d, sizeof(double)*N*N );
 	 checkCudaError(err);
 
    // copy vectors from CPU to GPU
    	 err = cudaMemcpy( dettemp_d, dettemp, sizeof(double), cudaMemcpyHostToDevice );
  	 checkCudaError(err);
-   	 err = cudaMemcpy(CovMatrix_d, CovMatrix, sizeof(double)*N*N, cudaMemcpyHostToDevice );
- 	 checkCudaError(err);
-     err = cudaMemcpy( Res_d, Res, sizeof(double)*N, cudaMemcpyHostToDevice );
- 	 checkCudaError(err);
 
-		int carryOn=0;
+	 int carryOn=0;
  	 status = culaDeviceDpotrf('L', N, CovMatrix_d, N);
-     checkStatusCarryOn(status,carryOn);
+     	 checkStatusCarryOn(status,carryOn);
      
 
 
-     calc_det<<< 1, 1 >>>( CovMatrix_d, dettemp_d, N);
-     err = cudaMemcpy( dettemp, dettemp_d, sizeof(double), cudaMemcpyDeviceToHost);
+	 calc_det<<< 1, 1 >>>( CovMatrix_d, dettemp_d, N);
+	 err = cudaMemcpy( dettemp, dettemp_d, sizeof(double), cudaMemcpyDeviceToHost);
   	 checkCudaError(err);
-     likeInfo[0]=dettemp[0];
+     	 likeInfo[0]=dettemp[0];
      
           if(carryOn == 1){
-     	// printf("Bad chol\n");
-     	 cudaFree(dettemp_d);
+
+     	 	 cudaFree(dettemp_d);
 	 	 cudaFree(Res_d);
+		 cudaFree(BatVec_d);
+		 cudaFree(NoiseVec_d);
+		 cudaFree(SpecInfo_d);
 		 cudaFree(CovMatrix_d);
-		delete[] CovMatrix;
 	  	 free(dettemp);
 	  	 free(WorkingRes);
 	  	 return;
   	 }
 	
-	//status = culaDeviceDpotri('L', N, CovMatrix_d, N);
+
  	 status=culaDeviceDpotrs('L', N, 1, CovMatrix_d, N, Res_d, N);
 	 checkStatus(status);
 	 err = cudaMemcpy(WorkingRes, Res_d, sizeof(double)*N, cudaMemcpyDeviceToHost);
-  	 //err = cudaMemcpy(CovMatrix, CovMatrix_d, sizeof(double)*N*N, cudaMemcpyDeviceToHost);
+
   	 checkCudaError(err);
-//	                for(int i=0; i<N;i++){
- //                
- //                       for(int j=0;j<i;j++){
- //                              CovMatrix[j*N +i]=CovMatrix[i*N + j];
- //                        }
- //               }
+
 	 double sum=0;
-//	 for(int i=0; i<N;i++){
-//	 	 for(int j=0; j<N;j++){
-//	 		sum=sum+Res[i]*CovMatrix[i*N + j]*Res[j];
-////	 		}
-//	 	}
 	 	
-	 	for(int i=0; i<N;i++){
-	 		sum=sum+Res[i]*WorkingRes[i];
-	 		}
+	for(int i=0; i<N;i++){
+		sum=sum+Res[i]*WorkingRes[i];
+	}
+
 	 likeInfo[1]=sum;
 	 
 	 cudaFree(dettemp_d);
  	 cudaFree(Res_d);
+  	 cudaFree(BatVec_d);
+ 	 cudaFree(NoiseVec_d);
+ 	 cudaFree(SpecInfo_d);
 	 cudaFree(CovMatrix_d);
 
   	 free(dettemp);
   	 free(WorkingRes);
   	 
-  	 delete[] CovMatrix;
+  
 
 
    return;
 }
 
-
-extern "C" void vHRedMarginGPUWrapper_(double *CovMatrix, double *Res, double *likeInfo, int N, int G)
-{
-
-	//printf("Entered \n");
-	clock_t startClock,endClock;
-	startClock = clock();
-	
-	double *dettemp;
-	dettemp = (double*)malloc(sizeof(double));
-	dettemp[0]=0;
-	
-	
-
-	double *WorkingGRes;
-	WorkingGRes = (double*)malloc(sizeof(double)*G);
-	double *GRes;
-	GRes = (double*)malloc(sizeof(double)*G);
-	
-	// declare GPU copies
-	double *Res_d;
-	double *CovMatrix_d;
-	double *dettemp_d;
-	double *CG_d;
-	double *GCG_d;
-	double *GRes_d;
-
-    cudaError_t err;
-    culaStatus status;
-
-   // Allocate memory on GPU
-  	 err = cudaMalloc( (void **)&dettemp_d, sizeof(double) );
-	 checkCudaError(err);
- 	 err = cudaMalloc( (void **)&Res_d, sizeof(double)*N );
-	 checkCudaError(err);
-  	 err = cudaMalloc( (void **)&CovMatrix_d, sizeof(double)*N*N );
-	 checkCudaError(err);
-  	 err = cudaMalloc( (void **)&CG_d, sizeof(double)*N*G );
-	 checkCudaError(err);
-   	 err = cudaMalloc( (void **)&GCG_d, sizeof(double)*G*G);
-	 checkCudaError(err);
-	 err = cudaMalloc( (void **)&GRes_d, sizeof(double)*G);
-	 checkCudaError(err);
-	 
-	// printf("Copying \n");
-   // copy vectors from CPU to GPU
-   	 err = cudaMemcpy( dettemp_d, dettemp, sizeof(double), cudaMemcpyHostToDevice );
- 	 checkCudaError(err);
-   	 err = cudaMemcpy(CovMatrix_d, CovMatrix, sizeof(double)*N*N, cudaMemcpyHostToDevice );
- 	 checkCudaError(err);
-     err = cudaMemcpy( Res_d, Res, sizeof(double)*N, cudaMemcpyHostToDevice );
- 	 checkCudaError(err);
- 	 
-  //	endClock = clock();
-   //	printf("Copied: time taken = %.2f (s)\n",(endClock-startClock)/(double)CLOCKS_PER_SEC);
- 	// startClock = clock();
-
-  	double alpha=1.0;
- 	double beta=0.0; 
- 	
- 	
- 	status =  culaDeviceDgemm('N', 'N', N, G, N, alpha, CovMatrix_d, N, GlobalGmat_d, N, beta, CG_d, N);
-	checkStatus(status);
-
-  	status =  culaDeviceDgemm('T', 'N', G, G, N, alpha, GlobalGmat_d, N, CG_d, N, beta, GCG_d, G);
-	checkStatus(status);
-
-	 status = culaDeviceDgemv('T', N, G, alpha, GlobalGmat_d, N, Res_d, 1, beta, GRes_d, 1);
-     checkStatus(status);
- 	 err = cudaMemcpy(GRes, GRes_d, sizeof(double)*G, cudaMemcpyDeviceToHost);
-  	 checkCudaError(err);	 
- 	 
-	int carryOn=0;
- 	 status = culaDeviceDpotrf('L', G, GCG_d, G);
-     checkStatusCarryOn(status,carryOn);
-
-
-     calc_det<<< 1, 1 >>>( GCG_d, dettemp_d, G);
-     err = cudaMemcpy( dettemp, dettemp_d, sizeof(double), cudaMemcpyDeviceToHost);
-  	 checkCudaError(err);
-     likeInfo[0]=dettemp[0];
-	 
-	      if(carryOn==1){
-     	//printf("bad chol \n");
- 		 cudaFree(dettemp_d);
-	 	 cudaFree(Res_d);
-		 cudaFree(CovMatrix_d);
-	 	 cudaFree(CG_d);
-		 cudaFree(GCG_d);
-		 cudaFree(GRes_d);
-
-	  	 free(dettemp);
-	  	 free(GRes);
-	  	 free(WorkingGRes);
-  	 	return;
-  	 	}
-  	 	
-  	 	
- 	 status=culaDeviceDpotrs('L', G, 1, GCG_d, G, GRes_d, G);
-	 checkStatus(status);
-	 err = cudaMemcpy(WorkingGRes, GRes_d, sizeof(double)*G, cudaMemcpyDeviceToHost);
-  	 checkCudaError(err);
-
-	 double sum=0;
-	 for(int i=0; i<G;i++){sum=sum+GRes[i]*WorkingGRes[i];}
-	 likeInfo[1]=sum;
-	 
-	 cudaFree(dettemp_d);
- 	 cudaFree(Res_d);
-	 cudaFree(CovMatrix_d);
- 	 cudaFree(CG_d);
-	 cudaFree(GCG_d);
-	 cudaFree(GRes_d);
-
-  	 free(dettemp);
-  	 free(GRes);
-  	 free(WorkingGRes);
-  	 
-  	 	//printf("Done: time taken = %.2f (s)\n",(endClock-startClock)/(double)CLOCKS_PER_SEC);
-
-
-   return;
-}
 
 // simple kernel function that calculates the FMatrix
 __global__ void make_fmatrix(double *FMatrix_d,double *Freqs_d, double *BATvec_d, int N,int F)
@@ -793,6 +607,22 @@ __global__ void make_fmatrix(double *FMatrix_d,double *Freqs_d, double *BATvec_d
 			FMatrix_d[(i+F/2)*N + Bidx]=sin(2*M_PI*Freqs_d[i]*BATvec_d[Bidx]);
 	}
 
+
+}
+__global__ void fastmake_fmatrix(double *FMatrix_d,double *Freqs_d, double *BATvec_d, int Aheight,int Awidth) {
+
+	// Each thread computes one element of F
+	// by accumulating results into Cvalue
+
+
+	int row = blockIdx.y * blockDim.y + threadIdx.y;
+	int col = blockIdx.x * blockDim.x + threadIdx.x;
+	
+	 __syncthreads();
+	if(row >= Aheight || col >= Awidth) return;
+
+	FMatrix_d[row * Awidth + col]=cos(2*M_PI*Freqs_d[col]*BATvec_d[row]);
+	FMatrix_d[row*Awidth + col + Awidth/2]=sin(2*M_PI*Freqs_d[col]*BATvec_d[row]);
 
 }
 
@@ -813,8 +643,8 @@ extern "C" void LRedGPUWrapper_(double *Freqs, double *resvec, double *BATvec, d
 	double *FNFvec;
 	FNFvec = (double*)malloc(sizeof(double)*F*F);
 
-    cudaError_t err;
-    culaStatus status;
+	cudaError_t err;
+	culaStatus status;
       
   	 err = cudaMalloc( (void **)&Freqs_d, sizeof(double)*F );
 	 checkCudaError(err);
@@ -834,7 +664,7 @@ extern "C" void LRedGPUWrapper_(double *Freqs, double *resvec, double *BATvec, d
    	 err = cudaMalloc( (void **)&NFd_d, sizeof(double)*F);
 	 checkCudaError(err);	
 	 
-   // copy vectors from CPU to GPU
+         // copy vectors from CPU to GPU
    	 err = cudaMemcpy( Freqs_d, Freqs, sizeof(double)*F, cudaMemcpyHostToDevice );
  	 checkCudaError(err);
 	 err = cudaMemcpy(resvec_d, resvec, sizeof(double)*N, cudaMemcpyHostToDevice );
@@ -844,19 +674,25 @@ extern "C" void LRedGPUWrapper_(double *Freqs, double *resvec, double *BATvec, d
  	 err = cudaMemcpy( Noise_d, Noise, sizeof(double)*N, cudaMemcpyHostToDevice );
  	 checkCudaError(err);
 
- 	 make_fmatrix<<< N, 1 >>>(FMatrix_d,Freqs_d,BATvec_d,N,F);
-
- 	 mult_noise<<< N, 1 >>>(FMatrix_d,Noise_d,NF_d,N,F);
  	 
+// 	 make_fmatrix<<< N, 1 >>>(FMatrix_d,Freqs_d,BATvec_d,N,F);
+  	 dim3 dimBlock(BLOCK_SIZE, BLOCK_SIZE);
+	 dim3 dimGrid;
+
+	 dimGrid.x=(F + dimBlock.x - 1)/dimBlock.x;
+	 dimGrid.y = (N + dimBlock.y - 1)/dimBlock.y;
+	 fastmake_fmatrix<<<dimGrid, dimBlock>>>(FMatrix_d,Freqs_d,BATvec_d,N,F);
+
+	 MatMulKernel<<<dimGrid, dimBlock>>>(N,N,N, F,Noise_d,FMatrix_d,NF_d);
 
  	 
-  	double alpha=1.0;
- 	double beta=0.0; 
- 	status =  culaDeviceDgemm('T', 'N', F, F, N, alpha, FMatrix_d, N, NF_d, N, beta, FNF_d, F);
+	double alpha=1.0;
+	double beta=0.0; 
+	status =  culaDeviceDgemm('T', 'N', F, F, N, alpha, FMatrix_d, N, NF_d, N, beta, FNF_d, F);
 	checkStatus(status);
 	
  	 status = culaDeviceDgemv('T', N, F, alpha, NF_d, N, resvec_d, 1, beta, NFd_d, 1);
-     checkStatus(status);
+	 checkStatus(status);
 	
 	 err = cudaMemcpy(FNFvec, FNF_d, sizeof(double)*F*F, cudaMemcpyDeviceToHost);
   	 checkCudaError(err);
@@ -864,18 +700,18 @@ extern "C" void LRedGPUWrapper_(double *Freqs, double *resvec, double *BATvec, d
 	 err = cudaMemcpy(NFd, NFd_d, sizeof(double)*F, cudaMemcpyDeviceToHost);
   	 checkCudaError(err);
 
-		for(int f1=0;f1<F; f1++){
-			for(int f2=0;f2<F; f2++){
- 
-				FNF[f2][f1]=FNFvec[f1*F + f2];
-			}
+	for(int f1=0;f1<F; f1++){
+		for(int f2=0;f2<F; f2++){
+
+			FNF[f2][f1]=FNFvec[f1*F + f2];
 		}
+	}
 
 	cudaFree(Freqs_d);
 	cudaFree(BATvec_d);
 	cudaFree(Noise_d);
-    cudaFree(FMatrix_d);
-    cudaFree(NF_d);
+    	cudaFree(FMatrix_d);
+    	cudaFree(NF_d);
 	cudaFree(FNF_d);
 	cudaFree(resvec_d);
 	cudaFree(NFd_d);
@@ -917,8 +753,8 @@ extern "C" void LRedMarginGPUWrapper_(double *Freqs, double *resvec, double *BAT
 	double *FNFvec;
 	FNFvec = (double*)malloc(sizeof(double)*F*F);
 
-    cudaError_t err;
-    culaStatus status;
+	cudaError_t err;
+	culaStatus status;
     
   	 err = cudaMalloc( (void **)&dettemp_d, sizeof(double) );
 	 checkCudaError(err);
@@ -961,7 +797,12 @@ extern "C" void LRedMarginGPUWrapper_(double *Freqs, double *resvec, double *BAT
  	 err = cudaMemcpy( Noise_d, Noise, sizeof(double)*N, cudaMemcpyHostToDevice );
  	 checkCudaError(err);
  	 
-  	 dim3 dimBlock(BLOCK_SIZE, BLOCK_SIZE);	 dim3 dimGrid((N + dimBlock.x - 1) / dimBlock.x,(N + dimBlock.y - 1) / dimBlock.y);	 NoiseMulKernel<<<dimGrid, dimBlock>>>(Noise_d,GlobalGmat_d,NG_d,N,N,N,G);
+  	 dim3 dimBlock(BLOCK_SIZE, BLOCK_SIZE);
+	 dim3 dimGrid;
+	 dimGrid.x=(N + dimBlock.x - 1)/dimBlock.x;
+	 dimGrid.y = (N + dimBlock.y - 1)/dimBlock.y;
+
+	 MatMulKernel<<<dimGrid, dimBlock>>>(N,N,N, G,Noise_d,GlobalGmat_d,NG_d);
 	 
 
  	 double alpha=1.0;
@@ -971,15 +812,15 @@ extern "C" void LRedMarginGPUWrapper_(double *Freqs, double *resvec, double *BAT
 
 
  	 status = culaDeviceDpotrf('L', G, GG_d, G);
-     checkStatus(status);
+     	checkStatus(status);
 
-     calc_det<<< 1, 1 >>>( GG_d, dettemp_d, G);
-     err = cudaMemcpy( dettemp, dettemp_d, sizeof(double), cudaMemcpyDeviceToHost);
+	calc_det<<< 1, 1 >>>( GG_d, dettemp_d, G);
+	err = cudaMemcpy( dettemp, dettemp_d, sizeof(double), cudaMemcpyDeviceToHost);
   	 checkCudaError(err);
-     likeVals[0]=dettemp[0];
+     	likeVals[0]=dettemp[0];
      
   	 status = culaDeviceDpotri('L', G, GG_d, G);
-     checkStatus(status);
+     	checkStatus(status);
      
   	 status =  culaDeviceDsymm('R', 'L', N, G, alpha, GG_d, G, GlobalGmat_d, N, beta, NG_d, N);
 	 checkStatus(status);
@@ -988,7 +829,7 @@ extern "C" void LRedMarginGPUWrapper_(double *Freqs, double *resvec, double *BAT
 	 checkStatus(status);
 	 
   	 status = culaDeviceDgemv('N', N, N, alpha, GNG_d, N, resvec_d, 1, beta, GNGd_d, 1);
-     checkStatus(status);
+     	checkStatus(status);
      
 
 	 err = cudaMemcpy(GNGd, GNGd_d, sizeof(double)*N, cudaMemcpyDeviceToHost);

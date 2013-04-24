@@ -85,16 +85,67 @@ void readsummary(pulsar *psr, std::string longname, int ndim, void *context, lon
 			std::istream_iterator< double > begin(myStream),eof;
 			std::vector<double> paramlist(begin,eof);
 			int pcount=0;
+			int jj=0;
+			if(doLinear==1){
+				double *linearParams=new double[ndim];
+				double *nonLinearParams=new double[ndim];
+				double *errorvec=new double[ndim];
+				double *nonLinearerror=new double[ndim];
+				for(int j=0;j<ndim;j++){
+					linearParams[j]=paramlist[j];
+					errorvec[j]=paramlist[j+ndim];
+					printf("%i %g %g \n",j,linearParams[j],errorvec[j]);
+					nonLinearerror[j]=0;
+					nonLinearParams[j]=0;
+				}
+				TNupdateParameters(psr,0,linearParams,errorvec, nonLinearParams);
+				TNupdateParameters(psr,0,errorvec,errorvec, nonLinearerror);
+                                for(int j=1;j<=((MNStruct *)context)->numFitTiming+((MNStruct *)context)->numFitJumps;j++){
+                                        if(((MNStruct *)context)->LDpriors[j-1][1] != 0){
+						 printf("before %i %g %g %Lg\n",j,nonLinearParams[j],nonLinearerror[j],((MNStruct *)context)->LDpriors[j-1][1]);
+						nonLinearParams[j]=nonLinearParams[j]/((MNStruct *)context)->LDpriors[j-1][1];
+						nonLinearerror[j]=nonLinearerror[j]/((MNStruct *)context)->LDpriors[j-1][1];
+						printf("after %i %g %g %Lg\n",j,nonLinearParams[j],nonLinearerror[j],((MNStruct *)context)->LDpriors[j-1][1]);
+					}
+					else{
+						nonLinearParams[j]=0;
+						nonLinearerror[j]=0;
+					}
+                                }
+
+
+                        for(int j=1;j<((MNStruct *)context)->numFitTiming;j++){
+
+                                long double value=nonLinearParams[j]*(((MNStruct *)context)->LDpriors[pcount][1])+(((MNStruct *)context)->LDpriors[pcount][0]);
+                                long double error=nonLinearerror[j]*(((MNStruct *)context)->LDpriors[pcount][1]);
+                                psr[0].param[((MNStruct *)context)->TempoFitNums[pcount][0]].val[((MNStruct *)context)->TempoFitNums[pcount][1]] = value;
+                                psr[0].param[((MNStruct *)context)->TempoFitNums[pcount][0]].err[((MNStruct *)context)->TempoFitNums[pcount][1]] = error;
+                                printf("%i %Lg %Lg %Lg %Lg \n",j,(((MNStruct *)context)->LDpriors[pcount][0]),(((MNStruct *)context)->LDpriors[pcount][1]),value,error);
+                                printf("%i %g \n", j, paramlist[j]);
+                                pcount++;
+                        }
+
+                        for(int j=0;j<((MNStruct *)context)->numFitJumps;j++){
+
+                                long double value=nonLinearParams[pcount+1];
+                                long double error=nonLinearerror[pcount+1]*(((MNStruct *)context)->LDpriors[pcount][1]);
+                                psr[0].jumpVal[((MNStruct *)context)->TempoJumpNums[j]] = value;
+                                psr[0].jumpValErr[((MNStruct *)context)->TempoJumpNums[j]] = error;
+                                pcount++;
+                        }
+			}
+			else{
 			for(int j=0;j<((MNStruct *)context)->numFitTiming;j++){
 				
-				long double value=paramlist[j]*(((MNStruct *)context)->LDpriors[j][1])+(((MNStruct *)context)->LDpriors[j][0]);
-				long double error=paramlist[j+ndim]*(((MNStruct *)context)->LDpriors[j][1]);
-				psr[0].param[((MNStruct *)context)->TempoFitNums[j][0]].val[((MNStruct *)context)->TempoFitNums[j][1]] = value;
-				psr[0].param[((MNStruct *)context)->TempoFitNums[j][0]].err[((MNStruct *)context)->TempoFitNums[j][1]] = error;
-				printf("%i %Lg %Lg %Lg %Lg \n",j,(((MNStruct *)context)->LDpriors[j][0]),(((MNStruct *)context)->LDpriors[j][1]),value,error);
+				long double value=paramlist[j]*(((MNStruct *)context)->LDpriors[pcount][1])+(((MNStruct *)context)->LDpriors[pcount][0]);
+				long double error=paramlist[j+ndim]*(((MNStruct *)context)->LDpriors[pcount][1]);
+				psr[0].param[((MNStruct *)context)->TempoFitNums[pcount][0]].val[((MNStruct *)context)->TempoFitNums[pcount][1]] = value;
+				psr[0].param[((MNStruct *)context)->TempoFitNums[pcount][0]].err[((MNStruct *)context)->TempoFitNums[pcount][1]] = error;
+				printf("%i %Lg %Lg %Lg %Lg \n",j,(((MNStruct *)context)->LDpriors[pcount][0]),(((MNStruct *)context)->LDpriors[pcount][1]),value,error);
+				printf("%i %g \n", j, paramlist[j]);
 				pcount++;
 			}
-
+			
 			for(int j=0;j<((MNStruct *)context)->numFitJumps;j++){
 				
 				long double value=paramlist[pcount]*(((MNStruct *)context)->LDpriors[pcount][1])+(((MNStruct *)context)->LDpriors[pcount][0]);
@@ -104,7 +155,7 @@ void readsummary(pulsar *psr, std::string longname, int ndim, void *context, lon
 				printf("%i %Lg %Lg %Lg %Lg \n",pcount,(((MNStruct *)context)->LDpriors[pcount][0]),(((MNStruct *)context)->LDpriors[pcount][1]),value,error);
 				pcount++;
 			}
-
+			}
 			double Evidence=paramlist[4*ndim];
 			TNtextOutput(psr, 1, 0, Tempo2Fit,  context,incRED,ndims,paramlist, Evidence, doTimeMargin, doJumpMargin, doLinear);
 			printf("finished output \n");
@@ -578,8 +629,14 @@ void convertFromLinear(pulsar *psr, std::string longname, int ndim, void *contex
 				txtstream << "\t";
 			}
 			else{
-				txtstream << nonLinearParams[j]/((MNStruct *)context)->LDpriors[j-1][1];
-				txtstream << "\t";
+				if(((MNStruct *)context)->LDpriors[j-1][1] != 0){
+					txtstream << nonLinearParams[j]/((MNStruct *)context)->LDpriors[j-1][1];
+					txtstream << "\t";
+				}
+				else{
+					txtstream << 0;
+                                        txtstream << "\t";
+				}
 // 				printf("%i %i %g %g %g \n",i,j,linearParams[j],nonLinearParams[j],(double)((MNStruct *)context)->LDpriors[j-1][1]);
 			}
 		}

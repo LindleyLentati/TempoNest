@@ -684,19 +684,10 @@ void LRedLinearLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *
 	double *WorkNoise=new double[((MNStruct *)context)->pulse->nobs];
 	double *powercoeff=new double[FitCoeff];
 
-	double freqdet=0;
+
 	double tdet=0;
 	double timelike=0;
-	for (int i=0; i<FitCoeff/2; i++){
-		int pnum=pcount;
-		double pc=Cube[pcount];
-		
-		powercoeff[i]=pow(10.0,pc)/(365.25*24*60*60)/4;
-		powercoeff[i+FitCoeff/2]=powercoeff[i];
-		freqdet=freqdet+2*log(powercoeff[i]);
-		pcount++;
-		//prior=prior+pc;
-	}
+
 
 
 	for(int o=0;o<((MNStruct *)context)->pulse->nobs; o++){
@@ -752,6 +743,17 @@ void LRedLinearLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *
 	  }
 // 	printf("Total time span = %.6f days = %.6f years\n",end-start,(end-start)/365.25);
 	double maxtspan=end-start;
+
+	double freqdet=0;
+	for (int i=0; i<FitCoeff/2; i++){
+		int pnum=pcount;
+		double pc=Cube[pcount];
+		
+		powercoeff[i]=pow(10.0,pc)/(maxtspan*24*60*60);///(365.25*24*60*60)/4;
+		powercoeff[i+FitCoeff/2]=powercoeff[i];
+		freqdet=freqdet+2*log(powercoeff[i]);
+		pcount++;
+	}
 
 
 	int coeffsize=FitCoeff/2;
@@ -934,16 +936,6 @@ void LRedMarginLinearLogLike(double *Cube, int &ndim, int &npars, double &lnew, 
 	int FitCoeff=2*(((MNStruct *)context)->numFitRedCoeff);
 	double *powercoeff=new double[FitCoeff];
 
-	double freqdet=0;
-	for (int i=0; i<FitCoeff/2; i++){
-		int pnum=pcount;
-		double pc=Cube[pcount];
-		
-		powercoeff[i]=pow(10.0,pc)/(365.25*24*60*60)/4;
-		powercoeff[i+FitCoeff/2]=powercoeff[i];
-		freqdet=freqdet+2*log(powercoeff[i]);
-		pcount++;
-	}
 
 	double *Noise=new double[((MNStruct *)context)->pulse->nobs];
 	double *GDiffvec=new double[((MNStruct *)context)->Gsize];
@@ -1022,6 +1014,18 @@ void LRedMarginLinearLogLike(double *Cube, int &ndim, int &npars, double &lnew, 
 	  }
 // 	printf("Total time span = %.6f days = %.6f years\n",end-start,(end-start)/365.25);
 	double maxtspan=end-start;
+
+
+	double freqdet=0;
+	for (int i=0; i<FitCoeff/2; i++){
+		int pnum=pcount;
+		double pc=Cube[pcount];
+		
+		powercoeff[i]=pow(10.0,pc)/(maxtspan*24*60*60);///(365.25*24*60*60)/4;
+		powercoeff[i+FitCoeff/2]=powercoeff[i];
+		freqdet=freqdet+2*log(powercoeff[i]);
+		pcount++;
+	}
 
 
 	int coeffsize=FitCoeff/2;

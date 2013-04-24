@@ -61,7 +61,7 @@ void fastephemeris_routines(pulsar *psr,int npsr);
 void fastformBatsAll(pulsar *psr,int npsr);
 void TNtextOutput(pulsar *psr, int npsr, int newpar, long double *Tempo2Fit, void *context, int incRED, int ndims, std::vector<double> paramlist, double Evidence, int MarginTime, int MarginJumps, int doLinear);
 
-void NelderMeadOptimum(int nParameters, double *pdParameters, void *context);
+void NelderMeadOptimum(int nParameters, long double *pdParameters, void *context);
 
 void doSim(int argc, char **commandLine, pulsar *psr, char timFile[][MAX_FILELEN], char parFile[][MAX_FILELEN]);
 void TNSimRedfromTim(int argc, char **commandLine, pulsar *psr, char timFile[][MAX_FILELEN], char parFile[][MAX_FILELEN], double EFAC, double EQUAD, int doRed, double redlogamp, double redslope, int updateEFAC, int updateEQUAD, int doDM, double DMlogamp, double DMslope,long idum);
@@ -90,6 +90,7 @@ void LRedLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *contex
 void LRedMarginLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *context);
 
 void LRedDMMarginLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *context);
+
 //GPU linear timing model likelihood functions
 void WhiteMarginGPULinearLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *context);
 void vHRedGPULinearLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *context);
@@ -126,7 +127,7 @@ void setupparams(char *Type,
 		int &incRED,
 		int &doTimeMargin,
 		int &doJumpMargin,
-		int &FitSig,
+		double &FitSig,
 		int &diffPriors,
 		double *EFACPrior,
 		double *EQUADPrior,

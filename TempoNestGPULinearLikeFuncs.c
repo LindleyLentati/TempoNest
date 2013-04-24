@@ -9,8 +9,10 @@
 #include "TempoNest.h"
 
 extern "C" void WhiteMarginGPUWrapper_(double *Noise, double *Res, double *likeInfo, int N, int G);
-extern "C" void vHRedGPUWrapper_(double *CovMatrix, double *Res, double *likeInfo, int N);
-extern "C" void vHRedMarginGPUWrapper_(double *CovMatrix, double *Res, double *likeInfo, int N, int G);
+
+extern "C" void vHRedGPUWrapper_(double *SpecInfo, double *BatVec, double *Res, double *NoiseVec, double *likeInfo, int N);
+extern "C" void vHRedMarginGPUWrapper_(double *Res, double *BATvec, double *Noisevec, double *SpecParm, double *likeInfo,double *FactorialList, int N, int G);
+
 extern "C" void LRedGPUWrapper_(double *Freqs, double *resvec, double *BATvec, double *Noise, double **FNF, double *NFd, int N, int F);
 extern "C" void LRedMarginGPUWrapper_(double *Freqs, double *resvec, double *BATvec, double *Noise, double **FNF, double *NFd, double *likeVals, int N, int F, int G);
 
@@ -171,54 +173,24 @@ void vHRedGPULinearLogLike(double *Cube, int &ndim, int &npars, double &lnew, vo
 
 	double *Fitvec=new double[((MNStruct *)context)->pulse->nobs];
 	double *Diffvec=new double[((MNStruct *)context)->pulse->nobs];
+	double *BatVec=new double[((MNStruct *)context)->pulse->nobs];
+	double *Noise=new double[((MNStruct *)context)->pulse->nobs];
+
 	dgemv(((MNStruct *)context)->DMatrix,Fitparams,Fitvec,((MNStruct *)context)->pulse->nobs,numfit,'N');
 	for(int o=0;o<((MNStruct *)context)->pulse->nobs; o++){
 		Diffvec[o]=((MNStruct *)context)->pulse->obsn[o].residual-Fitvec[o];
+		BatVec[o]=(double)((MNStruct *)context)->pulse->obsn[o].bat;
+		Noise[o]=pow(((((MNStruct *)context)->pulse->obsn[o].toaErr)*pow(10.0,-6))*EFAC[((MNStruct *)context)->sysFlags[o]],2) + EQUAD;
 	}
-
-	double secday=24*60*60;
-	double LongestPeriod=1.0/pow(10.0,-5);
-	double flo=1.0/LongestPeriod;
-
-	double modelalpha=redalpha;
-	double gwamp=pow(10.0,redamp);
-	double gwampsquared=gwamp*gwamp*(pow((365.25*secday),2)/(12*M_PI*M_PI))*(pow(365.25,(1-modelalpha)))/(pow(flo,(modelalpha-1)));
-
-	double timdiff=0;
-
-	double covconst=gsl_sf_gamma(1-modelalpha)*sin(0.5*M_PI*modelalpha);
-// 	printf("constants: %g %g \n",gwampsquared,covconst);
-
-
-	
-	double *CovMatrix = new double[((MNStruct *)context)->pulse->nobs*((MNStruct *)context)->pulse->nobs];
-
-	for(int o1=0;o1<((MNStruct *)context)->pulse->nobs; o1++){
-
-		for(int o2=0;o2<((MNStruct *)context)->pulse->nobs; o2++){
-			timdiff=((MNStruct *)context)->pulse->obsn[o1].bat-((MNStruct *)context)->pulse->obsn[o2].bat;	
-			double tau=2.0*M_PI*fabs(timdiff);
-			double covsum=0;
-
-			for(int k=0; k <=10; k++){
-				covsum=covsum+pow(-1.0,k)*(pow(flo*tau,2*k))/(iter_factorial(2*k)*(2*k+1-modelalpha));
-
-			}
-
-			CovMatrix[o1*((MNStruct *)context)->pulse->nobs + o2]=gwampsquared*(covconst*pow((flo*tau),(modelalpha-1)) - covsum);
-// 			printf("%i %i %g %g %g\n",o1,o2,CovMatrix[o1][o2],fabs(timdiff),covsum);
-
-			if(o1==o2){
-				CovMatrix[o1*((MNStruct *)context)->pulse->nobs + o2] += pow(((((MNStruct *)context)->pulse->obsn[o1].toaErr)*pow(10.0,-6))*EFAC[((MNStruct *)context)->sysFlags[o1]],2) + EQUAD;
-			}
-
-		}
-	}
-	
 
 
 	double *likeInfo=new double[2];
-	vHRedGPUWrapper_(CovMatrix, Diffvec, likeInfo,((MNStruct *)context)->pulse->nobs);
+	double *SpecInfo=new double[3];
+	
+	SpecInfo[0]=redamp;
+	SpecInfo[1]=redalpha;
+	vHRedGPUWrapper_(SpecInfo, BatVec,Diffvec, Noise, likeInfo,((MNStruct *)context)->pulse->nobs);
+
 
 	double covdet=likeInfo[0];
 	double Chisq=likeInfo[1];
@@ -238,7 +210,9 @@ void vHRedGPULinearLogLike(double *Cube, int &ndim, int &npars, double &lnew, vo
 	delete[] Diffvec;
 	delete[] Fitvec;
 	delete[] likeInfo;
-	delete[] CovMatrix;
+	delete[] BatVec;
+	delete[] Noise;
+	delete[] SpecInfo;
 
 		//printf("GPU Like: %g %g %g \n",lnew,Chisq,covdet);
 }
@@ -309,52 +283,32 @@ void vHRedMarginGPULinearLogLike(double *Cube, int &ndim, int &npars, double &ln
 	
 	double *Fitvec=new double[((MNStruct *)context)->pulse->nobs];
 	double *Diffvec=new double[((MNStruct *)context)->pulse->nobs];
+	double *BATvec=new double[((MNStruct *)context)->pulse->nobs];
+	double *Noisevec=new double[((MNStruct *)context)->pulse->nobs];
+
 	dgemv(((MNStruct *)context)->DMatrix,Fitparams,Fitvec,((MNStruct *)context)->pulse->nobs,numfit,'N');
 	for(int o=0;o<((MNStruct *)context)->pulse->nobs; o++){
 		Diffvec[o]=((MNStruct *)context)->pulse->obsn[o].residual-Fitvec[o];
+		BATvec[o]=(double)((MNStruct *)context)->pulse->obsn[o].bat;
+		Noisevec[o]=(double)(pow(((((MNStruct *)context)->pulse->obsn[o].toaErr)*pow(10.0,-6))*EFAC[((MNStruct *)context)->sysFlags[o]],2) + EQUAD);
+	}
+	 
+	double *SpecParm=new double[3];
+
+	SpecParm[0]=redamp;
+	SpecParm[1]=redalpha;
+
+	double *LinearTNFactorialList = new double[21];
+
+	for(int k=0; k <=20; k++){
+		LinearTNFactorialList[k]=iter_factorial(k);
 	}
 
-	double secday=24*60*60;
-	double LongestPeriod=1.0/pow(10.0,-5);
-	double flo=1.0/LongestPeriod;
-
-	double modelalpha=redalpha;
-	double gwamp=pow(10.0,redamp);
-	double gwampsquared=gwamp*gwamp*(pow((365.25*secday),2)/(12*M_PI*M_PI))*(pow(365.25,(1-modelalpha)))/(pow(flo,(modelalpha-1)));
-
-	double timdiff=0;
-
-	double covconst=gsl_sf_gamma(1-modelalpha)*sin(0.5*M_PI*modelalpha);
-// 	printf("constants: %g %g \n",gwampsquared,covconst);
-
-
-	
-	double *CovMatrix = new double[((MNStruct *)context)->pulse->nobs*((MNStruct *)context)->pulse->nobs];
-
-	for(int o1=0;o1<((MNStruct *)context)->pulse->nobs; o1++){
-
-		for(int o2=0;o2<((MNStruct *)context)->pulse->nobs; o2++){
-			timdiff=((MNStruct *)context)->pulse->obsn[o1].bat-((MNStruct *)context)->pulse->obsn[o2].bat;	
-			double tau=2.0*M_PI*fabs(timdiff);
-			double covsum=0;
-
-			for(int k=0; k <=10; k++){
-				covsum=covsum+pow(-1.0,k)*(pow(flo*tau,2*k))/(iter_factorial(2*k)*(2*k+1-modelalpha));
-
-			}
-
-			CovMatrix[o1*((MNStruct *)context)->pulse->nobs + o2]=gwampsquared*(covconst*pow((flo*tau),(modelalpha-1)) - covsum);
-// 			printf("%i %i %g %g %g\n",o1,o2,CovMatrix[o1][o2],fabs(timdiff),covsum);
-
-			if(o1==o2){
-				CovMatrix[o1*((MNStruct *)context)->pulse->nobs + o2] += pow(((((MNStruct *)context)->pulse->obsn[o1].toaErr)*pow(10.0,-6))*EFAC[((MNStruct *)context)->sysFlags[o1]],2) + EQUAD;
-			}
-
-		}
-	}
 	
 	double *likeInfo=new double[2];
-	vHRedMarginGPUWrapper_(CovMatrix, Diffvec, likeInfo, ((MNStruct *)context)->pulse->nobs, ((MNStruct *)context)->Gsize);
+	//printf("Entering %g %g \n", SpecParm[0], SpecParm[1]);
+	vHRedMarginGPUWrapper_(Diffvec, BATvec, Noisevec, SpecParm, likeInfo, LinearTNFactorialList, ((MNStruct *)context)->pulse->nobs, ((MNStruct *)context)->Gsize);
+
 
 	double covdet=likeInfo[0];
 	double Chisq=likeInfo[1];
@@ -376,10 +330,13 @@ void vHRedMarginGPULinearLogLike(double *Cube, int &ndim, int &npars, double &ln
 	
 
 	delete[] EFAC;
-	delete[] CovMatrix;
+	delete[] BATvec;
+	delete[] Noisevec;
+	delete[] SpecParm;
 	delete[] Diffvec;
 	delete[] Fitvec;
 	delete[] likeInfo;
+	delete[]LinearTNFactorialList;
 
 }
 
@@ -447,19 +404,10 @@ void LRedGPULinearLogLike(double *Cube, int &ndim, int &npars, double &lnew, voi
 	double *WorkNoise=new double[((MNStruct *)context)->pulse->nobs];
 	double *powercoeff=new double[FitCoeff];
 
-	double freqdet=0;
+
 	double tdet=0;
 	double timelike=0;
-	for (int i=0; i<FitCoeff/2; i++){
-		int pnum=pcount;
-		double pc=Cube[pcount];
-		
-		powercoeff[i]=pow(10.0,pc)/(365.25*24*60*60)/4;
-		powercoeff[i+FitCoeff/2]=powercoeff[i];
-		freqdet=freqdet+2*log(powercoeff[i]);
-		pcount++;
-		//prior=prior+pc;
-	}
+
 
 
 	double *BATvec=new double[((MNStruct *)context)->pulse->nobs];
@@ -507,6 +455,18 @@ void LRedGPULinearLogLike(double *Cube, int &ndim, int &npars, double &lnew, voi
 	  }
 
 	double maxtspan=end-start;
+
+
+	double freqdet=0;
+	for (int i=0; i<FitCoeff/2; i++){
+		int pnum=pcount;
+		double pc=Cube[pcount];
+		
+		powercoeff[i]=pow(10.0,pc)/(maxtspan*24*60*60);///(365.25*24*60*60)/4;
+		powercoeff[i+FitCoeff/2]=powercoeff[i];
+		freqdet=freqdet+2*log(powercoeff[i]);
+		pcount++;
+	}
 
 
 	int coeffsize=FitCoeff/2;
@@ -652,16 +612,6 @@ void LRedMarginGPULinearLogLike(double *Cube, int &ndim, int &npars, double &lne
 	int FitCoeff=2*(((MNStruct *)context)->numFitRedCoeff);
 	double *powercoeff=new double[FitCoeff];
 
-	double freqdet=0;
-	for (int i=0; i<FitCoeff/2; i++){
-		int pnum=pcount;
-		double pc=Cube[pcount];
-		
-		powercoeff[i]=pow(10.0,pc)/(365.25*24*60*60)/4;
-		powercoeff[i+FitCoeff/2]=powercoeff[i];
-		freqdet=freqdet+2*log(powercoeff[i]);
-		pcount++;
-	}
 
 	double *Noise=new double[((MNStruct *)context)->pulse->nobs];
 	double *BATvec=new double[((MNStruct *)context)->pulse->nobs];
@@ -701,6 +651,18 @@ void LRedMarginGPULinearLogLike(double *Cube, int &ndim, int &npars, double &lne
 	  }
 
 	double maxtspan=end-start;
+
+
+	double freqdet=0;
+	for (int i=0; i<FitCoeff/2; i++){
+		int pnum=pcount;
+		double pc=Cube[pcount];
+		
+		powercoeff[i]=pow(10.0,pc)/(maxtspan*24*60*60);///(365.25*24*60*60)/4;
+		powercoeff[i+FitCoeff/2]=powercoeff[i];
+		freqdet=freqdet+2*log(powercoeff[i]);
+		pcount++;
+	}
 
 
 	int coeffsize=FitCoeff/2;

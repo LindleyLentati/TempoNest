@@ -6,7 +6,7 @@ CUFLAGS += -Xcompiler -O3
 FFLAGS += -O3 
 CFLAGS += -O3 -DHAVE_CONFIG_H  
 
-LAPACKLIB =  -llapack
+LAPACKLIB =  -llapack -lblas
 
 LIBPATH64=-L${CULA_LIB_PATH_64}
 CULALIB = -lcula_core -lcula_lapack -lcula_lapack_fortran -lcublas -lcudart -lcuda
