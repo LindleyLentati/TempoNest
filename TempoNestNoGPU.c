@@ -1159,7 +1159,7 @@ int main(int argc, char *argv[])
 				nested::run(mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, vHRedMarginLogLike, dumper, context);
 			}
 			else if(incRED==2){
-				nested::run(mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, LRedDMMarginLogLike, dumper, context);
+				nested::run(mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, LRedMarginLogLike, dumper, context);
 			}
 		}
 		else if(doJumpMargin == 0 && doTimeMargin == 0 ){

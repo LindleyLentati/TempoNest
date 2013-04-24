@@ -948,4 +948,208 @@ void LRedMarginLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *
 
 	double** GG = new double*[((MNStruct *)context)->Gsize]; for (int k=0; k<((MNStruct *)context)->Gsize; k++) GG[k] = new double[((MNStruct *)context)->Gsize];
 
-	dgemm(((MNStruct *)context)->GMatrix, NG,GG,((MNStruct *)context)->p
+	dgemm(((MNStruct *)context)->GMatrix, NG,GG,((MNStruct *)context)->pulse->nobs, ((MNStruct *)context)->Gsize,((MNStruct *)context)->pulse->nobs, ((MNStruct *)context)->Gsize, 'T','N');
+
+	
+	double tdet=0;
+	dpotrf(GG, ((MNStruct *)context)->Gsize, tdet);
+	dpotri(GG,((MNStruct *)context)->Gsize);
+	
+
+
+	dgemm(((MNStruct *)context)->GMatrix, GG,NG,((MNStruct *)context)->pulse->nobs, ((MNStruct *)context)->Gsize, ((MNStruct *)context)->Gsize, ((MNStruct *)context)->Gsize, 'N','N');
+
+	double **GNG = new double*[((MNStruct *)context)->pulse->nobs]; for (int k=0; k<((MNStruct *)context)->pulse->nobs; k++) GNG[k] = new double[((MNStruct *)context)->pulse->nobs];	
+
+	dgemm(NG, ((MNStruct *)context)->GMatrix, GNG,((MNStruct *)context)->pulse->nobs, ((MNStruct *)context)->Gsize, ((MNStruct *)context)->pulse->nobs, ((MNStruct *)context)->Gsize, 'N','T');
+	
+	double *dG=new double[((MNStruct *)context)->pulse->nobs];
+	dgemv(GNG,Res,dG,((MNStruct *)context)->pulse->nobs,((MNStruct *)context)->pulse->nobs,'T');
+	
+	double timelike=0;
+	for(int o1=0; o1<((MNStruct *)context)->pulse->nobs; o1++){
+		timelike+=Res[o1]*dG[o1];
+	}
+
+
+	double *NFd = new double[FitCoeff];
+	double **FMatrix=new double*[((MNStruct *)context)->pulse->nobs];
+	for(int i=0;i<((MNStruct *)context)->pulse->nobs;i++){
+		FMatrix[i]=new double[FitCoeff];
+	}
+
+	double **NF=new double*[((MNStruct *)context)->pulse->nobs];
+	for(int i=0;i<((MNStruct *)context)->pulse->nobs;i++){
+		NF[i]=new double[FitCoeff];
+	}
+
+	double **FNF=new double*[FitCoeff];
+	for(int i=0;i<FitCoeff;i++){
+		FNF[i]=new double[FitCoeff];
+	}
+
+	double start,end;
+	int go=0;
+	for (int i=0;i<((MNStruct *)context)->pulse->nobs;i++)
+	  {
+	    if (((MNStruct *)context)->pulse->obsn[i].deleted==0)
+	      {
+		if (go==0)
+		  {
+		    go = 1;
+		    start = (double)((MNStruct *)context)->pulse->obsn[i].bat;
+		    end  = start;
+		  }
+		else
+		  {
+		    if (start > (double)((MNStruct *)context)->pulse->obsn[i].bat)
+		      start = (double)((MNStruct *)context)->pulse->obsn[i].bat;
+		    if (end < (double)((MNStruct *)context)->pulse->obsn[i].bat)
+		      end = (double)((MNStruct *)context)->pulse->obsn[i].bat;
+		  }
+	      }
+	  }
+// 	printf("Total time span = %.6f days = %.6f years\n",end-start,(end-start)/365.25);
+	double maxtspan=end-start;
+
+	double freqdet=0;
+	for (int i=0; i<FitCoeff/2; i++){
+		int pnum=pcount;
+		double pc=Cube[pcount];
+		
+		powercoeff[i]=pow(10.0,pc)/(maxtspan*24*60*60);///(365.25*24*60*60)/4;
+		powercoeff[i+FitCoeff/2]=powercoeff[i];
+		freqdet=freqdet+2*log(powercoeff[i]);
+		pcount++;
+	}
+
+	int coeffsize=FitCoeff/2;
+	std::vector<double>freqs(FitCoeff/2);
+	for(int i=0;i<FitCoeff/2;i++){
+		freqs[i]=double(i+1)/maxtspan;
+	}	
+	
+
+	for(int i=0;i<FitCoeff/2;i++){
+		for(int k=0;k<((MNStruct *)context)->pulse->nobs;k++){
+			double time=(double)((MNStruct *)context)->pulse->obsn[k].bat; //- (double)((MNStruct *)context)->pulse->param[param_pepoch].val[0] - maxtspan/2;
+			FMatrix[k][i]=cos(2*M_PI*freqs[i]*time);
+// 			printf("cos %i %i %g \n",i,k,time);
+		}
+	}
+
+	for(int i=0;i<FitCoeff/2;i++){
+		for(int k=0;k<((MNStruct *)context)->pulse->nobs;k++){
+			double time=(double)((MNStruct *)context)->pulse->obsn[k].bat; //- (double)((MNStruct *)context)->pulse->param[param_pepoch].val[0] - maxtspan/2;
+			FMatrix[k][i+FitCoeff/2]=sin(2*M_PI*freqs[i]*time);
+// 			printf("sin %i %i %g \n",i+FitCoeff/2,k,time);
+		}
+	}
+
+
+	dgemm(GNG, FMatrix , NF, ((MNStruct *)context)->pulse->nobs,((MNStruct *)context)->pulse->nobs, ((MNStruct *)context)->pulse->nobs, FitCoeff, 'N', 'N');
+
+	dgemm(FMatrix, NF , FNF, ((MNStruct *)context)->pulse->nobs, FitCoeff, ((MNStruct *)context)->pulse->nobs, FitCoeff, 'T', 'N');
+
+	dgemv(NF,Res,NFd,((MNStruct *)context)->pulse->nobs,FitCoeff,'T');
+
+	double **PPFM=new double*[FitCoeff];
+	for(int i=0;i<FitCoeff;i++){
+		PPFM[i]=new double[FitCoeff];
+		for(int j=0;j<FitCoeff;j++){
+			PPFM[i][j]=0;
+		}
+	}
+
+
+	for(int c1=0; c1<FitCoeff; c1++){
+		PPFM[c1][c1]=1.0/powercoeff[c1];
+	}
+
+
+
+	for(int j=0;j<FitCoeff;j++){
+		for(int k=0;k<FitCoeff;k++){
+			
+			PPFM[j][k]=PPFM[j][k]+FNF[j][k];
+			//printf("CPUFNF: %i %i %g \n",j,k,FNF[j][k]);
+		}
+	}
+
+ 	
+	double jointdet=0;
+	dpotrf(PPFM, FitCoeff, jointdet);
+        dpotri(PPFM,FitCoeff);
+
+	double freqlike=0;
+	for(int i=0;i<FitCoeff;i++){
+		for(int j=0;j<FitCoeff;j++){
+// 			printf("%i %i %g %g\n",i,j,NFd[i],PPFM[i][j]);
+			freqlike=freqlike+NFd[i]*PPFM[i][j]*NFd[j];
+			
+		}
+	}
+	
+	lnew=-0.5*(tdet+jointdet+freqdet+timelike-freqlike);
+
+	if(isnan(lnew) || isinf(lnew)){
+
+		lnew=-pow(10.0,200);
+// 		printf("red amp and alpha %g %g\n",redamp,redalpha);
+// 		printf("Like: %g %g %g \n",lnew,Chisq,covdet);
+		
+	}
+
+
+	delete[] EFAC;
+	delete[] powercoeff;
+	delete[] NFd;
+	delete[] dG;
+
+	for (int j = 0; j < FitCoeff; j++){
+		delete[]PPFM[j];
+	}
+	delete[]PPFM;
+
+	for (int j = 0; j < ((MNStruct *)context)->pulse->nobs; j++){
+		delete[]NF[j];
+	}
+	delete[]NF;
+
+	for (int j = 0; j < FitCoeff; j++){
+		delete[]FNF[j];
+	}
+	delete[]FNF;
+
+	for (int j = 0; j < ((MNStruct *)context)->pulse->nobs; j++){
+		delete[]FMatrix[j];
+	}
+	delete[]FMatrix;
+
+	delete[] Noise;
+	delete[] Res;
+	delete[] GRes;
+
+	for (int j = 0; j < ((MNStruct *)context)->pulse->nobs; j++){
+		delete[] NG[j];
+	}
+	delete[] NG;
+
+	for (int j = 0; j < ((MNStruct *)context)->Gsize; j++){
+		delete[]GG[j];
+	}
+	delete[] GG;
+
+	for (int j = 0; j < ((MNStruct *)context)->pulse->nobs; j++){
+		delete[] GNG[j];
+	}
+	delete[] GNG;
+	
+	//printf("CPUChisq: %g %g %g %g %g %g \n",lnew,jointdet,tdet,freqdet,timelike,freqlike);
+
+// 	if(isinf(lnew) || isinf(jointdet) || isinf(tdet) || isinf(freqdet) || isinf(timelike) || isinf(freqlike)){
+// 	printf("Chisq: %g %g %g %g %g %g \n",lnew,jointdet,tdet,freqdet,timelike,freqlike);
+// 	}
+
+}
+
