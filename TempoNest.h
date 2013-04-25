@@ -36,6 +36,7 @@ typedef struct {
 	double **FMatrix;
 	double **GMatrix;
 	int numberpulsars;
+	int doLinear;
 	int numFitJumps;
 	int numFitTiming;
 	int numFitEFAC;

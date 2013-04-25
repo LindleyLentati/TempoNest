@@ -2,7 +2,7 @@ FC = gfortran
 CC = gcc
 CXX = g++
 CU = nvcc
-CUFLAGS += -Xcompiler -O3
+CUFLAGS += -arch sm_13 -Xcompiler -O3
 FFLAGS += -O3 
 CFLAGS += -O3 -DHAVE_CONFIG_H  
 

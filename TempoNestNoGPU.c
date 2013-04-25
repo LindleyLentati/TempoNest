@@ -86,13 +86,14 @@ void fastformBatsAll(pulsar *psr,int npsr)
 }
 
 
-MNStruct* init_struct(pulsar *pulseval,	 long double **LDpriorsval, int numberpulsarsval,int numFitJumpsval,int numFitTimingval,int numFitEFACval, int numFitEQUADval, int numFitCoeffval, int **TempoFitNumsval,int *TempoJumpNumsval, int *sysFlagsval, int numdimsval, int incREDval, int TimeMarginVal, int JumpMarginVal)
+MNStruct* init_struct(pulsar *pulseval,	 long double **LDpriorsval, int numberpulsarsval,int numFitJumpsval,int numFitTimingval,int numFitEFACval, int numFitEQUADval, int numFitCoeffval, int **TempoFitNumsval,int *TempoJumpNumsval, int *sysFlagsval, int numdimsval, int incREDval, int TimeMarginVal, int JumpMarginVal, int doLinearval)
 {
     	MNStruct* MNS = (MNStruct*)malloc(sizeof(MNStruct));
 
 	MNS->pulse=pulseval;
 	MNS->LDpriors=LDpriorsval;
 	MNS->numberpulsars=numberpulsarsval;
+	MNS->doLinear=doLinearval;
 	MNS->numFitJumps=numFitJumpsval;
 	MNS->numFitTiming=numFitTimingval;
 	MNS->numFitEFAC=numFitEFACval;
@@ -953,7 +954,7 @@ int main(int argc, char *argv[])
 	void *context = 0;				// not required by MultiNest, any additional information user wants to pass
 
 
-	MNStruct *MNS = init_struct(psr,TempoPriors,npsr,numFitJumps,fitcount,systemcount,incEQUAD, numCoeff, TempoFitNums,TempoJumpNums,numFlags, ndims, incRED,doTimeMargin,doJumpMargin);
+	MNStruct *MNS = init_struct(psr,TempoPriors,npsr,numFitJumps,fitcount,systemcount,incEQUAD, numCoeff, TempoFitNums,TempoJumpNums,numFlags, ndims, incRED,doTimeMargin,doJumpMargin, doLinearFit);
 	
 	context=MNS;
 

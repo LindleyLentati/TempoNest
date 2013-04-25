@@ -15,15 +15,15 @@ LIBS =  -L$(NESTLIBDIR) -lnest3 $(LAPACKLIB)  -L$(TEMPO2LIB) -lsofa -ltempo2 -lg
 
 OBJFILES = dpotrs.o dgesvd.o dgemm.o dgemv.o dpotri.o dpotrf.o MultiNestParams.o TempoNestParams.o TempoNestTextOutput.o TempoNestUpdateLinear.o TempoNestFindMax.o TempoNestUtilities.o TempoNestSim.o TempoNestLinearLikeFuncs.o TempoNestLikeFuncs.o TempoNestNoGPU.o
 
-all: TempoNestDemo 
+all: TempoNest 
 
 %.o: %.c
 	$(CXX) $(CLAGS) -I$(NESTLIBDIR) -I$(TEMPO2INC) -I$(TEMPO2SRC) -c $*.c
 
  
-TempoNestDemo : $(OBJFILES)
-	$(FC) -o TempoNestDemo  $(OBJFILES) \
+TempoNest : $(OBJFILES)
+	$(FC) -o TempoNest  $(OBJFILES) \
 	$(FFLAGS) $(LIBS)
 
 clean:
-	rm -f *.o  TempoNestDemo
+	rm -f *.o  TempoNest
