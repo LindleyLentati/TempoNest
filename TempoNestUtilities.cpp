@@ -197,7 +197,7 @@ void readsummary(pulsar *psr, std::string longname, int ndim, void *context, lon
 			resfile << rs.str();
 			resfile << "\n";		
 
-			FITfuncs(psr[0].obsn[i].bat - psr[0].param[param_pepoch].val[0], pdParamDeriv, numtofit, psr, i);
+			FITfuncs(psr[0].obsn[i].bat - psr[0].param[param_pepoch].val[0], pdParamDeriv, numtofit, psr, i, 0);
 			for(int j=0; j<numtofit; j++) {
 				std::stringstream ss;
 				ss.precision(std::numeric_limits<double>::digits10);//override the default
@@ -286,7 +286,7 @@ void getDMatrix(pulsar *pulse, int TimetoFit, int JumptoFit, int numToMargin, in
 
 
 	for(int i=0; i < pulse->nobs; i++) {
-		FITfuncs(pulse[0].obsn[i].bat - pulse[0].param[param_pepoch].val[0], pdParamDeriv, numToMargin, pulse, i);
+		FITfuncs(pulse[0].obsn[i].bat - pulse[0].param[param_pepoch].val[0], pdParamDeriv, numToMargin, pulse, i, 0);
 		for(int j=0; j<numToMargin; j++) {
 			TNDM[i][j]=pdParamDeriv[j];
 // 			printf("%i %i %22.20e \n", i,j,pdParamDeriv[j]);
@@ -374,7 +374,7 @@ void getMarginDMatrix(pulsar *pulse, int TimetoFit, int JumptoFit, int numToMarg
 	
 	
 		for(int i=0; i < pulse->nobs; i++) {
-			FITfuncs(pulse[0].obsn[i].bat - pulse[0].param[param_pepoch].val[0], pdParamDeriv, numToMargin, pulse, i);
+			FITfuncs(pulse[0].obsn[i].bat - pulse[0].param[param_pepoch].val[0], pdParamDeriv, numToMargin, pulse, i, 0);
 			for(int j=0; j<numToMargin; j++) {
 				TNDM[i][j]=pdParamDeriv[j];
 // 				printf("%i %i %22.20e \n", i,j,pdParamDeriv[j]);
@@ -465,7 +465,7 @@ void getMarginDMatrix(pulsar *pulse, int TimetoFit, int JumptoFit, int numToMarg
 	
 	
 		for(int i=0; i < pulse->nobs; i++) {
-			FITfuncs(pulse[0].obsn[i].bat - pulse[0].param[param_pepoch].val[0], pdParamDeriv, numToMargin, pulse, i);
+			FITfuncs(pulse[0].obsn[i].bat - pulse[0].param[param_pepoch].val[0], pdParamDeriv, numToMargin, pulse, i, 0);
 			for(int j=0; j<numToMargin; j++) {
 				TNDM[i][j]=pdParamDeriv[j];
 				//printf("%i %i %22.20e \n", i,j,pdParamDeriv[j]);
