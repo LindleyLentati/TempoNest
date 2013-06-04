@@ -3,3 +3,17 @@
 *.so
 *.o
 *.a
+*.lo
+.deps
+.libs
+*.in
+libtool
+stamp-h*
+*.la
+configure
+config
+config.status
+config.log
+autom4te.cache
+aclocal.m4
+config.h
