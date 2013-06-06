@@ -58,18 +58,12 @@
 #include "dpotri.h"
 #include "dpotrf.h"
 
-#ifdef HAVE_CULA
-#include <cula_lapack_device.h>
-#endif /* HAVE_CULA */
+
 
 void ephemeris_routines(pulsar *psr,int npsr);
 void clock_corrections(pulsar *psr,int npsr);
 void extra_delays(pulsar *psr,int npsr);
 
-#ifdef HAVE_CULA
-extern "C" void copy_gmat_(double *G, int N);
-extern "C" void copy_floatgmat_(float *G, int N);
-#endif /* HAVE_CULA */
 
 
 void fastephemeris_routines(pulsar *psr,int npsr)
@@ -117,29 +111,6 @@ MNStruct* init_struct(pulsar *pulseval,	 long double **LDpriorsval, int numberpu
 }
 
 void update_MNPriors(MNStruct* MNS, double ** DPriorsval, long double **priorsval){
-
-
-        int paramsfitted=0;
-	if(MNS->doLinear==0){
-		for (int p=0;p<MAX_PARAMS;p++) {
-			for (int k=0;k<MNS->pulse->param[p].aSize;k++){
-				if(MNS->pulse->param[p].fitFlag[k] == 1){
-					if(p == param_ecc || p == param_m2 || p == param_dm || p == param_px){
-						long double minprior=priorsval[paramsfitted][0]+DPriorsval[paramsfitted][0]*priorsval[paramsfitted][1];
-						if(minprior < 0){
-							long double newprior=-priorsval[paramsfitted][0]/priorsval[paramsfitted][1];
-							DPriorsval[paramsfitted][0]=(double)newprior;
-							printf("Prior on %s updated to be physical (was <0) : %.25Lg -> %.25Lg\n",MNS->pulse->param[p].shortlabel[k], priorsval[paramsfitted][0]+DPriorsval[paramsfitted][0]*priorsval[paramsfitted][1],priorsval[paramsfitted][0]+DPriorsval[paramsfitted][1]*priorsval[paramsfitted][1]);
-						}
-					}
-					paramsfitted++;
-				}
-			}
-		}
-	}
-
-
-
 
 	MNS->Dpriors=DPriorsval;
 	MNS->LDpriors=priorsval;
@@ -209,10 +180,8 @@ void dumper(int &nSamples, int &nlive, int &nPar, double **physLive, double **po
 
 
 
-/* The main function of a plugin called from Tempo2 is 'graphicalInterface'
- */
-extern "C" int graphicalInterface(int argc, char **argv,
-    pulsar *psr, int *pnpsr) {
+int main(int argc, char *argv[])
+{
 	int iteration; 
 	int listparms;
 	int outRes=0;
@@ -222,7 +191,7 @@ extern "C" int graphicalInterface(int argc, char **argv,
 	char str[MAX_FILELEN];
 	char newparname[MAX_FILELEN];
 	longdouble coeff[MAX_COEFF]; /* For polynomial coefficients in polyco */
-	int npsr=*pnpsr;      /* The number of pulsars */
+	int npsr;      /* The number of pulsars */
 	int noWarnings=1;
 	double globalParameter=0.0;
 	int  displayParams,p;
@@ -237,21 +206,188 @@ extern "C" int graphicalInterface(int argc, char **argv,
 	const char *CVS_verNum = "$Revision: 1.28 $";
 	int numFitJumps;
 
+
+  printf("This program comes with ABSOLUTELY NO WARRANTY.\n");
+  printf("This is free software, and you are welcome to redistribute it\n");
+  printf("under conditions of GPL license.\n\n");
+
   //
   startClock = clock();
 
+  pulsar *psr;
 
   commandLine = (char **)malloc(1000*sizeof(char *));
 
   for (i=0;i<1000;i++)
     commandLine[i] = (char *)malloc(sizeof(char)*1000);
 
-  for (i=0;i<argc;i++)
+  /* Parse input line for machine type */
+  for (i=0;i<argc;i++)    
     {
+      if (strcasecmp(argv[i],"-npsr")==0)
+	sscanf(argv[i+1],"%d",&MAX_PSR);
+      else if (strcasecmp(argv[i],"-displayVersion")==0)
+	displayCVSversion = 1;
+      else if (strcasecmp(argv[i],"-nobs")==0)
+	sscanf(argv[i+1],"%d",&MAX_OBSN);
+      else if (strcasecmp(argv[i],"-debug")==0){
+	debugFlag=1;
+	tcheck=1;
+	writeResiduals=1;
+	  }
+	  else if (strcasecmp(argv[i],"-tcheck")==0)
+	tcheck=1;
+	  else if (strcasecmp(argv[i],"-noaccel")==0)
+	useT2accel=0;
+	  else if (strcasecmp(argv[i],"-writeres")==0)
+	writeResiduals=1;
+      else if (strcasecmp(argv[i],"-veryfast")==0)
+	veryFast=1;
+
       strcpy(commandLine[i],argv[i]);
     }
+  if (displayCVSversion == 1) CVSdisplayVersion("tempo2.C","main()",CVS_verNum);
 
-  strcpy(outputSO, "");
+  if ((psr = (pulsar *)malloc(sizeof(pulsar)*MAX_PSR))==NULL)
+    {
+      printf("Not enough memory to allocate room for %d pulsars\n",MAX_PSR);
+      printf("Please decrease the value of MAX_PSR_VAL in tempo2.h\n"); 
+      exit(1); 
+    }
+  logdbg("Have allocated memory for pulsar");
+  psr[0].jboFormat = 0;
+
+  for (i=1;i<argc;i++)
+    {
+      if (strcmp(commandLine[i],"-machine")==0)
+	strcpy(tempo2MachineType,commandLine[++i]);
+      else if (strcasecmp(commandLine[i],"-noWarnings")==0)
+	noWarnings=2;
+      else if (strcasecmp(commandLine[i],"-allInfo")==0)
+	noWarnings=0;
+      else if (strcmp(commandLine[i],"-jbo")==0)
+	psr[0].jboFormat=1;
+      else if (strcmp(commandLine[i],"-test")==0) /* Use TEMPO2_TEST environment variable */
+	strcpy(TEMPO2_ENVIRON,"TEMPO2_TEST");
+      else
+	{
+	  char oldCommandLine[1000][1000];
+	  int  oldArgc = argc;
+	  int  oldI = i;
+
+	  for (k=i;k<argc;k++)
+	    strcpy(oldCommandLine[k-i],commandLine[k]);
+
+	  sprintf(str,"%s/alias.dat",getenv(TEMPO2_ENVIRON));	  
+	  if ((alias = fopen(str,"r")))
+	    {
+	      while (!feof(alias))
+		{
+		  char *ret;
+		  fgets(str,MAX_FILELEN,alias);
+		  ret = strtok(str," ");
+		  if (strcmp(ret,commandLine[i])==0)
+		    {
+		      printf("Using alias: %s\n",ret);
+		      /* Have an alias: now split up the remainder of the line */
+		      while ((ret = strtok(NULL," "))!=NULL)
+			{
+			  strcpy(commandLine[i],ret);
+			  if (commandLine[i][strlen(commandLine[i])-1]=='\n')
+			    commandLine[i][strlen(commandLine[i])-1] = '\0';
+			  i++;
+			  argc++;
+			}
+		      argc--;
+		      for (k=1;k<oldArgc-oldI;k++)
+			strcpy(commandLine[i+k-1],oldCommandLine[k]);
+		      i=oldI-1;
+
+		    }
+		}
+	      fclose(alias);
+	    }
+	}
+    }
+  int ii;
+  for(ii=1;ii<argc;ii++){
+      if (strcasecmp(commandLine[ii],"-reminder")==0){
+	  // Writing command line to log file
+	  char commandfile[200] = "T2command.input";
+	  FILE *fout;
+	  time_t rawtime;
+	  struct tm * timeinfo;
+	  time ( &rawtime );
+	  timeinfo = localtime ( &rawtime );
+	  char timeval[200];
+	  strcpy(timeval,asctime (timeinfo));
+	  strcpy(&timeval[(int)strlen(timeval)-1],"");
+	  fout = fopen(commandfile,"a");
+	  fprintf(fout,"[%s]>> ",timeval);
+	  for(i=0;i<argc;i++){
+	      fprintf(fout," %s ",commandLine[i]);
+	  }
+	  fprintf(fout,"\n");
+	  fclose(fout);
+      }
+  }
+
+  if (getenv(TEMPO2_ENVIRON)==NULL)
+    {
+      printf("Environment variable >%s< not set\n",TEMPO2_ENVIRON);
+      exit(1);
+    }
+
+  /* get path to look for plugins */
+  setPlugPath();
+
+
+  /* If running from the command line ... */
+  logdbg("Running initialise");
+  initialise(psr,noWarnings); /* Initialise all */
+  logdbg("Completed running initialise %d",psr[0].nits);
+  /* Obtain login architecture */
+  if (strlen(tempo2MachineType)==0)
+    {
+#ifdef  TEMPO2_ARCH 
+      strcpy(tempo2MachineType, TEMPO2_ARCH);
+#else
+      if (getenv("LOGIN_ARCH")==NULL)
+	{
+	  printf("Unable to determine machine type: You must do one of the following:\n"
+                 "Re-compile tempo2 with the standard export distrubution, or\n"
+                 "Set the LOGIN_ARCH environment variable, or\n"
+                 "Use -machine on the command line\n");
+	  exit(1);
+	}
+      strcpy(tempo2MachineType, getenv("LOGIN_ARCH"));
+#endif
+    }
+
+  if (sizeof(longdouble)!=16 && noWarnings<1)
+    {
+      printf("Warning: the size of a longdouble is only %d bytes\n",sizeof(longdouble));
+      printf(" --- the size of a double is %d bytes\n",sizeof(double));
+    }
+  strcpy(outputSO,"");
+  if (argc==1) /* No command line arguments */
+    {
+      printf("%s\n",PACKAGE_STRING);
+      printf("  Usage:     %s -f XXX.par XXX.tim\n",argv[0]);
+      printf("Plugin search paths:\n");
+      for (i=0; i < tempo2_plug_path_len; i++){
+	      printf(" -- %s/*.t2\n",tempo2_plug_path[i]);
+      }
+	  printf("\n");
+#ifdef HAVE_LAPACK
+	  printf("* Using LAPACK acceleration for Cholesky decomposition\n");
+#endif
+#ifdef HAVE_BLAS
+	  printf("* Using BLAS acceleration for matrix mulitplication\n");
+#endif
+      printf("\nFor more help, use %s -h\n",argv[0]);
+      exit(1);
+    }
   npsr = 0;   /* Initialise the number of pulsars */
   displayParams=0;
   nGlobal=0;
@@ -261,7 +397,69 @@ extern "C" int graphicalInterface(int argc, char **argv,
 	    outputSO,&flagPolyco,polyco_args,&newpar,&onlypre,dcmFile,covarFuncFile,newparname);
   logdbg("Completed getInputs");
 
+  for (i=1;i<argc;i++)
+    {
+	if (strcmp(commandLine[i],"-sim")==0 ){ // Doing Sim?
+		//printf("Doing sim\n");
+		doSim(argc, commandLine, psr, timFile, parFile);
+		return 0;
+	}
 
+      if (strcmp(commandLine[i],"-gr")==0 || strcmp(commandLine[i],"-gr2")==0) 
+	/* Running from a graphical interface? */
+	{      
+	  char *(*entry)(int,char **,pulsar *,int *);
+	  void * module;
+
+	  if (strcmp(commandLine[i],"-gr2")==0){
+		  sprintf(str,"./%s_%s_plug.t2",commandLine[i+1],tempo2MachineType);
+		  printf("Looking for %s\n",str);
+		  module = dlopen(str, RTLD_NOW);
+	  } else{
+		  for (int iplug=0; iplug < tempo2_plug_path_len; iplug++){
+			  sprintf(str,"%s/%s_%s_plug.t2",tempo2_plug_path[iplug],
+					  commandLine[i+1],tempo2MachineType);
+			  printf("Looking for %s\n",str);
+			  module = dlopen(str, RTLD_NOW); 
+			  if(module==NULL){	  
+				  printf("dlerror() = %s\n",dlerror());
+			  } else break;
+		  }
+	  }
+	  if(!module)  {
+	    fprintf(stderr, "[error]: dlopen() failed while resolving symbols.\n" );
+//	    fprintf(stderr, "dlerror() = %s\n",dlerror());
+	    return -1;
+	  }
+
+	  /*
+	   * Check that the plugin is compiled against the same version of tempo2.h
+	   */
+	  char ** pv  = (char**)dlsym(module, "plugVersionCheck");
+	  if(pv!=NULL){
+		  // there is a version check for this plugin
+		  if(strcmp(TEMPO2_h_VER,*pv)){
+			  fprintf(stderr, "[error]: Plugin version mismatch\n");
+			  fprintf(stderr, " '%s' != '%s'\n",TEMPO2_h_VER,*pv);
+			  fprintf(stderr, " Please recompile plugin against same tempo2 version!\n");
+			  dlclose(module);
+			  return -1;
+		  }
+	  }
+
+	  entry = (char*(*)(int,char **,pulsar *,int *))dlsym(module, "graphicalInterface");
+	  if( entry == NULL ) {
+	    dlclose(module);
+	    fprintf(stderr, "[error]: dlerror() failed while  retrieving address.\n" ); 
+	    fprintf(stderr, "dlerror() = %s\n",dlerror());
+	    return -1;
+	  }
+	  logdbg("--ENTER GRAPHICAL PLUGIN--");
+	  entry(argc,commandLine,psr,&npsr);
+	  return 0;
+	}
+    }
+	
   logdbg("Reading par file");
   readParfile(psr,parFile,timFile,npsr); /* Read .par file to define the pulsar's initial parameters */  
   logdbg("Finished reading par file %d",psr[0].nits);
@@ -541,14 +739,6 @@ extern "C" int graphicalInterface(int argc, char **argv,
 
 
 
-    printf("Graphical Interface: TempoNest\n");
-    printf("Author:              L. Lentati\n");
-    printf("Version:             1.0\n");
-    printf("----------------------------------------------------------------\n");
-    printf("This program comes with ABSOLUTELY NO WARRANTY.\n");
-    printf("This is free software, and you are welcome to redistribute it\n");
-    printf("under conditions of GPL license.\n\n");
-    printf("----------------------------------------------------------------\n");
 
 	
 	printf("\n\n\n\n*****************************************************\n");
@@ -768,14 +958,7 @@ extern "C" int graphicalInterface(int argc, char **argv,
 	
 	context=MNS;
 
-#ifdef HAVE_CULA
-
-	culaStatus status;
-    status = culaInitialize();
-    store_factorial();
     
-#endif /* HAVE_CULA */    
-
     double **Dpriors;
     if(doLinearFit != 1){
   	   Dpriors = new double*[ndims]; for(int i = 0; i < ndims; i++){Dpriors[i]=new double[2];};
@@ -919,23 +1102,7 @@ extern "C" int graphicalInterface(int argc, char **argv,
 			update_MNPriors(MNS,Dpriors, TempoPriors);
 			context=MNS;
 			
-#ifdef HAVE_CULA			
-			double *GMatrixVec=new double[psr[0].nobs*Gsize];
-			float *GMatrixVecFloat=new float[psr[0].nobs*Gsize];
 	
-			for(int g=0;g<Gsize; g++){
-				for(int o=0;o<psr[0].nobs; o++){
-
-					GMatrixVec[g*psr[0].nobs + o]=TNGM[o][g];
-					GMatrixVecFloat[g*psr[0].nobs + o]=(float)TNGM[o][g];
-					
-				}
-			}
-		
-			copy_gmat_(GMatrixVec, psr[0].nobs*Gsize);
-			copy_floatgmat_(GMatrixVecFloat, psr[0].nobs*Gsize);
-
-#endif /* HAVE_CULA */
 
 			printf("\nPriors:\n");
 			paramsfitted=0;
@@ -987,25 +1154,13 @@ extern "C" int graphicalInterface(int argc, char **argv,
 	
 	
 			if(incRED==0){
-#ifdef HAVE_CULA
-				nested::run(mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, WhiteMarginGPULogLike, dumper, context);
-#else
 				nested::run(mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, WhiteMarginLogLike, dumper, context);
-#endif /* HAVE_CULA */
 			}
 			else if(incRED==1){
-#ifdef HAVE_CULA
-				nested::run(mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, vHRedMarginGPULogLike, dumper, context);
-#else
 				nested::run(mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, vHRedMarginLogLike, dumper, context);
-#endif /* HAVE_CULA */
 			}
 			else if(incRED==2){
-#ifdef HAVE_CULA
-				nested::run(mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, LRedMarginGPULogLike, dumper, context);
-#else
 				nested::run(mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, LRedMarginLogLike, dumper, context);
-#endif /* HAVE_CULA */
 			}
 		}
 		else if(doJumpMargin == 0 && doTimeMargin == 0 ){
@@ -1072,18 +1227,10 @@ extern "C" int graphicalInterface(int argc, char **argv,
 				nested::run(mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, WhiteLogLike, dumper, context);
 			}
 			else if(incRED==1){
-#ifdef HAVE_CULA
-				nested::run(mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, vHRedGPULogLike, dumper, context);
-#else
 				nested::run(mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, vHRedLogLike, dumper, context);
-#endif /* HAVE_CULA */
 			}
 			else if(incRED==2){
-#ifdef HAVE_CULA
-				nested::run(mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, LRedGPULogLike, dumper, context);
-#else
 				nested::run(mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, LRedLogLike, dumper, context);
-#endif /* HAVE_CULA */
 			}
 		}
 	}
@@ -1172,44 +1319,15 @@ extern "C" int graphicalInterface(int argc, char **argv,
 	
 			context=MNS;
 			
-#ifdef HAVE_CULA
-			double *GMatrixVec=new double[psr[0].nobs*Gsize];
-			float *GMatrixVecFloat=new float[psr[0].nobs*Gsize];
-	
-			for(int g=0;g<Gsize; g++){
-				for(int o=0;o<psr[0].nobs; o++){
-
-					GMatrixVec[g*psr[0].nobs + o]=TNGM[o][g];
-					GMatrixVecFloat[g*psr[0].nobs + o]=(float)TNGM[o][g];
-					
-				}
-			}
-		
-			copy_gmat_(GMatrixVec, psr[0].nobs*Gsize);
-			copy_floatgmat_(GMatrixVecFloat, psr[0].nobs*Gsize);
-#endif
-
 
 			if(incRED==0){
-#ifdef HAVE_CULA
-				nested::run(mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, WhiteMarginGPULinearLogLike, dumper, context);
-#else
 				nested::run(mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, WhiteMarginLinearLogLike, dumper, context);
-#endif /* HAVE_CULA */
 			}
 			else if(incRED==1){
-#ifdef HAVE_CULA
-				nested::run(mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, vHRedMarginGPULinearLogLike, dumper, context);
-#else
 				nested::run(mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, vHRedMarginLinearLogLike, dumper, context);
-#endif /* HAVE_CULA */
 			}
 			else if(incRED==2){
-#ifdef HAVE_CULA
-				nested::run(mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, LRedMarginGPULinearLogLike, dumper, context);
-#else
 				nested::run(mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, LRedMarginLinearLogLike, dumper, context);
-#endif /* HAVE_CULA */
 			}
 
 		}
@@ -1273,18 +1391,10 @@ extern "C" int graphicalInterface(int argc, char **argv,
 				nested::run(mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, WhiteLinearLogLike, dumper, context);
 			}
 			else if(incRED==1){
-#ifdef HAVE_CULA
-				nested::run(mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, vHRedGPULinearLogLike, dumper, context);
-#else
 				nested::run(mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, vHRedLinearLogLike, dumper, context);
-#endif /* HAVE_CULA */
 			}
 			else if(incRED==2){
-#ifdef HAVE_CULA
-				nested::run(mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, LRedGPULinearLogLike, dumper, context);
-#else
 				nested::run(mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, LRedLinearLogLike, dumper, context);
-#endif /* HAVE_CULA */
 			}
 		}
 
@@ -1299,7 +1409,7 @@ extern "C" int graphicalInterface(int argc, char **argv,
   	printf("Finishing off: time taken = %.2f (s)\n",(endClock-startClock)/(float)CLOCKS_PER_SEC);
 
 
-    return EXIT_SUCCESS;
+  exit(EXIT_SUCCESS);
 } 
 
 
