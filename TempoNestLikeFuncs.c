@@ -41,35 +41,67 @@ void vHRedLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *conte
 {
 
 	clock_t startClock,endClock;
-	long double LDparams[ndim];
+
 	double *EFAC;
-	double EQUAD, redamp, redalpha;
+	double EQUAD, redamp, redalpha, DMamp, DMalpha;
 	int pcount=0;
+
+	int numfit=((MNStruct *)context)->numFitTiming + ((MNStruct *)context)->numFitJumps;
+	long double LDparams[numfit];
+	double Fitparams[numfit];
+	double *Resvec=new double[((MNStruct *)context)->pulse->nobs];
 
 	for(int p=0;p<ndim;p++){
 
-			Cube[p]=(((MNStruct *)context)->Dpriors[p][1]-((MNStruct *)context)->Dpriors[p][0])*Cube[p]+((MNStruct *)context)->Dpriors[p][0];
-
+		Cube[p]=(((MNStruct *)context)->Dpriors[p][1]-((MNStruct *)context)->Dpriors[p][0])*Cube[p]+((MNStruct *)context)->Dpriors[p][0];
 	}
 
-	for(int p=0;p< ((MNStruct *)context)->numFitTiming + ((MNStruct *)context)->numFitJumps; p++){
-		LDparams[p]=Cube[p]*(((MNStruct *)context)->LDpriors[p][1]) + (((MNStruct *)context)->LDpriors[p][0]);
-	}
+	if(((MNStruct *)context)->doLinear==0){
+	
+		for(int p=0;p< ((MNStruct *)context)->numFitTiming + ((MNStruct *)context)->numFitJumps; p++){
+			LDparams[p]=Cube[p]*(((MNStruct *)context)->LDpriors[p][1]) + (((MNStruct *)context)->LDpriors[p][0]);
+		}
 
-
-	for(int p=0;p<((MNStruct *)context)->numFitTiming;p++){
-		((MNStruct *)context)->pulse->param[((MNStruct *)context)->TempoFitNums[p][0]].val[((MNStruct *)context)->TempoFitNums[p][1]] = LDparams[pcount];	
+		double phase=(double)LDparams[0];
 		pcount++;
+		for(int p=1;p<((MNStruct *)context)->numFitTiming;p++){
+			((MNStruct *)context)->pulse->param[((MNStruct *)context)->TempoFitNums[p][0]].val[((MNStruct *)context)->TempoFitNums[p][1]] = LDparams[pcount];	
+			pcount++;
+		}
+		for(int p=0;p<((MNStruct *)context)->numFitJumps;p++){
+			((MNStruct *)context)->pulse->jumpVal[((MNStruct *)context)->TempoJumpNums[p]]= LDparams[pcount];
+			pcount++;
+		}
+		
+		fastformBatsAll(((MNStruct *)context)->pulse,((MNStruct *)context)->numberpulsars);       /* Form Barycentric arrival times */
+		formResiduals(((MNStruct *)context)->pulse,((MNStruct *)context)->numberpulsars,1);       /* Form residuals */
+		
+		for(int o=0;o<((MNStruct *)context)->pulse->nobs; o++){
+			Resvec[o]=(double)((MNStruct *)context)->pulse->obsn[o].residual+phase;
+		}
+	
 	}
-	for(int p=0;p<((MNStruct *)context)->numFitJumps;p++){
-		((MNStruct *)context)->pulse->jumpVal[((MNStruct *)context)->TempoJumpNums[p]]= LDparams[pcount];
-		pcount++;
+	else if(((MNStruct *)context)->doLinear==1){
+	
+		for(int p=0;p < numfit; p++){
+			Fitparams[p]=Cube[p];
+			pcount++;
+		}
+		
+		double *Fitvec=new double[((MNStruct *)context)->pulse->nobs];
+
+		dgemv(((MNStruct *)context)->DMatrix,Fitparams,Fitvec,((MNStruct *)context)->pulse->nobs,numfit,'N');
+		for(int o=0;o<((MNStruct *)context)->pulse->nobs; o++){
+			Resvec[o]=((MNStruct *)context)->pulse->obsn[o].residual+Fitvec[o];
+		}
+		
+		delete[] Fitvec;
 	}
+		
 
 	if(((MNStruct *)context)->numFitEFAC == 0){
 		EFAC=new double[1];
 		EFAC[0]=1;
-// 		
 	}
 	else if(((MNStruct *)context)->numFitEFAC == 1){
 		EFAC=new double[1];
@@ -87,106 +119,134 @@ void vHRedLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *conte
 
 	if(((MNStruct *)context)->numFitEQUAD == 0){
 		EQUAD=0;
-// 		printf("EQUAD: %g \n",EQUAD);
 	}
 	else{
 		
 		EQUAD=pow(10.0,2*Cube[pcount]);
 		pcount++;
-//		printf("E: %g %g \n",EQUAD,EFAC[0]);
-
 	}
 
 
-	redamp=Cube[pcount];
-	pcount++;
-	redalpha=Cube[pcount];
-	pcount++;
-  	
-
-// 	startClock = clock();
+	double redampsquared=0;
+	double redcovconst=0;
 	
-	
-	fastformBatsAll(((MNStruct *)context)->pulse,((MNStruct *)context)->numberpulsars);                /* Form Barycentric arrival times */
-	formResiduals(((MNStruct *)context)->pulse,((MNStruct *)context)->numberpulsars,1);       /* Form residuals */
-
 	double secday=24*60*60;
 	double LongestPeriod=1.0/pow(10.0,-5);
 	double flo=1.0/LongestPeriod;
+	
+	if(((MNStruct *)context)->incRED==1){
+		redamp=Cube[pcount];
+		pcount++;
+		redalpha=Cube[pcount];
+		pcount++;
+		
+		redamp=pow(10.0,redamp);
+		redampsquared=redamp*redamp*(pow((365.25*secday),2)/(12*M_PI*M_PI))*(pow(365.25,(1-redalpha)))/(pow(flo,(redalpha-1)));
+		redcovconst=gsl_sf_gamma(1-redalpha)*sin(0.5*M_PI*redalpha);
+	}
+	
+	double DMampsquared=0;
+	double DMcovconst=0;
 
-	double modelalpha=redalpha;
-	double gwamp=pow(10.0,redamp);
-	double gwampsquared=gwamp*gwamp*(pow((365.25*secday),2)/(12*M_PI*M_PI))*(pow(365.25,(1-modelalpha)))/(pow(flo,(modelalpha-1)));
+	if(((MNStruct *)context)->incDM==1){
+		DMamp=Cube[pcount];
+		pcount++;
+		DMalpha=Cube[pcount];
+		pcount++;
+		
+		DMamp=pow(10.0,DMamp);
+		DMampsquared=DMamp*DMamp*(pow((365.25*secday),2)/(12*M_PI*M_PI))*(pow(365.25,(1-DMalpha)))/(pow(flo,(DMalpha-1)));
+		DMcovconst=gsl_sf_gamma(1-DMalpha)*sin(0.5*M_PI*DMalpha);
+	}
+
 
 	double timdiff=0;
 
-	double covconst=gsl_sf_gamma(1-modelalpha)*sin(0.5*M_PI*modelalpha);
-// 	printf("constants: %g %g \n",gwampsquared,covconst);
-
-
 	
-	double **CovMatrix = new double*[((MNStruct *)context)->pulse->nobs]; for(int o1=0;o1<((MNStruct *)context)->pulse->nobs;o1++)CovMatrix[o1]=new double[((MNStruct *)context)->pulse->nobs];
-
+	double **CovMatrix = new double*[((MNStruct *)context)->pulse->nobs]; 
+	for(int o1=0;o1<((MNStruct *)context)->pulse->nobs;o1++){
+		 CovMatrix[o1]=new double[((MNStruct *)context)->pulse->nobs];
+		 for(int o2=0;o2<((MNStruct *)context)->pulse->nobs;o2++){
+		 	CovMatrix[o1][o2]=0;
+		 }
+	}
+	
 	for(int o1=0;o1<((MNStruct *)context)->pulse->nobs; o1++){
+		CovMatrix[o1][o1] += pow(((((MNStruct *)context)->pulse->obsn[o1].toaErr)*pow(10.0,-6))*EFAC[((MNStruct *)context)->sysFlags[o1]],2) + EQUAD;
+	}
 
-		for(int o2=0;o2<((MNStruct *)context)->pulse->nobs; o2++){
-			timdiff=((MNStruct *)context)->pulse->obsn[o1].bat-((MNStruct *)context)->pulse->obsn[o2].bat;	
-			double tau=2.0*M_PI*fabs(timdiff);
-			double covsum=0;
+		
 
-			for(int k=0; k <=4; k++){
-				covsum=covsum+pow(-1.0,k)*(pow(flo*tau,2*k))/(iter_factorial(2*k)*(2*k+1-modelalpha));
+	if(((MNStruct *)context)->incRED==1){
+		for(int o1=0;o1<((MNStruct *)context)->pulse->nobs; o1++){
+			for(int o2=0;o2<((MNStruct *)context)->pulse->nobs; o2++){
+		
+				timdiff=((MNStruct *)context)->pulse->obsn[o1].bat-((MNStruct *)context)->pulse->obsn[o2].bat;	
+				double tau=2.0*M_PI*fabs(timdiff);
+			
+			
+				double redcovsum=0;
 
+				for(int k=0; k <=4; k++){
+					redcovsum=redcovsum+pow(-1.0,k)*(pow(flo*tau,2*k))/(iter_factorial(2*k)*(2*k+1-redalpha));
+
+				}
+
+				CovMatrix[o1][o2] += redampsquared*(redcovconst*pow((flo*tau),(redalpha-1)) - redcovsum);
 			}
-
-			CovMatrix[o1][o2]=gwampsquared*(covconst*pow((flo*tau),(modelalpha-1)) - covsum);
-// 			printf("%i %i %g %g %g\n",o1,o2,CovMatrix[o1][o2],fabs(timdiff),covsum);
-
-			if(o1==o2){
-				CovMatrix[o1][o2] += pow(((((MNStruct *)context)->pulse->obsn[o1].toaErr)*pow(10.0,-6))*EFAC[((MNStruct *)context)->sysFlags[o1]],2) + EQUAD;
-			}
-
 		}
 	}
+	
+	if(((MNStruct *)context)->incDM==1){
+		for(int o1=0;o1<((MNStruct *)context)->pulse->nobs; o1++){
+			for(int o2=0;o2<((MNStruct *)context)->pulse->nobs; o2++){
+		
+				timdiff=((MNStruct *)context)->pulse->obsn[o1].bat-((MNStruct *)context)->pulse->obsn[o2].bat;	
+				double tau=2.0*M_PI*fabs(timdiff);
+				double DMcovsum=0;
+
+				for(int k=0; k <=4; k++){
+					DMcovsum=DMcovsum+pow(-1.0,k)*(pow(flo*tau,2*k))/(iter_factorial(2*k)*(2*k+1-DMalpha));
+
+				}
+
+				CovMatrix[o1][o2] += DMampsquared*(DMcovconst*pow((flo*tau),(DMalpha-1)) - DMcovsum);
+			}
+		}
+	}	
 
 	double covdet=0;
 	double *WorkRes = new double[((MNStruct *)context)->pulse->nobs];
 	for(int o1=0;o1<((MNStruct *)context)->pulse->nobs; o1++){
-		WorkRes[o1]=((MNStruct *)context)->pulse->obsn[o1].residual;
+		WorkRes[o1]=Resvec[o1];
 	}
 	dpotrf(CovMatrix, ((MNStruct *)context)->pulse->nobs, covdet);
-        dpotrs(CovMatrix, WorkRes, ((MNStruct *)context)->pulse->nobs);
+    dpotrs(CovMatrix, WorkRes, ((MNStruct *)context)->pulse->nobs);
 
 
 	double Chisq=0;
 
 
 	for(int o1=0;o1<((MNStruct *)context)->pulse->nobs; o1++){
-		Chisq += ((MNStruct *)context)->pulse->obsn[o1].residual*WorkRes[o1];
+		Chisq += Resvec[o1]*WorkRes[o1];
 	}
 
 	if(isnan(covdet) || isinf(covdet) || isnan(Chisq) || isinf(Chisq)){
 
 		lnew=-pow(10.0,200);
-// 		printf("red amp and alpha %g %g\n",redamp,redalpha);
-// 		printf("Like: %g %g %g \n",lnew,Chisq,covdet);
 		
 	}
 	else{
 		lnew = -0.5*(((MNStruct *)context)->pulse->nobs*log(2*M_PI) + covdet + Chisq);	
-// 		printf("red amp and alpha %g %g\n",redamp,redalpha);
-
 
 	}
-// 	endClock = clock();
-// //   	printf("Finishing off: time taken = %.2f (s)\n",(endClock-startClock)/(float)CLOCKS_PER_SEC);
 	
 
 	delete[] EFAC;
 	for(int o=0;o<((MNStruct *)context)->pulse->nobs;o++){delete[] CovMatrix[o];}
 	delete[] CovMatrix;
 	delete[] WorkRes;
-	//printf("Like: %g %g %g \n",lnew,Chisq,covdet);
+	delete[] Resvec;
 
 }
 
@@ -194,38 +254,66 @@ void vHRedMarginLogLike(double *Cube, int &ndim, int &npars, double &lnew, void 
 {
 
 	clock_t startClock,endClock;
-	long double LDparams[ndim];
+
 	double *EFAC;
-	double EQUAD, redamp, redalpha;
+	double EQUAD, redamp, redalpha, DMamp, DMalpha;
 	int pcount=0;
 
+	int numfit=((MNStruct *)context)->numFitTiming + ((MNStruct *)context)->numFitJumps;
+	long double LDparams[numfit];
+	double Fitparams[numfit];
+	double *Resvec=new double[((MNStruct *)context)->pulse->nobs];
+
 	for(int p=0;p<ndim;p++){
-// 		if(p == 2 || p == 3){
-// 			Cube[p]=0;//2*pow(10.0,4)*Cube[p]-pow(10.0,4);
-// 		}
-// 		else{
+
 		Cube[p]=(((MNStruct *)context)->Dpriors[p][1]-((MNStruct *)context)->Dpriors[p][0])*Cube[p]+((MNStruct *)context)->Dpriors[p][0];
-// 		}
 	}
 
-	for(int p=0;p< ((MNStruct *)context)->numFitTiming + ((MNStruct *)context)->numFitJumps; p++){
-		LDparams[p]=Cube[p]*(((MNStruct *)context)->LDpriors[p][1]) + (((MNStruct *)context)->LDpriors[p][0]);
-	}
+	if(((MNStruct *)context)->doLinear==0){
+	
+		for(int p=0;p< ((MNStruct *)context)->numFitTiming + ((MNStruct *)context)->numFitJumps; p++){
+			LDparams[p]=Cube[p]*(((MNStruct *)context)->LDpriors[p][1]) + (((MNStruct *)context)->LDpriors[p][0]);
+		}
 
-
-	for(int p=0;p<((MNStruct *)context)->numFitTiming;p++){
-		((MNStruct *)context)->pulse->param[((MNStruct *)context)->TempoFitNums[p][0]].val[((MNStruct *)context)->TempoFitNums[p][1]] = LDparams[pcount];	
+		double phase=(double)LDparams[0];
 		pcount++;
+		for(int p=1;p<((MNStruct *)context)->numFitTiming;p++){
+			((MNStruct *)context)->pulse->param[((MNStruct *)context)->TempoFitNums[p][0]].val[((MNStruct *)context)->TempoFitNums[p][1]] = LDparams[pcount];	
+			pcount++;
+		}
+		for(int p=0;p<((MNStruct *)context)->numFitJumps;p++){
+			((MNStruct *)context)->pulse->jumpVal[((MNStruct *)context)->TempoJumpNums[p]]= LDparams[pcount];
+			pcount++;
+		}
+		
+		fastformBatsAll(((MNStruct *)context)->pulse,((MNStruct *)context)->numberpulsars);       /* Form Barycentric arrival times */
+		formResiduals(((MNStruct *)context)->pulse,((MNStruct *)context)->numberpulsars,1);       /* Form residuals */
+		
+		for(int o=0;o<((MNStruct *)context)->pulse->nobs; o++){
+			Resvec[o]=(double)((MNStruct *)context)->pulse->obsn[o].residual+phase;
+		}
+	
 	}
-	for(int p=0;p<((MNStruct *)context)->numFitJumps;p++){
-		((MNStruct *)context)->pulse->jumpVal[((MNStruct *)context)->TempoJumpNums[p]]= LDparams[pcount];
-		pcount++;
-	}
+	else if(((MNStruct *)context)->doLinear==1){
+	
+		for(int p=0;p < numfit; p++){
+			Fitparams[p]=Cube[p];
+			pcount++;
+		}
+		
+		double *Fitvec=new double[((MNStruct *)context)->pulse->nobs];
 
+		dgemv(((MNStruct *)context)->DMatrix,Fitparams,Fitvec,((MNStruct *)context)->pulse->nobs,numfit,'N');
+		for(int o=0;o<((MNStruct *)context)->pulse->nobs; o++){
+			Resvec[o]=((MNStruct *)context)->pulse->obsn[o].residual+Fitvec[o];
+		}
+		
+		delete[] Fitvec;
+	}
+		
 	if(((MNStruct *)context)->numFitEFAC == 0){
 		EFAC=new double[1];
 		EFAC[0]=1;
-// 		
 	}
 	else if(((MNStruct *)context)->numFitEFAC == 1){
 		EFAC=new double[1];
@@ -243,85 +331,115 @@ void vHRedMarginLogLike(double *Cube, int &ndim, int &npars, double &lnew, void 
 
 	if(((MNStruct *)context)->numFitEQUAD == 0){
 		EQUAD=0;
-// 		printf("EQUAD: %g \n",EQUAD);
 	}
 	else{
 		
 		EQUAD=pow(10.0,2*Cube[pcount]);
 		pcount++;
-//		printf("E: %g %g \n",EQUAD,EFAC[0]);
-
 	}
 
 
-	redamp=Cube[pcount];
-	pcount++;
-	redalpha=Cube[pcount];
-	pcount++;
-  	
 
-// 	startClock = clock();
+	double redampsquared=0;
+	double redcovconst=0;
 	
-	
-	fastformBatsAll(((MNStruct *)context)->pulse,((MNStruct *)context)->numberpulsars);                /* Form Barycentric arrival times */
-	formResiduals(((MNStruct *)context)->pulse,((MNStruct *)context)->numberpulsars,1);       /* Form residuals */
-
-	double *WorkRes=new double[((MNStruct *)context)->pulse->nobs];
-	double *GRes=new double[((MNStruct *)context)->Gsize];
-
-	for(int o1=0;o1<((MNStruct *)context)->pulse->nobs; o1++){
-		WorkRes[o1]=((MNStruct *)context)->pulse->obsn[o1].residual;
-	}
-
 	double secday=24*60*60;
 	double LongestPeriod=1.0/pow(10.0,-5);
 	double flo=1.0/LongestPeriod;
+	
+	if(((MNStruct *)context)->incRED==1){
+		redamp=Cube[pcount];
+		pcount++;
+		redalpha=Cube[pcount];
+		pcount++;
+		
+		redamp=pow(10.0,redamp);
+		redampsquared=redamp*redamp*(pow((365.25*secday),2)/(12*M_PI*M_PI))*(pow(365.25,(1-redalpha)))/(pow(flo,(redalpha-1)));
+		redcovconst=gsl_sf_gamma(1-redalpha)*sin(0.5*M_PI*redalpha);
+	}
+	
+	double DMampsquared=0;
+	double DMcovconst=0;
 
-	double modelalpha=redalpha;
-	double gwamp=pow(10.0,redamp);
-	double gwampsquared=gwamp*gwamp*(pow((365.25*secday),2)/(12*M_PI*M_PI))*(pow(365.25,(1-modelalpha)))/(pow(flo,(modelalpha-1)));
+	if(((MNStruct *)context)->incDM==1){
+		DMamp=Cube[pcount];
+		pcount++;
+		DMalpha=Cube[pcount];
+		pcount++;
+		
+		DMamp=pow(10.0,DMamp);
+		DMampsquared=DMamp*DMamp*(pow((365.25*secday),2)/(12*M_PI*M_PI))*(pow(365.25,(1-DMalpha)))/(pow(flo,(DMalpha-1)));
+		DMcovconst=gsl_sf_gamma(1-DMalpha)*sin(0.5*M_PI*DMalpha);
+	}
+
 
 	double timdiff=0;
 
-	double covconst=gsl_sf_gamma(1-modelalpha)*sin(0.5*M_PI*modelalpha);
-// 	printf("constants: %g %g \n",gwampsquared,covconst);
-
-
 	
-	double **CovMatrix = new double*[((MNStruct *)context)->pulse->nobs]; for(int o1=0;o1<((MNStruct *)context)->pulse->nobs;o1++)CovMatrix[o1]=new double[((MNStruct *)context)->pulse->nobs];
-
+	double **CovMatrix = new double*[((MNStruct *)context)->pulse->nobs]; 
+	for(int o1=0;o1<((MNStruct *)context)->pulse->nobs;o1++){
+		 CovMatrix[o1]=new double[((MNStruct *)context)->pulse->nobs];
+		 for(int o2=0;o2<((MNStruct *)context)->pulse->nobs;o2++){
+		 	CovMatrix[o1][o2]=0;
+		 }
+	}
+	
 	for(int o1=0;o1<((MNStruct *)context)->pulse->nobs; o1++){
+		CovMatrix[o1][o1] += pow(((((MNStruct *)context)->pulse->obsn[o1].toaErr)*pow(10.0,-6))*EFAC[((MNStruct *)context)->sysFlags[o1]],2) + EQUAD;
+	}
 
-		for(int o2=0;o2<((MNStruct *)context)->pulse->nobs; o2++){
-			timdiff=((MNStruct *)context)->pulse->obsn[o1].bat-((MNStruct *)context)->pulse->obsn[o2].bat;	
-			double tau=2.0*M_PI*fabs(timdiff);
-			double covsum=0;
+		
 
-			for(int k=0; k <=4; k++){
-				covsum=covsum+pow(-1.0,k)*(pow(flo*tau,2*k))/(iter_factorial(2*k)*(2*k+1-modelalpha));
+	if(((MNStruct *)context)->incRED==1){
+		for(int o1=0;o1<((MNStruct *)context)->pulse->nobs; o1++){
+			for(int o2=0;o2<((MNStruct *)context)->pulse->nobs; o2++){
+		
+				timdiff=((MNStruct *)context)->pulse->obsn[o1].bat-((MNStruct *)context)->pulse->obsn[o2].bat;	
+				double tau=2.0*M_PI*fabs(timdiff);
+			
+			
+				double redcovsum=0;
 
+				for(int k=0; k <=4; k++){
+					redcovsum=redcovsum+pow(-1.0,k)*(pow(flo*tau,2*k))/(iter_factorial(2*k)*(2*k+1-redalpha));
+
+				}
+
+				CovMatrix[o1][o2] += redampsquared*(redcovconst*pow((flo*tau),(redalpha-1)) - redcovsum);
 			}
-
-			CovMatrix[o1][o2]=gwampsquared*(covconst*pow((flo*tau),(modelalpha-1)) - covsum);
-// 			printf("%i %i %g %g %g\n",o1,o2,CovMatrix[o1][o2],fabs(timdiff),covsum);
-
-			if(o1==o2){
-				CovMatrix[o1][o2] += pow(((((MNStruct *)context)->pulse->obsn[o1].toaErr)*pow(10.0,-6))*EFAC[((MNStruct *)context)->sysFlags[o1]],2) + EQUAD;
-			}
-
 		}
 	}
+	
+	if(((MNStruct *)context)->incDM==1){
+		for(int o1=0;o1<((MNStruct *)context)->pulse->nobs; o1++){
+			for(int o2=0;o2<((MNStruct *)context)->pulse->nobs; o2++){
+		
+				timdiff=((MNStruct *)context)->pulse->obsn[o1].bat-((MNStruct *)context)->pulse->obsn[o2].bat;	
+				double tau=2.0*M_PI*fabs(timdiff);
+				double DMcovsum=0;
+
+				for(int k=0; k <=4; k++){
+					DMcovsum=DMcovsum+pow(-1.0,k)*(pow(flo*tau,2*k))/(iter_factorial(2*k)*(2*k+1-DMalpha));
+
+				}
+
+				CovMatrix[o1][o2] += DMampsquared*(DMcovconst*pow((flo*tau),(DMalpha-1)) - DMcovsum);
+			}
+		}
+	}	
 
 	double **CG = new double*[((MNStruct *)context)->pulse->nobs]; for(int o1=0;o1<((MNStruct *)context)->pulse->nobs;o1++)CG[o1]=new double[((MNStruct *)context)->Gsize];
 
 	double **GCG= new double*[((MNStruct *)context)->Gsize]; for(int o1=0;o1<((MNStruct *)context)->Gsize;o1++)GCG[o1]=new double[((MNStruct *)context)->Gsize];
+	
+	double *GRes=new double[((MNStruct *)context)->Gsize];
 
 
 	dgemm(CovMatrix,((MNStruct *)context)->GMatrix, CG, ((MNStruct *)context)->pulse->nobs, ((MNStruct *)context)->pulse->nobs, ((MNStruct *)context)->pulse->nobs, ((MNStruct *)context)->Gsize, 'N', 'N');
 
 	dgemm(((MNStruct *)context)->GMatrix,CG, GCG, ((MNStruct *)context)->pulse->nobs, ((MNStruct *)context)->Gsize, ((MNStruct *)context)->pulse->nobs, ((MNStruct *)context)->Gsize, 'T', 'N');
 
-	dgemv(((MNStruct *)context)->GMatrix,WorkRes,GRes,((MNStruct *)context)->pulse->nobs,((MNStruct *)context)->Gsize,'T');
+	dgemv(((MNStruct *)context)->GMatrix,Resvec,GRes,((MNStruct *)context)->pulse->nobs,((MNStruct *)context)->Gsize,'T');
 
 	double covdet=0;
 	double *WorkGRes = new double[((MNStruct *)context)->Gsize];
@@ -329,7 +447,7 @@ void vHRedMarginLogLike(double *Cube, int &ndim, int &npars, double &lnew, void 
 		WorkGRes[o1]=GRes[o1];
 	}
 	dpotrf(GCG, ((MNStruct *)context)->Gsize, covdet);
-        dpotrs(GCG, WorkGRes, ((MNStruct *)context)->Gsize);
+    dpotrs(GCG, WorkGRes, ((MNStruct *)context)->Gsize);
 
 
 
@@ -343,8 +461,6 @@ void vHRedMarginLogLike(double *Cube, int &ndim, int &npars, double &lnew, void 
 	if(isnan(covdet) || isinf(covdet) || isnan(Chisq) || isinf(Chisq)){
 
 		lnew=-pow(10.0,200);
-// 		printf("red amp and alpha %g %g\n",redamp,redalpha);
-// 		printf("Like: %g %g %g \n",lnew,Chisq,covdet);
 		
 	}
 	else{
@@ -360,7 +476,8 @@ void vHRedMarginLogLike(double *Cube, int &ndim, int &npars, double &lnew, void 
 	for(int o=0;o<((MNStruct *)context)->Gsize;o++){delete[] GCG[o];}
 	delete[] GCG;
 
-	delete[] WorkRes;
+
+	delete[] Resvec;
 	delete[] WorkGRes;
 	delete[] GRes;
 	
@@ -372,34 +489,69 @@ void WhiteLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *conte
 {
 
 	clock_t startClock,endClock;
-	long double LDparams[ndim];
+
 	double *EFAC;
 	double EQUAD;
 	int pcount=0;
-// 	printf("here1\n");
+	
+	int numfit=((MNStruct *)context)->numFitTiming + ((MNStruct *)context)->numFitJumps;
+	long double LDparams[numfit];
+	double Fitparams[numfit];
+	double *Resvec=new double[((MNStruct *)context)->pulse->nobs];
+
 	for(int p=0;p<ndim;p++){
-// 		printf("param %i %g %g\n",p,((MNStruct *)context)->Dpriors[p][0],((MNStruct *)context)->Dpriors[p][1]);
+
 		Cube[p]=(((MNStruct *)context)->Dpriors[p][1]-((MNStruct *)context)->Dpriors[p][0])*Cube[p]+((MNStruct *)context)->Dpriors[p][0];
 	}
-// 	printf("here1.5\n");
-	for(int p=0;p< ((MNStruct *)context)->numFitTiming + ((MNStruct *)context)->numFitJumps; p++){
-		LDparams[p]=Cube[p]*(((MNStruct *)context)->LDpriors[p][1]) + (((MNStruct *)context)->LDpriors[p][0]);
-	}
-// 	printf("here2\n");
 
-	for(int p=0;p<((MNStruct *)context)->numFitTiming;p++){
-		((MNStruct *)context)->pulse->param[((MNStruct *)context)->TempoFitNums[p][0]].val[((MNStruct *)context)->TempoFitNums[p][1]] = LDparams[pcount];	
+	if(((MNStruct *)context)->doLinear==0){
+	
+		for(int p=0;p< ((MNStruct *)context)->numFitTiming + ((MNStruct *)context)->numFitJumps; p++){
+			LDparams[p]=Cube[p]*(((MNStruct *)context)->LDpriors[p][1]) + (((MNStruct *)context)->LDpriors[p][0]);
+		}
+
+		double phase=(double)LDparams[0];
 		pcount++;
+		for(int p=1;p<((MNStruct *)context)->numFitTiming;p++){
+			((MNStruct *)context)->pulse->param[((MNStruct *)context)->TempoFitNums[p][0]].val[((MNStruct *)context)->TempoFitNums[p][1]] = LDparams[pcount];	
+			pcount++;
+		}
+		for(int p=0;p<((MNStruct *)context)->numFitJumps;p++){
+			((MNStruct *)context)->pulse->jumpVal[((MNStruct *)context)->TempoJumpNums[p]]= LDparams[pcount];
+			pcount++;
+		}
+		
+		fastformBatsAll(((MNStruct *)context)->pulse,((MNStruct *)context)->numberpulsars);       /* Form Barycentric arrival times */
+		formResiduals(((MNStruct *)context)->pulse,((MNStruct *)context)->numberpulsars,1);       /* Form residuals */
+		
+		for(int o=0;o<((MNStruct *)context)->pulse->nobs; o++){
+			Resvec[o]=(double)((MNStruct *)context)->pulse->obsn[o].residual+phase;
+		}
+	
 	}
-	for(int p=0;p<((MNStruct *)context)->numFitJumps;p++){
-		((MNStruct *)context)->pulse->jumpVal[((MNStruct *)context)->TempoJumpNums[p]]= LDparams[pcount];
-		pcount++;
+	else if(((MNStruct *)context)->doLinear==1){
+	
+		for(int p=0;p < numfit; p++){
+			Fitparams[p]=Cube[p];
+			//printf("FitP: %i %g \n",p,Cube[p]);
+			pcount++;
+		}
+		
+		double *Fitvec=new double[((MNStruct *)context)->pulse->nobs];
+
+		dgemv(((MNStruct *)context)->DMatrix,Fitparams,Fitvec,((MNStruct *)context)->pulse->nobs,numfit,'N');
+		for(int o=0;o<((MNStruct *)context)->pulse->nobs; o++){
+			Resvec[o]=((MNStruct *)context)->pulse->obsn[o].residual+Fitvec[o];
+			//printf("FitVec: %i %g \n",o,Fitvec[o]);
+		}
+		
+		delete[] Fitvec;
 	}
-// 	printf("here3\n");
+		
+
 	if(((MNStruct *)context)->numFitEFAC == 0){
 		EFAC=new double[1];
 		EFAC[0]=1;
-// 		
 	}
 	else if(((MNStruct *)context)->numFitEFAC == 1){
 		EFAC=new double[1];
@@ -413,20 +565,18 @@ void WhiteLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *conte
 			pcount++;
 		}
 	}				
-// 	printf("here4\n");
+
 	if(((MNStruct *)context)->numFitEQUAD == 0){
 		EQUAD=0;
-// 		printf("E: %g %g\n",EFAC[0],EQUAD);
 	}
 	else{
 		
 		EQUAD=pow(10.0,2*Cube[pcount]);
 		pcount++;
-
 	}
-// 	printf("here\n",EFAC[0],EQUAD);
-	fastformBatsAll(((MNStruct *)context)->pulse,((MNStruct *)context)->numberpulsars);                /* Form Barycentric arrival times */
-	formResiduals(((MNStruct *)context)->pulse,((MNStruct *)context)->numberpulsars,1);       /* Form residuals */
+
+
+
 
 
 
@@ -436,26 +586,20 @@ void WhiteLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *conte
 	double detN=0;
 	for(int o=0;o<((MNStruct *)context)->pulse->nobs; o++){
 		noiseval=pow(((((MNStruct *)context)->pulse->obsn[o].toaErr)*pow(10.0,-6))*EFAC[((MNStruct *)context)->sysFlags[o]],2) + EQUAD;
-		Chisq += pow((((MNStruct *)context)->pulse->obsn[o].residual),2)/noiseval;
+		Chisq += pow(Resvec[o],2)/noiseval;
 		detN += log(noiseval);
- 	//	printf("like: %i %.25Lg %g %g %g \n",o,LDparams[2], Cube[2], (double)(((MNStruct *)context)->pulse->obsn[o].residual), Chisq);
 	}
 
 	if(isnan(detN) || isinf(detN) || isnan(Chisq) || isinf(Chisq)){
 
 		lnew=-pow(10.0,200);
-// 		printf("red amp and alpha %g %g\n",redamp,redalpha);
- 	//	printf("Like: %g %g %g \n",lnew,Chisq,detN);
-		
 	}
 	else{
 		lnew = -0.5*(((MNStruct *)context)->pulse->nobs*log(2*M_PI) + detN + Chisq);	
-// 		printf("red amp and alpha %g %g\n",redamp,redalpha);
- 	//	printf("Like: %g %g %g \n",lnew,Chisq,detN);
-
 	}
 
 	delete[] EFAC;
+	delete[] Resvec;
 
 
 }
@@ -465,33 +609,67 @@ void WhiteMarginLogLike(double *Cube, int &ndim, int &npars, double &lnew, void 
 {
 
 	clock_t startClock,endClock;
-	long double LDparams[ndim];
+
 	double *EFAC;
 	double EQUAD;
 	int pcount=0;
 
+	int numfit=((MNStruct *)context)->numFitTiming + ((MNStruct *)context)->numFitJumps;
+	long double LDparams[numfit];
+	double Fitparams[numfit];
+	double *Resvec=new double[((MNStruct *)context)->pulse->nobs];
+
 	for(int p=0;p<ndim;p++){
+
 		Cube[p]=(((MNStruct *)context)->Dpriors[p][1]-((MNStruct *)context)->Dpriors[p][0])*Cube[p]+((MNStruct *)context)->Dpriors[p][0];
 	}
 
-	for(int p=0;p< ((MNStruct *)context)->numFitTiming + ((MNStruct *)context)->numFitJumps; p++){
-		LDparams[p]=Cube[p]*(((MNStruct *)context)->LDpriors[p][1]) + (((MNStruct *)context)->LDpriors[p][0]);
-	}
+	if(((MNStruct *)context)->doLinear==0){
+	
+		for(int p=0;p< ((MNStruct *)context)->numFitTiming + ((MNStruct *)context)->numFitJumps; p++){
+			LDparams[p]=Cube[p]*(((MNStruct *)context)->LDpriors[p][1]) + (((MNStruct *)context)->LDpriors[p][0]);
+		}
 
+		double phase=(double)LDparams[0];
+		pcount++;
+		for(int p=1;p<((MNStruct *)context)->numFitTiming;p++){
+			((MNStruct *)context)->pulse->param[((MNStruct *)context)->TempoFitNums[p][0]].val[((MNStruct *)context)->TempoFitNums[p][1]] = LDparams[pcount];	
+			pcount++;
+		}
+		for(int p=0;p<((MNStruct *)context)->numFitJumps;p++){
+			((MNStruct *)context)->pulse->jumpVal[((MNStruct *)context)->TempoJumpNums[p]]= LDparams[pcount];
+			pcount++;
+		}
+		
+		fastformBatsAll(((MNStruct *)context)->pulse,((MNStruct *)context)->numberpulsars);       /* Form Barycentric arrival times */
+		formResiduals(((MNStruct *)context)->pulse,((MNStruct *)context)->numberpulsars,1);       /* Form residuals */
+		
+		for(int o=0;o<((MNStruct *)context)->pulse->nobs; o++){
+			Resvec[o]=(double)((MNStruct *)context)->pulse->obsn[o].residual+phase;
+		}
+	
+	}
+	else if(((MNStruct *)context)->doLinear==1){
+	
+		for(int p=0;p < numfit; p++){
+			Fitparams[p]=Cube[p];
+			pcount++;
+		}
+		
+		double *Fitvec=new double[((MNStruct *)context)->pulse->nobs];
 
-	for(int p=0;p<((MNStruct *)context)->numFitTiming;p++){
-		((MNStruct *)context)->pulse->param[((MNStruct *)context)->TempoFitNums[p][0]].val[((MNStruct *)context)->TempoFitNums[p][1]] = LDparams[pcount];	
-		pcount++;
+		dgemv(((MNStruct *)context)->DMatrix,Fitparams,Fitvec,((MNStruct *)context)->pulse->nobs,numfit,'N');
+		for(int o=0;o<((MNStruct *)context)->pulse->nobs; o++){
+			Resvec[o]=((MNStruct *)context)->pulse->obsn[o].residual+Fitvec[o];
+		}
+		
+		delete[] Fitvec;
 	}
-	for(int p=0;p<((MNStruct *)context)->numFitJumps;p++){
-		((MNStruct *)context)->pulse->jumpVal[((MNStruct *)context)->TempoJumpNums[p]]= LDparams[pcount];
-		pcount++;
-	}
+		
 
 	if(((MNStruct *)context)->numFitEFAC == 0){
 		EFAC=new double[1];
 		EFAC[0]=1;
-// 		
 	}
 	else if(((MNStruct *)context)->numFitEFAC == 1){
 		EFAC=new double[1];
@@ -508,7 +686,6 @@ void WhiteMarginLogLike(double *Cube, int &ndim, int &npars, double &lnew, void 
 
 	if(((MNStruct *)context)->numFitEQUAD == 0){
 		EQUAD=0;
-// 		printf("E: %g %g\n",EFAC[0],EQUAD);
 	}
 	else{
 		
@@ -517,29 +694,17 @@ void WhiteMarginLogLike(double *Cube, int &ndim, int &npars, double &lnew, void 
 
 	}
 
-	fastformBatsAll(((MNStruct *)context)->pulse,((MNStruct *)context)->numberpulsars);                /* Form Barycentric arrival times */
-	formResiduals(((MNStruct *)context)->pulse,((MNStruct *)context)->numberpulsars,1);       /* Form residuals */
-
-
-
-
-
 	double *Noise=new double[((MNStruct *)context)->pulse->nobs];
-	double *Res=new double[((MNStruct *)context)->pulse->nobs];
 	double *GRes=new double[((MNStruct *)context)->Gsize];
 
 	for(int o=0;o<((MNStruct *)context)->pulse->nobs; o++){
 		Noise[o]=pow(((((MNStruct *)context)->pulse->obsn[o].toaErr)*pow(10.0,-6))*EFAC[((MNStruct *)context)->sysFlags[o]],2) + EQUAD;
-		Res[o]=((MNStruct *)context)->pulse->obsn[o].residual;
-// 		printf("%i %g %g \n",o,Noise[o],Res[o]);
 	}
 
 	double **NG = new double*[((MNStruct *)context)->pulse->nobs]; for (int k=0; k<((MNStruct *)context)->pulse->nobs; k++) NG[k] = new double[((MNStruct *)context)->Gsize];
 	for(int i=0;i<((MNStruct *)context)->pulse->nobs;i++){
 		for(int j=0;j<((MNStruct *)context)->Gsize; j++){
 			NG[i][j]=((MNStruct *)context)->GMatrix[i][j]*Noise[i];
-// 			printf("%i %i %g %g %g \n",i,j,((MNStruct *)context)->GMatrix[i][j],Noise[i],NG[i][j]);
-
 		}
 	}
 
@@ -548,7 +713,7 @@ void WhiteMarginLogLike(double *Cube, int &ndim, int &npars, double &lnew, void 
 	dgemm(((MNStruct *)context)->GMatrix, NG,GG,((MNStruct *)context)->pulse->nobs, ((MNStruct *)context)->Gsize,((MNStruct *)context)->pulse->nobs, ((MNStruct *)context)->Gsize, 'T','N');
 
 
-	dgemv(((MNStruct *)context)->GMatrix,Res,GRes,((MNStruct *)context)->pulse->nobs,((MNStruct *)context)->Gsize,'T');
+	dgemv(((MNStruct *)context)->GMatrix,Resvec,GRes,((MNStruct *)context)->pulse->nobs,((MNStruct *)context)->Gsize,'T');
 
 
 
@@ -558,7 +723,7 @@ void WhiteMarginLogLike(double *Cube, int &ndim, int &npars, double &lnew, void 
 		WorkGRes[o1]=GRes[o1];
 	}
 	dpotrf(GG, ((MNStruct *)context)->Gsize, det);
-        dpotrs(GG, WorkGRes, ((MNStruct *)context)->Gsize);
+    dpotrs(GG, WorkGRes, ((MNStruct *)context)->Gsize);
 
 
 
@@ -572,20 +737,16 @@ void WhiteMarginLogLike(double *Cube, int &ndim, int &npars, double &lnew, void 
 	if(isnan(det) || isinf(det) || isnan(Chisq) || isinf(Chisq)){
 
 		lnew=-pow(10.0,200);
-// 		printf("red amp and alpha %g %g\n",redamp,redalpha);
-// 		printf("Like: %g %g %g \n",lnew,Chisq,covdet);
 		
 	}
 	else{
 		lnew = -0.5*(((MNStruct *)context)->Gsize*log(2.0*M_PI) + det + Chisq);	
-// 		printf("red amp and alpha %g %g\n",redamp,redalpha);
-// 		printf("Like: %g %g %g \n",lnew,Chisq,det);
 
 	}
 
 	delete[] EFAC;
 	delete[] Noise;
-	delete[] Res;
+	delete[] Resvec;
 	delete[] GRes;
 	delete[] WorkGRes;
 
@@ -609,35 +770,67 @@ void LRedLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *contex
 {
 
 	clock_t startClock,endClock;
-	long double LDparams[ndim];
+
 	double *EFAC;
 	double EQUAD;
 	int pcount=0;
 
+	int numfit=((MNStruct *)context)->numFitTiming + ((MNStruct *)context)->numFitJumps;
+	long double LDparams[numfit];
+	double Fitparams[numfit];
+	double *Resvec=new double[((MNStruct *)context)->pulse->nobs];
+
 	for(int p=0;p<ndim;p++){
 
-			Cube[p]=(((MNStruct *)context)->Dpriors[p][1]-((MNStruct *)context)->Dpriors[p][0])*Cube[p]+((MNStruct *)context)->Dpriors[p][0];
+		Cube[p]=(((MNStruct *)context)->Dpriors[p][1]-((MNStruct *)context)->Dpriors[p][0])*Cube[p]+((MNStruct *)context)->Dpriors[p][0];
+	}
+
+	if(((MNStruct *)context)->doLinear==0){
+	
+		for(int p=0;p< ((MNStruct *)context)->numFitTiming + ((MNStruct *)context)->numFitJumps; p++){
+			LDparams[p]=Cube[p]*(((MNStruct *)context)->LDpriors[p][1]) + (((MNStruct *)context)->LDpriors[p][0]);
+		}
+
+		double phase=(double)LDparams[0];
+		pcount++;
+		for(int p=1;p<((MNStruct *)context)->numFitTiming;p++){
+			((MNStruct *)context)->pulse->param[((MNStruct *)context)->TempoFitNums[p][0]].val[((MNStruct *)context)->TempoFitNums[p][1]] = LDparams[pcount];	
+			pcount++;
+		}
+		for(int p=0;p<((MNStruct *)context)->numFitJumps;p++){
+			((MNStruct *)context)->pulse->jumpVal[((MNStruct *)context)->TempoJumpNums[p]]= LDparams[pcount];
+			pcount++;
+		}
 		
+		fastformBatsAll(((MNStruct *)context)->pulse,((MNStruct *)context)->numberpulsars);       /* Form Barycentric arrival times */
+		formResiduals(((MNStruct *)context)->pulse,((MNStruct *)context)->numberpulsars,1);       /* Form residuals */
+		
+		for(int o=0;o<((MNStruct *)context)->pulse->nobs; o++){
+			Resvec[o]=(double)((MNStruct *)context)->pulse->obsn[o].residual+phase;
+		}
+	
 	}
+	else if(((MNStruct *)context)->doLinear==1){
+	
+		for(int p=0;p < numfit; p++){
+			Fitparams[p]=Cube[p];
+			pcount++;
+		}
+		
+		double *Fitvec=new double[((MNStruct *)context)->pulse->nobs];
 
-	for(int p=0;p< ((MNStruct *)context)->numFitTiming + ((MNStruct *)context)->numFitJumps; p++){
-		LDparams[p]=Cube[p]*(((MNStruct *)context)->LDpriors[p][1]) + (((MNStruct *)context)->LDpriors[p][0]);
+		dgemv(((MNStruct *)context)->DMatrix,Fitparams,Fitvec,((MNStruct *)context)->pulse->nobs,numfit,'N');
+		for(int o=0;o<((MNStruct *)context)->pulse->nobs; o++){
+			Resvec[o]=((MNStruct *)context)->pulse->obsn[o].residual+Fitvec[o];
+		}
+		
+		delete[] Fitvec;
 	}
-
-
-	for(int p=0;p<((MNStruct *)context)->numFitTiming;p++){
-		((MNStruct *)context)->pulse->param[((MNStruct *)context)->TempoFitNums[p][0]].val[((MNStruct *)context)->TempoFitNums[p][1]] = LDparams[pcount];	
-		pcount++;
-	}
-	for(int p=0;p<((MNStruct *)context)->numFitJumps;p++){
-		((MNStruct *)context)->pulse->jumpVal[((MNStruct *)context)->TempoJumpNums[p]]= LDparams[pcount];
-		pcount++;
-	}
+		
 
 	if(((MNStruct *)context)->numFitEFAC == 0){
 		EFAC=new double[1];
 		EFAC[0]=1;
-// 		
 	}
 	else if(((MNStruct *)context)->numFitEFAC == 1){
 		EFAC=new double[1];
@@ -654,22 +847,14 @@ void LRedLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *contex
 
 	if(((MNStruct *)context)->numFitEQUAD == 0){
 		EQUAD=0;
-// 		printf("EQUAD: %g \n",EQUAD);
 	}
 	else{
 		
 		EQUAD=pow(10.0,2*Cube[pcount]);
 		pcount++;
-// 		printf("EQUAD: %g %g %g %i \n",EQUAD,EQUADPrior[0],EQUADPrior[1],((MNStruct *)context)->numFitTiming + ((MNStruct *)context)->numFitJumps + ((MNStruct *)context)->numFitEFAC);
 	}
 
-  	
 
-// 	startClock = clock();
-	
-	
-	fastformBatsAll(((MNStruct *)context)->pulse,((MNStruct *)context)->numberpulsars);                /* Form Barycentric arrival times */
-	formResiduals(((MNStruct *)context)->pulse,((MNStruct *)context)->numberpulsars,1);       /* Form residuals */
 
 	int FitCoeff=2*(((MNStruct *)context)->numFitRedCoeff);
 	double *WorkNoise=new double[((MNStruct *)context)->pulse->nobs];
@@ -678,18 +863,8 @@ void LRedLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *contex
 	double freqdet=0;
 	double tdet=0;
 	double timelike=0;
-	for (int i=0; i<FitCoeff/2; i++){
-		int pnum=pcount;
-		double pc=Cube[pcount];
-		
-		powercoeff[i]=pow(10.0,pc)/(365.25*24*60*60)/4;
-		powercoeff[i+FitCoeff/2]=powercoeff[i];
-		freqdet=freqdet+2*log(powercoeff[i]);
-		pcount++;
-		//prior=prior+pc;
-	}
 
-	double *resvec=new double[((MNStruct *)context)->pulse->nobs];
+
 	for(int o=0;o<((MNStruct *)context)->pulse->nobs; o++){
 		//	printf("Noise %i %g %g %g\n",m1,Noise[m1],EFAC[flagList[m1]],EQUAD);
 			WorkNoise[o]=pow(((((MNStruct *)context)->pulse->obsn[o].toaErr)*pow(10.0,-6))*EFAC[((MNStruct *)context)->sysFlags[o]],2) + EQUAD;
@@ -697,7 +872,6 @@ void LRedLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *contex
 			tdet=tdet+log(WorkNoise[o]);
 			WorkNoise[o]=1.0/WorkNoise[o];
 			timelike=timelike+pow((((MNStruct *)context)->pulse->obsn[o].residual),2)*WorkNoise[o];
-			resvec[o]=((MNStruct *)context)->pulse->obsn[o].residual;
 	}
 
 	double *NFd = new double[FitCoeff];
@@ -743,6 +917,17 @@ void LRedLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *contex
 	  }
 // 	printf("Total time span = %.6f days = %.6f years\n",end-start,(end-start)/365.25);
 	double maxtspan=end-start;
+	
+	for (int i=0; i<FitCoeff/2; i++){
+		int pnum=pcount;
+		double pc=Cube[pcount];
+		
+		powercoeff[i]=pow(10.0,pc)/(maxtspan*24*60*60);
+		powercoeff[i+FitCoeff/2]=powercoeff[i];
+		freqdet=freqdet+2*log(powercoeff[i]);
+		pcount++;
+		//prior=prior+pc;
+	}
 
 
 	int coeffsize=FitCoeff/2;
@@ -779,7 +964,7 @@ void LRedLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *contex
 			NF[i][j]=WorkNoise[i]*FMatrix[i][j];
 		}
 	}
-	dgemv(NF,resvec,NFd,((MNStruct *)context)->pulse->nobs,FitCoeff,'T');
+	dgemv(NF,Resvec,NFd,((MNStruct *)context)->pulse->nobs,FitCoeff,'T');
 	dgemm(FMatrix, NF , FNF, ((MNStruct *)context)->pulse->nobs, FitCoeff, ((MNStruct *)context)->pulse->nobs, FitCoeff, 'T', 'N');
 
 
@@ -800,7 +985,6 @@ void LRedLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *contex
 
 	for(int j=0;j<FitCoeff;j++){
 		for(int k=0;k<FitCoeff;k++){
-// 			printf("%i %i %g %g \n",j,k,PPFM[j][k],FNF[j][k]);
 			PPFM[j][k]=PPFM[j][k]+FNF[j][k];
 		}
 	}
@@ -813,7 +997,6 @@ void LRedLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *contex
 	double freqlike=0;
 	for(int i=0;i<FitCoeff;i++){
 		for(int j=0;j<FitCoeff;j++){
-			//sprintf("%i %i %g %g\n",i,j,NFd[i],PPFM[i][j]);
 			freqlike=freqlike+NFd[i]*PPFM[i][j]*NFd[j];
 		}
 	}
@@ -823,8 +1006,6 @@ void LRedLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *contex
 	if(isnan(lnew) || isinf(lnew)){
 
 		lnew=-pow(10.0,200);
-// 		printf("red amp and alpha %g %g\n",redamp,redalpha);
-// 		printf("Like: %g %g %g \n",lnew,Chisq,covdet);
 		
 	}
 
@@ -832,7 +1013,7 @@ void LRedLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *contex
 	delete[] EFAC;
 	delete[] WorkNoise;
 	delete[] powercoeff;
-	delete[] resvec;
+	delete[] Resvec;
 	delete[] NFd;
 
 	for (int j = 0; j < FitCoeff; j++){
@@ -855,39 +1036,69 @@ void LRedLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *contex
 	}
 	delete[] FMatrix;
 
-// 	if(isinf(lnew) || isinf(jointdet) || isinf(tdet) || isinf(freqdet) || isinf(timelike) || isinf(freqlike)){
- 	printf("CPUChisq: %g %g %g %g %g %g \n",lnew,jointdet,tdet,freqdet,timelike,freqlike);
-// 	}
-
 }
 
 void LRedMarginLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *context)
 {
 
 	clock_t startClock,endClock;
-	long double LDparams[ndim];
+
 	double *EFAC;
 	double EQUAD;
 	int pcount=0;
 
+	int numfit=((MNStruct *)context)->numFitTiming + ((MNStruct *)context)->numFitJumps;
+	long double LDparams[numfit];
+	double Fitparams[numfit];
+	double *Resvec=new double[((MNStruct *)context)->pulse->nobs];
+
 	for(int p=0;p<ndim;p++){
+
 		Cube[p]=(((MNStruct *)context)->Dpriors[p][1]-((MNStruct *)context)->Dpriors[p][0])*Cube[p]+((MNStruct *)context)->Dpriors[p][0];
 	}
 
-	for(int p=0;p< ((MNStruct *)context)->numFitTiming + ((MNStruct *)context)->numFitJumps; p++){
-		LDparams[p]=Cube[p]*(((MNStruct *)context)->LDpriors[p][1]) + (((MNStruct *)context)->LDpriors[p][0]);
-	}
+	if(((MNStruct *)context)->doLinear==0){
+	
+		for(int p=0;p< ((MNStruct *)context)->numFitTiming + ((MNStruct *)context)->numFitJumps; p++){
+			LDparams[p]=Cube[p]*(((MNStruct *)context)->LDpriors[p][1]) + (((MNStruct *)context)->LDpriors[p][0]);
+		}
 
-
-	for(int p=0;p<((MNStruct *)context)->numFitTiming;p++){
-		((MNStruct *)context)->pulse->param[((MNStruct *)context)->TempoFitNums[p][0]].val[((MNStruct *)context)->TempoFitNums[p][1]] = LDparams[pcount];	
+		double phase=(double)LDparams[0];
 		pcount++;
+		for(int p=1;p<((MNStruct *)context)->numFitTiming;p++){
+			((MNStruct *)context)->pulse->param[((MNStruct *)context)->TempoFitNums[p][0]].val[((MNStruct *)context)->TempoFitNums[p][1]] = LDparams[pcount];	
+			pcount++;
+		}
+		for(int p=0;p<((MNStruct *)context)->numFitJumps;p++){
+			((MNStruct *)context)->pulse->jumpVal[((MNStruct *)context)->TempoJumpNums[p]]= LDparams[pcount];
+			pcount++;
+		}
+		
+		fastformBatsAll(((MNStruct *)context)->pulse,((MNStruct *)context)->numberpulsars);       /* Form Barycentric arrival times */
+		formResiduals(((MNStruct *)context)->pulse,((MNStruct *)context)->numberpulsars,1);       /* Form residuals */
+		
+		for(int o=0;o<((MNStruct *)context)->pulse->nobs; o++){
+			Resvec[o]=(double)((MNStruct *)context)->pulse->obsn[o].residual+phase;
+		}
+	
 	}
-	for(int p=0;p<((MNStruct *)context)->numFitJumps;p++){
-		((MNStruct *)context)->pulse->jumpVal[((MNStruct *)context)->TempoJumpNums[p]]= LDparams[pcount];
-		pcount++;
-	}
+	else if(((MNStruct *)context)->doLinear==1){
+	
+		for(int p=0;p < numfit; p++){
+			Fitparams[p]=Cube[p];
+			pcount++;
+		}
+		
+		double *Fitvec=new double[((MNStruct *)context)->pulse->nobs];
 
+		dgemv(((MNStruct *)context)->DMatrix,Fitparams,Fitvec,((MNStruct *)context)->pulse->nobs,numfit,'N');
+		for(int o=0;o<((MNStruct *)context)->pulse->nobs; o++){
+			Resvec[o]=((MNStruct *)context)->pulse->obsn[o].residual+Fitvec[o];
+		}
+		
+		delete[] Fitvec;
+	}
+		
 	if(((MNStruct *)context)->numFitEFAC == 0){
 		EFAC=new double[1];
 		EFAC[0]=1;
@@ -908,34 +1119,24 @@ void LRedMarginLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *
 
 	if(((MNStruct *)context)->numFitEQUAD == 0){
 		EQUAD=0;
-// 		printf("EQUAD: %g \n",EQUAD);
 	}
 	else{
 		
 		EQUAD=pow(10.0,2*Cube[pcount]);
 		pcount++;
-// 		printf("EQUAD: %g %g %g %i \n",EQUAD,EQUADPrior[0],EQUADPrior[1],((MNStruct *)context)->numFitTiming + ((MNStruct *)context)->numFitJumps + ((MNStruct *)context)->numFitEFAC);
+
 	}
 
-  	
-
-// 	startClock = clock();
-	
-	
-	fastformBatsAll(((MNStruct *)context)->pulse,((MNStruct *)context)->numberpulsars);                /* Form Barycentric arrival times */
-	formResiduals(((MNStruct *)context)->pulse,((MNStruct *)context)->numberpulsars,1);       /* Form residuals */
 
 	int FitCoeff=2*(((MNStruct *)context)->numFitRedCoeff);
 	double *powercoeff=new double[FitCoeff];
 
 
 	double *Noise=new double[((MNStruct *)context)->pulse->nobs];
-	double *Res=new double[((MNStruct *)context)->pulse->nobs];
 	double *GRes=new double[((MNStruct *)context)->Gsize];
 
 	for(int o=0;o<((MNStruct *)context)->pulse->nobs; o++){
 		Noise[o]=pow(((((MNStruct *)context)->pulse->obsn[o].toaErr)*pow(10.0,-6))*EFAC[((MNStruct *)context)->sysFlags[o]],2) + EQUAD;
-		Res[o]=((MNStruct *)context)->pulse->obsn[o].residual;
 	}
 
 	double **NG = new double*[((MNStruct *)context)->pulse->nobs]; for (int k=0; k<((MNStruct *)context)->pulse->nobs; k++) NG[k] = new double[((MNStruct *)context)->Gsize];
@@ -964,11 +1165,11 @@ void LRedMarginLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *
 	dgemm(NG, ((MNStruct *)context)->GMatrix, GNG,((MNStruct *)context)->pulse->nobs, ((MNStruct *)context)->Gsize, ((MNStruct *)context)->pulse->nobs, ((MNStruct *)context)->Gsize, 'N','T');
 	
 	double *dG=new double[((MNStruct *)context)->pulse->nobs];
-	dgemv(GNG,Res,dG,((MNStruct *)context)->pulse->nobs,((MNStruct *)context)->pulse->nobs,'T');
+	dgemv(GNG,Resvec,dG,((MNStruct *)context)->pulse->nobs,((MNStruct *)context)->pulse->nobs,'T');
 	
 	double timelike=0;
 	for(int o1=0; o1<((MNStruct *)context)->pulse->nobs; o1++){
-		timelike+=Res[o1]*dG[o1];
+		timelike+=Resvec[o1]*dG[o1];
 	}
 
 
@@ -1009,7 +1210,7 @@ void LRedMarginLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *
 		  }
 	      }
 	  }
-// 	printf("Total time span = %.6f days = %.6f years\n",end-start,(end-start)/365.25);
+
 	double maxtspan=end-start;
 
 	double freqdet=0;
@@ -1051,7 +1252,7 @@ void LRedMarginLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *
 
 	dgemm(FMatrix, NF , FNF, ((MNStruct *)context)->pulse->nobs, FitCoeff, ((MNStruct *)context)->pulse->nobs, FitCoeff, 'T', 'N');
 
-	dgemv(NF,Res,NFd,((MNStruct *)context)->pulse->nobs,FitCoeff,'T');
+	dgemv(NF,Resvec,NFd,((MNStruct *)context)->pulse->nobs,FitCoeff,'T');
 
 	double **PPFM=new double*[FitCoeff];
 	for(int i=0;i<FitCoeff;i++){
@@ -1127,7 +1328,7 @@ void LRedMarginLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *
 	delete[]FMatrix;
 
 	delete[] Noise;
-	delete[] Res;
+	delete[] Resvec;
 	delete[] GRes;
 
 	for (int j = 0; j < ((MNStruct *)context)->pulse->nobs; j++){

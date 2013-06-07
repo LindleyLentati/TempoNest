@@ -35,6 +35,7 @@ void setupparams(char *root,
 		int &incEFAC,
 		int &incEQUAD,
 		int &incRED,
+		int &incDM,
 		int &doTimeMargin,
 		int &doJumpMargin,
 		double &FitSig,
@@ -43,15 +44,17 @@ void setupparams(char *root,
 		double *EQUADPrior,
 		double *AlphaPrior,
 		double *AmpPrior,
+		double *DMAlphaPrior,
+		double *DMAmpPrior,
 		int &numCoeff,
 		double *CoeffPrior){
 
 //General parameters:
 //Root of the results files,relative to the directory in which TempoNest is run. This will be followed by the pulsar name, and then the individual output file extensions.
-strcpy( root, "Examples/Example2/results/Red2LP500-");
+strcpy( root, "results/Example1-NL-");
 
 //numTempo2its - sets the number of iterations Tempo2 should do before setting the priors.  Should only be set to 0 if all the priors are set in setTNPriors
-numTempo2its=1;
+numTempo2its=10;
 
 //doLinearFit:  Switches between the full non linear timing model (doLinearFit=0) and the linear approximation for the timing model based on the initial Tempo2 Fit (= 1).
 
@@ -61,15 +64,16 @@ doLinearFit=0;
 //Will find maximum in the full un marginalised problem in order to find the best values to then marginalise over.
 //Start point of non linear search will be performed at this maximum if chosen unless set otherwise in custom priors.
 //Central point of prior for non linear search will be set at this value unless set otherwise in custom priors.
-doMax=1;
+doMax=0;
 
 //Model Choice
 
 incEFAC=0; //include EFAC: 0 = none, 1 = one for all residuals, 2 = one for each observing system
 incEQUAD=0; //include EQUAD: 0 = no, 1 = yes
-incRED=1; //include Red Noise model: 0 = no, 1 = power law model (vHL2013), 2 = model independant (L2013)
+incRED=0; //include Red Noise model: 0 = no, 1 = power law model (vHL2013), 2 = model independant (L2013)
+incDM=0; //include Red Noise model: 0 = no, 1 = power law model (vHL2013), 2 = model independant (L2013)
 
-doTimeMargin=2; //0=No Analytical Marginalisation over Timing Model. 1=Marginalise over QSD. 2=Marginalise over all Model params excluding jumps.
+doTimeMargin=0; //0=No Analytical Marginalisation over Timing Model. 1=Marginalise over QSD. 2=Marginalise over all Model params excluding jumps.
 doJumpMargin=0; //0=No Analytical Marginalisation over Jumps. 1=Marginalise over Jumps.
 
 
@@ -83,28 +87,37 @@ customPriors=0;
 //FitSig sets the priors for all timing model and jump parameters for both non linear and linear timing models.
 //For the non linear fit, Fitsig multiples the error returned by Tempo2, and sets the prior to be the best fit value returned by tempo2 +/- the scaled error.
 // For the linear fit, multiplies the ratio of the rms of the designmatrix vector for each timing model parameter, and the rms of the residuals returned by Tempo2.
-FitSig=10;
+FitSig=5;
 
 //Remaining priors for the stochastic parameters.  
-EFACPrior[0]=0.1;
-EFACPrior[1]=10;
+EFACPrior[0]=0.0;
+EFACPrior[1]=5;
 
 
 EQUADPrior[0]=-10;
-EQUADPrior[1]=-0;
+EQUADPrior[1]=-5;
+
 
 
 AlphaPrior[0]=1.1;
 AlphaPrior[1]=6.1;
 
 
-AmpPrior[0]=-16;
+AmpPrior[0]=-20;
 AmpPrior[1]=-10;
 
-numCoeff=5;
+numCoeff=0;
 
-CoeffPrior[0]=-20;
+CoeffPrior[0]=-10;
 CoeffPrior[1]=0;
+
+DMAlphaPrior[0]=1.1;
+DMAlphaPrior[1]=6.1;
+
+
+DMAmpPrior[0]=-18;
+DMAmpPrior[1]=-8;
+
 
 }
 
@@ -119,23 +132,6 @@ void setTNPriors(double **Dpriors, long double **TempoPriors){
 //EQUAD
 //Red Noise Parameters (Amplitude then Alpha for incRed=1, coefficients 1..n for incRed=2)
 
-TempoPriors[0][0]=0.132894457099784;
-TempoPriors[0][1]=3.2289e-10;
-TempoPriors[1][0]=0.0848411933106807;
-TempoPriors[1][1]=7.4981e-10;
-TempoPriors[2][0]=205.530696088273;
-TempoPriors[2][1]=1.6671e-14;
-TempoPriors[3][0]=-4.30603883991342e-16;
-TempoPriors[3][1]=1.2981e-22;
-TempoPriors[4][0]=-4.05413525836408;
-TempoPriors[4][1]=0.0092892;
-TempoPriors[5][0]=-5.03376865001804;
-TempoPriors[5][1]=0.021785;
-TempoPriors[6][0]= 4.02291243326134;
-TempoPriors[6][1]=0.0059585 ;
-
-//Dpriors[2][0]=-10000000;
-//Dpriors[2][1]=10000000;
 
 
 }

@@ -2,24 +2,24 @@ FC = gfortran
 CC = gcc
 CXX = g++
 CU = nvcc
-CUFLAGS += -arch sm_13 -Xcompiler -O3
+CUFLAGS += -arch sm_20 -Xcompiler -O3
 FFLAGS += -O3 
-CFLAGS += -O3 -DHAVE_CONFIG_H  
+CFLAGS += -O3 -DHAVE_CONFIG_H  -DHAVE_CULA
 
 LAPACKLIB =  -llapack -lblas
 
 LIBPATH64=-L${CULA_LIB_PATH_64}
-CULALIB = -lcula_core -lcula_lapack -lcula_lapack_fortran -lcublas -lcudart -lcuda
+CULALIB = -lcula_lapack -lcuda
 CULAINC = -I/apgpu04/data/ltl21/Code/cula/include 
 
-NESTLIBDIR = /import/apgpu04/ltl21/Code/TempoFit/TempoNestRelease/MultiNest
-TEMPO2LIB = /data/ltl21/Code/Tempo2Fit/Tempo2-2013.3.1Install/lib
-TEMPO2INC = /data/ltl21/Code/Tempo2Fit/Tempo2-2013.3.1Install/include
-TEMPO2SRC = /data/ltl21/Code/Tempo2Fit/Tempo2-3.1/tempo2-2013.3.1
+NESTLIBDIR = /import/apgpu04/ltl21/Code/TempoFit/MultiNest
+TEMPO2LIB = /data/ltl21/Code/Tempo2Fit/Tempo2CVS/lib
+TEMPO2INC = /data/ltl21/Code/Tempo2Fit/Tempo2CVS/include
+TEMPO2SRC = /data/ltl21/Code/Tempo2Fit/Tempo2CVS/Tempo2Src
 
 LIBS =  -L$(NESTLIBDIR) -lnest3 $(LAPACKLIB)  $(LIBPATH64) $(CULALIB) -L$(TEMPO2LIB) -lsofa -ltempo2 -lgsl -lgslcblas
 
-OBJFILES = TempoNestGPUFuncs.o dpotrs.o dgesvd.o dgemm.o dgemv.o dpotri.o dpotrf.o TempoNestParams.o MultiNestParams.o TempoNestTextOutput.o TempoNestUtilities.o TempoNestUpdateLinear.o TempoNestFindMaxGPU.o TempoNestSim.o TempoNestLikeFuncs.o TempoNestGPULikeFuncs.o TempoNestLinearLikeFuncs.o TempoNestGPULinearLikeFuncs.o TempoNestGPU.o
+OBJFILES = TempoNestGPUFuncs.o dpotrs.o dgesvd.o dgemm.o dgemv.o dpotri.o dpotrf.o TempoNestParams.o MultiNestParams.o TempoNestTextOutput.o TempoNestUtilities.o TempoNestUpdateLinear.o TempoNestFindMaxGPU.o TempoNestSim.o TempoNestLikeFuncs.o TempoNestGPULikeFuncs.o TempoNest.o
 
 all: TempoNest 
 

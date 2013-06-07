@@ -58,7 +58,70 @@ double TNcalcRMS(pulsar *psr,int p);
 /*                                              */
 /* Changes:                                     */
 /* ******************************************** */
-void TNtextOutput(pulsar *psr, int npsr, int newpar, long double *Tempo2Fit, void *context,int incRED, int ndim, std::vector<double> paramlist, double Evidence,int doTimeMargin, int doJumpMargin, int doLinear)
+
+int longturn_hms(long double turn, char *hms){
+ 
+  /* Converts double turn to string " hh:mm:ss.ssss" */
+  
+  int hh, mm, isec;
+  long double sec;
+
+  hh = (int)(turn*24.);
+  mm = (int)((turn*24.-hh)*60.);
+  sec = ((turn*24.-hh)*60.-mm)*60.;
+  isec = (int)((sec*10000. +0.5)/10000);
+    if(isec==60){
+      sec=0.;
+      mm=mm+1;
+      if(mm==60){
+        mm=0;
+        hh=hh+1;
+        if(hh==24){
+          hh=0;
+        }
+      }
+    }
+
+  sprintf(hms," %02d:%02d:%.12Lg",hh,mm,sec);
+  return 0;
+}
+
+int longturn_dms(long double turn, char *dms){
+  
+  /* Converts double turn to string "sddd:mm:ss.sss" */
+  
+  int dd, mm, isec;
+  long double trn, sec;
+  char sign;
+  
+  sign=' ';
+  if (turn < 0.){
+    sign = '-';
+    trn = -turn;
+  }
+  else{
+    sign = '+';
+    trn = turn;
+  }
+  dd = (int)(trn*360.);
+  mm = (int)((trn*360.-dd)*60.);
+  sec = ((trn*360.-dd)*60.-mm)*60.;
+  isec = (int)((sec*1000. +0.5)/1000);
+    if(isec==60){
+      sec=0.;
+      mm=mm+1;
+      if(mm==60){
+        mm=0;
+        dd=dd+1;
+      }
+    }
+  sprintf(dms,"%c%02d:%02d:%.12Lg",sign,dd,mm,sec);
+  return 0;
+}
+
+
+
+void TNtextOutput(pulsar *psr, int npsr, int newpar, long double *Tempo2Fit, void *context,int incRED, int ndim, std::vector<double> paramlist, double Evidence,int doTimeMargin, int doJumpMargin, int doLinear, std::string longname)
 {
   double rms_pre=0.0,rms_post=0.0;
   double mean_pre=0.0,mean_post=0.0,chisqr;
@@ -131,7 +194,7 @@ void TNtextOutput(pulsar *psr, int npsr, int newpar, long double *Tempo2Fit, voi
 	  chisqr = psr[p].fitChisq;
 
 	}
-	int pcount=0;
+	int pcount=1;
 
       printf("\n\n");
       printf("PARAMETER          Tempo2-Fit              TempoNest-Fit          Uncertainty   Difference   Fit\n");
@@ -269,7 +332,7 @@ void TNtextOutput(pulsar *psr, int npsr, int newpar, long double *Tempo2Fit, voi
 	  else printf("N\n");
 	}
       }
-  	if(doLinear==1)pcount++;
+  	
 	if(incRED != 0 || ((MNStruct *)context)->numFitEFAC > 0 || ((MNStruct *)context)->numFitEQUAD > 0){
 	 	printf("------------------------------------------------------------------------------\n");
 		printf("Stochastic Parameters:\n");
@@ -277,7 +340,7 @@ void TNtextOutput(pulsar *psr, int npsr, int newpar, long double *Tempo2Fit, voi
 			printf("Global EFAC: %g +/- %g\n", paramlist[pcount],paramlist[pcount+ndim]);
 			pcount++;
 		}
-		else if(((MNStruct *)context)->numFitEFAC > 2){
+		else if(((MNStruct *)context)->numFitEFAC > 1){
 			int system=1;
 			for(int i =0;i<((MNStruct *)context)->numFitEFAC; i++){
 				printf("EFAC for system %i: %g +/- %g\n", system,paramlist[pcount],paramlist[pcount+ndim]);
@@ -298,6 +361,22 @@ void TNtextOutput(pulsar *psr, int npsr, int newpar, long double *Tempo2Fit, voi
 		}
 		else if(incRED ==2){	
 			printf("Model Independant Red Noise, %i Coefficients used:\n",((MNStruct *)context)->numFitRedCoeff);
+			int coeff=1;
+			for(int i =0; i < ((MNStruct *)context)->numFitRedCoeff; i++){
+				printf("Log Amplitude Coefficient %i: %g +/- %g\n", coeff,paramlist[pcount],paramlist[pcount+ndim]);	
+				pcount++;
+				coeff++;
+			}
+		}
+		if(((MNStruct *)context)->incDM ==1){
+			printf("Power Law DM Model:\n");
+			printf("Log Amplitude: %g +/- %g\n",paramlist[pcount],paramlist[pcount+ndim]);
+			pcount++;
+			printf("Spectral Index: %g +/- %g\n",paramlist[pcount],paramlist[pcount+ndim]);	
+			pcount++;
+		}
+		else if(((MNStruct *)context)->incDM==2){	
+			printf("Model Independant DM, %i Coefficients used:\n",((MNStruct *)context)->numFitRedCoeff);
 			int coeff=1;
 			for(int i =0; i < ((MNStruct *)context)->numFitRedCoeff; i++){
 				printf("Log Amplitude Coefficient %i: %g +/- %g\n", coeff,paramlist[pcount],paramlist[pcount+ndim]);	
@@ -849,12 +928,27 @@ void TNtextOutput(pulsar *psr, int npsr, int newpar, long double *Tempo2Fit, voi
 	printf("Total time span = %.3f days = %.3f years\n",end-start,(end-start)/365.25);
       }
     
-      if (newpar==1)  /* Write a new .par file */
+      if (1==1)  /* Write a new .par file */
 	{
+		
+		std::string parname=longname+".par";
+		printf("name size: %i \n",parname.size());
+		fname=(char*)parname.c_str();
+		//fname="newpar.par";
+		printf("writing par file %s. \n",fname);
 	  FILE *fout2;
 	  char fname2[1000];
 	  char str1[100],str2[100],str3[100],str4[100],str5[100];
 	  int nread;
+
+		char hmsstr[100];
+		longturn_hms(psr[p].param[param_raj].val[0]/(2*M_PI), hmsstr);
+		
+
+		strcpy(psr[p].rajStrPost,hmsstr);
+			
+		longturn_dms(psr[p].param[param_decj].val[0]/(2*M_PI), hmsstr);
+		strcpy(psr[p].decjStrPost,hmsstr);
 
 	  if (strlen(fname)==0)
 	    {

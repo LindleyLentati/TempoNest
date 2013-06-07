@@ -45,6 +45,9 @@
 #include <limits>
 #include <sstream>
 #include <iomanip>
+#include "/usr/include/gsl/gsl_sf_gamma.h"
+
+void writeCov(std::vector<double> Cube, int &ndim,void *context, std::string longname, int outputoption);
 
 double iter_factorial(unsigned int n)
 {
@@ -60,7 +63,9 @@ double iter_factorial(unsigned int n)
 void readsummary(pulsar *psr, std::string longname, int ndim, void *context, long double *Tempo2Fit, int incRED, int ndims, int doTimeMargin, int doJumpMargin, int doLinear){
 
 	int number_of_lines = 0;
+	int outputoption=0;
 	char *outname;
+	int pcount=0;
 
 	std::ifstream checkfile;
 	std::string checkname = longname+"summary.txt";
@@ -81,18 +86,37 @@ void readsummary(pulsar *psr, std::string longname, int ndim, void *context, lon
 			
 			std::string line;
 			getline(summaryfile,line);
+			//printf("line %s \n", line);
 			std::istringstream myStream( line );
 			std::istream_iterator< double > begin(myStream),eof;
 			std::vector<double> paramlist(begin,eof);
-			int pcount=0;
+
+	
+			long double *LDP = new long double[ndim];
+
+			pcount=0;
+			for(int j=0;j<((MNStruct *)context)->numFitTiming;j++){
+						
+					LDP[j]=paramlist[j+outputoption*ndim]*(((MNStruct *)context)->LDpriors[pcount][1])+(((MNStruct *)context)->LDpriors[pcount][0]);
+					pcount++;
+			}
+			for(int j=0;j<((MNStruct *)context)->numFitJumps;j++){
+					LDP[pcount]=paramlist[pcount+outputoption*ndim]*(((MNStruct *)context)->LDpriors[pcount][1])+(((MNStruct *)context)->LDpriors[pcount][0]);
+					pcount++;
+			}
+			
+	
+				
+			pcount=0;
 			int jj=0;
 			if(doLinear==1){
+			
 				double *linearParams=new double[ndim];
 				double *nonLinearParams=new double[ndim];
 				double *errorvec=new double[ndim];
 				double *nonLinearerror=new double[ndim];
 				for(int j=0;j<ndim;j++){
-					linearParams[j]=paramlist[j];
+					linearParams[j]=paramlist[j+outputoption*ndim];
 					errorvec[j]=paramlist[j+ndim];
 					printf("%i %g %g \n",j,linearParams[j],errorvec[j]);
 					nonLinearerror[j]=0;
@@ -100,119 +124,166 @@ void readsummary(pulsar *psr, std::string longname, int ndim, void *context, lon
 				}
 				TNupdateParameters(psr,0,linearParams,errorvec, nonLinearParams);
 				TNupdateParameters(psr,0,errorvec,errorvec, nonLinearerror);
-                                for(int j=1;j<=((MNStruct *)context)->numFitTiming+((MNStruct *)context)->numFitJumps;j++){
-                                        if(((MNStruct *)context)->LDpriors[j-1][1] != 0){
-						 printf("before %i %g %g %Lg\n",j,nonLinearParams[j],nonLinearerror[j],((MNStruct *)context)->LDpriors[j-1][1]);
-						nonLinearParams[j]=nonLinearParams[j]/((MNStruct *)context)->LDpriors[j-1][1];
-						nonLinearerror[j]=nonLinearerror[j]/((MNStruct *)context)->LDpriors[j-1][1];
-						printf("after %i %g %g %Lg\n",j,nonLinearParams[j],nonLinearerror[j],((MNStruct *)context)->LDpriors[j-1][1]);
+                for(int j=0;j<((MNStruct *)context)->numFitTiming+((MNStruct *)context)->numFitJumps;j++){
+                        if(((MNStruct *)context)->LDpriors[j][1] != 0){
+						 printf("before %i %g %g %Lg\n",j,nonLinearParams[j],nonLinearerror[j],((MNStruct *)context)->LDpriors[j][1]);
+						nonLinearParams[j]=nonLinearParams[j]/((MNStruct *)context)->LDpriors[j][1];
+						nonLinearerror[j]=nonLinearerror[j]/((MNStruct *)context)->LDpriors[j][1];
+						printf("after %i %g %g %Lg\n",j,nonLinearParams[j],nonLinearerror[j],((MNStruct *)context)->LDpriors[j][1]);
 					}
 					else{
 						nonLinearParams[j]=0;
 						nonLinearerror[j]=0;
 					}
-                                }
+                }
 
+				pcount=1;
+                for(int j=1;j<((MNStruct *)context)->numFitTiming;j++){
 
-                        for(int j=1;j<((MNStruct *)context)->numFitTiming;j++){
+                        long double value=nonLinearParams[j]*(((MNStruct *)context)->LDpriors[pcount][1])+(((MNStruct *)context)->LDpriors[pcount][0]);
+                        long double error=nonLinearerror[j]*(((MNStruct *)context)->LDpriors[pcount][1]);
+                        ((MNStruct *)context)->pulse->param[((MNStruct *)context)->TempoFitNums[pcount][0]].val[((MNStruct *)context)->TempoFitNums[pcount][1]] = value;
+                        ((MNStruct *)context)->pulse->param[((MNStruct *)context)->TempoFitNums[pcount][0]].err[((MNStruct *)context)->TempoFitNums[pcount][1]] = error;
+                        printf("%i %Lg %Lg %Lg %Lg \n",j,(((MNStruct *)context)->LDpriors[pcount][0]),(((MNStruct *)context)->LDpriors[pcount][1]),value,error);
+                        printf("%i %g \n", j, paramlist[j]);
+                        pcount++;
+                }
 
-                                long double value=nonLinearParams[j]*(((MNStruct *)context)->LDpriors[pcount][1])+(((MNStruct *)context)->LDpriors[pcount][0]);
-                                long double error=nonLinearerror[j]*(((MNStruct *)context)->LDpriors[pcount][1]);
-                                psr[0].param[((MNStruct *)context)->TempoFitNums[pcount][0]].val[((MNStruct *)context)->TempoFitNums[pcount][1]] = value;
-                                psr[0].param[((MNStruct *)context)->TempoFitNums[pcount][0]].err[((MNStruct *)context)->TempoFitNums[pcount][1]] = error;
-                                printf("%i %Lg %Lg %Lg %Lg \n",j,(((MNStruct *)context)->LDpriors[pcount][0]),(((MNStruct *)context)->LDpriors[pcount][1]),value,error);
-                                printf("%i %g \n", j, paramlist[j]);
-                                pcount++;
-                        }
+                       for(int j=0;j<((MNStruct *)context)->numFitJumps;j++){
 
-                        for(int j=0;j<((MNStruct *)context)->numFitJumps;j++){
-
-                                long double value=nonLinearParams[pcount+1];
-                                long double error=nonLinearerror[pcount+1]*(((MNStruct *)context)->LDpriors[pcount][1]);
-                                psr[0].jumpVal[((MNStruct *)context)->TempoJumpNums[j]] = value;
-                                psr[0].jumpValErr[((MNStruct *)context)->TempoJumpNums[j]] = error;
+                                long double value=nonLinearParams[pcount]*(((MNStruct *)context)->LDpriors[pcount][1])+(((MNStruct *)context)->LDpriors[pcount][0]);
+                                long double error=nonLinearerror[pcount]*(((MNStruct *)context)->LDpriors[pcount][1]);
+                                ((MNStruct *)context)->pulse->jumpVal[((MNStruct *)context)->TempoJumpNums[j]] = value;
+                                ((MNStruct *)context)->pulse->jumpValErr[((MNStruct *)context)->TempoJumpNums[j]] = error;
                                 pcount++;
                         }
 			}
 			else{
-			for(int j=0;j<((MNStruct *)context)->numFitTiming;j++){
+			pcount=1;
+			for(int j=1;j<((MNStruct *)context)->numFitTiming;j++){
+			
+				long double value;
+				long double error;
 				
-				long double value=paramlist[j]*(((MNStruct *)context)->LDpriors[pcount][1])+(((MNStruct *)context)->LDpriors[pcount][0]);
-				long double error=paramlist[j+ndim]*(((MNStruct *)context)->LDpriors[pcount][1]);
-				psr[0].param[((MNStruct *)context)->TempoFitNums[pcount][0]].val[((MNStruct *)context)->TempoFitNums[pcount][1]] = value;
-				psr[0].param[((MNStruct *)context)->TempoFitNums[pcount][0]].err[((MNStruct *)context)->TempoFitNums[pcount][1]] = error;
+				value=LDP[pcount];
+	
+				if(doTimeMargin==0){
+
+				error=paramlist[j+ndim]*(((MNStruct *)context)->LDpriors[pcount][1]);
+				}
+				else if(doTimeMargin==1){
+					if(strcasecmp(((MNStruct *)context)->pulse->param[((MNStruct *)context)->TempoFitNums[pcount][0]].shortlabel[((MNStruct *)context)->TempoFitNums[pcount][1]],"F0")==0 || strcasecmp(((MNStruct *)context)->pulse->param[((MNStruct *)context)->TempoFitNums[pcount][0]].shortlabel[((MNStruct *)context)->TempoFitNums[pcount][1]],"F1")==0){
+						error=0;
+					}
+					else{
+
+
+						error=paramlist[j+ndim]*(((MNStruct *)context)->LDpriors[pcount][1]);
+					}
+				}
+				else if(doTimeMargin==2){
+					
+					error=0;
+				}
+				
+				
+				((MNStruct *)context)->pulse->param[((MNStruct *)context)->TempoFitNums[pcount][0]].val[((MNStruct *)context)->TempoFitNums[pcount][1]] = value;
+				((MNStruct *)context)->pulse->param[((MNStruct *)context)->TempoFitNums[pcount][0]].err[((MNStruct *)context)->TempoFitNums[pcount][1]] = error;
 				printf("%i %Lg %Lg %Lg %Lg \n",j,(((MNStruct *)context)->LDpriors[pcount][0]),(((MNStruct *)context)->LDpriors[pcount][1]),value,error);
-				printf("%i %g \n", j, paramlist[j]);
+				printf("%i %.25Lg %.25Lg \n", j, value, error);
 				pcount++;
 			}
 			
 			for(int j=0;j<((MNStruct *)context)->numFitJumps;j++){
 				
-				long double value=paramlist[pcount]*(((MNStruct *)context)->LDpriors[pcount][1])+(((MNStruct *)context)->LDpriors[pcount][0]);
-				long double error=paramlist[pcount+ndim]*(((MNStruct *)context)->LDpriors[pcount][1]);
-				psr[0].jumpVal[((MNStruct *)context)->TempoJumpNums[j]] = value;
-				psr[0].jumpValErr[((MNStruct *)context)->TempoJumpNums[j]] = error;
+				long double value;
+				long double error;
+				
+				value=LDP[pcount];
+				
+				if(doJumpMargin==0){
+
+					error=paramlist[pcount+ndim]*(((MNStruct *)context)->LDpriors[pcount][1]);
+				}
+				else{
+				
+				error=0;
+				}
+				
+				((MNStruct *)context)->pulse->jumpVal[((MNStruct *)context)->TempoJumpNums[j]] = value;
+				((MNStruct *)context)->pulse->jumpValErr[((MNStruct *)context)->TempoJumpNums[j]] = error;
 				printf("%i %Lg %Lg %Lg %Lg \n",pcount,(((MNStruct *)context)->LDpriors[pcount][0]),(((MNStruct *)context)->LDpriors[pcount][1]),value,error);
 				pcount++;
+			}	
 			}
-			}
+			
+				
+		 
+		  	
+			
+	
+	
+			formBatsAll(((MNStruct *)context)->pulse,1);           // Form Barycentric arrival times 
+			formResiduals(((MNStruct *)context)->pulse,1,1);       //Form residuals 
+			
+			std::ofstream designfile;
+			std::string dname = longname+"designMatrix.txt";
+			std::ofstream resfile;
+			std::string rname = longname+"res.dat";
+			printf("Writing Timing Model Design Matrix and Residuals\n");
+
+			designfile.open(dname.c_str());
+			resfile.open(rname.c_str());
+			double pdParamDeriv[MAX_PARAMS];
+			int numtofit=((MNStruct *)context)->numFitTiming+((MNStruct *)context)->numFitJumps;
+			designfile << psr->nobs;
+			designfile << " ";
+			designfile << numtofit;
+			designfile << "\n";
+			designfile << psr->param[param_raj].val[0];
+			designfile << " ";
+			designfile << psr->param[param_decj].val[0];
+			designfile << "\n";		
+			for(int i=0; i < psr->nobs; i++) {
+
+				std::stringstream rs;
+				rs.precision(std::numeric_limits<double>::digits10);//override the default
+
+				rs << psr->obsn[i].bat;
+				rs << " ";
+				rs << psr->obsn[i].residual;
+				rs << " ";
+				rs << psr->obsn[i].toaErr*pow(10.0,-6);
+				resfile << rs.str();
+				resfile << "\n";		
+
+				FITfuncs(psr[0].obsn[i].bat - psr[0].param[param_pepoch].val[0], pdParamDeriv, numtofit, psr, i,0);
+				for(int j=0; j<numtofit; j++) {
+					std::stringstream ss;
+					ss.precision(std::numeric_limits<double>::digits10);//override the default
+					ss << pdParamDeriv[j];
+	
+					designfile << ss.str();
+					designfile << " ";
+	 				//printf("%i %i %22.20e \n", i,j,pdParamDeriv[j]);
+	
+				} 
+				designfile << "\n";
+	
+			} 
+
+			designfile.close();
+			resfile.close();
+		
+			writeCov(paramlist, ndim,context, longname,outputoption);
+
 			double Evidence=paramlist[4*ndim];
-			TNtextOutput(psr, 1, 0, Tempo2Fit,  context,incRED,ndims,paramlist, Evidence, doTimeMargin, doJumpMargin, doLinear);
+			TNtextOutput(((MNStruct *)context)->pulse, 1, 0, Tempo2Fit,  context,incRED,ndims,paramlist, Evidence, doTimeMargin, doJumpMargin, doLinear, longname);
+			
+			
 			printf("finished output \n");
 		}
 		summaryfile.close();
-
-
-		formBatsAll(psr,1);           /* Form Barycentric arrival times */
-		formResiduals(psr,1,1);       /* Form residuals */
-
-		std::ofstream designfile;
-		std::string dname = longname+"designMatrix.txt";
-		std::ofstream resfile;
-		std::string rname = longname+"res.dat";
-		printf("Writing Timing Model Design Matrix and Residuals\n");
-
-		designfile.open(dname.c_str());
-		resfile.open(rname.c_str());
-		double pdParamDeriv[MAX_PARAMS];
-		int numtofit=((MNStruct *)context)->numFitTiming+((MNStruct *)context)->numFitJumps + 1;
-		designfile << psr->nobs;
-		designfile << " ";
-		designfile << numtofit;
-		designfile << "\n";
-		designfile << psr->param[param_raj].val[0];
-		designfile << " ";
-		designfile << psr->param[param_decj].val[0];
-		designfile << "\n";		
-		for(int i=0; i < psr->nobs; i++) {
-
-			std::stringstream rs;
-			rs.precision(std::numeric_limits<double>::digits10);//override the default
-
-			rs << psr->obsn[i].bat;
-			rs << " ";
-			rs << psr->obsn[i].residual;
-			rs << " ";
-			rs << psr->obsn[i].toaErr*pow(10.0,-6);
-			resfile << rs.str();
-			resfile << "\n";		
-
-			FITfuncs(psr[0].obsn[i].bat - psr[0].param[param_pepoch].val[0], pdParamDeriv, numtofit, psr, i);
-			for(int j=0; j<numtofit; j++) {
-				std::stringstream ss;
-				ss.precision(std::numeric_limits<double>::digits10);//override the default
-				ss << pdParamDeriv[j];
-	
-				designfile << ss.str();
-				designfile << "\n";
-// 				printf("%i %i %22.20e \n", i,j,pdParamDeriv[j]);
-	
-			} 
-	
-		} 
-
-		designfile.close();
-		resfile.close();
 
 	}
 	else{
@@ -247,7 +318,7 @@ void getDMatrix(pulsar *pulse, int TimetoFit, int JumptoFit, int numToMargin, in
 
 
 	if(doTimeMargin==0){
-		for (int p=0;p<TimetoFit;p++) {
+		for (int p=1;p<TimetoFit;p++) {
 			pulse[0].param[TempoFitNums[p][0]].fitFlag[TempoFitNums[p][1]] = 0;
 		}
 	}
@@ -286,10 +357,10 @@ void getDMatrix(pulsar *pulse, int TimetoFit, int JumptoFit, int numToMargin, in
 
 
 	for(int i=0; i < pulse->nobs; i++) {
-		FITfuncs(pulse[0].obsn[i].bat - pulse[0].param[param_pepoch].val[0], pdParamDeriv, numToMargin, pulse, i);
+		FITfuncs(pulse[0].obsn[i].bat - pulse[0].param[param_pepoch].val[0], pdParamDeriv, numToMargin, pulse, i,0);
 		for(int j=0; j<numToMargin; j++) {
 			TNDM[i][j]=pdParamDeriv[j];
-// 			printf("%i %i %22.20e \n", i,j,pdParamDeriv[j]);
+ 			//printf("%i %i %22.20e \n", i,j,pdParamDeriv[j]);
 
 		} 
 
@@ -298,7 +369,7 @@ void getDMatrix(pulsar *pulse, int TimetoFit, int JumptoFit, int numToMargin, in
 
 	//Now set fit flags back to how they were
 
-	for (int p=0;p<TimetoFit;p++) {
+	for (int p=1;p<TimetoFit;p++) {
 		pulse[0].param[TempoFitNums[p][0]].fitFlag[TempoFitNums[p][1]] = 1;
 	}
 
@@ -317,8 +388,13 @@ void getMarginDMatrix(pulsar *pulse, int TimetoFit, int JumptoFit, int numToMarg
 	//Unset all fit flags for parameters we arn't marginalising over so they arn't in the design Matrix
 	//If we are marginalising, change the prior so you dont sample it
 
-	if(linearFit ==0){
+
 		if(JumptoFit>0){
+		
+				Dpriors[0][0]=0;  //Prior on Phase is zero
+				Dpriors[0][1]=0;
+				
+				
 			if(doJumpMargin==0){
 				for(int i=0; i < JumptoFit; i++){
 					pulse[0].fitJump[TempoJumpNums[i]]=0;
@@ -335,13 +411,16 @@ void getMarginDMatrix(pulsar *pulse, int TimetoFit, int JumptoFit, int numToMarg
 	
 	
 		if(doTimeMargin==0){
-			for (int p=0;p<TimetoFit;p++) {
+			for (int p=1;p<TimetoFit;p++) {
 				pulse[0].param[TempoFitNums[p][0]].fitFlag[TempoFitNums[p][1]] = 0;
 			}
 		}
 		//If only marginalising over QSD (i.e. F0 and F1) then set all other flags to 0
 		else if(doTimeMargin==1){	
 			int pcount=0;
+			Dpriors[pcount][0]=0;
+			Dpriors[pcount][1]=0;
+			pcount++;
 			for (int p=0;p<MAX_PARAMS;p++) {
 				if(strcasecmp(pulse[0].param[p].shortlabel[0],"F0")!=0){
 					for (int k=0;k<pulse[0].param[p].aSize;k++){
@@ -374,7 +453,7 @@ void getMarginDMatrix(pulsar *pulse, int TimetoFit, int JumptoFit, int numToMarg
 	
 	
 		for(int i=0; i < pulse->nobs; i++) {
-			FITfuncs(pulse[0].obsn[i].bat - pulse[0].param[param_pepoch].val[0], pdParamDeriv, numToMargin, pulse, i);
+			FITfuncs(pulse[0].obsn[i].bat - pulse[0].param[param_pepoch].val[0], pdParamDeriv, numToMargin, pulse, i,0);
 			for(int j=0; j<numToMargin; j++) {
 				TNDM[i][j]=pdParamDeriv[j];
 // 				printf("%i %i %22.20e \n", i,j,pdParamDeriv[j]);
@@ -386,105 +465,15 @@ void getMarginDMatrix(pulsar *pulse, int TimetoFit, int JumptoFit, int numToMarg
 	
 		//Now set fit flags back to how they were
 	
-		for (int p=0;p<TimetoFit;p++) {
+		for (int p=1;p<TimetoFit;p++) {
 			pulse[0].param[TempoFitNums[p][0]].fitFlag[TempoFitNums[p][1]] = 1;
 		}
 	
 		for(int i=0; i < JumptoFit; i++){
 			pulse[0].fitJump[TempoJumpNums[i]]=1;
 		}
-	}
+	
 
-
-	else if(linearFit ==1){
-
-
-
-		if(JumptoFit>0){
-			if(doJumpMargin==0){
-				for(int i=0; i < JumptoFit; i++){
-					pulse[0].fitJump[TempoJumpNums[i]]=0;
-				}
-			} 
-			else if(doJumpMargin==1){
-				//Prior on phase is zero for all
-				Dpriors[0][0]=0;
-				Dpriors[0][1]=0;
-
-				for(int i=0; i < JumptoFit; i++){
-					Dpriors[1+TimetoFit+i][0]=0;
-					Dpriors[1+TimetoFit+i][1]=0;
-					
-				}
-			}
-		}
-	
-	
-		if(doTimeMargin==0){
-			for (int p=0;p<TimetoFit;p++) {
-				pulse[0].param[TempoFitNums[p][0]].fitFlag[TempoFitNums[p][1]] = 0;
-			}
-		}
-		//If only marginalising over QSD (i.e. F0 and F1) then set all other flags to 0
-		else if(doTimeMargin==1){	
-
-			//Prior on phase is zero for all
-			Dpriors[0][0]=0;
-			Dpriors[0][1]=0;
-			int pcount=1;
-			
-			for (int p=0;p<MAX_PARAMS;p++) {
-				if(strcasecmp(pulse[0].param[p].shortlabel[0],"F0")!=0){
-					for (int k=0;k<pulse[0].param[p].aSize;k++){
-						if(pulse[0].param[p].fitFlag[k] == 1){
-							//printf("in getDM %s \n",pulse[0].param[p].shortlabel[k]);
-							pulse[0].param[p].fitFlag[k]=0;
-							pcount++;
-						}
-					}
-				}
-				else if(strcasecmp(pulse[0].param[p].shortlabel[0],"F0")==0){
-					for (int k=0;k<pulse[0].param[p].aSize;k++){
-						if(pulse[0].param[p].fitFlag[k] == 1){
-							//printf("in getDM %s setting prior %i to zero\n",pulse[0].param[p].shortlabel[k], pcount);
-							Dpriors[pcount][0]=0;
-							Dpriors[pcount][1]=0;
-							pcount++;
-						}
-					}
-				}
-						
-			}
-		}
-		else if(doTimeMargin==2){	
-			for(int i=0; i < TimetoFit+1; i++){
-				Dpriors[i][0]=0;
-				Dpriors[i][1]=0;
-			}
-		}
-	
-	
-		for(int i=0; i < pulse->nobs; i++) {
-			FITfuncs(pulse[0].obsn[i].bat - pulse[0].param[param_pepoch].val[0], pdParamDeriv, numToMargin, pulse, i);
-			for(int j=0; j<numToMargin; j++) {
-				TNDM[i][j]=pdParamDeriv[j];
-				//printf("%i %i %22.20e \n", i,j,pdParamDeriv[j]);
-	
-			} 
-	
-		} 
-	
-	
-		//Now set fit flags back to how they were
-	
-		for (int p=0;p<TimetoFit;p++) {
-			pulse[0].param[TempoFitNums[p][0]].fitFlag[TempoFitNums[p][1]] = 1;
-		}
-	
-		for(int i=0; i < JumptoFit; i++){
-			pulse[0].fitJump[TempoJumpNums[i]]=1;
-		}
-	}
 
 
 
@@ -609,7 +598,7 @@ void convertFromLinear(pulsar *psr, std::string longname, int ndim, void *contex
 		std::vector<double> paramlist(begin,eof);
 
 		
-		for(int j=0;j<((MNStruct *)context)->numFitTiming+((MNStruct *)context)->numFitJumps+1;j++){
+		for(int j=0;j<((MNStruct *)context)->numFitTiming+((MNStruct *)context)->numFitJumps;j++){
 			linearParams[j]=paramlist[2+j];
 			nonLinearParams[j]=0;
 		}
@@ -623,24 +612,24 @@ void convertFromLinear(pulsar *psr, std::string longname, int ndim, void *contex
 		txtstream << "\t";
 		txtstream << paramlist[1];
 		txtstream << "\t";
-		for(int j=0;j<((MNStruct *)context)->numFitTiming+((MNStruct *)context)->numFitJumps+1;j++){
+		for(int j=0;j<((MNStruct *)context)->numFitTiming+((MNStruct *)context)->numFitJumps;j++){
 			if(j==0){
 				txtstream << nonLinearParams[j];
 				txtstream << "\t";
 			}
 			else{
-				if(((MNStruct *)context)->LDpriors[j-1][1] != 0){
-					txtstream << nonLinearParams[j]/((MNStruct *)context)->LDpriors[j-1][1];
+				if(((MNStruct *)context)->LDpriors[j][1] != 0){
+					txtstream << nonLinearParams[j]/((MNStruct *)context)->LDpriors[j][1];
 					txtstream << "\t";
 				}
 				else{
 					txtstream << 0;
-                                        txtstream << "\t";
+                    txtstream << "\t";
 				}
 // 				printf("%i %i %g %g %g \n",i,j,linearParams[j],nonLinearParams[j],(double)((MNStruct *)context)->LDpriors[j-1][1]);
 			}
 		}
-		for(int j=((MNStruct *)context)->numFitTiming+((MNStruct *)context)->numFitJumps+1;j<ndim;j++){
+		for(int j=((MNStruct *)context)->numFitTiming+((MNStruct *)context)->numFitJumps;j<ndim;j++){
 
 				txtstream << paramlist[j+2];
 				txtstream << "\t";
@@ -657,3 +646,137 @@ void convertFromLinear(pulsar *psr, std::string longname, int ndim, void *contex
 
 
 }
+
+
+void writeCov(std::vector<double> Cube, int &ndim,void *context, std::string longname, int outputoption)
+{
+
+	clock_t startClock,endClock;
+	long double LDparams[ndim];
+	double *EFAC;
+	double EQUAD, redamp, redalpha;
+	
+			  for(int i =0; i< 4*ndim; i++){
+		  	printf("bparm: %i %g \n ", i, Cube[i]);
+			}	
+	
+	
+	int pcount=outputoption*ndim;
+
+
+	for(int p=0;p<((MNStruct *)context)->numFitTiming;p++){
+		pcount++;
+	}
+	for(int p=0;p<((MNStruct *)context)->numFitJumps;p++){
+		pcount++;
+	}
+
+	if(((MNStruct *)context)->numFitEFAC == 0){
+		EFAC=new double[1];
+		EFAC[0]=1;
+// 		
+	}
+	else if(((MNStruct *)context)->numFitEFAC == 1){
+		EFAC=new double[1];
+		EFAC[0]=Cube[pcount];
+		pcount++;
+		
+	}
+	else if(((MNStruct *)context)->numFitEFAC > 1){
+		EFAC=new double[((MNStruct *)context)->numFitEFAC];
+		for(int p=0;p< ((MNStruct *)context)->numFitEFAC; p++){
+			EFAC[p]=Cube[pcount];
+			printf("EF: %i %g \n",p,EFAC[p]);
+			pcount++;
+			
+		}
+	}				
+
+	if(((MNStruct *)context)->numFitEQUAD == 0){
+		EQUAD=0;
+// 		printf("EQUAD: %g \n",EQUAD);
+	}
+	else{
+		
+		EQUAD=pow(10.0,2*Cube[pcount]);
+		printf("EQ: %g \n",Cube[pcount]);
+		pcount++;
+		
+
+	}
+
+
+	redamp=Cube[pcount];
+	pcount++;
+	redalpha=Cube[pcount];
+	pcount++;
+
+	printf("red: %g %g \n",redamp, redalpha);
+	double secday=24*60*60;
+	double LongestPeriod=1.0/pow(10.0,-5);
+	double flo=1.0/LongestPeriod;
+
+	double modelalpha=redalpha;
+	double gwamp=pow(10.0,redamp);
+	double gwampsquared=gwamp*gwamp*(pow((365.25*secday),2)/(12*M_PI*M_PI))*(pow(365.25,(1-modelalpha)))/(pow(flo,(modelalpha-1)));
+
+	double timdiff=0;
+
+	double covconst=gsl_sf_gamma(1-modelalpha)*sin(0.5*M_PI*modelalpha);
+
+	
+	double **CovMatrix = new double*[((MNStruct *)context)->pulse->nobs]; for(int o1=0;o1<((MNStruct *)context)->pulse->nobs;o1++)CovMatrix[o1]=new double[((MNStruct *)context)->pulse->nobs];
+
+	for(int o1=0;o1<((MNStruct *)context)->pulse->nobs; o1++){
+
+		for(int o2=0;o2<((MNStruct *)context)->pulse->nobs; o2++){
+			timdiff=((MNStruct *)context)->pulse->obsn[o1].bat-((MNStruct *)context)->pulse->obsn[o2].bat;	
+			double tau=2.0*M_PI*fabs(timdiff);
+			double covsum=0;
+
+			for(int k=0; k <=4; k++){
+				covsum=covsum+pow(-1.0,k)*(pow(flo*tau,2*k))/(iter_factorial(2*k)*(2*k+1-modelalpha));
+
+			}
+
+			CovMatrix[o1][o2]=gwampsquared*(covconst*pow((flo*tau),(modelalpha-1)) - covsum);
+// 			printf("%i %i %g %g %g\n",o1,o2,CovMatrix[o1][o2],fabs(timdiff),covsum);
+
+			if(o1==o2){
+				CovMatrix[o1][o2] += pow(((((MNStruct *)context)->pulse->obsn[o1].toaErr)*pow(10.0,-6))*EFAC[((MNStruct *)context)->sysFlags[o1]],2) + EQUAD;
+			}
+
+		}
+	}
+	
+	
+	FILE *pFile;
+	std::string covname = longname+"covMatrix.txt";
+	pFile = fopen(covname.c_str(), "w+");
+	
+	for(int i=0; i<((MNStruct *)context)->pulse->nobs; i++) {
+
+    	for(int j=0; j<((MNStruct *)context)->pulse->nobs; j++) {
+     		 fprintf(pFile, "%22.20e", CovMatrix[i][j]);
+     		 fprintf(pFile, " ");
+     	}
+        fprintf(pFile, "\n");
+     }
+     	
+     fclose(pFile);	
+     
+
+	std::string maxstoc = longname+"maxStoc.txt";
+	pFile = fopen(maxstoc.c_str(), "w+");
+	
+	for(int p=0;p< ((MNStruct *)context)->numFitEFAC; p++){
+			fprintf(pFile, "Max EFAC %i %22.20e \n",p, EFAC[p]);
+		}
+
+	fprintf(pFile, "Max EQUAD 0 %22.20e \n",0.50*log10(EQUAD));
+	fprintf(pFile, "Max Red Amp %22.20e \n",redamp);
+	fprintf(pFile, "Max Red Index %22.20e \n",redalpha);
+
+     fclose(pFile);	
+}	 
+     		 

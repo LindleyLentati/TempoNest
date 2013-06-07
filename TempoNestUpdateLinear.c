@@ -30,6 +30,56 @@
 #include <math.h>
 #include <stdio.h>
 #include <string.h>
+#include "TempoNest.h"
+
+void getLinearPriors(pulsar *psr, double **Dmatrix, long double **LDpriors, double **Dpriors, int numtofit, int fitsig){
+
+	double *linearParams = new double[numtofit];
+	double *nonLinearParams = new double[numtofit];
+	double *errorvec = new double[numtofit];
+		
+	nonLinearParams[0]=(double)psr[0].offset_e;
+	linearParams[0]=0;
+	for(int j=1;j<numtofit;j++){
+		nonLinearParams[j]=(double)LDpriors[j][1];
+		linearParams[j]=0;
+
+	}
+	TNIupdateParameters(psr,0,nonLinearParams,errorvec, linearParams);
+
+	double *Drms=new double[numtofit];
+	for(int i =0; i < numtofit; i++){
+		Drms[i]=0;
+		
+		for(int j =0; j < psr->nobs; j++){
+			Drms[i] += Dmatrix[j][i]*Dmatrix[j][i];
+// 			printf("%i %i %g \n",i,j,Dmatrix[j][i]);
+		}
+		Drms[i]=sqrt(Drms[i]/psr->nobs);
+	}
+
+	for(int i =0; i < numtofit; i++){
+		if(Dpriors[i][0] !=0 && Dpriors[i][1] != 0){
+			if(Drms[i] != 0){
+				Dpriors[i][0]=Dpriors[i][0]*linearParams[i];
+				Dpriors[i][1]=Dpriors[i][1]*linearParams[i];
+				//printf("DP: %i %g  %g\n",i,Dpriors[i][0], Dpriors[i][1]);
+			}
+			else if(Drms[i] == 0){
+				Dpriors[i][0]=0;
+				Dpriors[i][1]=0;
+				//printf("DP: %i %g %g %g %g\n",i,fitsig*trms,Drms[i],Dpriors[i][0], Dpriors[i][1]);
+			}
+
+						
+		}
+		else {
+			printf("DP: Prior %i is set to zero, marginalising?\n ", i);
+		}
+
+// 		printf("compare: %i %g %g \n",i,trms/Drms[i],linearParams[i]);
+	}
+}
 
 void TNupdateDD(pulsar *psr,double val,double err,int pos, double &outval)
 {
@@ -1544,4 +1594,3 @@ void TNIupdateParameters(pulsar *psr,int p,double *val,double *error, double *ou
     }
   logdbg("Complete updating parameters");
 }
-
