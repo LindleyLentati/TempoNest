@@ -436,12 +436,18 @@ int main(int argc, char *argv[])
 	    outputSO,&flagPolyco,polyco_args,&newpar,&onlypre,dcmFile,covarFuncFile,newparname);
   logdbg("Completed getInputs");
 
+	int doMaxLike=0;
   for (i=1;i<argc;i++)
     {
 	if (strcmp(commandLine[i],"-sim")==0 ){ // Doing Sim?
 		//printf("Doing sim\n");
 		doSim(argc, commandLine, psr, timFile, parFile);
 		return 0;
+	}
+
+	if (strcmp(commandLine[i],"-maxlike")==0 ){ // Doing Sim?
+		//printf("Doing sim\n");
+		doMaxLike=1;
 	}
 
       if (strcmp(commandLine[i],"-gr")==0 || strcmp(commandLine[i],"-gr2")==0) 
@@ -1111,6 +1117,15 @@ int main(int argc, char *argv[])
 			psr[0].jumpVal[((MNStruct *)context)->TempoJumpNums[j]] =  TempoPriors[pcount][0];
 			pcount++;
 		}
+	}
+
+	if(doMaxLike==1){
+#ifdef HAVE_CULA
+		GPUFindMLHypervisor(ndims, context,longname);
+#else
+		FindMLHypervisor(ndims, context,longname);
+#endif
+		return 0;
 	}
 	
 	//If wanting to find the max do so now

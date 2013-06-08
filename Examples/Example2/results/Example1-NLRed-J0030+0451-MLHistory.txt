@@ -1,0 +1,127 @@
+
+
+ Entered ML Hypervisor Function
+
+
+
+ Marginalising over Current Timing Model, Finding ML Stochastic Parameters 
+
+
+
+ Entered Master ML Function 
+
+Processing FitList...
+Marginalising over parameter 0 
+Marginalising over parameter 1 
+Marginalising over parameter 2 
+Marginalising over parameter 3 
+Marginalising over parameter 4 
+Marginalising over parameter 5 
+Marginalising over parameter 6 
+Marginalising over parameter 7 
+Fitting parameter 8 
+Fitting parameter 9 
+Making new G Matrix for marginalisation
+
+
+ Performing Minimisation over current model parameters 
+
+First Step Likelihood: -1760.22 
+Step[100]: Convergence: 0.0436964 Current Minimum: -1770.74 
+Converged to maximum likelihood with downhill simplex: Convergence: 0.000989109 Current Minimum: -1770.74 
+Marginalised Phase at: 0 
+Marginalised RAJ at: 0.13289445710417144593 
+Marginalised DECJ at: 0.084841193320580584683 
+Marginalised F0 at: 205.53069608827312569 
+Marginalised F1 at: -4.3060388649760815078e-16 
+Marginalised PMRA at: -4.0544817227340539502 
+Marginalised PMDEC at: -5.0330780552725575537 
+Marginalised PX at: 4.0228866975221306752 
+ML Red Amp: -13.29137382 
+ML Red Index: 4.786187275 
+
+
+ Fixing Stochastic Parameters, Marginalising over Jumps, Finding ML Timing model 
+
+
+
+ Entered Master ML Function 
+
+Processing FitList...
+Fitting parameter 0 
+Fitting parameter 1 
+Fitting parameter 2 
+Fitting parameter 3 
+Fitting parameter 4 
+Fitting parameter 5 
+Fitting parameter 6 
+Fitting parameter 7 
+Fixing parameter 8 
+Fixing parameter 9 
+
+
+ Performing Minimisation over current model parameters 
+
+First Step Likelihood: -1834.54 
+Step[100]: Convergence: 2.58642 Current Minimum: -1847.22 
+Step[200]: Convergence: 6.00524 Current Minimum: -1855.88 
+Converged to maximum likelihood with downhill simplex: Convergence: 0.000958406 Current Minimum: -1855.97 
+ML Phase: 7.7255937747495607341e-07 
+ML RAJ: 0.13289447905185456328 
+ML DECJ: 0.084841141455144851606 
+ML F0: 205.53069608828186511 
+ML F1: -4.3051574145809331983e-16 
+ML PMRA: -5.4570822379105883063 
+ML PMDEC: -1.7426392742391430073 
+ML PX: 4.1525425190104562484 
+Fixed Red Amp at: -13.29137382 
+Fixed Red Index at: 4.786187275 
+
+
+ Marginalising over Jumps, Finding ML Timing model and Stochastic Parameters 
+
+
+
+ Entered Master ML Function 
+
+Processing FitList...
+Fitting parameter 0 
+Fitting parameter 1 
+Fitting parameter 2 
+Fitting parameter 3 
+Fitting parameter 4 
+Fitting parameter 5 
+Fitting parameter 6 
+Fitting parameter 7 
+Fitting parameter 8 
+Fitting parameter 9 
+
+
+ Performing Minimisation over current model parameters 
+
+First Step Likelihood: -1855.98 
+Step[100]: Convergence: 0.61232 Current Minimum: -1860.08 
+Converged to maximum likelihood with downhill simplex: Convergence: 0.00072695 Current Minimum: -1860.09 
+ML Phase: 9.9544677544406289431e-07 
+ML RAJ: 0.13289447905355823101 
+ML DECJ: 0.084841141123003333541 
+ML F0: 205.53069608828282644 
+ML F1: -4.3048672501235776083e-16 
+ML PMRA: -5.4565283585193597696 
+ML PMDEC: -1.7099618725059194924 
+ML PX: 4.1470860951054368659 
+ML Red Amp: -13.29933139 
+ML Red Index: 3.74505647 
+
+Final ML Timing model: 
+Max RAJ : 0.13289447905355823101 
+Max DECJ : 0.084841141123003333541 
+Max F0 : 205.53069608828282644 
+Max F1 : -4.3048672501235776083e-16 
+Max PMRA : -5.4565283585193597696 
+Max PMDEC : -1.7099618725059194924 
+Max PX : 4.1470860951054368659 
+
+
+ Finished ML analysis 
+

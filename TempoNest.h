@@ -70,6 +70,8 @@ void TNtextOutput(pulsar *psr, int npsr, int newpar, long double *Tempo2Fit, voi
 void NelderMeadOptimum(int nParameters, long double *pdParameters, void *context);
 void NelderMeadOptimumSubset(int nParameters, long double *LdParameters, void *context,std::vector<double>& paramlist, std::string longname);
 void NelderMeadMargin(int nParameters, long double *LdParameters, void *context, std::vector<double>& paramlist, std::string longname);
+void FindMLHypervisor(int nParameters, void *context, std::string longname);
+void GPUFindMLHypervisor(int nParameters, void *context, std::string longname);
 
 void doSim(int argc, char **commandLine, pulsar *psr, char timFile[][MAX_FILELEN], char parFile[][MAX_FILELEN]);
 void TNSimRedfromTim(int argc, char **commandLine, pulsar *psr, char timFile[][MAX_FILELEN], char parFile[][MAX_FILELEN], double EFAC, double EQUAD, int doRed, double redlogamp, double redslope, int updateEFAC, int updateEQUAD, int doDM, double DMlogamp, double DMslope,long idum);

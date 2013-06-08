@@ -51,10 +51,10 @@ void setupparams(char *root,
 
 //General parameters:
 //Root of the results files,relative to the directory in which TempoNest is run. This will be followed by the pulsar name, and then the individual output file extensions.
-strcpy( root, "results/Example1-NL-");
+strcpy( root, "results/Example1-NLRed-");
 
 //numTempo2its - sets the number of iterations Tempo2 should do before setting the priors.  Should only be set to 0 if all the priors are set in setTNPriors
-numTempo2its=10;
+numTempo2its=1;
 
 //doLinearFit:  Switches between the full non linear timing model (doLinearFit=0) and the linear approximation for the timing model based on the initial Tempo2 Fit (= 1).
 
@@ -70,8 +70,8 @@ doMax=0;
 
 incEFAC=0; //include EFAC: 0 = none, 1 = one for all residuals, 2 = one for each observing system
 incEQUAD=0; //include EQUAD: 0 = no, 1 = yes
-incRED=0; //include Red Noise model: 0 = no, 1 = power law model (vHL2013), 2 = model independant (L2013)
-incDM=0; //include Red Noise model: 0 = no, 1 = power law model (vHL2013), 2 = model independant (L2013)
+incRED=1; //include Red Noise model: 0 = no, 1 = power law model (vHL2013), 2 = model independant (L2013)
+incDM=1; //include Red Noise model: 0 = no, 1 = power law model (vHL2013), 2 = model independant (L2013)
 
 doTimeMargin=0; //0=No Analytical Marginalisation over Timing Model. 1=Marginalise over QSD. 2=Marginalise over all Model params excluding jumps.
 doJumpMargin=0; //0=No Analytical Marginalisation over Jumps. 1=Marginalise over Jumps.

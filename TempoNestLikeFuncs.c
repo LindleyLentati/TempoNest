@@ -148,6 +148,9 @@ void vHRedLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *conte
 	double DMampsquared=0;
 	double DMcovconst=0;
 
+  	double *DMVec=new double[((MNStruct *)context)->pulse->nobs];
+	double DMKappa = 2.410*pow(10.0,-16);
+
 	if(((MNStruct *)context)->incDM==1){
 		DMamp=Cube[pcount];
 		pcount++;
@@ -157,6 +160,10 @@ void vHRedLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *conte
 		DMamp=pow(10.0,DMamp);
 		DMampsquared=DMamp*DMamp*(pow((365.25*secday),2)/(12*M_PI*M_PI))*(pow(365.25,(1-DMalpha)))/(pow(flo,(DMalpha-1)));
 		DMcovconst=gsl_sf_gamma(1-DMalpha)*sin(0.5*M_PI*DMalpha);
+
+		for(int o=0;o<((MNStruct *)context)->pulse->nobs; o++){
+			DMVec[o]=1.0/(DMKappa*pow((double)((MNStruct *)context)->pulse->obsn[o].freqSSB,2));
+		}
 	}
 
 
@@ -210,7 +217,7 @@ void vHRedLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *conte
 
 				}
 
-				CovMatrix[o1][o2] += DMampsquared*(DMcovconst*pow((flo*tau),(DMalpha-1)) - DMcovsum);
+				CovMatrix[o1][o2] += DMampsquared*(DMcovconst*pow((flo*tau),(DMalpha-1)) - DMcovsum)*DMVec[o1]*DMVec[o2];;
 			}
 		}
 	}	
@@ -361,6 +368,9 @@ void vHRedMarginLogLike(double *Cube, int &ndim, int &npars, double &lnew, void 
 	double DMampsquared=0;
 	double DMcovconst=0;
 
+  	double *DMVec=new double[((MNStruct *)context)->pulse->nobs];
+	double DMKappa = 2.410*pow(10.0,-16);
+
 	if(((MNStruct *)context)->incDM==1){
 		DMamp=Cube[pcount];
 		pcount++;
@@ -370,6 +380,10 @@ void vHRedMarginLogLike(double *Cube, int &ndim, int &npars, double &lnew, void 
 		DMamp=pow(10.0,DMamp);
 		DMampsquared=DMamp*DMamp*(pow((365.25*secday),2)/(12*M_PI*M_PI))*(pow(365.25,(1-DMalpha)))/(pow(flo,(DMalpha-1)));
 		DMcovconst=gsl_sf_gamma(1-DMalpha)*sin(0.5*M_PI*DMalpha);
+
+		for(int o=0;o<((MNStruct *)context)->pulse->nobs; o++){
+			DMVec[o]=1.0/(DMKappa*pow((double)((MNStruct *)context)->pulse->obsn[o].freqSSB,2));
+		}
 	}
 
 
@@ -423,7 +437,7 @@ void vHRedMarginLogLike(double *Cube, int &ndim, int &npars, double &lnew, void 
 
 				}
 
-				CovMatrix[o1][o2] += DMampsquared*(DMcovconst*pow((flo*tau),(DMalpha-1)) - DMcovsum);
+				CovMatrix[o1][o2] += DMampsquared*(DMcovconst*pow((flo*tau),(DMalpha-1)) - DMcovsum)*DMVec[o1]*DMVec[o2];;
 			}
 		}
 	}	

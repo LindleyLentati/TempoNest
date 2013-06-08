@@ -219,6 +219,8 @@ __global__ void MakeDMcov(double *A_d, double *BATvec, double *NoiseVec, double 
 		A_d[row * Awidth + col] += NoiseVec[row];
 	}
 
+	//printf("%i %i %g\n",row,col,A_d[row * Awidth + col]);
+
 }
 
 
@@ -702,6 +704,7 @@ extern "C" void vHRedGPUWrapper_(double *SpecInfo, double *BatVec,  double *DMVe
 	 	
 	for(int i=0; i<N;i++){
 		sum=sum+Res[i]*WorkingRes[i];
+
 	}
 
 	 likeInfo[1]=sum;
