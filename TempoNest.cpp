@@ -1,31 +1,31 @@
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
-//  Copyright (C) 2013 Lindley Lentati
+// Copyright (C) 2013 Lindley Lentati
 
 /*
-*    This file is part of TempoNest 
-* 
-*    TempoNest is free software: you can redistribute it and/or modify 
-*    it under the terms of the GNU General Public License as published by 
-*    the Free Software Foundation, either version 3 of the License, or 
-*    (at your option) any later version. 
-*    TempoNest  is distributed in the hope that it will be useful, 
-*    but WITHOUT ANY WARRANTY; without even the implied warranty of 
-*    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the 
-*    GNU General Public License for more details. 
-*    You should have received a copy of the GNU General Public License 
-*    along with TempoNest.  If not, see <http://www.gnu.org/licenses/>. 
+* This file is part of TempoNest
+*
+* TempoNest is free software: you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation, either version 3 of the License, or
+* (at your option) any later version.
+* TempoNest is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+* GNU General Public License for more details.
+* You should have received a copy of the GNU General Public License
+* along with TempoNest. If not, see <http://www.gnu.org/licenses/>.
 */
 
 /*
-*    If you use TempoNest and as a byproduct both Tempo2 and MultiNest
-*    then please acknowledge it by citing Lentati L., Alexander P., Hobson M. P. (2013) for TempoNest,
-*    Hobbs, Edwards & Manchester (2006) MNRAS, Vol 369, Issue 2, 
-*    pp. 655-672 (bibtex: 2006MNRAS.369..655H)
-*    or Edwards, Hobbs & Manchester (2006) MNRAS, VOl 372, Issue 4,
-*    pp. 1549-1574 (bibtex: 2006MNRAS.372.1549E) when discussing the
-*    timing model and MultiNest Papers here.
+* If you use TempoNest and as a byproduct both Tempo2 and MultiNest
+* then please acknowledge it by citing Lentati L., Alexander P., Hobson M. P. (2013) for TempoNest,
+* Hobbs, Edwards & Manchester (2006) MNRAS, Vol 369, Issue 2,
+* pp. 655-672 (bibtex: 2006MNRAS.369..655H)
+* or Edwards, Hobbs & Manchester (2006) MNRAS, VOl 372, Issue 4,
+* pp. 1549-1574 (bibtex: 2006MNRAS.372.1549E) when discussing the
+* timing model and MultiNest Papers here.
 */
 
 
@@ -58,42 +58,46 @@
 #include "dpotri.h"
 #include "dpotrf.h"
 
-
+#ifdef HAVE_CULA
+#include <cula_lapack_device.h>
+#endif /* HAVE_CULA */
 
 void ephemeris_routines(pulsar *psr,int npsr);
 void clock_corrections(pulsar *psr,int npsr);
 void extra_delays(pulsar *psr,int npsr);
 
+#ifdef HAVE_CULA
+extern "C" void copy_gmat_(double *G, int N);
+extern "C" void copy_floatgmat_(float *G, int N);
+#endif /* HAVE_CULA */
 
 
 void fastephemeris_routines(pulsar *psr,int npsr)
-{ 
-	vectorPulsar(psr,npsr);   /* 1. Form a vector pointing at the pulsar */
-	readEphemeris(psr,npsr,0);/* 2. Read the ephemeris */
-	tt2tb(psr,npsr);          /* Observatory/time-dependent part of TT-TB */
-	readEphemeris(psr,npsr,0);  /* Re-evaluate ephemeris with correct TB */ 
+{
+vectorPulsar(psr,npsr); /* 1. Form a vector pointing at the pulsar */
+//readEphemeris(psr,npsr,0);/* 2. Read the ephemeris */
+//tt2tb(psr,npsr); /* Observatory/time-dependent part of TT-TB */
+//readEphemeris(psr,npsr,0); /* Re-evaluate ephemeris with correct TB */
 
 }
 
 void fastformBatsAll(pulsar *psr,int npsr)
 {
-  	clock_corrections(psr,npsr);          /* Clock corrections  ... */  
- 	fastephemeris_routines(psr,npsr);         /* Ephemeris routines ... */
-  	extra_delays(psr,npsr);               /* Other time delays  ... */
-	formBats(psr,npsr);    /* Form Barycentric arrival times */
-	secularMotion(psr,npsr); 
+    //clock_corrections(psr,npsr); /* Clock corrections ... */
+    fastephemeris_routines(psr,npsr); /* Ephemeris routines ... */
+  	extra_delays(psr,npsr); /* Other time delays ... */
+	formBats(psr,npsr); /* Form Barycentric arrival times */
+	secularMotion(psr,npsr);
 
 }
 
-
-MNStruct* init_struct(pulsar *pulseval,	 long double **LDpriorsval, int numberpulsarsval,int numFitJumpsval,int numFitTimingval,int numFitEFACval, int numFitEQUADval, int numFitCoeffval, int **TempoFitNumsval,int *TempoJumpNumsval, int *sysFlagsval, int numdimsval, int incREDval, int TimeMarginVal, int JumpMarginVal, int doLinearval)
+MNStruct* init_struct(pulsar *pulseval,	 long double **LDpriorsval, int numberpulsarsval,int numFitJumpsval,int numFitTimingval,int numFitEFACval, int numFitEQUADval, int numFitCoeffval, int **TempoFitNumsval,int *TempoJumpNumsval, int *sysFlagsval, int numdimsval, int incREDval, int incDMval, int TimeMarginVal, int JumpMarginVal, int doLinearVal)
 {
-    	MNStruct* MNS = (MNStruct*)malloc(sizeof(MNStruct));
+    MNStruct* MNS = (MNStruct*)malloc(sizeof(MNStruct));
 
 	MNS->pulse=pulseval;
 	MNS->LDpriors=LDpriorsval;
 	MNS->numberpulsars=numberpulsarsval;
-	MNS->doLinear=doLinearval;
 	MNS->numFitJumps=numFitJumpsval;
 	MNS->numFitTiming=numFitTimingval;
 	MNS->numFitEFAC=numFitEFACval;
@@ -104,82 +108,117 @@ MNStruct* init_struct(pulsar *pulseval,	 long double **LDpriorsval, int numberpu
 	MNS->sysFlags=sysFlagsval;
 	MNS->numdims=numdimsval;
 	MNS->incRED=incREDval;
+	MNS->incDM=incDMval;
 	MNS->TimeMargin=TimeMarginVal;
 	MNS->JumpMargin=JumpMarginVal;
+	MNS->doLinear=doLinearVal;
 
 	return MNS;
 }
 
-void update_MNPriors(MNStruct* MNS, double ** DPriorsval, long double **priorsval){
+
+void update_MNPriors(MNStruct* MNS, double ** DPriorsval, long double **priorsval, int linearPriors){
+
+
+	int paramsfitted=1;
+
+	
+	if(linearPriors != 2){
+	//printf("lin p is 0\n");
+	for (int p=0;p<MAX_PARAMS;p++) {
+        	for (int k=0;k<MNS->pulse->param[p].aSize;k++){
+                	if(MNS->pulse->param[p].fitFlag[k] == 1){
+				if(p == param_ecc || p ==param_px || p == param_m2 || p==param_dm){
+					long double minprior=priorsval[paramsfitted][0]+DPriorsval[paramsfitted+linearPriors][0]*priorsval[paramsfitted][1];
+					if(minprior < 0){
+						printf("%.10Lg %.10Lg %g %g \n",priorsval[paramsfitted][0],priorsval[paramsfitted][1],DPriorsval[paramsfitted+linearPriors][0],DPriorsval[paramsfitted+linearPriors][1]);
+						long double newprior=-priorsval[paramsfitted][0]/priorsval[paramsfitted][1];
+						DPriorsval[paramsfitted+linearPriors][0]=(double)newprior;
+	                        		printf("Prior on %s updated to be physical (was <0) : %.25Lg -> %.25Lg\n", MNS->pulse->param[p].shortlabel[k], priorsval[paramsfitted][0]+DPriorsval[paramsfitted+linearPriors][0]*priorsval[paramsfitted][1],priorsval[paramsfitted][0]+DPriorsval[paramsfitted+linearPriors][1]*priorsval[paramsfitted][1]);
+	                        		printf("%.10Lg %.10Lg %g %g \n",priorsval[paramsfitted][0],priorsval[paramsfitted][1],DPriorsval[paramsfitted+linearPriors][0],DPriorsval[paramsfitted+linearPriors][1]);
+					}
+				}
+                                paramsfitted++;
+			 }
+                }
+       }
+
+	}
+	
 
 	MNS->Dpriors=DPriorsval;
+
 	MNS->LDpriors=priorsval;
+
 }
 
 
 
-void update_MNGdata(MNStruct* MNS, int Gsizeval, double **GMatrixval)
-{
 
-	MNS->Gsize=Gsizeval;
-	MNS->GMatrix=GMatrixval;
+	void update_MNGdata(MNStruct* MNS, int Gsizeval, double **GMatrixval)
+	{
 
-	
-}
+		MNS->Gsize=Gsizeval;
+		MNS->GMatrix=GMatrixval;
 
-void update_MNDdata(MNStruct* MNS, int Dsizeval, double **DMatrixval)
-{
+
+	}
+
+	void update_MNDdata(MNStruct* MNS, int Dsizeval, double **DMatrixval)
+	{
 
   
-	MNS->Dsize=Dsizeval;
-	MNS->DMatrix=DMatrixval;
+		MNS->Dsize=Dsizeval;
+		MNS->DMatrix=DMatrixval;
 
-}
+	}
 
-void update_MNGDdata(MNStruct* MNS, int Dsizeval, double **DMatrixval,int Gsizeval, double **GMatrixval)
-{
-
-
-	MNS->Dsize=Dsizeval;
-	MNS->DMatrix=DMatrixval;
-	MNS->Gsize=Gsizeval;
-	MNS->GMatrix=GMatrixval;
+	void update_MNGDdata(MNStruct* MNS, int Dsizeval, double **DMatrixval,int Gsizeval, double **GMatrixval)
+	{
 
 
-	
-}
+		MNS->Dsize=Dsizeval;
+		MNS->DMatrix=DMatrixval;
+		MNS->Gsize=Gsizeval;
+		MNS->GMatrix=GMatrixval;
 
 
 
-// 
+	}
+
+
+
+//
 void dumper(int &nSamples, int &nlive, int &nPar, double **physLive, double **posterior, double **paramConstr, double &maxLogLike, double &logZ, double &logZerr, void *context)
 {
-	// convert the 2D Fortran arrays to C arrays
-	
-	
-	// the posterior distribution
-	// postdist will have nPar parameters in the first nPar columns & loglike value & the posterior probability in the last two columns
-	
-	int i, j;
-	
-	double postdist[nSamples][nPar + 2];
-	for( i = 0; i < nPar + 2; i++ )
-		for( j = 0; j < nSamples; j++ )
-			postdist[j][i] = posterior[0][i * (nSamples) + j];
-	
-	
-	
-	// last set of live points
-	// pLivePts will have nPar parameters in the first nPar columns & loglike value in the last column
-	
-	double pLivePts[nlive][nPar + 1];
-	for( i = 0; i < nPar + 1; i++ )
-		for( j = 0; j < nlive; j++ )
-			pLivePts[j][i] = physLive[0][i * (nlive) + j];
+// convert the 2D Fortran arrays to C arrays
+
+
+// the posterior distribution
+// postdist will have nPar parameters in the first nPar columns & loglike value & the posterior probability in the last two columns
+
+int i, j;
+
+double postdist[nSamples][nPar + 2];
+for( i = 0; i < nPar + 2; i++ )
+for( j = 0; j < nSamples; j++ )
+postdist[j][i] = posterior[0][i * (nSamples) + j];
+
+
+
+// last set of live points
+// pLivePts will have nPar parameters in the first nPar columns & loglike value in the last column
+
+double pLivePts[nlive][nPar + 1];
+for( i = 0; i < nPar + 1; i++ )
+for( j = 0; j < nlive; j++ )
+pLivePts[j][i] = physLive[0][i * (nlive) + j];
 }
 
 
 
+/* The main function of a plugin called from Tempo2 is 'graphicalInterface'
+*/
 int main(int argc, char *argv[])
 {
 	int iteration; 
@@ -205,6 +244,7 @@ int main(int argc, char *argv[])
 	clock_t startClock,endClock;
 	const char *CVS_verNum = "$Revision: 1.28 $";
 	int numFitJumps;
+	int numToMargin=0;
 
 
   printf("This program comes with ABSOLUTELY NO WARRANTY.\n");
@@ -397,12 +437,18 @@ int main(int argc, char *argv[])
 	    outputSO,&flagPolyco,polyco_args,&newpar,&onlypre,dcmFile,covarFuncFile,newparname);
   logdbg("Completed getInputs");
 
+	int doMaxLike=0;
   for (i=1;i<argc;i++)
     {
 	if (strcmp(commandLine[i],"-sim")==0 ){ // Doing Sim?
 		//printf("Doing sim\n");
 		doSim(argc, commandLine, psr, timFile, parFile);
 		return 0;
+	}
+
+	if (strcmp(commandLine[i],"-maxlike")==0 ){ // Doing Sim?
+		//printf("Doing sim\n");
+		doMaxLike=1;
 	}
 
       if (strcmp(commandLine[i],"-gr")==0 || strcmp(commandLine[i],"-gr2")==0) 
@@ -589,7 +635,7 @@ int main(int argc, char *argv[])
       logdbg("Number of pulsars = %d",npsr);
     }
 
-
+	
 	char root[100]; 
 	int numTempo2its;
 	int doLinearFit;
@@ -597,15 +643,19 @@ int main(int argc, char *argv[])
 	int incEFAC;
 	int incEQUAD;
 	int incRED;
+	int incDM;
 	int doTimeMargin;
 	int doJumpMargin;
 	double FitSig;
 	int customPriors;
 	int Reddims=0;
+	int DMdims=0;
 	double *EFACPrior;
 	double *EQUADPrior;
 	double *AlphaPrior;
 	double *AmpPrior;
+	double *DMAlphaPrior;
+	double *DMAmpPrior;
 	int numCoeff;
 	double *CoeffPrior;
 
@@ -615,12 +665,20 @@ int main(int argc, char *argv[])
 	EQUADPrior=new double[2];
 	AlphaPrior=new double[2];
 	AmpPrior=new double[2];
+	DMAlphaPrior=new double[2];
+	DMAmpPrior=new double[2];
 	CoeffPrior=new double[2];
 
 
 
-	setupparams(Type, numTempo2its, doLinearFit, doMax, incEFAC, incEQUAD, incRED, doTimeMargin, doJumpMargin, FitSig, customPriors, EFACPrior, EQUADPrior, AlphaPrior, AmpPrior, numCoeff, CoeffPrior); 
+	setupparams(Type, numTempo2its, doLinearFit, doMax, incEFAC, incEQUAD, incRED, incDM, doTimeMargin, doJumpMargin, FitSig, customPriors, EFACPrior, EQUADPrior, AlphaPrior, AmpPrior, DMAlphaPrior, DMAmpPrior, numCoeff, CoeffPrior); 
 
+
+
+	
+  formBatsAll(psr,npsr);                /* Form Barycentric arrival times */
+  logdbg("calling formResiduals");
+  formResiduals(psr,npsr,1);       /* Form residuals */
 
   for (it=0;it<numTempo2its;it++) /* Why pulsar 0 should select the iterations? */
     {
@@ -648,6 +706,7 @@ int main(int argc, char *argv[])
 	  logdbg("calling formResiduals");
 	  formResiduals(psr,npsr,1);       /* Form residuals */
 
+
 	  if (listparms==1 && iteration==0)displayParameters(13,timFile,parFile,psr,npsr); /* List out all the parameters */  
 	  if (iteration==0)          /* Only fit to pre-fit residuals */
 	    {
@@ -663,8 +722,11 @@ int main(int argc, char *argv[])
 	    }
 	  if (iteration==1 || onlypre==1)
 	    {
-	      if (strlen(outputSO)==0)
+	      if (strlen(outputSO)==0){
+	      //printf("CHI SQ IS: %g \n",psr->fitChisq);
 		textOutput(psr,npsr,globalParameter,nGlobal,outRes,newpar,newparname); /* Output results to the screen */
+		//printf("CHI SQ IS: %g %g %g \n",psr->fitChisq,psr[0].offset,psr[0].offset_e);
+		}
 	      else  /* Use a plug in for the output */
 		{
 		  char *(*entry)(int,char **,pulsar *,int);
@@ -714,25 +776,21 @@ int main(int argc, char *argv[])
 	}
     }
 
-
-
 	if(incRED==0)Reddims=0;
 	if(incRED==1)Reddims=2;
 	if(incRED==2)Reddims=numCoeff;
+	
+	if(incDM==0)DMdims=0;
+	if(incDM==1)DMdims=2;
+	
+	
 	std::string pulsarname=psr[0].name;
 	std::string longname=Type+pulsarname+"-";
-// 	printf("string size %i \n",longname.size());
+
 	if(longname.size() >= 100){printf("Root Name is too long, needs to be less than 100 characters, currently %i .\n",longname.size());return 0;}
-	
-// 	root=longname;
-// 	printf("%i %i %i %i %i \n",incEFAC,incEQUAD,incRED,FitSig,numCoeff);
-// 	printf(" %g %g \n",EQUADPrior[0],EQUADPrior[1]);
-// 	printf("long name %s \n",longname);
 
 	for(int r=0;r<=longname.size();r++){root[r]=longname[r];}
-// 	printf("long name %s \n",root);
-// 	return 0;
-	//Open file to use for getdist paramnames
+
 	std::ofstream getdistparamnames;
 	std::string gdpnfname = longname+".paramnames";
 	getdistparamnames.open(gdpnfname.c_str());
@@ -752,9 +810,22 @@ int main(int argc, char *argv[])
 	if(incEFAC == 0 || incEFAC == 1){
 		if(incEFAC == 0){printf("Not Including EFAC\n");systemcount=0;}
 		if(incEFAC == 1){printf("Including One EFAC for all observations\n");systemcount=1;}
+		
+			std::string whiteflagname=pulsarname+"-whiteflags.txt";
+			std::ofstream whiteflagoutput;
+			whiteflagoutput.open(whiteflagname.c_str());
+			whiteflagoutput << 1;
+			whiteflagoutput <<  "\n";
+		
+	
+		
 		for(int o=0;o<psr[0].nobs;o++){
 			numFlags[o]=0;
+			whiteflagoutput << numFlags[o];
+			whiteflagoutput <<  "\n";
 		}
+		
+		whiteflagoutput.close();
 		
 	}
 	else{
@@ -784,6 +855,12 @@ int main(int argc, char *argv[])
 		}
 		printf("total number of systems: %i \n",systemcount);
 		
+		std::string whiteflagname=pulsarname+"-whiteflags.txt";
+		std::ofstream whiteflagoutput;
+		whiteflagoutput.open(whiteflagname.c_str());
+		whiteflagoutput << systemcount;
+		whiteflagoutput <<  "\n";
+		
 		for(int o=0;o<psr[0].nobs;o++){
 			for (int f=0;f<psr[0].obsn[o].nFlags;f++){
 			
@@ -791,20 +868,30 @@ int main(int argc, char *argv[])
 					for (int l=0;l<systemcount;l++){
 						if(psr[0].obsn[o].flagVal[f] == systemnames[l]){
 							numFlags[o]=l;
+							whiteflagoutput << numFlags[o];
+							whiteflagoutput <<  "\n";
 						}
 					}
 				}
 	
 			}
 		}
+		whiteflagoutput.close();
 	}
+
 	if(incEQUAD == 0){printf("Not Including EQUAD\n");}
 	if(incEQUAD == 1){printf("Including One EQUAD for all observations\n");}
 	if(incRED == 0){printf("Not Including Red Noise\n");}
 	if(incRED == 1){printf("Including Red Noise : Power Law Model\n");}
 	if(incRED == 2){printf("Including Red Noise : Model Independant - Fitting %i Coefficients\n", numCoeff);}
-		
+	if(incDM == 0){printf("Not Including DM\n");}
+	if(incDM == 1){printf("Including DM : Power Law Model\n");}
+	if(incDM == 2){printf("Including DM : Model Independant - Fitting %i Coefficients\n", numCoeff);}
+	
+	
 	int fitcount=0;
+	printf("fitting for: Arbitrary Phase \n");
+	fitcount++;
 	for (int p=0;p<MAX_PARAMS;p++) {
 	      for (int k=0;k<psr[0].param[p].aSize;k++){
 			if(psr[0].param[p].fitFlag[k] == 1){
@@ -829,18 +916,31 @@ int main(int argc, char *argv[])
 	long double *Tempo2Fit = new long double[numFitJumps+fitcount];
 	int **TempoFitNums;
 	int *TempoJumpNums;
-	TempoPriors=new long double*[numFitJumps+fitcount];for(int i=0;i<numFitJumps+fitcount;i++){TempoPriors[i]=new long double[2];}
+	TempoPriors=new long double*[numFitJumps+fitcount];
+	for(int i=0;i<numFitJumps+fitcount;i++){
+		TempoPriors[i]=new long double[3];
+		for(int j=0; j< 3; j++){
+				TempoPriors[i][j]=0;
+		}
+		
+	}
 	TempoFitNums=new int*[fitcount];for(int i=0;i<fitcount;i++){TempoFitNums[i]=new int[2];}
 	TempoJumpNums=new int[numFitJumps];
-
+	//printf("allocated\n");
 	int paramsfitted=0;
 	int getdistlabel=1;
-	if(doLinearFit == 1){
-		getdistparamnames << getdistlabel;
-		getdistparamnames << " ";
-		getdistparamnames <<  "Phase\n";
-		getdistlabel++;
-	}
+
+	getdistparamnames << getdistlabel;
+	getdistparamnames << " ";
+	getdistparamnames <<  "Phase\n";
+	getdistlabel++;
+	TempoPriors[paramsfitted][0]=0;
+	TempoPriors[paramsfitted][1]=psr[0].offset_e/sqrt(psr[0].fitChisq/psr[0].fitNfree);
+	TempoFitNums[paramsfitted][0]=0;
+	TempoFitNums[paramsfitted][1]=0;
+	if(doTimeMargin != 0 || doJumpMargin != 0)TempoPriors[paramsfitted][2]=1;
+	paramsfitted++;
+	//printf("p plus\n");
 	for (int p=0;p<MAX_PARAMS;p++) {
 	      for (int k=0;k<psr[0].param[p].aSize;k++){
 			if(psr[0].param[p].fitFlag[k] == 1){
@@ -848,76 +948,121 @@ int main(int argc, char *argv[])
 				getdistparamnames << " ";
 				getdistparamnames <<  psr[0].param[p].shortlabel[k];
 				getdistparamnames << "\n";
-				TempoPriors[paramsfitted][0]=psr[0].param[p].val[k];
+				TempoPriors[paramsfitted][0]=psr[0].param[p].prefit[k];
 				TempoPriors[paramsfitted][1]=psr[0].param[p].err[k]/sqrt(psr[0].fitChisq/psr[0].fitNfree);
 				Tempo2Fit[paramsfitted]=psr[0].param[p].val[k];
-// 				if(k == 2 || k == 3){TempoPriors[paramsfitted][1] *= 100;}
+
 				TempoFitNums[paramsfitted][0]=p;
 				TempoFitNums[paramsfitted][1]=k;	
-				//printf("%i Sigma Prior on %s : %.25Lg +/- %.25Lg\n",FitSig,psr[0].param[p].shortlabel[k], TempoPriors[paramsfitted][0],FitSig*TempoPriors[paramsfitted][1]);
+
+				if(strcasecmp(psr[0].param[p].shortlabel[0],"F0")== 0){
+					if(doTimeMargin != 0)TempoPriors[paramsfitted][2]=1;
+				}
+				if(doTimeMargin == 2)TempoPriors[paramsfitted][2]=1;				 
+
+
 				paramsfitted++;
 				getdistlabel++;
 
 	    		}
 		}
 	}
-
+	//printf("and time\n");
 	int jumpsfitted=0;
 	for(int i=0;i<=psr[0].nJumps;i++){
 		if(psr[0].fitJump[i] == 1){
-			getdistparamnames << paramsfitted+1;
+			getdistparamnames << getdistlabel;
 			getdistparamnames << " ";
 			getdistparamnames <<  "Jump";
 			getdistparamnames << i+1;
 			getdistparamnames << "\n";
-			TempoPriors[paramsfitted][0]=psr[0].jumpVal[i];
+			//printf("gonna read ump %i %s \n",i,psr[0].jumpStr[i]);	
+			char str1[100],str2[100],str3[100],str4[100],str5[100];
+			int nread=sscanf(psr[0].jumpStr[i],"%s %s %s %s %s",str1,str2,str3,str4,str5);
+			double prejump=atof(str3);
+			//printf("Pre jump %g \n",prejump);
+			
+			TempoPriors[paramsfitted][0]=prejump;
 			TempoPriors[paramsfitted][1]=psr[0].jumpValErr[i]/sqrt(psr[0].fitChisq/psr[0].fitNfree);
 			Tempo2Fit[paramsfitted]=psr[0].jumpVal[i];
 			TempoJumpNums[jumpsfitted]=i;
+			
+			if(doJumpMargin == 1)TempoPriors[paramsfitted][2]=1;
+			
 			paramsfitted++;
 			jumpsfitted++;
+			getdistlabel++;
 		}
 	}  
 
-
+	//printf("dont this\n");
 	for(int i =0;i<systemcount;i++){
-		getdistparamnames << paramsfitted+1;
+		getdistparamnames << getdistlabel;
 		getdistparamnames << " ";
 		getdistparamnames <<  "EFAC";
 		getdistparamnames << i+1;
 		getdistparamnames << "\n";
 		paramsfitted++;
+		getdistlabel++;
 	}
 	for(int i =0;i<incEQUAD;i++){
-		getdistparamnames << paramsfitted+1;
+		getdistparamnames << getdistlabel;
 		getdistparamnames << " ";
 		getdistparamnames <<  "EQUAD";
 		getdistparamnames << "\n";
 		paramsfitted++;
+		getdistlabel++;
 	}
 	if(incRED==1){
-		getdistparamnames << paramsfitted+1;
+		getdistparamnames << getdistlabel;
 		getdistparamnames << " ";
-		getdistparamnames <<  "Amp";
+		getdistparamnames <<  "RedAmp";
 		getdistparamnames << "\n";
-		paramsfitted++;		
-		getdistparamnames << paramsfitted+1;
+		paramsfitted++;	
+		getdistlabel++;	
+		getdistparamnames << getdistlabel;
 		getdistparamnames << " ";
-		getdistparamnames <<  "Slope";
+		getdistparamnames <<  "RedSlope";
 		getdistparamnames << "\n";
 		paramsfitted++;
+		getdistlabel++;
 	}
 	else if(incRED==2){
 		for(int i =0;i<numCoeff;i++){
-			getdistparamnames << paramsfitted+1;
+			getdistparamnames << getdistlabel;
 			getdistparamnames << " ";
 			getdistparamnames <<  "RedC";
 			getdistparamnames <<  i+1;
 			getdistparamnames << "\n";
 			paramsfitted++;	
+			getdistlabel++;
 		}
 	}
-
+	if(incDM==1){
+		getdistparamnames << getdistlabel;
+		getdistparamnames << " ";
+		getdistparamnames <<  "DMAmp";
+		getdistparamnames << "\n";
+		paramsfitted++;	
+		getdistlabel++;	
+		getdistparamnames << getdistlabel;
+		getdistparamnames << " ";
+		getdistparamnames <<  "DMSlope";
+		getdistparamnames << "\n";
+		paramsfitted++;
+		getdistlabel++;
+	}
+	else if(incRED==2){
+		for(int i =0;i<numCoeff;i++){
+			getdistparamnames << getdistlabel;
+			getdistparamnames << " ";
+			getdistparamnames <<  "DMC";
+			getdistparamnames <<  i+1;
+			getdistparamnames << "\n";
+			paramsfitted++;	
+			getdistlabel++;
+		}
+	}
 
 	getdistparamnames.close();
 
@@ -934,7 +1079,7 @@ int main(int argc, char *argv[])
 
 
 	double tol = 0.1;				// tol, defines the stopping criteria
-	int ndims = numFitJumps+fitcount+systemcount+incEQUAD+Reddims;					// dimensionality (no. of free parameters)
+	int ndims = numFitJumps+fitcount+systemcount+incEQUAD+Reddims+DMdims;					// dimensionality (no. of free parameters)
 	int nPar = ndims;					// total no. of parameters including free & derived parameters
 	int nClsPar = 2;				// no. of parameters to do mode separation on
 	int updInt = 500;				// after how many iterations feedback is required & the output files should be updated
@@ -952,38 +1097,52 @@ int main(int argc, char *argv[])
 	double logZero = -DBL_MAX;			// points with loglike < logZero will be ignored by MultiNest
 	int maxiter = 0;				// max no. of iterations, a non-positive value means infinity. MultiNest will terminate if either it has done max no. of iterations or convergence criterion (defined through tol) has been satisfied
 	void *context = 0;				// not required by MultiNest, any additional information user wants to pass
-
-
-	MNStruct *MNS = init_struct(psr,TempoPriors,npsr,numFitJumps,fitcount,systemcount,incEQUAD, numCoeff, TempoFitNums,TempoJumpNums,numFlags, ndims, incRED,doTimeMargin,doJumpMargin, doLinearFit);
+	//printf("Here \n");
+	MNStruct *MNS = init_struct(psr,TempoPriors,npsr,numFitJumps,fitcount,systemcount,incEQUAD, numCoeff, TempoFitNums,TempoJumpNums,numFlags, ndims, incRED,incDM, doTimeMargin,doJumpMargin, doLinearFit);
+	
 	
 	context=MNS;
 
+#ifdef HAVE_CULA
+
+	culaStatus status;
+    status = culaInitialize();
+    store_factorial();
     
+#endif /* HAVE_CULA */
+   
     double **Dpriors;
-    if(doLinearFit != 1){
-  	   Dpriors = new double*[ndims]; for(int i = 0; i < ndims; i++){Dpriors[i]=new double[2];};
-  	  }
-  	else if(doLinearFit == 1){
-  		Dpriors = new double*[ndims+1]; for(int i = 0; i < ndims+1; i++){Dpriors[i]=new double[2];};
-  	}
+    Dpriors = new double*[ndims]; for(int i = 0; i < ndims; i++){Dpriors[i]=new double[2];};
+
   	
-    long double *TNMaxParameters = new long double[ndims];
+     long double *TNMaxParameters = new long double[ndims];
     //If using custompriors for errors incase T2 doesnt converge, get those values before doing anything else
     if(customPriors == 1){
 		setTNPriors(Dpriors, TempoPriors);
-		update_MNPriors(MNS,Dpriors, TempoPriors);
+		update_MNPriors(MNS,Dpriors, TempoPriors,0);
 		context=MNS;
 		
-		int pcount=0;
-		for(int j=0;j<((MNStruct *)context)->numFitTiming;j++){
+		int pcount=1;
+		for(int j=1;j<((MNStruct *)context)->numFitTiming;j++){
 			psr[0].param[((MNStruct *)context)->TempoFitNums[j][0]].val[((MNStruct *)context)->TempoFitNums[j][1]] = TempoPriors[pcount][0];
+	//		printf("TP: %i %.10Lg %.10Lg \n",pcount,TempoPriors[pcount][0],TempoPriors[pcount][1]);
 			pcount++;
 		}
 
 		for(int j=0;j<((MNStruct *)context)->numFitJumps;j++){
 			psr[0].jumpVal[((MNStruct *)context)->TempoJumpNums[j]] =  TempoPriors[pcount][0];
+	//		printf("TP: %i %.10Lg %.10Lg \n",pcount,TempoPriors[pcount][0],TempoPriors[pcount][1]);
 			pcount++;
 		}
+	}
+
+	if(doMaxLike==1){
+#ifdef HAVE_CULA
+		GPUFindMLHypervisor(ndims, context,longname);
+#else
+		FindMLHypervisor(ndims, context,longname);
+#endif
+		return 0;
 	}
 	
 	//If wanting to find the max do so now
@@ -994,8 +1153,8 @@ int main(int argc, char *argv[])
 			TempoPriors[i][0]=TNMaxParameters[i];
 		}
 		
-		int pcount=0;
-		for(int j=0;j<((MNStruct *)context)->numFitTiming;j++){
+		int pcount=1;
+		for(int j=1;j<((MNStruct *)context)->numFitTiming;j++){
 			psr[0].param[((MNStruct *)context)->TempoFitNums[j][0]].val[((MNStruct *)context)->TempoFitNums[j][1]] = TempoPriors[pcount][0];
 			pcount++;
 		}
@@ -1009,12 +1168,13 @@ int main(int argc, char *argv[])
 	//reupdate any of the priors from custom priors that were overwritten by findmax
     if(customPriors == 1){
 		setTNPriors(Dpriors, TempoPriors);
-		update_MNPriors(MNS,Dpriors, TempoPriors);
+		update_MNPriors(MNS,Dpriors, TempoPriors,0);
 		context=MNS;
 		
-		int pcount=0;
-		for(int j=0;j<((MNStruct *)context)->numFitTiming;j++){
+		int pcount=1;
+		for(int j=1;j<((MNStruct *)context)->numFitTiming;j++){
 			psr[0].param[((MNStruct *)context)->TempoFitNums[j][0]].val[((MNStruct *)context)->TempoFitNums[j][1]] = TempoPriors[pcount][0];
+	//		printf("TP2: %i %.10Lg %.10Lg \n",pcount,TempoPriors[pcount][0],TempoPriors[pcount][1]);
 			pcount++;
 		}
 
@@ -1059,16 +1219,32 @@ int main(int argc, char *argv[])
 				pcount++;
 			}
 		}	
+		if(incDM==1){
+			Dpriors[pcount][0]=DMAmpPrior[0];
+			Dpriors[pcount][1]=DMAmpPrior[1];
+			pcount++;
+			Dpriors[pcount][0]=DMAlphaPrior[0];
+			Dpriors[pcount][1]=DMAlphaPrior[1];
+			pcount++;
+		}
 		//printf("set up priors, pcount: %i \n",pcount);
 
 
-
+		
 		if(doJumpMargin != 0 || doTimeMargin != 0 ){
 	
-			int numToMargin=1;
-			if(doJumpMargin==1)numToMargin += numFitJumps;
-			if(doTimeMargin==1)numToMargin += 2;
-			if(doTimeMargin==2)numToMargin += fitcount;
+			int *FitList=new int[ndims];
+			for(int i=0;i<ndims;i++){
+				FitList[i]=0;
+			}
+			numToMargin=0;
+			for(int i=0;i<((MNStruct *)context)->numFitTiming + ((MNStruct *)context)->numFitJumps;i++){
+				if(TempoPriors[i][2]==1){
+					FitList[i]=1;
+					printf("marginalising over param: %i \n",i);
+					numToMargin++;
+				}
+			}
 	
 			int Gsize=psr[0].nobs-numToMargin;
 			double **TNDM=new double*[psr[0].nobs];
@@ -1081,101 +1257,49 @@ int main(int argc, char *argv[])
 				TNGM[i]=new double[psr[0].nobs];
 
 			}
-	
+
+			getCustomDMatrix(psr, FitList, TNDM, TempoFitNums, TempoJumpNums, Dpriors, ((MNStruct *)context)->numFitTiming, ((MNStruct *)context)->numFitJumps);
 			//Get DMatrix for marginalisation, using T2 values if not custom or max, max if not custom, or else custom position.
-			getMarginDMatrix(psr, fitcount, numFitJumps, numToMargin, TempoFitNums, TempoJumpNums, Dpriors, doJumpMargin, doTimeMargin, TNDM, 0);
+			//getMarginDMatrix(psr, fitcount, numFitJumps, numToMargin, TempoFitNums, TempoJumpNums, Dpriors, doJumpMargin, doTimeMargin, TNDM, 0);
 			makeGDesign(psr, Gsize, numToMargin, TNGM, TNDM);
 
-			update_MNPriors(MNS,Dpriors, TempoPriors);
+			update_MNPriors(MNS,Dpriors, TempoPriors,0);
 			update_MNGdata(MNS, Gsize,TNGM);
 
 			context=MNS;
 
-	
+			
 			//Finally after doing everything reget custom priors in case overwritten by previous steps.
 			if(customPriors == 1){
 				printf("Set to use custom priors, updating from setPriors function \n");
 				setTNPriors(Dpriors, TempoPriors);
 				paramsfitted=0;
 			}
-
-			update_MNPriors(MNS,Dpriors, TempoPriors);
+	//		printf("Step size: %.20Lg \n", TempoPriors[3][1]);
+			update_MNPriors(MNS,Dpriors, TempoPriors,0);
 			context=MNS;
 			
-	
+			
+#ifdef HAVE_CULA
+	double *GMatrixVec=new double[psr[0].nobs*Gsize];
 
-			printf("\nPriors:\n");
-			paramsfitted=0;
-			for (int p=0;p<MAX_PARAMS;p++) {
-			for (int k=0;k<psr[0].param[p].aSize;k++){
-					if(psr[0].param[p].fitFlag[k] == 1){
-						printf("Prior on %s : %.25Lg -> %.25Lg\n",psr[0].param[p].shortlabel[k], TempoPriors[paramsfitted][0]+Dpriors[paramsfitted][0]*TempoPriors[paramsfitted][1],TempoPriors[paramsfitted][0]+Dpriors[paramsfitted][1]*TempoPriors[paramsfitted][1]);
-						paramsfitted++;
-		
-					}
-				}
-			}
-		
-			jumpsfitted=0;
-			for(int i=0;i<=psr[0].nJumps;i++){
-				if(psr[0].fitJump[i] == 1){
-					printf("Prior on Jump %i : %.25Lg -> %.25Lg\n",jumpsfitted+1, TempoPriors[paramsfitted][0]+Dpriors[paramsfitted][0]*TempoPriors[paramsfitted][1],TempoPriors[paramsfitted][0]+Dpriors[paramsfitted][1]*TempoPriors[paramsfitted][1]);
 
-					paramsfitted++;
-					jumpsfitted++;
-				}
-			}  
-		
-			if(incEFAC>0){
-				int EFACnum=1;
-				for(int i =0;i<systemcount;i++){
-					printf("Prior on EFAC %i : %.5g -> %.5g\n",EFACnum, Dpriors[paramsfitted][0],Dpriors[paramsfitted][1]);
-					paramsfitted++;
-				}
-			}
-			for(int i =0;i<incEQUAD;i++){
-				printf("Prior on EQUAD : %.5g -> %.5g\n",Dpriors[paramsfitted][0],Dpriors[paramsfitted][1]);
-				paramsfitted++;
-			}
-			if(incRED==1){
-				printf("Prior on Red Noise Log Amplitude : %.5g -> %.5g\n",Dpriors[paramsfitted][0],Dpriors[paramsfitted][1]);
-				paramsfitted++;		
-				printf("Prior on Red Noise Slope : %.5g -> %.5g\n",Dpriors[paramsfitted][0],Dpriors[paramsfitted][1]);
-				paramsfitted++;
-			}
-			else if(incRED==2){
-				int Coeffnum=1;
-				for(int i =0;i<numCoeff;i++){
-					printf("Prior on Red Noise Coefficient %i Log Amplitude : %.5g -> %.5g\n",Coeffnum,Dpriors[paramsfitted][0],Dpriors[paramsfitted][1]);
-					paramsfitted++;	
-				}
-			}
-			printf("\n\n");
-	
-	
-			if(incRED==0){
-				nested::run(mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, WhiteMarginLogLike, dumper, context);
-			}
-			else if(incRED==1){
-				nested::run(mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, vHRedMarginLogLike, dumper, context);
-			}
-			else if(incRED==2){
-				nested::run(mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, LRedMarginLogLike, dumper, context);
-			}
+	for(int g=0;g<Gsize; g++){
+		for(int o=0;o<psr[0].nobs; o++){
+
+			GMatrixVec[g*psr[0].nobs + o]=TNGM[o][g];
 		}
-		else if(doJumpMargin == 0 && doTimeMargin == 0 ){
+	}
 
-			//If not marginalising, only need to reget custom priors to overwrite anything done previously
-			if(customPriors == 1){
-				printf("Set to use custom priors, updating from setPriors function \n");
-				setTNPriors(Dpriors, TempoPriors);
-			}
+	copy_gmat_(GMatrixVec, psr[0].nobs*Gsize);
 
-			update_MNPriors(MNS,Dpriors, TempoPriors);
-			context=MNS;
+
+#endif /* HAVE_CULA */
 
 			printf("\nPriors:\n");
 			paramsfitted=0;
+			printf("Prior on Phase : %.25Lg -> %.25Lg\n",TempoPriors[paramsfitted][0]+Dpriors[paramsfitted][0]*TempoPriors[paramsfitted][1],TempoPriors[paramsfitted][0]+Dpriors[paramsfitted][1]*TempoPriors[paramsfitted][1]);
+			paramsfitted++;
 			for (int p=0;p<MAX_PARAMS;p++) {
 			for (int k=0;k<psr[0].param[p].aSize;k++){
 					if(psr[0].param[p].fitFlag[k] == 1){
@@ -1203,10 +1327,12 @@ int main(int argc, char *argv[])
 					paramsfitted++;
 				}
 			}
+			
 			for(int i =0;i<incEQUAD;i++){
 				printf("Prior on EQUAD : %.5g -> %.5g\n",Dpriors[paramsfitted][0],Dpriors[paramsfitted][1]);
 				paramsfitted++;
 			}
+			
 			if(incRED==1){
 				printf("Prior on Red Noise Log Amplitude : %.5g -> %.5g\n",Dpriors[paramsfitted][0],Dpriors[paramsfitted][1]);
 				paramsfitted++;		
@@ -1220,27 +1346,145 @@ int main(int argc, char *argv[])
 					paramsfitted++;	
 				}
 			}
+			
+			if(incDM==1){
+				printf("Prior on DM Log Amplitude : %.5g -> %.5g\n",Dpriors[paramsfitted][0],Dpriors[paramsfitted][1]);
+				paramsfitted++;		
+				printf("Prior on DM Slope : %.5g -> %.5g\n",Dpriors[paramsfitted][0],Dpriors[paramsfitted][1]);
+				paramsfitted++;
+			}
+			else if(incDM==2){
+				int Coeffnum=1;
+				for(int i =0;i<numCoeff;i++){
+					printf("Prior on DM Coefficient %i Log Amplitude : %.5g -> %.5g\n",Coeffnum,Dpriors[paramsfitted][0],Dpriors[paramsfitted][1]);
+					paramsfitted++;	
+				}
+			}
 			printf("\n\n");
+			ndims=ndims-numToMargin;
+			nPar=ndims;
+		if(incRED==0){
+#ifdef HAVE_CULA
+			nested::run(mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, WhiteMarginGPULogLike, dumper, context);
+#else
+			nested::run(mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, WhiteMarginLogLike, dumper, context);
+#endif /* HAVE_CULA */
+		}
+		else if(incRED==1){
+#ifdef HAVE_CULA
+			nested::run(mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, vHRedMarginGPULogLike, dumper, context);
+#else
+			nested::run(mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, vHRedMarginLogLike, dumper, context);
+#endif /* HAVE_CULA */
+		}
+		else if(incRED==2){
+#ifdef HAVE_CULA
+			nested::run(mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, LRedMarginGPULogLike, dumper, context);
+#else
+			nested::run(mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, LRedMarginLogLike, dumper, context);
+#endif /* HAVE_CULA */
+		}
+	}
+	else if(doJumpMargin == 0 && doTimeMargin == 0 ){
 
+		//If not marginalising, only need to reget custom priors to overwrite anything done previously
+		if(customPriors == 1){
+			printf("Set to use custom priors, updating from setPriors function \n");
+			setTNPriors(Dpriors, TempoPriors);
+		}
+
+		update_MNPriors(MNS,Dpriors, TempoPriors,0);
+		context=MNS;
+			printf("\nPriors:\n");
+			paramsfitted=0;
+			printf("Prior on Phase : %.25Lg -> %.25Lg\n",TempoPriors[paramsfitted][0]+Dpriors[paramsfitted][0]*TempoPriors[paramsfitted][1],TempoPriors[paramsfitted][0]+Dpriors[paramsfitted][1]*TempoPriors[paramsfitted][1]);
+			paramsfitted++;
+			for (int p=0;p<MAX_PARAMS;p++) {
+			for (int k=0;k<psr[0].param[p].aSize;k++){
+					if(psr[0].param[p].fitFlag[k] == 1){
+						printf("Prior on %s : %.25Lg -> %.25Lg\n",psr[0].param[p].shortlabel[k], TempoPriors[paramsfitted][0]+Dpriors[paramsfitted][0]*TempoPriors[paramsfitted][1],TempoPriors[paramsfitted][0]+Dpriors[paramsfitted][1]*TempoPriors[paramsfitted][1]);
+						paramsfitted++;
+		
+					}
+				}
+			}
+		
+			jumpsfitted=0;
+			for(int i=0;i<=psr[0].nJumps;i++){
+				if(psr[0].fitJump[i] == 1){
+					printf("Prior on Jump %i : %.25Lg -> %.25Lg\n",jumpsfitted+1, TempoPriors[paramsfitted][0]+Dpriors[paramsfitted][0]*TempoPriors[paramsfitted][1],TempoPriors[paramsfitted][0]+Dpriors[paramsfitted][1]*TempoPriors[paramsfitted][1]);
+
+					paramsfitted++;
+					jumpsfitted++;
+				}
+			}  
+		
+			if(incEFAC>0){
+				int EFACnum=1;
+				for(int i =0;i<systemcount;i++){
+					printf("Prior on EFAC %i : %.5g -> %.5g\n",EFACnum, Dpriors[paramsfitted][0],Dpriors[paramsfitted][1]);
+					paramsfitted++;
+				}
+			}
+			
+			for(int i =0;i<incEQUAD;i++){
+				printf("Prior on EQUAD : %.5g -> %.5g\n",Dpriors[paramsfitted][0],Dpriors[paramsfitted][1]);
+				paramsfitted++;
+			}
+			
+			if(incRED==1){
+				printf("Prior on Red Noise Log Amplitude : %.5g -> %.5g\n",Dpriors[paramsfitted][0],Dpriors[paramsfitted][1]);
+				paramsfitted++;		
+				printf("Prior on Red Noise Slope : %.5g -> %.5g\n",Dpriors[paramsfitted][0],Dpriors[paramsfitted][1]);
+				paramsfitted++;
+			}
+			else if(incRED==2){
+				int Coeffnum=1;
+				for(int i =0;i<numCoeff;i++){
+					printf("Prior on Red Noise Coefficient %i Log Amplitude : %.5g -> %.5g\n",Coeffnum,Dpriors[paramsfitted][0],Dpriors[paramsfitted][1]);
+					paramsfitted++;	
+				}
+			}
+			
+			if(incDM==1){
+				printf("Prior on DM Log Amplitude : %.5g -> %.5g\n",Dpriors[paramsfitted][0],Dpriors[paramsfitted][1]);
+				paramsfitted++;		
+				printf("Prior on DM Slope : %.5g -> %.5g\n",Dpriors[paramsfitted][0],Dpriors[paramsfitted][1]);
+				paramsfitted++;
+			}
+			else if(incDM==2){
+				int Coeffnum=1;
+				for(int i =0;i<numCoeff;i++){
+					printf("Prior on DM Coefficient %i Log Amplitude : %.5g -> %.5g\n",Coeffnum,Dpriors[paramsfitted][0],Dpriors[paramsfitted][1]);
+					paramsfitted++;	
+				}
+			}
+		//	printf("dims are: %i \n\n", ndims);
 
 			if(incRED==0){
 				nested::run(mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, WhiteLogLike, dumper, context);
-			}
+		}
 			else if(incRED==1){
+#ifdef HAVE_CULA
+				nested::run(mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, vHRedGPULogLike, dumper, context);
+#else
 				nested::run(mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, vHRedLogLike, dumper, context);
-			}
+#endif /* HAVE_CULA */
+		}
 			else if(incRED==2){
+#ifdef HAVE_CULA
+				nested::run(mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, LRedGPULogLike, dumper, context);
+#else
 				nested::run(mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, LRedLogLike, dumper, context);
+#endif /* HAVE_CULA */
 			}
 		}
 	}
 	else if(doLinearFit == 1){
 
-		ndims++;
-		nPar++;
 		//Combine all the priors into one aray: Dpriors
 		int pcount=0;
-		for(int i =0; i< numFitJumps+fitcount+1; i++){
+		for(int i =0; i< numFitJumps+fitcount; i++){
 			Dpriors[pcount][0]=-FitSig;
 			Dpriors[pcount][1]=FitSig;
 			pcount++;
@@ -1270,131 +1514,174 @@ int main(int argc, char *argv[])
 				pcount++;
 			}
 		}	
+		
+		if(incDM==1){
+			Dpriors[pcount][0]=DMAmpPrior[0];
+			Dpriors[pcount][1]=DMAmpPrior[1];
+			pcount++;
+			Dpriors[pcount][0]=DMAlphaPrior[0];
+			Dpriors[pcount][1]=DMAlphaPrior[1];
+			pcount++;
+		}	
+		else if(incDM==2){	
+			for(int i =0; i< numCoeff; i++){
+				Dpriors[pcount][0]=CoeffPrior[0];
+				Dpriors[pcount][1]=CoeffPrior[1];
+				pcount++;
+			}
+		}
 
-		int linearNum=1+numFitJumps+fitcount;
+		int linearNum=numFitJumps+fitcount;
 		double **TNDM=new double*[psr[0].nobs];
 		for(int i=0;i<psr[0].nobs;i++){
 			TNDM[i]=new double[linearNum];
 		}
 		
-		getDMatrix(psr, fitcount, numFitJumps, linearNum, TempoFitNums, TempoJumpNums, Dpriors, 1, 2, TNDM);
+					
+		//Update Pulsar position to reflect values in TempoPriors which will be either the Tempo2 fit, the max, or the value set in 			custom priors
+		
+		paramsfitted=1;
+		for (int p=0;p<MAX_PARAMS;p++) {
+		for (int k=0;k<psr[0].param[p].aSize;k++){
+				if(psr[0].param[p].fitFlag[k] == 1){
+					((MNStruct *)context)->pulse->param[p].val[k]=TempoPriors[paramsfitted][0];
+					//printf("here: %i %.10Lg %.10Lg\n",paramsfitted,TempoPriors[paramsfitted][0],TempoPriors[paramsfitted][1]);
+					paramsfitted++;
+	
+				}
+			}
+		}
+	
 
-		getLinearPriors(psr, TNDM, TempoPriors, Dpriors, numFitJumps+fitcount+1, FitSig);
-		printf("set up priors, pcount: %i \n",pcount);
-
+		for(int i=0;i<=psr[0].nJumps;i++){
+			if(psr[0].fitJump[i] == 1){
+				((MNStruct *)context)->pulse->jumpVal[i]=TempoPriors[paramsfitted][0];
+				paramsfitted++;
+			}
+		} 
+		
+			
+	  formBatsAll(((MNStruct *)context)->pulse,npsr);                /* Form Barycentric arrival times */
+	  logdbg("calling formResiduals");
+	  formResiduals(((MNStruct *)context)->pulse, npsr,1);       /* Form residuals */
+		
+		getDMatrix(((MNStruct *)context)->pulse, fitcount, numFitJumps, linearNum, TempoFitNums, TempoJumpNums, Dpriors, 1, 2, TNDM);
+		
 		if(customPriors == 1){
 			printf("Set to use custom priors, updating from setPriors function \n");
 			setTNPriors(Dpriors, TempoPriors);
 			paramsfitted=0;
 		}
+		update_MNPriors(MNS,Dpriors, TempoPriors,0);
+		getLinearPriors(((MNStruct *)context)->pulse, TNDM, TempoPriors, Dpriors, numFitJumps+fitcount, FitSig);
+		//printf("set up priors, pcount: %i \n",pcount);
 
 		if(doJumpMargin != 0 || doTimeMargin != 0 ){
 
+                        int *FitList=new int[ndims];
+                        for(int i=0;i<ndims;i++){
+                                FitList[i]=0;
+                        }
+                        numToMargin=0;
+                        for(int i=0;i<((MNStruct *)context)->numFitTiming + ((MNStruct *)context)->numFitJumps;i++){
+                                if(TempoPriors[i][2]==1){
+                                        FitList[i]=1;
+                                        printf("marginalising over param: %i \n",i);
+                                        numToMargin++;
+                                }
+                        }
 
-	
-			int numToMargin=1;
-			if(doJumpMargin==1)numToMargin += numFitJumps;
-			if(doTimeMargin==1)numToMargin += 2;
-			if(doTimeMargin==2)numToMargin += fitcount;
-	
-			int Gsize=psr[0].nobs-numToMargin;
-			double **DMargin=new double*[psr[0].nobs];
-			for(int i=0;i<psr[0].nobs;i++){
-				DMargin[i]=new double[numToMargin];
-			}
-	
-			double **TNGM=new double*[psr[0].nobs];
-			for(int i=0;i<psr[0].nobs;i++){
-				TNGM[i]=new double[psr[0].nobs];
-	// 			TNGM[i]=new double[psr[0].nobs-numToMargin];
-			}
-	
-	
-			getMarginDMatrix(psr, fitcount, numFitJumps, numToMargin, TempoFitNums, TempoJumpNums, Dpriors, doJumpMargin, doTimeMargin, DMargin, 1);
-			makeGDesign(psr, Gsize, numToMargin, TNGM, DMargin);
+                        int Gsize=psr[0].nobs-numToMargin;
+                        double **TNDM=new double*[psr[0].nobs];
+                        for(int i=0;i<psr[0].nobs;i++){
+                                TNDM[i]=new double[numToMargin];
+                        }
 
+                        double **TNGM=new double*[psr[0].nobs];
+                        for(int i=0;i<psr[0].nobs;i++){
+                                TNGM[i]=new double[psr[0].nobs];
 
-			update_MNPriors(MNS,Dpriors, TempoPriors);
+                        }
+
+                        getCustomDMatrix(psr, FitList, TNDM, TempoFitNums, TempoJumpNums, Dpriors, ((MNStruct *)context)->numFitTiming, ((MNStruct *)context)->numFitJumps);
+                        //Get DMatrix for marginalisation, using T2 values if not custom or max, max if not custom, or else custom position.
+                        //getMarginDMatrix(psr, fitcount, numFitJumps, numToMargin, TempoFitNums, TempoJumpNums, Dpriors, doJumpMargin, doTimeMargin, TNDM, 0);
+                        makeGDesign(psr, Gsize, numToMargin, TNGM, TNDM);
+
+                        update_MNPriors(MNS,Dpriors, TempoPriors,2);
 			update_MNGDdata(MNS, numFitJumps+fitcount, TNDM, Gsize,TNGM);
 	
 			context=MNS;
-			
+		
+
+#ifdef HAVE_CULA
+			double *GMatrixVec=new double[psr[0].nobs*Gsize];
+
+
+			for(int g=0;g<Gsize; g++){
+				for(int o=0;o<psr[0].nobs; o++){
+
+					GMatrixVec[g*psr[0].nobs + o]=TNGM[o][g];
+
+
+				}
+				}
+
+			copy_gmat_(GMatrixVec, psr[0].nobs*Gsize);
+
+#endif
+
 
 			if(incRED==0){
-				nested::run(mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, WhiteMarginLinearLogLike, dumper, context);
+
+#ifdef HAVE_CULA
+				nested::run(mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, WhiteMarginGPULogLike, dumper, context);
+#else
+				nested::run(mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, WhiteMarginLogLike, dumper, context);
+#endif /* HAVE_CULA */
 			}
 			else if(incRED==1){
-				nested::run(mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, vHRedMarginLinearLogLike, dumper, context);
+#ifdef HAVE_CULA
+				nested::run(mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, vHRedMarginGPULogLike, dumper, context);
+#else
+				nested::run(mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, vHRedMarginLogLike, dumper, context);
+#endif /* HAVE_CULA */
 			}
 			else if(incRED==2){
-				nested::run(mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, LRedMarginLinearLogLike, dumper, context);
+#ifdef HAVE_CULA
+				nested::run(mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, LRedMarginGPULogLike, dumper, context);
+#else
+				nested::run(mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, LRedMarginLogLike, dumper, context);
+#endif /* HAVE_CULA */
 			}
 
 		}
 		else if(doJumpMargin == 0 && doTimeMargin == 0 ){
 
-			printf("\nPriors:\n");
-			paramsfitted=0;
-			for (int p=0;p<MAX_PARAMS;p++) {
-			for (int k=0;k<psr[0].param[p].aSize;k++){
-					if(psr[0].param[p].fitFlag[k] == 1){
-						printf("Prior on %s : %.25Lg -> %.25Lg\n",psr[0].param[p].shortlabel[k], TempoPriors[paramsfitted][0]+Dpriors[paramsfitted][0]*TempoPriors[paramsfitted][1],TempoPriors[paramsfitted][0]+Dpriors[paramsfitted][1]*TempoPriors[paramsfitted][1]);
-						paramsfitted++;
-		
-					}
-				}
-			}
-		
-			jumpsfitted=0;
-			for(int i=0;i<=psr[0].nJumps;i++){
-				if(psr[0].fitJump[i] == 1){
-					printf("Prior on Jump %i : %.25Lg -> %.25Lg\n",jumpsfitted+1, TempoPriors[paramsfitted][0]+Dpriors[paramsfitted][0]*TempoPriors[paramsfitted][1],TempoPriors[paramsfitted][0]+Dpriors[paramsfitted][1]*TempoPriors[paramsfitted][1]);
 
-					paramsfitted++;
-					jumpsfitted++;
-				}
-			}  
-		
-			if(incEFAC>0){
-				int EFACnum=1;
-				for(int i =0;i<systemcount;i++){
-					printf("Prior on EFAC %i : %.5g -> %.5g\n",EFACnum, Dpriors[paramsfitted][0],Dpriors[paramsfitted][1]);
-					paramsfitted++;
-				}
-			}
-			for(int i =0;i<incEQUAD;i++){
-				printf("Prior on EQUAD : %.5g -> %.5g\n",Dpriors[paramsfitted][0],Dpriors[paramsfitted][1]);
-				paramsfitted++;
-			}
-			if(incRED==1){
-				printf("Prior on Red Noise Log Amplitude : %.5g -> %.5g\n",Dpriors[paramsfitted][0],Dpriors[paramsfitted][1]);
-				paramsfitted++;		
-				printf("Prior on Red Noise Slope : %.5g -> %.5g\n",Dpriors[paramsfitted][0],Dpriors[paramsfitted][1]);
-				paramsfitted++;
-			}
-			else if(incRED==2){
-				int Coeffnum=1;
-				for(int i =0;i<numCoeff;i++){
-					printf("Prior on Red Noise Coefficient %i Log Amplitude : %.5g -> %.5g\n",Coeffnum,Dpriors[paramsfitted][0],Dpriors[paramsfitted][0]);
-					paramsfitted++;	
-				}
-			}
-			printf("\n\n");
+			update_MNPriors(MNS,Dpriors, TempoPriors,2);
 
-			update_MNPriors(MNS,Dpriors, TempoPriors);
 			update_MNDdata(MNS, numFitJumps+fitcount,TNDM);
-	
-			context=MNS;
 
+			context=MNS;
+	
 
 			if(incRED==0){
-				nested::run(mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, WhiteLinearLogLike, dumper, context);
-			}
+				nested::run(mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, WhiteLogLike, dumper, context);
+		}
 			else if(incRED==1){
-				nested::run(mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, vHRedLinearLogLike, dumper, context);
-			}
+#ifdef HAVE_CULA
+				nested::run(mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, vHRedGPULogLike, dumper, context);
+#else
+				nested::run(mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, vHRedLogLike, dumper, context);
+#endif /* HAVE_CULA */
+		}
 			else if(incRED==2){
-				nested::run(mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, LRedLinearLogLike, dumper, context);
+#ifdef HAVE_CULA
+				nested::run(mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, LRedGPULogLike, dumper, context);
+#else
+				nested::run(mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, LRedLogLike, dumper, context);
+#endif /* HAVE_CULA */
 			}
 		}
 
@@ -1407,11 +1694,8 @@ int main(int argc, char *argv[])
 // 	printf("num its %i \n",psr[0].nits);
 	endClock = clock();
   	printf("Finishing off: time taken = %.2f (s)\n",(endClock-startClock)/(float)CLOCKS_PER_SEC);
-
-
-  exit(EXIT_SUCCESS);
+ 	 exit(EXIT_SUCCESS);
 } 
-
 
 
 

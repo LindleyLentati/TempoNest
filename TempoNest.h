@@ -44,6 +44,7 @@ typedef struct {
 	int numFitRedCoeff;
 	int numdims;
 	int incRED;
+	int incDM;
 	int Gsize;
 	int Dsize;
 	int **TempoFitNums;
@@ -51,6 +52,7 @@ typedef struct {
 	int *sysFlags;
 	int TimeMargin;
 	int JumpMargin;
+	std::string *name;
 	
 } MNStruct;
 
@@ -60,9 +62,16 @@ double iter_factorial(unsigned int n);
 void store_factorial();
 void fastephemeris_routines(pulsar *psr,int npsr);
 void fastformBatsAll(pulsar *psr,int npsr);
-void TNtextOutput(pulsar *psr, int npsr, int newpar, long double *Tempo2Fit, void *context, int incRED, int ndims, std::vector<double> paramlist, double Evidence, int MarginTime, int MarginJumps, int doLinear);
+
+
+void TNtextOutput(pulsar *psr, int npsr, int newpar, long double *Tempo2Fit, void *context, int incRED, int ndims, std::vector<double> paramlist, double Evidence, int MarginTime, int MarginJumps, int doLinear, std::string longname);
+
 
 void NelderMeadOptimum(int nParameters, long double *pdParameters, void *context);
+void NelderMeadOptimumSubset(int nParameters, long double *LdParameters, void *context,std::vector<double>& paramlist, std::string longname);
+void NelderMeadMargin(int nParameters, long double *LdParameters, void *context, std::vector<double>& paramlist, std::string longname);
+void FindMLHypervisor(int nParameters, void *context, std::string longname);
+void GPUFindMLHypervisor(int nParameters, void *context, std::string longname);
 
 void doSim(int argc, char **commandLine, pulsar *psr, char timFile[][MAX_FILELEN], char parFile[][MAX_FILELEN]);
 void TNSimRedfromTim(int argc, char **commandLine, pulsar *psr, char timFile[][MAX_FILELEN], char parFile[][MAX_FILELEN], double EFAC, double EQUAD, int doRed, double redlogamp, double redslope, int updateEFAC, int updateEQUAD, int doDM, double DMlogamp, double DMslope,long idum);
@@ -73,14 +82,6 @@ void getLinearPriors(pulsar *psr,  double **Dmatrix, long double **LDpriors, dou
 void convertFromLinear(pulsar *psr, std::string longname, int ndim, void *context);
 void TNupdateParameters(pulsar *psr,int p,double *val,double *error, double *outval);
 void TNIupdateParameters(pulsar *psr,int p,double *val,double *error, double *outval);
-
-void WhiteLinearLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *context);
-void WhiteMarginLinearLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *context);
-void vHRedLinearLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *context);
-void vHRedMarginLinearLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *context);
-void LRedLinearLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *context);
-void LRedMarginLinearLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *context);
-
 
 //non linear timing model likelihood functions
 void WhiteLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *context);
@@ -107,13 +108,15 @@ void LRedGPULogLike(double *Cube, int &ndim, int &npars, double &lnew, void *con
 void LRedMarginGPULogLike(double *Cube, int &ndim, int &npars, double &lnew, void *context);
 
 void LRedDMMarginGPULogLike(double *Cube, int &ndim, int &npars, double &lnew, void *context);
+void vHRedDMMarginGPULogLike(double *Cube, int &ndim, int &npars, double &lnew, void *context);
+void vHRedDMGPULogLike(double *Cube, int &ndim, int &npars, double &lnew, void *context);
 
 
 //Functions to calculate the design matrices or 'G' marginalisation matrices
 void makeGDesign(pulsar *pulse, int &Gsize, int numtofit, double** staticGMatrix, double **oneDesign);
 void getDMatrix(pulsar *pulse, int TimeToFit, int JumptoFit, int numToMargin, int **TempoFitNums, int *TempoJumpNums, double **Dpriors, int doJumpMargin, int doTimeMargin, double **TNDM);
 void getMarginDMatrix(pulsar *pulse, int TimetoFit, int JumptoFit, int numToMargin, int **TempoFitNums, int *TempoJumpNums, double **Dpriors, int doJumpMargin, int doTimeMargin, double **TNDM, int linearFit);
-
+void getCustomDMatrix(pulsar *pulse, int *MarginList, double **TNDM, int **TempoFitNums, int *TempoJumpNums, double **Dpriors, int TimetoFit, int JumptoFit);
 
 
 void readsummary(pulsar *psr, std::string longname, int ndim, void *context, long double *Tempo2Fit, int incRED, int ndims, int MarginTime, int MarginJumps, int doLinear);
@@ -126,6 +129,7 @@ void setupparams(char *Type,
 		int &incEFAC,
 		int &incEQUAD,
 		int &incRED,
+		int &incDM,
 		int &doTimeMargin,
 		int &doJumpMargin,
 		double &FitSig,
@@ -134,8 +138,9 @@ void setupparams(char *Type,
 		double *EQUADPrior,
 		double *AlphaPrior,
 		double *AmpPrior,
+		double *DMAlphaPrior,
+		double *DMAmpPrior,
 		int &numCoeff,
 		double *CoeffPrior);
-
 
 void setTNPriors(double **Dpriors, long double **TempoPriors);
