@@ -51,7 +51,7 @@ void setupparams(char *root,
 
 //General parameters:
 //Root of the results files,relative to the directory in which TempoNest is run. This will be followed by the pulsar name, and then the individual output file extensions.
-strcpy( root, "results/NL-QSDMargin-");
+strcpy( root, "results/LRedDMPL-QSDJM-");
 
 //numTempo2its - sets the number of iterations Tempo2 should do before setting the priors.  Should only be set to 0 if all the priors are set in setTNPriors
 numTempo2its=1;
@@ -68,13 +68,13 @@ doMax=0;
 
 //ModelChoice
 
-incEFAC=0; //include EFAC: 0 = none, 1 = one for all residuals, 2 = one for each observing system
-incEQUAD=0; //include EQUAD: 0 = no, 1 = yes
-incRED=0; //include Red Noise model: 0 = no, 1 = power law model (vHL2013), 2 = model independant (L2013)
-incDM=0; //include Red Noise model: 0 = no, 1 = power law model (vHL2013), 2 = model independant (L2013)
+incEFAC=1; //include EFAC: 0 = none, 1 = one for all residuals, 2 = one for each observing system
+incEQUAD=1; //include EQUAD: 0 = no, 1 = yes
+incRED=3; //include Red Noise model: 0 = no, 1 = power law model (vHL2013), 2 = model independant (L2013)
+incDM=3; //include Red Noise model: 0 = no, 1 = power law model (vHL2013), 2 = model independant (L2013)
 
 doTimeMargin=1 ; //0=No Analytical Marginalisation over Timing Model. 1=Marginalise over QSD. 2=Marginalise over all Model params excluding jumps.
-doJumpMargin=0; //0=No Analytical Marginalisation over Jumps. 1=Marginalise over Jumps.
+doJumpMargin=1; //0=No Analytical Marginalisation over Jumps. 1=Marginalise over Jumps.
 
 
 
@@ -87,7 +87,7 @@ customPriors=1;
 //FitSig sets the priors for all timing model and jump parameters for both non linear and linear timing models.
 //For the non linear fit, Fitsig multiples the error returned by Tempo2, and sets the prior to be the best fit value returned by tempo2 +/- the scaled error.
 // For the linear fit, multiplies the ratio of the rms of the designmatrix vector for each timing model parameter, and the rms of the residuals returned by Tempo2.
-FitSig=5;
+FitSig=20;
 
 //Remaining priors for the stochastic parameters.  
 EFACPrior[0]=0.5;

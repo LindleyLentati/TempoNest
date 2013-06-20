@@ -779,9 +779,16 @@ int main(int argc, char *argv[])
 	if(incRED==0)Reddims=0;
 	if(incRED==1)Reddims=2;
 	if(incRED==2)Reddims=numCoeff;
-	
+ 	if(incRED==3)Reddims=2;	
 	if(incDM==0)DMdims=0;
 	if(incDM==1)DMdims=2;
+	if(incDM==2)DMdims=numCoeff;
+	if(incDM==3)DMdims=2;
+
+	if(incRED != incDM){
+		printf("Different methods for DM and red noise not currently supported, please use the same option for both");
+		return 0;
+	}
 	
 	
 	std::string pulsarname=psr[0].name;
@@ -884,10 +891,11 @@ int main(int argc, char *argv[])
 	if(incRED == 0){printf("Not Including Red Noise\n");}
 	if(incRED == 1){printf("Including Red Noise : Power Law Model\n");}
 	if(incRED == 2){printf("Including Red Noise : Model Independant - Fitting %i Coefficients\n", numCoeff);}
+	if(incRED ==3){printf("Including Red Noise: Power Law Model to %i Coefficients \n", numCoeff);}
 	if(incDM == 0){printf("Not Including DM\n");}
 	if(incDM == 1){printf("Including DM : Power Law Model\n");}
 	if(incDM == 2){printf("Including DM : Model Independant - Fitting %i Coefficients\n", numCoeff);}
-	
+ 	if(incDM ==3){printf("Including DM: Power Law Model to %i Coefficients \n", numCoeff);}	
 	
 	int fitcount=0;
 	printf("fitting for: Arbitrary Phase \n");
@@ -1013,7 +1021,7 @@ int main(int argc, char *argv[])
 		paramsfitted++;
 		getdistlabel++;
 	}
-	if(incRED==1){
+	if(incRED==1 || incRED == 3){
 		getdistparamnames << getdistlabel;
 		getdistparamnames << " ";
 		getdistparamnames <<  "RedAmp";
@@ -1038,7 +1046,7 @@ int main(int argc, char *argv[])
 			getdistlabel++;
 		}
 	}
-	if(incDM==1){
+	if(incDM==1 || incDM == 3){
 		getdistparamnames << getdistlabel;
 		getdistparamnames << " ";
 		getdistparamnames <<  "DMAmp";
@@ -1052,7 +1060,7 @@ int main(int argc, char *argv[])
 		paramsfitted++;
 		getdistlabel++;
 	}
-	else if(incRED==2){
+	else if(incDM==2){
 		for(int i =0;i<numCoeff;i++){
 			getdistparamnames << getdistlabel;
 			getdistparamnames << " ";
@@ -1204,7 +1212,7 @@ int main(int argc, char *argv[])
 			Dpriors[pcount][1]=EQUADPrior[1];
 			pcount++;
 		}	
-		if(incRED==1){
+		if(incRED==1 || incRED == 3){
 			Dpriors[pcount][0]=AmpPrior[0];
 			Dpriors[pcount][1]=AmpPrior[1];
 			pcount++;
@@ -1219,7 +1227,7 @@ int main(int argc, char *argv[])
 				pcount++;
 			}
 		}	
-		if(incDM==1){
+		if(incDM==1 || incDM == 3){
 			Dpriors[pcount][0]=DMAmpPrior[0];
 			Dpriors[pcount][1]=DMAmpPrior[1];
 			pcount++;
@@ -1333,7 +1341,7 @@ int main(int argc, char *argv[])
 				paramsfitted++;
 			}
 			
-			if(incRED==1){
+			if(incRED==1 || incRED == 3){
 				printf("Prior on Red Noise Log Amplitude : %.5g -> %.5g\n",Dpriors[paramsfitted][0],Dpriors[paramsfitted][1]);
 				paramsfitted++;		
 				printf("Prior on Red Noise Slope : %.5g -> %.5g\n",Dpriors[paramsfitted][0],Dpriors[paramsfitted][1]);
@@ -1347,7 +1355,7 @@ int main(int argc, char *argv[])
 				}
 			}
 			
-			if(incDM==1){
+			if(incDM==1 || incDM == 3){
 				printf("Prior on DM Log Amplitude : %.5g -> %.5g\n",Dpriors[paramsfitted][0],Dpriors[paramsfitted][1]);
 				paramsfitted++;		
 				printf("Prior on DM Slope : %.5g -> %.5g\n",Dpriors[paramsfitted][0],Dpriors[paramsfitted][1]);
@@ -1377,9 +1385,9 @@ int main(int argc, char *argv[])
 			nested::run(mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, vHRedMarginLogLike, dumper, context);
 #endif /* HAVE_CULA */
 		}
-		else if(incRED==2){
+		else if(incRED==2 || incRED == 3){
 #ifdef HAVE_CULA
-			nested::run(mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, LRedMarginGPULogLike, dumper, context);
+			nested::run(mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, LRedDMMarginGPULogLike, dumper, context);
 #else
 			nested::run(mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, LRedMarginLogLike, dumper, context);
 #endif /* HAVE_CULA */
@@ -1432,7 +1440,7 @@ int main(int argc, char *argv[])
 				paramsfitted++;
 			}
 			
-			if(incRED==1){
+			if(incRED==1 || incRED==3){
 				printf("Prior on Red Noise Log Amplitude : %.5g -> %.5g\n",Dpriors[paramsfitted][0],Dpriors[paramsfitted][1]);
 				paramsfitted++;		
 				printf("Prior on Red Noise Slope : %.5g -> %.5g\n",Dpriors[paramsfitted][0],Dpriors[paramsfitted][1]);
@@ -1446,7 +1454,7 @@ int main(int argc, char *argv[])
 				}
 			}
 			
-			if(incDM==1){
+			if(incDM==1 || incDM==3){
 				printf("Prior on DM Log Amplitude : %.5g -> %.5g\n",Dpriors[paramsfitted][0],Dpriors[paramsfitted][1]);
 				paramsfitted++;		
 				printf("Prior on DM Slope : %.5g -> %.5g\n",Dpriors[paramsfitted][0],Dpriors[paramsfitted][1]);
@@ -1471,7 +1479,7 @@ int main(int argc, char *argv[])
 				nested::run(mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, vHRedLogLike, dumper, context);
 #endif /* HAVE_CULA */
 		}
-			else if(incRED==2){
+			else if(incRED==2 || incRED==3){
 #ifdef HAVE_CULA
 				nested::run(mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, LRedGPULogLike, dumper, context);
 #else
@@ -1499,7 +1507,7 @@ int main(int argc, char *argv[])
 			Dpriors[pcount][1]=EQUADPrior[1];
 			pcount++;
 		}	
-		if(incRED==1){
+		if(incRED==1 || incRED ==3){
 			Dpriors[pcount][0]=AmpPrior[0];
 			Dpriors[pcount][1]=AmpPrior[1];
 			pcount++;
@@ -1515,7 +1523,7 @@ int main(int argc, char *argv[])
 			}
 		}	
 		
-		if(incDM==1){
+		if(incDM==1 || incDM==3){
 			Dpriors[pcount][0]=DMAmpPrior[0];
 			Dpriors[pcount][1]=DMAmpPrior[1];
 			pcount++;
@@ -1647,7 +1655,7 @@ int main(int argc, char *argv[])
 				nested::run(mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, vHRedMarginLogLike, dumper, context);
 #endif /* HAVE_CULA */
 			}
-			else if(incRED==2){
+			else if(incRED==2 || incRED==3){
 #ifdef HAVE_CULA
 				nested::run(mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, LRedMarginGPULogLike, dumper, context);
 #else
@@ -1676,7 +1684,7 @@ int main(int argc, char *argv[])
 				nested::run(mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, vHRedLogLike, dumper, context);
 #endif /* HAVE_CULA */
 		}
-			else if(incRED==2){
+			else if(incRED==2 || incRED==3){
 #ifdef HAVE_CULA
 				nested::run(mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, LRedGPULogLike, dumper, context);
 #else
