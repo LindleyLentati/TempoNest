@@ -27,6 +27,8 @@
 
 
 #include <string.h>
+#include <stdio.h>
+#include "configfile.h"
 
 void setupparams(char *root,
 		int &numTempo2its,
@@ -49,75 +51,127 @@ void setupparams(char *root,
 		int &numCoeff,
 		double *CoeffPrior){
 
-//General parameters:
-//Root of the results files,relative to the directory in which TempoNest is run. This will be followed by the pulsar name, and then the individual output file extensions.
-strcpy( root, "results/NL-QSDMargin-");
+    //General parameters:
+    //Root of the results files,relative to the directory in which TempoNest is run. This will be followed by the pulsar name, and then the individual output file extensions.
+    strcpy( root, "results/NL-QSDMargin-");
 
-//numTempo2its - sets the number of iterations Tempo2 should do before setting the priors.  Should only be set to 0 if all the priors are set in setTNPriors
-numTempo2its=1;
+    //numTempo2its - sets the number of iterations Tempo2 should do before setting the priors.  Should only be set to 0 if all the priors are set in setTNPriors
+    numTempo2its=1;
 
-//doLinearFit:  Switches between the full non linear timing model (doLinearFit=0) and the linear approximation for the timing model based on the initial Tempo2 Fit (= 1).
+    //doLinearFit:  Switches between the full non linear timing model (doLinearFit=0) and the linear approximation for the timing model based on the initial Tempo2 Fit (= 1).
 
-doLinearFit=0;
+    doLinearFit=0;
 
-//doMax: Find maximum likelihood values for non linear timing model for the stochastic model chosen.
-//Will find maximum in the full un marginalised problem in order to find the best values to then marginalise over.
-//Start point of non linear search will be performed at this maximum if chosen unless set otherwise in custom priors.
-//Central point of prior for non linear search will be set at this value unless set otherwise in custom priors.
-doMax=0;
+    //doMax: Find maximum likelihood values for non linear timing model for the stochastic model chosen.
+    //Will find maximum in the full un marginalised problem in order to find the best values to then marginalise over.
+    //Start point of non linear search will be performed at this maximum if chosen unless set otherwise in custom priors.
+    //Central point of prior for non linear search will be set at this value unless set otherwise in custom priors.
+    doMax=0;
 
-//ModelChoice
+    //ModelChoice
 
-incEFAC=0; //include EFAC: 0 = none, 1 = one for all residuals, 2 = one for each observing system
-incEQUAD=0; //include EQUAD: 0 = no, 1 = yes
-incRED=0; //include Red Noise model: 0 = no, 1 = power law model (vHL2013), 2 = model independant (L2013)
-incDM=0; //include Red Noise model: 0 = no, 1 = power law model (vHL2013), 2 = model independant (L2013)
+    incEFAC=1; //include EFAC: 0 = none, 1 = one for all residuals, 2 = one for each observing system
+    incEQUAD=0; //include EQUAD: 0 = no, 1 = yes
+    incRED=2; //include Red Noise model: 0 = no, 1 = power law model (vHL2013), 2 = model independent (L2013)
+    incDM=0; //include Red Noise model: 0 = no, 1 = power law model (vHL2013), 2 = model independent (L2013)
 
-doTimeMargin=1 ; //0=No Analytical Marginalisation over Timing Model. 1=Marginalise over QSD. 2=Marginalise over all Model params excluding jumps.
-doJumpMargin=0; //0=No Analytical Marginalisation over Jumps. 1=Marginalise over Jumps.
-
-
-
-//Priors
-
-//Which priors to use: customPriors=0 uses the Priors from tempo2 fit, along with values set in this function, =1:set priors for specific parameters in setTNPriors
-customPriors=1; 
-
-
-//FitSig sets the priors for all timing model and jump parameters for both non linear and linear timing models.
-//For the non linear fit, Fitsig multiples the error returned by Tempo2, and sets the prior to be the best fit value returned by tempo2 +/- the scaled error.
-// For the linear fit, multiplies the ratio of the rms of the designmatrix vector for each timing model parameter, and the rms of the residuals returned by Tempo2.
-FitSig=5;
-
-//Remaining priors for the stochastic parameters.  
-EFACPrior[0]=0.5;
-EFACPrior[1]=5;
-
-
-EQUADPrior[0]=-10;
-EQUADPrior[1]=-5;
+    doTimeMargin=1 ; //0=No Analytical Marginalisation over Timing Model. 1=Marginalise over QSD. 2=Marginalise over all Model params excluding jumps.
+    doJumpMargin=1; //0=No Analytical Marginalisation over Jumps. 1=Marginalise over Jumps.
 
 
 
-AlphaPrior[0]=1.1;
-AlphaPrior[1]=6.1;
+    //Priors
+
+    //Which priors to use: customPriors=0 uses the Priors from tempo2 fit, along with values set in this function, =1:set priors for specific parameters in setTNPriors
+    customPriors=0; 
 
 
-AmpPrior[0]=-20;
-AmpPrior[1]=-10;
+    //FitSig sets the priors for all timing model and jump parameters for both non linear and linear timing models.
+    //For the non linear fit, Fitsig multiples the error returned by Tempo2, and sets the prior to be the best fit value returned by tempo2 +/- the scaled error.
+    // For the linear fit, multiplies the ratio of the rms of the designmatrix vector for each timing model parameter, and the rms of the residuals returned by Tempo2.
+    FitSig=10;
 
-numCoeff=0;
-
-CoeffPrior[0]=-10;
-CoeffPrior[1]=0;
-
-DMAlphaPrior[0]=1.1;
-DMAlphaPrior[1]=6.1;
+    //Remaining priors for the stochastic parameters.  
+    EFACPrior[0]=0.1;
+    EFACPrior[1]=10;
 
 
-DMAmpPrior[0]=-18;
-DMAmpPrior[1]=-8;
+    EQUADPrior[0]=-10;
+    EQUADPrior[1]=-5;
 
+
+
+    AlphaPrior[0]=1.1;
+    AlphaPrior[1]=6.1;
+
+
+    AmpPrior[0]=-20;
+    AmpPrior[1]=-10;
+
+    numCoeff=10;
+
+    CoeffPrior[0]=-10;
+    CoeffPrior[1]=0;
+
+    DMAlphaPrior[0]=1.1;
+    DMAlphaPrior[1]=6.1;
+
+
+    DMAmpPrior[0]=-18;
+    DMAmpPrior[1]=-8;
+
+
+    // Use a configfile, if we can, to overwrite the defaults set in this file.
+    try {
+        string strBuf;
+        strBuf = string("defaultparameters.conf");
+        ConfigFile parameters(strBuf);
+
+        /* We can check whether a value is not set in the file by doing
+         * if(! parameters.readInto(variable, "name", default)) {
+         *   printf("WARNING");
+         * }
+         *
+         * At the moment I was too lazy to print warning messages, and the
+         * default value from this file is used in that case.
+         *
+         * Note: the timing model parameters are not done implemented yet
+         */
+
+        parameters.readInto(strBuf, "root", string("results/NL-QSDMargin-"));
+        strcpy(root, strBuf.data());
+        parameters.readInto(numTempo2its, "numTempo2its", numTempo2its);
+        parameters.readInto(doLinearFit, "doLinearFit", doLinearFit);
+        parameters.readInto(doMax, "doMax", doMax);
+        parameters.readInto(incEFAC, "incEFAC", incEFAC);
+        parameters.readInto(incEQUAD, "incEQUAD", incEQUAD);
+        parameters.readInto(incRED, "incRED", incRED);
+        parameters.readInto(doTimeMargin, "doTimeMargin", doTimeMargin);
+        parameters.readInto(doJumpMargin, "doJumpMargin", doJumpMargin);
+        parameters.readInto(customPriors, "customPriors", customPriors);
+        parameters.readInto(FitSig, "FitSig", FitSig);
+        parameters.readInto(EFACPrior[0], "EFACPrior[0]", EFACPrior[0]);
+        parameters.readInto(EFACPrior[1], "EFACPrior[1]", EFACPrior[1]);
+        parameters.readInto(EQUADPrior[0], "EQUADPrior[0]", EQUADPrior[0]);
+        parameters.readInto(EQUADPrior[1], "EQUADPrior[1]", EQUADPrior[1]);
+        parameters.readInto(AlphaPrior[0], "AlphaPrior[0]", AlphaPrior[0]);
+        parameters.readInto(AlphaPrior[1], "AlphaPrior[1]", AlphaPrior[1]);
+        parameters.readInto(AmpPrior[0], "AmpPrior[0]", AmpPrior[0]);
+        parameters.readInto(numCoeff, "numCoeff", numCoeff);
+        parameters.readInto(CoeffPrior[0], "CoeffPrior[0]", CoeffPrior[0]);
+        parameters.readInto(CoeffPrior[1], "CoeffPrior[1]", CoeffPrior[1]);
+        parameters.readInto(DMAlphaPrior[0], "DMAlphaPrior[0]", DMAlphaPrior[0]);
+        parameters.readInto(DMAlphaPrior[1], "DMAlphaPrior[1]", DMAlphaPrior[1]);
+        parameters.readInto(DMAmpPrior[0], "DMAmpPrior[0]", DMAmpPrior[0]);
+        parameters.readInto(DMAmpPrior[1], "DMAmpPrior[1]", DMAmpPrior[1]);
+        parameters.readInto(AmpPrior[1], "AmpPrior[1]", AmpPrior[1]);
+        parameters.readInto(AmpPrior[1], "AmpPrior[1]", AmpPrior[1]);
+        parameters.readInto(AmpPrior[1], "AmpPrior[1]", AmpPrior[1]);
+        parameters.readInto(AmpPrior[1], "AmpPrior[1]", AmpPrior[1]);
+
+    } catch(ConfigFile::file_not_found oError) {
+        printf("WARNING: parameters file '%s' not found. Using defaults.\n", oError.filename.c_str());
+    } // try
 
 }
 
