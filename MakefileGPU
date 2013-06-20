@@ -26,8 +26,8 @@ all: TempoNest
 %.o: %.cu
 	$(CU) $(CUFLAGS) $(CULAINC) -c $*.cu	
 
-%.o: %.c
-	$(CXX) $(CFLAGS) -I$(NESTLIBDIR) $(CULAINC) -I$(TEMPO2INC) -I$(TEMPO2SRC) -c $*.c
+%.o: %.cpp
+	$(CXX) $(CFLAGS) -I$(NESTLIBDIR) $(CULAINC) -I$(TEMPO2INC) -I$(TEMPO2SRC) -c $*.cpp
 
  
 TempoNest : $(OBJFILES)

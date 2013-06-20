@@ -17,8 +17,8 @@ OBJFILES = dpotrs.o dgesvd.o dgemm.o dgemv.o dpotri.o dpotrf.o MultiNestParams.o
 
 all: TempoNest
 
-%.o: %.c
-	$(CXX) $(CLAGS) -I$(NESTLIBDIR) -I$(TEMPO2INC) -I$(TEMPO2SRC) -c $*.c
+%.o: %.cpp
+	$(CXX) $(CLAGS) -I$(NESTLIBDIR) -I$(TEMPO2INC) -I$(TEMPO2SRC) -c $*.cpp
 
  
 TempoNest : $(OBJFILES)
