@@ -205,7 +205,8 @@ void TNSimRedfromTim(int argc, char **commandLine, pulsar *psr, char timFile[][M
 	double LongestPeriod=1.0/pow(10.0,-5);
 	double flo=1.0/LongestPeriod;
 	
-
+	double fitbothnoise=1;
+	if(doDM ==1 && doRed ==1)fitbothnoise=0.5;
 
 
 
@@ -214,39 +215,43 @@ void TNSimRedfromTim(int argc, char **commandLine, pulsar *psr, char timFile[][M
 
 /* ************************Calculate DM Matrix if to be included ************** */
 
-	double DMconst=0;
-	double DMampsquared=0;
-	double DMalpha=0;
 	if(doDM ==1){
+
+		double DMconst=0;
+		double DMampsquared=0;
+		double DMalpha=0;
+
 		DMalpha=DMslope;
 		double DMamp=pow(10.0,DMlogamp);
-		DMampsquared=DMamp*DMamp*(pow((365.25*secday),2)/(12*M_PI*M_PI))*(pow(365.25,(1-DMalpha)))/(pow(flo,(DMalpha-1)));
+		DMampsquared=DMamp*DMamp*(pow(365.25,(1-DMalpha)))/(pow(flo,(DMalpha-1)));
 		DMconst=gsl_sf_gamma(1-DMalpha)*sin(0.5*M_PI*DMalpha);
-	}
+	
 
-	double **DMMatrix = new double*[psr->nobs]; for(int o1=0;o1<psr->nobs;o1++)DMMatrix[o1]=new double[psr->nobs];
+		double **DMMatrix = new double*[psr->nobs]; for(int o1=0;o1<psr->nobs;o1++)DMMatrix[o1]=new double[psr->nobs];
 
-	for(int o1=0;o1<psr->nobs; o1++){
-		for(int o2=0; o2< psr->nobs; o2++){
+		for(int o1=0;o1<psr->nobs; o1++){
+			for(int o2=0; o2< psr->nobs; o2++){
 
-			timdiff=(double)psr->obsn[o1].bat - (double)psr->obsn[o2].bat;	
-			double tau=2.0*M_PI*fabs(timdiff);
-			double DMsum=0;
+				timdiff=(double)psr->obsn[o1].bat - (double)psr->obsn[o2].bat;	
+				double tau=2.0*M_PI*fabs(timdiff);
+				double DMsum=0;
+	
+				for(int k=0; k <=10; k++){
+					DMsum=DMsum+pow(-1.0,k)*(pow(flo*tau,2*k))/(iter_factorial(2*k)*(2*k+1-DMalpha));
 
-			for(int k=0; k <=10; k++){
-				DMsum=DMsum+pow(-1.0,k)*(pow(flo*tau,2*k))/(iter_factorial(2*k)*(2*k+1-DMalpha));
+				}
+				DMMatrix[o1][o2]=DMampsquared*(DMconst*pow((flo*tau),(DMalpha-1)) - DMsum);
+				
 
-			}
-			if(doDM ==1){
-			DMMatrix[o1][o2]=DMampsquared*(DMconst*pow((flo*tau),(DMalpha-1)) - DMsum);
-			}
-			else if(doDM == 0){
-			DMMatrix[o1][o2]=0;
+
+				if(o1==o2){
+                                	double whitenoise = fitbothnoise*pow(psr->obsn[o1].toaErr*pow(10.0,-6)*EFAC,2) + pow(EQUAD,2);
+                               	 	DMMatrix[o1][o2] += whitenoise;
+				}
 			}
 		}
-	}
-	double *DMVec = new double[psr->nobs]; 
-	if(doDM ==1){
+		double *DMVec = new double[psr->nobs]; 
+
 		//Get vector of frequencies
 		
 		double DMKappa = 2.410*pow(10.0,-16);
@@ -255,136 +260,121 @@ void TNSimRedfromTim(int argc, char **commandLine, pulsar *psr, char timFile[][M
 			printf("freqs: %i %g %g %g \n",o1,(double)psr->obsn[o1].freq,(double)psr->obsn[o1].freqSSB,DMVec[o1]);
 		}
 
-		//multiply matrices
-		//First DM*FMatrix
+
 		for(int o1=0;o1<psr->nobs; o1++){
-			for(int o2=0; o2< psr->nobs; o2++){
-				DMMatrix[o1][o2] = DMMatrix[o1][o2]*DMVec[o2];
+			for(int o2=0; o2 < o1; o2++){
+				DMMatrix[o1][o2]=0;
 			}
 		}
-		//Then FMatrix*DM
-		for(int o1=0;o1<psr->nobs; o1++){
-			for(int o2=0; o2< psr->nobs; o2++){
-				DMMatrix[o1][o2] = DMVec[o1]*DMMatrix[o1][o2];
-			}
-		}	
+
+		double covdet=0;
+		dpotrfU(DMMatrix, psr->nobs, covdet);
+		long seed = 1;
+		if(idum==-1){
+			seed=TKsetSeed();
+		}
+		else{
+			seed=idum;
+		}
+		double *RanVec = new double[psr->nobs];
+		double *NoiseVec = new double[psr->nobs];
+		for(int o1=0;o1 < psr->nobs; o1++){
+			
+			RanVec[o1]=TKgaussDev(&seed);
+		}
+
+		dgemv(DMMatrix,RanVec,NoiseVec,psr->nobs,psr->nobs,'T');
+		double sum=0;
+		for(int o1=0;o1 < psr->nobs; o1++){
+			sum+=NoiseVec[o1];		
+		}
+
+		for(int o1=0;o1 < psr->nobs; o1++){
+			NoiseVec[o1]-= sum/psr->nobs;
+			bats[o1]=(double)psr[0].obsn[o1].bat;		
+		}
+		TKremovePoly_d(bats,NoiseVec,psr[0].nobs,2); // remove a quadratic to reduce the chances of phase wraps
+
+		for(int o1=0;o1 < psr->nobs; o1++){
+			printf("DM Signal: %i %g %g \n:", o1, NoiseVec[o1], DMVec[o1]);
+			psr[0].obsn[o1].sat +=	NoiseVec[o1]*DMVec[o1]/(24*60*60);
+		}
+
+
 	}
 
 /* ************************Calculate Red Matrix if to be included ************** */
-
-	double Redconst=0;
-	double Redampsquared=0;
-	double Redalpha=0;
+	printf("Do red: %i \n", doRed);
 	if(doRed ==1){
+
+		double Redconst=0;
+		double Redampsquared=0;
+		double Redalpha=0;
+
+
+
 		Redalpha=redslope;
 		double Redamp=pow(10.0,redlogamp);
-		Redampsquared=Redamp*Redamp*(pow((365.25*secday),2)/(12*M_PI*M_PI))*(pow(365.25,(1-Redalpha)))/(pow(flo,(Redalpha-1)));
+		Redampsquared=Redamp*Redamp/(pow(365.25,(1-Redalpha)))/(pow(flo,(Redalpha-1)));
 		Redconst=gsl_sf_gamma(1-Redalpha)*sin(0.5*M_PI*Redalpha);
-		
-	}
+		double **RedMatrix = new double*[psr->nobs]; for(int o1=0;o1<psr->nobs;o1++)RedMatrix[o1]=new double[psr->nobs];
 
-	double **RedMatrix = new double*[psr->nobs]; for(int o1=0;o1<psr->nobs;o1++)RedMatrix[o1]=new double[psr->nobs];
-
-	for(int o1=0;o1<psr->nobs; o1++){
-		for(int o2=0; o2< psr->nobs; o2++){
-
-			timdiff=(double)psr->obsn[o1].bat - (double)psr->obsn[o2].bat;	
-			double tau=2.0*M_PI*fabs(timdiff);
-			double Redsum=0;
-
-			for(int k=0; k <=10; k++){
-				Redsum=Redsum+pow(-1.0,k)*(pow(flo*tau,2*k))/(iter_factorial(2*k)*(2*k+1-Redalpha));
-
-			}
-			if(doRed ==1){
-			RedMatrix[o1][o2]=Redampsquared*(Redconst*pow((flo*tau),(Redalpha-1)) - Redsum);
-			}
-			else if(doRed == 0){
-			RedMatrix[o1][o2]=0;
+		for(int o1=0;o1<psr->nobs; o1++){
+			for(int o2=0; o2< psr->nobs; o2++){
+				timdiff=(double)psr->obsn[o1].bat - (double)psr->obsn[o2].bat;	
+				double tau=2.0*M_PI*fabs(timdiff);
+				double Redsum=0;
+				for(int k=0; k <=10; k++){
+					Redsum=Redsum+pow(-1.0,k)*(pow(flo*tau,2*k))/(iter_factorial(2*k)*(2*k+1-Redalpha));
+				}
+				RedMatrix[o1][o2]=Redampsquared*(Redconst*pow((flo*tau),(Redalpha-1)) - Redsum);		
+				if(o1==o2){
+                                	double whitenoise = fitbothnoise*pow(psr->obsn[o1].toaErr*pow(10.0,-6)*EFAC,2) + pow(EQUAD,2);
+                               	 	RedMatrix[o1][o2] += whitenoise;
+				}
 			}
 		}
-	}
 
-/* ************************Calculate total Cov Matrix ************** */
-
-	double **CovMatrix = new double*[psr->nobs]; for(int o1=0;o1<psr->nobs;o1++)CovMatrix[o1]=new double[psr->nobs];
-
-	for(int o1=0;o1<psr->nobs; o1++){
-
-		for(int o2=0; o2< psr->nobs; o2++){
-
-
-			CovMatrix[o1][o2]=DMMatrix[o1][o2]+RedMatrix[o1][o2];
-
-
-			if(o1==o2){
-				double whitenoise = pow(psr->obsn[o1].toaErr*pow(10.0,-6)*EFAC,2) + pow(EQUAD,2);
-				CovMatrix[o1][o2] += whitenoise;
-				if(updateEFAC==1 && updateEQUAD==0){
-					psr[0].obsn[o1].origErr=psr->obsn[o1].toaErr*EFAC;
-				}
-				if(updateEFAC==0 && updateEQUAD==1){
-					psr[0].obsn[o1].origErr=sqrt(pow(psr->obsn[o1].toaErr*pow(10.0,-6),2) + pow(EQUAD,2))*pow(10.0,6);
-				}
-				if(updateEFAC==1 && updateEQUAD==1){
-					psr[0].obsn[o1].origErr=sqrt(whitenoise)*pow(10.0,6);
-				}
-				//printf("%i %i %g \n",o1,o2,whitenoise);
+		for(int o1=0;o1<psr->nobs; o1++){
+			for(int o2=0; o2 < o1; o2++){
+				RedMatrix[o1][o2]=0;
 			}
-			
-
 		}
-	}
 
-	for(int o1=0;o1<psr->nobs; o1++){
-		for(int o2=0; o2 < o1; o2++){
-			CovMatrix[o1][o2]=0;
+		double covdet=0;
+		dpotrfU(RedMatrix, psr->nobs, covdet);
+		long seed = 1;
+		if(idum==-1){
+			seed=TKsetSeed();
 		}
-	}
+		else{
+			seed=idum;
+		}
+		double *RanVec = new double[psr->nobs];
+		double *NoiseVec = new double[psr->nobs];
+		for(int o1=0;o1 < psr->nobs; o1++){		
+			RanVec[o1]=TKgaussDev(&seed);
+		}
+		dgemv(RedMatrix,RanVec,NoiseVec,psr->nobs,psr->nobs,'T');
+		double sum=0;
+		for(int o1=0;o1 < psr->nobs; o1++){
+			sum+=NoiseVec[o1];		
+		}
+		for(int o1=0;o1 < psr->nobs; o1++){
+			NoiseVec[o1]-= sum/psr->nobs;
+			bats[o1]=(double)psr[0].obsn[o1].bat;		
+		}
+		TKremovePoly_d(bats,NoiseVec,psr[0].nobs,2); // remove a quadratic to reduce the chances of phase wraps
+		for(int o1=0;o1 < psr->nobs; o1++){
+			printf("Signal: %i %g\n", o1, NoiseVec[o1]);
+			psr[0].obsn[o1].sat +=	NoiseVec[o1]/(24*60*60);
+		}
 
-	double covdet=0;
-	dpotrfU(CovMatrix, psr->nobs, covdet);
-	long seed = 1;
-	if(idum==-1){
-		seed=TKsetSeed();
 	}
-	else{
-		seed=idum;
-	}
-	double *RanVec = new double[psr->nobs];
-	double *NoiseVec = new double[psr->nobs];
-	for(int o1=0;o1 < psr->nobs; o1++){
-		
-		RanVec[o1]=TKgaussDev(&seed);
-	}
-
-	dgemv(CovMatrix,RanVec,NoiseVec,psr->nobs,psr->nobs,'T');
-	double sum=0;
-	for(int o1=0;o1 < psr->nobs; o1++){
-		sum+=NoiseVec[o1];		
-	}
-
-	for(int o1=0;o1 < psr->nobs; o1++){
-		NoiseVec[o1]-= sum/psr->nobs;
-		bats[o1]=(double)psr[0].obsn[o1].bat;		
-	}
-	for(int o1=0;o1 < psr->nobs; o1++){
-	//	printf("BNoiseVec: %i %g %g %g %g\n",o1,(double)psr[0].obsn[o1].bat,NoiseVec[o1],(double)psr->obsn[o1].freqSSB, DMVec[o1]);	
-	}
-	TKremovePoly_d(bats,NoiseVec,psr[0].nobs,2); // remove a quadratic to reduce the chances of phase wraps
-
-	for(int o1=0;o1 < psr->nobs; o1++){
-		psr[0].obsn[o1].sat +=	NoiseVec[o1]/(24*60*60);
-	//	printf("ANoiseVec: %i %g %g %g %g\n",o1,(double)psr[0].obsn[o1].bat,NoiseVec[o1],(double)psr->obsn[o1].freqSSB, DMVec[o1]);	
-	}
-
-	for(int o=0;o<psr->nobs;o++){delete[] CovMatrix[o];}
-	delete[] CovMatrix;
-	delete[] RanVec;
-	delete[] NoiseVec;
-	//printf("Like: %g %g %g \n",lnew,Chisq,covdet);
+	
 
 	writeTim(str, psr, "tempo2");
+
 
 }
 

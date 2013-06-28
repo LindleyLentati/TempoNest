@@ -53,7 +53,7 @@ void setupparams(char *root,
 
     //General parameters:
     //Root of the results files,relative to the directory in which TempoNest is run. This will be followed by the pulsar name, and then the individual output file extensions.
-    strcpy( root, "results/NL-QSDMargin-");
+    strcpy( root, "results/Example1-");
 
     //numTempo2its - sets the number of iterations Tempo2 should do before setting the priors.  Should only be set to 0 if all the priors are set in setTNPriors
     numTempo2its=1;
@@ -70,13 +70,13 @@ void setupparams(char *root,
 
     //ModelChoice
 
-    incEFAC=1; //include EFAC: 0 = none, 1 = one for all residuals, 2 = one for each observing system
+    incEFAC=0; //include EFAC: 0 = none, 1 = one for all residuals, 2 = one for each observing system
     incEQUAD=0; //include EQUAD: 0 = no, 1 = yes
-    incRED=2; //include Red Noise model: 0 = no, 1 = power law model (vHL2013), 2 = model independent (L2013)
+    incRED=0; //include Red Noise model: 0 = no, 1 = power law model (vHL2013), 2 = model independent (L2013)
     incDM=0; //include Red Noise model: 0 = no, 1 = power law model (vHL2013), 2 = model independent (L2013)
 
-    doTimeMargin=1 ; //0=No Analytical Marginalisation over Timing Model. 1=Marginalise over QSD. 2=Marginalise over all Model params excluding jumps.
-    doJumpMargin=1; //0=No Analytical Marginalisation over Jumps. 1=Marginalise over Jumps.
+    doTimeMargin=0 ; //0=No Analytical Marginalisation over Timing Model. 1=Marginalise over QSD. 2=Marginalise over all Model params excluding jumps.
+    doJumpMargin=0; //0=No Analytical Marginalisation over Jumps. 1=Marginalise over Jumps.
 
 
 
@@ -89,7 +89,7 @@ void setupparams(char *root,
     //FitSig sets the priors for all timing model and jump parameters for both non linear and linear timing models.
     //For the non linear fit, Fitsig multiples the error returned by Tempo2, and sets the prior to be the best fit value returned by tempo2 +/- the scaled error.
     // For the linear fit, multiplies the ratio of the rms of the designmatrix vector for each timing model parameter, and the rms of the residuals returned by Tempo2.
-    FitSig=10;
+    FitSig=5;
 
     //Remaining priors for the stochastic parameters.  
     EFACPrior[0]=0.1;
@@ -138,7 +138,7 @@ void setupparams(char *root,
          * Note: the timing model parameters are not done implemented yet
          */
 
-        parameters.readInto(strBuf, "root", string("results/NL-QSDMargin-"));
+        parameters.readInto(strBuf, "root", string("results/Example1"));
         strcpy(root, strBuf.data());
         parameters.readInto(numTempo2its, "numTempo2its", numTempo2its);
         parameters.readInto(doLinearFit, "doLinearFit", doLinearFit);
@@ -146,6 +146,7 @@ void setupparams(char *root,
         parameters.readInto(incEFAC, "incEFAC", incEFAC);
         parameters.readInto(incEQUAD, "incEQUAD", incEQUAD);
         parameters.readInto(incRED, "incRED", incRED);
+	parameters.readInto(incDM, "incDM", incDM);
         parameters.readInto(doTimeMargin, "doTimeMargin", doTimeMargin);
         parameters.readInto(doJumpMargin, "doJumpMargin", doJumpMargin);
         parameters.readInto(customPriors, "customPriors", customPriors);
@@ -165,9 +166,6 @@ void setupparams(char *root,
         parameters.readInto(DMAmpPrior[0], "DMAmpPrior[0]", DMAmpPrior[0]);
         parameters.readInto(DMAmpPrior[1], "DMAmpPrior[1]", DMAmpPrior[1]);
         parameters.readInto(AmpPrior[1], "AmpPrior[1]", AmpPrior[1]);
-        parameters.readInto(AmpPrior[1], "AmpPrior[1]", AmpPrior[1]);
-        parameters.readInto(AmpPrior[1], "AmpPrior[1]", AmpPrior[1]);
-        parameters.readInto(AmpPrior[1], "AmpPrior[1]", AmpPrior[1]);
 
     } catch(ConfigFile::file_not_found oError) {
         printf("WARNING: parameters file '%s' not found. Using defaults.\n", oError.filename.c_str());
@@ -175,7 +173,7 @@ void setupparams(char *root,
 
 }
 
-void setTNPriors(double **Dpriors, long double **TempoPriors){
+void setTNPriors(double **Dpriors, long double **TempoPriors, int TPsize, int DPsize){
 
 //This function overwrites the default values for the priors sent to multinest, and the long double priors used by tempo2, you need to be aware of what dimension is what if you use this function.
 
@@ -186,5 +184,77 @@ void setTNPriors(double **Dpriors, long double **TempoPriors){
 //EQUAD
 //Red Noise Parameters (Amplitude then Alpha for incRed=1, coefficients 1..n for incRed=2)
 
-TempoPriors[5][2]=1;
+	for(int i =0;i<TPsize; i++){	
+	//	printf("TP %i \n", i);
+
+	    // Use a configfile, if we can, to overwrite the defaults set in this file.
+	    try {
+		string strBuf;
+		strBuf = string("defaultparameters.conf");
+		ConfigFile parameters(strBuf);
+
+		/* We can check whether a value is not set in the file by doing
+		 * if(! parameters.readInto(variable, "name", default)) {
+		 *   printf("WARNING");
+		 * }
+		 *
+		 * At the moment I was too lazy to print warning messages, and the
+		 * default value from this file is used in that case.
+		 *
+		 * Note: the timing model parameters are not done implemented yet
+		 */
+		char buffer [50];
+		int n;
+  		n=sprintf (buffer, "TempoPriors[%i][0]", i);
+		parameters.readInto(TempoPriors[i][0], buffer, TempoPriors[i][0]);
+		n=sprintf (buffer, "TempoPriors[%i][1]", i);
+                parameters.readInto(TempoPriors[i][1], buffer, TempoPriors[i][1]);
+		n=sprintf (buffer, "TempoPriors[%i][2]", i);
+		parameters.readInto(TempoPriors[i][2], buffer, TempoPriors[i][2]);
+
+
+	    } catch(ConfigFile::file_not_found oError) {
+		printf("WARNING: parameters file '%s' not found. Using defaults.\n", oError.filename.c_str());
+	    } // try
+
+	}
+
+
+
+	for(int i =0;i<DPsize; i++){	
+
+
+	    // Use a configfile, if we can, to overwrite the defaults set in this file.
+	    try {
+		string strBuf;
+		strBuf = string("defaultparameters.conf");
+		ConfigFile parameters(strBuf);
+
+		/* We can check whether a value is not set in the file by doing
+		 * if(! parameters.readInto(variable, "name", default)) {
+		 *   printf("WARNING");
+		 * }
+		 *
+		 * At the moment I was too lazy to print warning messages, and the
+		 * default value from this file is used in that case.
+		 *
+		 * Note: the timing model parameters are not done implemented yet
+		 */
+                char buffer [50];
+                int n;
+                n=sprintf (buffer, "DPriors[%i][0]", i);
+		parameters.readInto(Dpriors[i][0], buffer, Dpriors[i][0]);
+		n=sprintf (buffer, "DPriors[%i][1]", i);
+		parameters.readInto(Dpriors[i][1], buffer, Dpriors[i][1]);
+
+	    } catch(ConfigFile::file_not_found oError) {
+		printf("WARNING: parameters file '%s' not found. Using defaults.\n", oError.filename.c_str());
+	    } // try
+
+	}
+
+
+
+
+
 }

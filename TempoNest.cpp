@@ -54,7 +54,7 @@
 #include <iostream>
 #include <fstream>
 
-#include "/usr/include/gsl/gsl_sf_gamma.h"
+#include <gsl/gsl_sf_gamma.h>
 #include "dpotri.h"
 #include "dpotrf.h"
 
@@ -130,7 +130,7 @@ void update_MNPriors(MNStruct* MNS, double ** DPriorsval, long double **priorsva
                 	if(MNS->pulse->param[p].fitFlag[k] == 1){
 				if(p == param_ecc || p ==param_px || p == param_m2 || p==param_dm){
 					long double minprior=priorsval[paramsfitted][0]+DPriorsval[paramsfitted+linearPriors][0]*priorsval[paramsfitted][1];
-					if(minprior < 0){
+					if(minprior < 0 && priorsval[paramsfitted][2]==0){
 						printf("%.10Lg %.10Lg %g %g \n",priorsval[paramsfitted][0],priorsval[paramsfitted][1],DPriorsval[paramsfitted+linearPriors][0],DPriorsval[paramsfitted+linearPriors][1]);
 						long double newprior=-priorsval[paramsfitted][0]/priorsval[paramsfitted][1];
 						DPriorsval[paramsfitted+linearPriors][0]=(double)newprior;
@@ -779,9 +779,20 @@ int main(int argc, char *argv[])
 	if(incRED==0)Reddims=0;
 	if(incRED==1)Reddims=2;
 	if(incRED==2)Reddims=numCoeff;
-	
+ 	if(incRED==3)Reddims=2;	
+        if(incRED==4)Reddims=3*numCoeff;
+        if(incRED==5)Reddims=2*numCoeff+2;
 	if(incDM==0)DMdims=0;
 	if(incDM==1)DMdims=2;
+	if(incDM==2)DMdims=numCoeff;
+	if(incDM==3)DMdims=2;
+        if(incDM==4)DMdims=3*numCoeff;
+        if(incDM==5)DMdims=2*numCoeff+2;
+
+	if(incRED == 1 && incDM != 1 || incRED != 1 && incDM == 1){
+		printf("Different methods for DM and red noise not currently supported, please use the same option for both");
+		return 0;
+	}
 	
 	
 	std::string pulsarname=psr[0].name;
@@ -884,10 +895,11 @@ int main(int argc, char *argv[])
 	if(incRED == 0){printf("Not Including Red Noise\n");}
 	if(incRED == 1){printf("Including Red Noise : Power Law Model\n");}
 	if(incRED == 2){printf("Including Red Noise : Model Independant - Fitting %i Coefficients\n", numCoeff);}
+	if(incRED ==3){printf("Including Red Noise: Power Law Model to %i Coefficients \n", numCoeff);}
 	if(incDM == 0){printf("Not Including DM\n");}
 	if(incDM == 1){printf("Including DM : Power Law Model\n");}
 	if(incDM == 2){printf("Including DM : Model Independant - Fitting %i Coefficients\n", numCoeff);}
-	
+ 	if(incDM ==3){printf("Including DM: Power Law Model to %i Coefficients \n", numCoeff);}	
 	
 	int fitcount=0;
 	printf("fitting for: Arbitrary Phase \n");
@@ -1013,7 +1025,7 @@ int main(int argc, char *argv[])
 		paramsfitted++;
 		getdistlabel++;
 	}
-	if(incRED==1){
+	if(incRED==1 || incRED == 3){
 		getdistparamnames << getdistlabel;
 		getdistparamnames << " ";
 		getdistparamnames <<  "RedAmp";
@@ -1038,7 +1050,7 @@ int main(int argc, char *argv[])
 			getdistlabel++;
 		}
 	}
-	if(incDM==1){
+	if(incDM==1 || incDM == 3){
 		getdistparamnames << getdistlabel;
 		getdistparamnames << " ";
 		getdistparamnames <<  "DMAmp";
@@ -1052,7 +1064,7 @@ int main(int argc, char *argv[])
 		paramsfitted++;
 		getdistlabel++;
 	}
-	else if(incRED==2){
+	else if(incDM==2){
 		for(int i =0;i<numCoeff;i++){
 			getdistparamnames << getdistlabel;
 			getdistparamnames << " ";
@@ -1125,7 +1137,7 @@ int main(int argc, char *argv[])
 		int pcount=1;
 		for(int j=1;j<((MNStruct *)context)->numFitTiming;j++){
 			psr[0].param[((MNStruct *)context)->TempoFitNums[j][0]].val[((MNStruct *)context)->TempoFitNums[j][1]] = TempoPriors[pcount][0];
-	//		printf("TP: %i %.10Lg %.10Lg \n",pcount,TempoPriors[pcount][0],TempoPriors[pcount][1]);
+			//printf("TP: %i %.10Lg %.10Lg \n",pcount,TempoPriors[pcount][0],TempoPriors[pcount][1]);
 			pcount++;
 		}
 
@@ -1188,7 +1200,7 @@ int main(int argc, char *argv[])
 
 		//Combine all the priors into one aray: Dpriors
 		int pcount=0;
-
+		printf("Setting up priors %i\n",ndims);
 		for(int i =0; i< numFitJumps+fitcount; i++){
 			Dpriors[pcount][0]=-FitSig;
 			Dpriors[pcount][1]=FitSig;
@@ -1204,7 +1216,7 @@ int main(int argc, char *argv[])
 			Dpriors[pcount][1]=EQUADPrior[1];
 			pcount++;
 		}	
-		if(incRED==1){
+		if(incRED==1 || incRED == 3){
 			Dpriors[pcount][0]=AmpPrior[0];
 			Dpriors[pcount][1]=AmpPrior[1];
 			pcount++;
@@ -1218,8 +1230,41 @@ int main(int argc, char *argv[])
 				Dpriors[pcount][1]=CoeffPrior[1];
 				pcount++;
 			}
-		}	
-		if(incDM==1){
+		}
+/*                if(incRED==4){
+
+                        for(int i =0;i < 2*numCoeff;i++){
+                                Dpriors[pcount][0]=-5*psr[p].rmsPre*pow(10.0,-6);
+                                Dpriors[pcount][1]=5*psr[p].rmsPre*pow(10.0,-6);
+                                printf("Prior on fourier coefficients: %g\n",psr[p].rmsPre*pow(10.0,-6));
+                                pcount++;
+                        }
+                
+		        for(int i =0; i< numCoeff; i++){
+                                Dpriors[pcount][0]=CoeffPrior[0];
+                                Dpriors[pcount][1]=CoeffPrior[1];
+                                pcount++;
+                        }
+}
+
+                if(incRED==5){
+
+			for(int i =0;i < 2*numCoeff;i++){
+				Dpriors[pcount][0]=-5*psr[p].rmsPre*pow(10.0,-6);
+	                        Dpriors[pcount][1]=5*psr[p].rmsPre*pow(10.0,-6);
+				printf("Prior on fourier coefficients: %g\n",psr[p].rmsPre*pow(10.0,-6));
+        	                pcount++;
+			}
+
+                        Dpriors[pcount][0]=AmpPrior[0];
+                        Dpriors[pcount][1]=AmpPrior[1];
+                        pcount++;
+                        Dpriors[pcount][0]=AlphaPrior[0];
+                        Dpriors[pcount][1]=AlphaPrior[1];
+                        pcount++;
+                }	 */
+		if(incDM==1 || incDM == 3){
+			printf("DMP %i\n",pcount);
 			Dpriors[pcount][0]=DMAmpPrior[0];
 			Dpriors[pcount][1]=DMAmpPrior[1];
 			pcount++;
@@ -1227,7 +1272,49 @@ int main(int argc, char *argv[])
 			Dpriors[pcount][1]=DMAlphaPrior[1];
 			pcount++;
 		}
-		//printf("set up priors, pcount: %i \n",pcount);
+                else if(incDM==2){
+                        for(int i =0; i< numCoeff; i++){
+                                Dpriors[pcount][0]=CoeffPrior[0];
+                                Dpriors[pcount][1]=CoeffPrior[1];
+                                pcount++;
+                        }
+                }
+
+/*
+               if(incDM==4){
+
+                        for(int i =0;i < 2*numCoeff;i++){
+                                Dpriors[pcount][0]=-5*psr[p].rmsPre*pow(10.0,-6);
+                                Dpriors[pcount][1]=5*psr[p].rmsPre*pow(10.0,-6);
+                                printf("Prior on fourier coefficients: %g\n",psr[p].rmsPre*pow(10.0,-6));
+                                pcount++;
+                        }
+
+                        for(int i =0; i< numCoeff; i++){
+                                Dpriors[pcount][0]=CoeffPrior[0];
+                                Dpriors[pcount][1]=CoeffPrior[1];
+                                pcount++;
+                        }
+}
+
+                if(incDM=5){
+
+                        for(int i =0;i < 2*numCoeff;i++){
+                                Dpriors[pcount][0]=-1000*psr[p].rmsPre*pow(10.0,-6);
+                                Dpriors[pcount][1]=1000*psr[p].rmsPre*pow(10.0,-6);
+                                printf("Prior on fourier coefficients: %g\n",psr[p].rmsPre*pow(10.0,-6));
+                                pcount++;
+                        }
+
+                        Dpriors[pcount][0]=DMAmpPrior[0];
+                        Dpriors[pcount][1]=DMAmpPrior[1];
+                        pcount++;
+                        Dpriors[pcount][0]=DMAlphaPrior[0];
+                        Dpriors[pcount][1]=DMAlphaPrior[1];
+                        pcount++;
+                }
+*/
+		printf("set up priors, pcount: %i \n",pcount);
 
 
 		
@@ -1238,13 +1325,14 @@ int main(int argc, char *argv[])
 				FitList[i]=0;
 			}
 			numToMargin=0;
+			if(incDM == 2 || incDM == 3 || incDM == 4 || incDM == 5)numToMargin +=2;
 			for(int i=0;i<((MNStruct *)context)->numFitTiming + ((MNStruct *)context)->numFitJumps;i++){
 				if(TempoPriors[i][2]==1){
 					FitList[i]=1;
 					printf("marginalising over param: %i \n",i);
 					numToMargin++;
 				}
-			}
+	}
 	
 			int Gsize=psr[0].nobs-numToMargin;
 			double **TNDM=new double*[psr[0].nobs];
@@ -1333,7 +1421,7 @@ int main(int argc, char *argv[])
 				paramsfitted++;
 			}
 			
-			if(incRED==1){
+			if(incRED==1 || incRED == 3){
 				printf("Prior on Red Noise Log Amplitude : %.5g -> %.5g\n",Dpriors[paramsfitted][0],Dpriors[paramsfitted][1]);
 				paramsfitted++;		
 				printf("Prior on Red Noise Slope : %.5g -> %.5g\n",Dpriors[paramsfitted][0],Dpriors[paramsfitted][1]);
@@ -1347,7 +1435,7 @@ int main(int argc, char *argv[])
 				}
 			}
 			
-			if(incDM==1){
+			if(incDM==1 || incDM == 3){
 				printf("Prior on DM Log Amplitude : %.5g -> %.5g\n",Dpriors[paramsfitted][0],Dpriors[paramsfitted][1]);
 				paramsfitted++;		
 				printf("Prior on DM Slope : %.5g -> %.5g\n",Dpriors[paramsfitted][0],Dpriors[paramsfitted][1]);
@@ -1360,30 +1448,39 @@ int main(int argc, char *argv[])
 					paramsfitted++;	
 				}
 			}
-			printf("\n\n");
+			printf("%i %i\n\n", incRED, incDM);
 			ndims=ndims-numToMargin;
+			if(incDM == 2 || incDM == 3 || incDM == 4 || incDM == 5)ndims +=2;
 			nPar=ndims;
-		if(incRED==0){
+		if(incRED==0 && incDM == 0){
 #ifdef HAVE_CULA
 			nested::run(mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, WhiteMarginGPULogLike, dumper, context);
 #else
 			nested::run(mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, WhiteMarginLogLike, dumper, context);
 #endif /* HAVE_CULA */
 		}
-		else if(incRED==1){
+		else if(incRED==1 || incDM==1){
 #ifdef HAVE_CULA
 			nested::run(mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, vHRedMarginGPULogLike, dumper, context);
 #else
 			nested::run(mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, vHRedMarginLogLike, dumper, context);
 #endif /* HAVE_CULA */
 		}
-		else if(incRED==2){
+		else if(incRED==2 || incRED == 3 || incDM==2 || incDM == 3){
 #ifdef HAVE_CULA
 			nested::run(mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, LRedMarginGPULogLike, dumper, context);
 #else
 			nested::run(mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, LRedMarginLogLike, dumper, context);
 #endif /* HAVE_CULA */
 		}
+                else if(incRED==4 || incRED == 5 || incDM==4 || incDM == 5){
+#ifdef HAVE_CULA
+                        nested::run(mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, LRedMarginNumGPULogLike, dumper, context);
+#else
+                        nested::run(mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, LRedMarginNumLogLike, dumper, context);
+#endif /* HAVE_CULA */
+                }
+
 	}
 	else if(doJumpMargin == 0 && doTimeMargin == 0 ){
 
@@ -1432,7 +1529,7 @@ int main(int argc, char *argv[])
 				paramsfitted++;
 			}
 			
-			if(incRED==1){
+			if(incRED==1 || incRED==3){
 				printf("Prior on Red Noise Log Amplitude : %.5g -> %.5g\n",Dpriors[paramsfitted][0],Dpriors[paramsfitted][1]);
 				paramsfitted++;		
 				printf("Prior on Red Noise Slope : %.5g -> %.5g\n",Dpriors[paramsfitted][0],Dpriors[paramsfitted][1]);
@@ -1446,7 +1543,7 @@ int main(int argc, char *argv[])
 				}
 			}
 			
-			if(incDM==1){
+			if(incDM==1 || incDM==3){
 				printf("Prior on DM Log Amplitude : %.5g -> %.5g\n",Dpriors[paramsfitted][0],Dpriors[paramsfitted][1]);
 				paramsfitted++;		
 				printf("Prior on DM Slope : %.5g -> %.5g\n",Dpriors[paramsfitted][0],Dpriors[paramsfitted][1]);
@@ -1471,7 +1568,7 @@ int main(int argc, char *argv[])
 				nested::run(mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, vHRedLogLike, dumper, context);
 #endif /* HAVE_CULA */
 		}
-			else if(incRED==2){
+			else if(incRED==2 || incRED==3 || incDM==2 || incDM==3){
 #ifdef HAVE_CULA
 				nested::run(mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, LRedGPULogLike, dumper, context);
 #else
@@ -1499,7 +1596,7 @@ int main(int argc, char *argv[])
 			Dpriors[pcount][1]=EQUADPrior[1];
 			pcount++;
 		}	
-		if(incRED==1){
+		if(incRED==1 || incRED ==3){
 			Dpriors[pcount][0]=AmpPrior[0];
 			Dpriors[pcount][1]=AmpPrior[1];
 			pcount++;
@@ -1515,7 +1612,7 @@ int main(int argc, char *argv[])
 			}
 		}	
 		
-		if(incDM==1){
+		if(incDM==1 || incDM==3){
 			Dpriors[pcount][0]=DMAmpPrior[0];
 			Dpriors[pcount][1]=DMAmpPrior[1];
 			pcount++;
@@ -1647,7 +1744,7 @@ int main(int argc, char *argv[])
 				nested::run(mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, vHRedMarginLogLike, dumper, context);
 #endif /* HAVE_CULA */
 			}
-			else if(incRED==2){
+			else if(incRED==2 || incRED==3){
 #ifdef HAVE_CULA
 				nested::run(mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, LRedMarginGPULogLike, dumper, context);
 #else
@@ -1676,7 +1773,7 @@ int main(int argc, char *argv[])
 				nested::run(mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, vHRedLogLike, dumper, context);
 #endif /* HAVE_CULA */
 		}
-			else if(incRED==2){
+			else if(incRED==2 || incRED==3){
 #ifdef HAVE_CULA
 				nested::run(mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, LRedGPULogLike, dumper, context);
 #else

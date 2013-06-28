@@ -28,7 +28,7 @@
 #include <stdio.h>
 #include <time.h>
 #define __Tempo2_h
-#define TEMPO2_h_VER "$Revision: 1.65 $"
+#define TEMPO2_h_VER "$Revision: 1.69 $"
 #define TSUN (4.925490947e-6L) // Solar constant for mass calculations.
 #define MAX_FREQ_DERIVATIVES 13    /* F0 -> Fn   where n=10                            */
 #define MAX_DM_DERIVATIVES   10    /* DM0 -> DMn where n=10                            */
@@ -177,8 +177,8 @@ extern char TEMPO2_ERROR[];
 enum label {param_raj,param_decj,param_f,param_pepoch,param_posepoch,
 	    param_dmepoch,param_dm,param_pmra,param_pmdec,param_px,
 	    param_sini,param_pb,param_fb,param_t0,param_a1,param_om,param_pmrv,
-	    param_ecc,param_edot,param_xpbdot,param_pbdot,param_a1dot,
-	    param_omdot,param_tasc,param_eps1,param_eps2,param_m2,param_gamma,
+	    param_ecc,param_edot,param_e2dot,param_xpbdot,param_pbdot,param_a1dot,
+	    param_a2dot,param_omdot,param_om2dot,param_orbpx,param_tasc,param_eps1,param_eps2,param_m2,param_gamma,
 	    param_mtot,param_glep,param_glph,param_glf0,param_glf1,param_glf2,
 	    param_glf0d,param_gltd,param_start,param_finish,param_track,param_bp,param_bpp,
 	    param_tzrmjd,param_tzrfrq,param_fddc,param_fddi,param_dr,param_dtheta,param_tspan,
@@ -446,6 +446,8 @@ typedef struct pulsar {
   int    nFit;                    /* Number of points in the fit */
   int    nParam;                  /* Number of parameters in the fit */
   int    nGlobal;                 /* Number of global parameters in the fit */
+  int fitParamGlobalI[MAX_FIT];   // number of global parameters in fit
+  int fitParamGlobalK[MAX_FIT];    // number of global parameters in fit
   int    fitParamI[MAX_FIT];
   int    fitParamK[MAX_FIT];
   int    fitMode;                 /* = 0 not fitting with errors, = 1 fitting with errors (MODE 1) */
@@ -468,6 +470,7 @@ typedef struct pulsar {
   int t2cMethod;  /* How to transform from terrestrial to celestial coords */
   int correctTroposphere;     /* whether or not do correct for tropospheric delay */
   int noWarnings;                 /* = 1, do not display warning messages                       */
+  char sorted; /* ToAs sorted */
   /* Path for the file containing the corrections between observatory clocks and UTC(NIST)      */
   /* - set in readParfile.C                                                                     */
 /*   char OBSERVATORY_CLOCK_2_UTC_NIST[MAX_FILELEN];  */
@@ -547,7 +550,10 @@ typedef struct pulsar {
   char   T2equadFlagID[MAX_T2EQUAD][MAX_FLAG_LEN],T2equadFlagVal[MAX_T2EQUAD][MAX_FLAG_LEN];
   double T2equadVal[MAX_T2EQUAD];
   double T2globalEfac;
-  
+  //some parameters for Ryan Shannon's simulations
+  double rasim, decsim;
+  int simflag;
+
 
   /* Which fit function are we using */
   char fitFunc[MAX_FILELEN];
@@ -608,6 +614,7 @@ void secularMotion(pulsar *psr,int npsr);
 void autoConstraints(pulsar* psr, int ipsr,int npsr);
 void setPlugPath();
 
+void sortToAs(pulsar* psr);
 void preProcess(pulsar *psr,int npsr,int argc,char *argv[]);
 
 /* used by psrchive to initialize a single psr struct */

@@ -54,7 +54,7 @@
 #include <iostream>
 #include <fstream>
 
-#include "/usr/include/gsl/gsl_sf_gamma.h"
+#include <gsl/gsl_sf_gamma.h>
 #include "dpotri.h"
 #include "dpotrf.h"
 
@@ -130,7 +130,7 @@ void update_MNPriors(MNStruct* MNS, double ** DPriorsval, long double **priorsva
                 	if(MNS->pulse->param[p].fitFlag[k] == 1){
 				if(p == param_ecc || p ==param_px || p == param_m2 || p==param_dm){
 					long double minprior=priorsval[paramsfitted][0]+DPriorsval[paramsfitted+linearPriors][0]*priorsval[paramsfitted][1];
-					if(minprior < 0){
+					if(minprior < 0 && priorsval[paramsfitted][2]==0){
 						printf("%.10Lg %.10Lg %g %g \n",priorsval[paramsfitted][0],priorsval[paramsfitted][1],DPriorsval[paramsfitted+linearPriors][0],DPriorsval[paramsfitted+linearPriors][1]);
 						long double newprior=-priorsval[paramsfitted][0]/priorsval[paramsfitted][1];
 						DPriorsval[paramsfitted+linearPriors][0]=(double)newprior;
@@ -188,34 +188,56 @@ void update_MNPriors(MNStruct* MNS, double ** DPriorsval, long double **priorsva
 
 
 
+
+
+/************************************************* dumper routine ******************************************************/
+
+// The dumper routine will be called every updInt*10 iterations
+// MultiNest doesn not need to the user to do anything. User can use the arguments in whichever way he/she wants
 //
+//
+// Arguments:
+//
+// nSamples 						= total number of samples in posterior distribution
+// nlive 						= total number of live points
+// nPar 						= total number of parameters (free + derived)
+// physLive[1][nlive * (nPar + 1)] 			= 2D array containing the last set of live points (physical parameters plus derived parameters) along with their loglikelihood values
+// posterior[1][nSamples * (nPar + 2)] 			= posterior distribution containing nSamples points. Each sample has nPar parameters (physical + derived) along with the their loglike value & posterior probability
+// paramConstr[1][4*nPar]:
+// paramConstr[0][0] to paramConstr[0][nPar - 1] 	= mean values of the parameters
+// paramConstr[0][nPar] to paramConstr[0][2*nPar - 1] 	= standard deviation of the parameters
+// paramConstr[0][nPar*2] to paramConstr[0][3*nPar - 1] = best-fit (maxlike) parameters
+// paramConstr[0][nPar*4] to paramConstr[0][4*nPar - 1] = MAP (maximum-a-posteriori) parameters
+// maxLogLike						= maximum loglikelihood value
+// logZ							= log evidence value
+// logZerr						= error on log evidence value
+// context						void pointer, any additional information
+
 void dumper(int &nSamples, int &nlive, int &nPar, double **physLive, double **posterior, double **paramConstr, double &maxLogLike, double &logZ, double &logZerr, void *context)
 {
-// convert the 2D Fortran arrays to C arrays
-
-
-// the posterior distribution
-// postdist will have nPar parameters in the first nPar columns & loglike value & the posterior probability in the last two columns
-
-int i, j;
-
-double postdist[nSamples][nPar + 2];
-for( i = 0; i < nPar + 2; i++ )
-for( j = 0; j < nSamples; j++ )
-postdist[j][i] = posterior[0][i * (nSamples) + j];
-
-
-
-// last set of live points
-// pLivePts will have nPar parameters in the first nPar columns & loglike value in the last column
-
-double pLivePts[nlive][nPar + 1];
-for( i = 0; i < nPar + 1; i++ )
-for( j = 0; j < nlive; j++ )
-pLivePts[j][i] = physLive[0][i * (nlive) + j];
+	// convert the 2D Fortran arrays to C++ arrays
+	
+	
+	// the posterior distribution
+	// postdist will have nPar parameters in the first nPar columns & loglike value & the posterior probability in the last two columns
+	
+	int i, j;
+	
+	double postdist[nSamples][nPar + 2];
+	for( i = 0; i < nPar + 2; i++ )
+		for( j = 0; j < nSamples; j++ )
+			postdist[j][i] = posterior[0][i * nSamples + j];
+	
+	
+	
+	// last set of live points
+	// pLivePts will have nPar parameters in the first nPar columns & loglike value in the last column
+	
+	double pLivePts[nlive][nPar + 1];
+	for( i = 0; i < nPar + 1; i++ )
+		for( j = 0; j < nlive; j++ )
+			pLivePts[j][i] = physLive[0][i * nlive + j];
 }
-
-
 
 /* The main function of a plugin called from Tempo2 is 'graphicalInterface'
 */
@@ -560,14 +582,25 @@ extern "C" int graphicalInterface(int argc, char **argv,
 	}
     }
 
+	
+	
 	if(incRED==0)Reddims=0;
-	if(incRED==1)Reddims=2;
-	if(incRED==2)Reddims=numCoeff;
-	
-	if(incDM==0)DMdims=0;
-	if(incDM==1)DMdims=2;
-	
-	
+        if(incRED==1)Reddims=2;
+        if(incRED==2)Reddims=numCoeff;
+        if(incRED==3)Reddims=2;
+        if(incRED==4)Reddims=3*numCoeff;
+        if(incRED==5)Reddims=2*numCoeff+2;
+        if(incDM==0)DMdims=0;
+        if(incDM==1)DMdims=2;
+        if(incDM==2)DMdims=numCoeff;
+        if(incDM==3)DMdims=2;
+        if(incDM==4)DMdims=3*numCoeff;
+        if(incDM==5)DMdims=2*numCoeff+2;
+
+        if(incRED == 1 && incDM != 1 && incDM != 0|| incRED != 1 && incRED != 0 && incDM == 1){
+                printf("Different methods for DM and red noise not currently supported, please use the same option for both");
+                return 0;
+        }
 	std::string pulsarname=psr[0].name;
 	std::string longname=Type+pulsarname+"-";
 
@@ -671,14 +704,16 @@ extern "C" int graphicalInterface(int argc, char **argv,
 		whiteflagoutput.close();
 	}
 
-	if(incEQUAD == 0){printf("Not Including EQUAD\n");}
-	if(incEQUAD == 1){printf("Including One EQUAD for all observations\n");}
-	if(incRED == 0){printf("Not Including Red Noise\n");}
-	if(incRED == 1){printf("Including Red Noise : Power Law Model\n");}
-	if(incRED == 2){printf("Including Red Noise : Model Independant - Fitting %i Coefficients\n", numCoeff);}
-	if(incDM == 0){printf("Not Including DM\n");}
-	if(incDM == 1){printf("Including DM : Power Law Model\n");}
-	if(incDM == 2){printf("Including DM : Model Independant - Fitting %i Coefficients\n", numCoeff);}
+        if(incEQUAD == 0){printf("Not Including EQUAD\n");}
+        if(incEQUAD == 1){printf("Including One EQUAD for all observations\n");}
+        if(incRED == 0){printf("Not Including Red Noise\n");}
+        if(incRED == 1){printf("Including Red Noise : Power Law Model\n");}
+        if(incRED == 2){printf("Including Red Noise : Model Independant - Fitting %i Coefficients\n", numCoeff);}
+        if(incRED ==3){printf("Including Red Noise: Power Law Model to %i Coefficients \n", numCoeff);}
+        if(incDM == 0){printf("Not Including DM\n");}
+        if(incDM == 1){printf("Including DM : Power Law Model\n");}
+        if(incDM == 2){printf("Including DM : Model Independant - Fitting %i Coefficients\n", numCoeff);}
+        if(incDM ==3){printf("Including DM: Power Law Model to %i Coefficients \n", numCoeff);}
 	
 	
 	int fitcount=0;
@@ -787,7 +822,7 @@ extern "C" int graphicalInterface(int argc, char **argv,
 		}
 	}  
 
-	//printf("dont this\n");
+//	printf("dont this\n");
 	for(int i =0;i<systemcount;i++){
 		getdistparamnames << getdistlabel;
 		getdistparamnames << " ";
@@ -805,7 +840,7 @@ extern "C" int graphicalInterface(int argc, char **argv,
 		paramsfitted++;
 		getdistlabel++;
 	}
-	if(incRED==1){
+	if(incRED==1 || incRED==3){
 		getdistparamnames << getdistlabel;
 		getdistparamnames << " ";
 		getdistparamnames <<  "RedAmp";
@@ -830,7 +865,7 @@ extern "C" int graphicalInterface(int argc, char **argv,
 			getdistlabel++;
 		}
 	}
-	if(incDM==1){
+	if(incDM==1 || incDM ==3){
 		getdistparamnames << getdistlabel;
 		getdistparamnames << " ";
 		getdistparamnames <<  "DMAmp";
@@ -844,7 +879,7 @@ extern "C" int graphicalInterface(int argc, char **argv,
 		paramsfitted++;
 		getdistlabel++;
 	}
-	else if(incRED==2){
+	else if(incDM==2){
 		for(int i =0;i<numCoeff;i++){
 			getdistparamnames << getdistlabel;
 			getdistparamnames << " ";
@@ -857,7 +892,7 @@ extern "C" int graphicalInterface(int argc, char **argv,
 	}
 
 	getdistparamnames.close();
-
+	//printf("nwhere\n");
 	// set the MultiNest sampling parameters
 	
 // 	return 0;
@@ -902,7 +937,7 @@ extern "C" int graphicalInterface(int argc, char **argv,
     store_factorial();
     
 #endif /* HAVE_CULA */
-   
+ // 	printf("Di\n"); 
     double **Dpriors;
     Dpriors = new double*[ndims]; for(int i = 0; i < ndims; i++){Dpriors[i]=new double[2];};
 
@@ -910,14 +945,14 @@ extern "C" int graphicalInterface(int argc, char **argv,
      long double *TNMaxParameters = new long double[ndims];
     //If using custompriors for errors incase T2 doesnt converge, get those values before doing anything else
     if(customPriors == 1){
-		setTNPriors(Dpriors, TempoPriors);
+		setTNPriors(Dpriors, TempoPriors, ((MNStruct *)context)->numFitTiming+((MNStruct *)context)->numFitJumps,ndims);
 		update_MNPriors(MNS,Dpriors, TempoPriors,0);
 		context=MNS;
 		
 		int pcount=1;
 		for(int j=1;j<((MNStruct *)context)->numFitTiming;j++){
 			psr[0].param[((MNStruct *)context)->TempoFitNums[j][0]].val[((MNStruct *)context)->TempoFitNums[j][1]] = TempoPriors[pcount][0];
-	//		printf("TP: %i %.10Lg %.10Lg \n",pcount,TempoPriors[pcount][0],TempoPriors[pcount][1]);
+		//	printf("TP: %i %.10Lg %.10Lg \n",pcount,TempoPriors[pcount][0],TempoPriors[pcount][1]);
 			pcount++;
 		}
 
@@ -959,14 +994,14 @@ extern "C" int graphicalInterface(int argc, char **argv,
 	
 	//reupdate any of the priors from custom priors that were overwritten by findmax
     if(customPriors == 1){
-		setTNPriors(Dpriors, TempoPriors);
+		setTNPriors(Dpriors, TempoPriors,  ((MNStruct *)context)->numFitTiming+((MNStruct *)context)->numFitJumps,ndims);
 		update_MNPriors(MNS,Dpriors, TempoPriors,0);
 		context=MNS;
 		
 		int pcount=1;
 		for(int j=1;j<((MNStruct *)context)->numFitTiming;j++){
 			psr[0].param[((MNStruct *)context)->TempoFitNums[j][0]].val[((MNStruct *)context)->TempoFitNums[j][1]] = TempoPriors[pcount][0];
-	//		printf("TP2: %i %.10Lg %.10Lg \n",pcount,TempoPriors[pcount][0],TempoPriors[pcount][1]);
+//			printf("TP2: %i %.10Lg %.10Lg \n",pcount,TempoPriors[pcount][0],TempoPriors[pcount][1]);
 			pcount++;
 		}
 
@@ -996,7 +1031,7 @@ extern "C" int graphicalInterface(int argc, char **argv,
 			Dpriors[pcount][1]=EQUADPrior[1];
 			pcount++;
 		}	
-		if(incRED==1){
+		if(incRED==1 || incRED==3){
 			Dpriors[pcount][0]=AmpPrior[0];
 			Dpriors[pcount][1]=AmpPrior[1];
 			pcount++;
@@ -1011,7 +1046,7 @@ extern "C" int graphicalInterface(int argc, char **argv,
 				pcount++;
 			}
 		}	
-		if(incDM==1){
+		if(incDM==1 || incDM==3){
 			Dpriors[pcount][0]=DMAmpPrior[0];
 			Dpriors[pcount][1]=DMAmpPrior[1];
 			pcount++;
@@ -1019,17 +1054,34 @@ extern "C" int graphicalInterface(int argc, char **argv,
 			Dpriors[pcount][1]=DMAlphaPrior[1];
 			pcount++;
 		}
+                else if(incDM==2){
+                        for(int i =0; i< numCoeff; i++){
+                                Dpriors[pcount][0]=CoeffPrior[0];
+                                Dpriors[pcount][1]=CoeffPrior[1];
+                                pcount++;
+                        }
+                }
+
 		//printf("set up priors, pcount: %i \n",pcount);
 
+	
+		numToMargin=0;
+		if(incDM == 2 || incDM == 3 || incDM == 4 || incDM == 5)numToMargin +=2;
+		for(int i=0;i<((MNStruct *)context)->numFitTiming + ((MNStruct *)context)->numFitJumps;i++){
+			if(TempoPriors[i][2]==1){
+				numToMargin++;
+			}
+		}
 
-		
-		if(doJumpMargin != 0 || doTimeMargin != 0 ){
+	
+		if(numToMargin>0 ){
 	
 			int *FitList=new int[ndims];
 			for(int i=0;i<ndims;i++){
 				FitList[i]=0;
 			}
 			numToMargin=0;
+			if(incDM == 2 || incDM == 3 || incDM == 4 || incDM == 5)numToMargin +=2;
 			for(int i=0;i<((MNStruct *)context)->numFitTiming + ((MNStruct *)context)->numFitJumps;i++){
 				if(TempoPriors[i][2]==1){
 					FitList[i]=1;
@@ -1050,7 +1102,7 @@ extern "C" int graphicalInterface(int argc, char **argv,
 
 			}
 
-			getCustomDMatrix(psr, FitList, TNDM, TempoFitNums, TempoJumpNums, Dpriors, ((MNStruct *)context)->numFitTiming, ((MNStruct *)context)->numFitJumps);
+			getCustomDMatrix(psr, FitList, TNDM, TempoFitNums, TempoJumpNums, Dpriors, incDM, ((MNStruct *)context)->numFitTiming, ((MNStruct *)context)->numFitJumps);
 			//Get DMatrix for marginalisation, using T2 values if not custom or max, max if not custom, or else custom position.
 			//getMarginDMatrix(psr, fitcount, numFitJumps, numToMargin, TempoFitNums, TempoJumpNums, Dpriors, doJumpMargin, doTimeMargin, TNDM, 0);
 			makeGDesign(psr, Gsize, numToMargin, TNGM, TNDM);
@@ -1064,7 +1116,7 @@ extern "C" int graphicalInterface(int argc, char **argv,
 			//Finally after doing everything reget custom priors in case overwritten by previous steps.
 			if(customPriors == 1){
 				printf("Set to use custom priors, updating from setPriors function \n");
-				setTNPriors(Dpriors, TempoPriors);
+				setTNPriors(Dpriors, TempoPriors,  ((MNStruct *)context)->numFitTiming+((MNStruct *)context)->numFitJumps,ndims);
 				paramsfitted=0;
 			}
 	//		printf("Step size: %.20Lg \n", TempoPriors[3][1]);
@@ -1125,7 +1177,7 @@ extern "C" int graphicalInterface(int argc, char **argv,
 				paramsfitted++;
 			}
 			
-			if(incRED==1){
+			if(incRED==1 || incRED==3){
 				printf("Prior on Red Noise Log Amplitude : %.5g -> %.5g\n",Dpriors[paramsfitted][0],Dpriors[paramsfitted][1]);
 				paramsfitted++;		
 				printf("Prior on Red Noise Slope : %.5g -> %.5g\n",Dpriors[paramsfitted][0],Dpriors[paramsfitted][1]);
@@ -1139,7 +1191,7 @@ extern "C" int graphicalInterface(int argc, char **argv,
 				}
 			}
 			
-			if(incDM==1){
+			if(incDM==1 || incDM==3){
 				printf("Prior on DM Log Amplitude : %.5g -> %.5g\n",Dpriors[paramsfitted][0],Dpriors[paramsfitted][1]);
 				paramsfitted++;		
 				printf("Prior on DM Slope : %.5g -> %.5g\n",Dpriors[paramsfitted][0],Dpriors[paramsfitted][1]);
@@ -1154,26 +1206,27 @@ extern "C" int graphicalInterface(int argc, char **argv,
 			}
 			printf("\n\n");
 			ndims=ndims-numToMargin;
+			if(incDM == 2 || incDM == 3 || incDM == 4 || incDM == 5)ndims +=2;
 			nPar=ndims;
-		if(incRED==0){
+		if(incRED==0 && incDM == 0){
 #ifdef HAVE_CULA
-			nested::run(mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, WhiteMarginGPULogLike, dumper, context);
+			nested::run(IS,mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, WhiteMarginGPULogLike, dumper, context);
 #else
-			nested::run(mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, WhiteMarginLogLike, dumper, context);
+			nested::run(IS,mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, WhiteMarginLogLike, dumper, context);
 #endif /* HAVE_CULA */
 		}
-		else if(incRED==1){
+		else if(incRED==1 || incDM==1){
 #ifdef HAVE_CULA
-			nested::run(mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, vHRedMarginGPULogLike, dumper, context);
+			nested::run(IS,mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, vHRedMarginGPULogLike, dumper, context);
 #else
-			nested::run(mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, vHRedMarginLogLike, dumper, context);
+			nested::run(IS,mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, vHRedMarginLogLike, dumper, context);
 #endif /* HAVE_CULA */
 		}
-		else if(incRED==2){
+		else if(incRED==2 || incDM==2 || incRED==3 || incDM==3){
 #ifdef HAVE_CULA
-			nested::run(mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, LRedMarginGPULogLike, dumper, context);
+			nested::run(IS,mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, LRedMarginGPULogLike, dumper, context);
 #else
-			nested::run(mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, LRedMarginLogLike, dumper, context);
+			nested::run(IS,mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, LRedMarginLogLike, dumper, context);
 #endif /* HAVE_CULA */
 		}
 	}
@@ -1182,8 +1235,8 @@ extern "C" int graphicalInterface(int argc, char **argv,
 		//If not marginalising, only need to reget custom priors to overwrite anything done previously
 		if(customPriors == 1){
 			printf("Set to use custom priors, updating from setPriors function \n");
-			setTNPriors(Dpriors, TempoPriors);
-		}
+		setTNPriors(Dpriors, TempoPriors,  ((MNStruct *)context)->numFitTiming+((MNStruct *)context)->numFitJumps,ndims);
+			}
 
 		update_MNPriors(MNS,Dpriors, TempoPriors,0);
 		context=MNS;
@@ -1224,7 +1277,7 @@ extern "C" int graphicalInterface(int argc, char **argv,
 				paramsfitted++;
 			}
 			
-			if(incRED==1){
+			if(incRED==1 || incRED==3){
 				printf("Prior on Red Noise Log Amplitude : %.5g -> %.5g\n",Dpriors[paramsfitted][0],Dpriors[paramsfitted][1]);
 				paramsfitted++;		
 				printf("Prior on Red Noise Slope : %.5g -> %.5g\n",Dpriors[paramsfitted][0],Dpriors[paramsfitted][1]);
@@ -1238,7 +1291,7 @@ extern "C" int graphicalInterface(int argc, char **argv,
 				}
 			}
 			
-			if(incDM==1){
+			if(incDM==1 || incDM==3){
 				printf("Prior on DM Log Amplitude : %.5g -> %.5g\n",Dpriors[paramsfitted][0],Dpriors[paramsfitted][1]);
 				paramsfitted++;		
 				printf("Prior on DM Slope : %.5g -> %.5g\n",Dpriors[paramsfitted][0],Dpriors[paramsfitted][1]);
@@ -1253,21 +1306,21 @@ extern "C" int graphicalInterface(int argc, char **argv,
 			}
 		//	printf("dims are: %i \n\n", ndims);
 
-			if(incRED==0){
-				nested::run(mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, WhiteLogLike, dumper, context);
+		if(incRED==0 && incDM == 0){
+				nested::run(IS,mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, WhiteLogLike, dumper, context);
 		}
-			else if(incRED==1){
+			else if(incRED==1 || incDM==1 ){
 #ifdef HAVE_CULA
-				nested::run(mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, vHRedGPULogLike, dumper, context);
+				nested::run(IS,mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, vHRedGPULogLike, dumper, context);
 #else
-				nested::run(mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, vHRedLogLike, dumper, context);
+				nested::run(IS,mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, vHRedLogLike, dumper, context);
 #endif /* HAVE_CULA */
 		}
-			else if(incRED==2){
+			else if(incRED==2 || incDM==2 || incRED==3 || incDM==3){
 #ifdef HAVE_CULA
-				nested::run(mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, LRedGPULogLike, dumper, context);
+				nested::run(IS,mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, LRedGPULogLike, dumper, context);
 #else
-				nested::run(mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, LRedLogLike, dumper, context);
+				nested::run(IS,mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, LRedLogLike, dumper, context);
 #endif /* HAVE_CULA */
 			}
 		}
@@ -1291,7 +1344,7 @@ extern "C" int graphicalInterface(int argc, char **argv,
 			Dpriors[pcount][1]=EQUADPrior[1];
 			pcount++;
 		}	
-		if(incRED==1){
+		if(incRED==1 || incRED==3){
 			Dpriors[pcount][0]=AmpPrior[0];
 			Dpriors[pcount][1]=AmpPrior[1];
 			pcount++;
@@ -1307,7 +1360,7 @@ extern "C" int graphicalInterface(int argc, char **argv,
 			}
 		}	
 		
-		if(incDM==1){
+		if(incDM==1 || incDM==3){
 			Dpriors[pcount][0]=DMAmpPrior[0];
 			Dpriors[pcount][1]=DMAmpPrior[1];
 			pcount++;
@@ -1361,20 +1414,30 @@ extern "C" int graphicalInterface(int argc, char **argv,
 		
 		if(customPriors == 1){
 			printf("Set to use custom priors, updating from setPriors function \n");
-			setTNPriors(Dpriors, TempoPriors);
+			setTNPriors(Dpriors, TempoPriors, ((MNStruct *)context)->numFitTiming+((MNStruct *)context)->numFitJumps,ndims);
 			paramsfitted=0;
 		}
 		update_MNPriors(MNS,Dpriors, TempoPriors,0);
 		getLinearPriors(((MNStruct *)context)->pulse, TNDM, TempoPriors, Dpriors, numFitJumps+fitcount, FitSig);
 		//printf("set up priors, pcount: %i \n",pcount);
+		//
+                numToMargin=0;
+                if(incDM == 2 || incDM == 3 || incDM == 4 || incDM == 5)numToMargin +=2;
+                for(int i=0;i<((MNStruct *)context)->numFitTiming + ((MNStruct *)context)->numFitJumps;i++){
+                        if(TempoPriors[i][2]==1){
+                                numToMargin++;
+                        }
+                }
 
-		if(doJumpMargin != 0 || doTimeMargin != 0 ){
+
+		if(numToMargin>0){
 
                         int *FitList=new int[ndims];
                         for(int i=0;i<ndims;i++){
                                 FitList[i]=0;
                         }
                         numToMargin=0;
+			if(incDM == 2 || incDM == 3 || incDM == 4 || incDM == 5)numToMargin +=2;
                         for(int i=0;i<((MNStruct *)context)->numFitTiming + ((MNStruct *)context)->numFitJumps;i++){
                                 if(TempoPriors[i][2]==1){
                                         FitList[i]=1;
@@ -1395,7 +1458,7 @@ extern "C" int graphicalInterface(int argc, char **argv,
 
                         }
 
-                        getCustomDMatrix(psr, FitList, TNDM, TempoFitNums, TempoJumpNums, Dpriors, ((MNStruct *)context)->numFitTiming, ((MNStruct *)context)->numFitJumps);
+                        getCustomDMatrix(psr, FitList, TNDM, TempoFitNums, TempoJumpNums, Dpriors, incDM, ((MNStruct *)context)->numFitTiming, ((MNStruct *)context)->numFitJumps);
                         //Get DMatrix for marginalisation, using T2 values if not custom or max, max if not custom, or else custom position.
                         //getMarginDMatrix(psr, fitcount, numFitJumps, numToMargin, TempoFitNums, TempoJumpNums, Dpriors, doJumpMargin, doTimeMargin, TNDM, 0);
                         makeGDesign(psr, Gsize, numToMargin, TNGM, TNDM);
@@ -1423,27 +1486,30 @@ extern "C" int graphicalInterface(int argc, char **argv,
 
 #endif
 
+			ndims=ndims-numToMargin;
+                        if(incDM == 2 || incDM == 3 || incDM == 4 || incDM == 5)ndims +=2;
+                        nPar=ndims;
 
-			if(incRED==0){
+			if(incRED==0 && incDM ==0){
 
 #ifdef HAVE_CULA
-				nested::run(mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, WhiteMarginGPULogLike, dumper, context);
+				nested::run(IS,mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, WhiteMarginGPULogLike, dumper, context);
 #else
-				nested::run(mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, WhiteMarginLogLike, dumper, context);
+				nested::run(IS,mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, WhiteMarginLogLike, dumper, context);
 #endif /* HAVE_CULA */
 			}
-			else if(incRED==1){
+			else if(incRED==1 || incRED ==3 || incDM==1 || incDM==3){
 #ifdef HAVE_CULA
-				nested::run(mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, vHRedMarginGPULogLike, dumper, context);
+				nested::run(IS,mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, vHRedMarginGPULogLike, dumper, context);
 #else
-				nested::run(mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, vHRedMarginLogLike, dumper, context);
+				nested::run(IS,mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, vHRedMarginLogLike, dumper, context);
 #endif /* HAVE_CULA */
 			}
-			else if(incRED==2){
+			else if(incRED==2 || incDM==2){
 #ifdef HAVE_CULA
-				nested::run(mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, LRedMarginGPULogLike, dumper, context);
+				nested::run(IS,mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, LRedMarginGPULogLike, dumper, context);
 #else
-				nested::run(mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, LRedMarginLogLike, dumper, context);
+				nested::run(IS,mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, LRedMarginLogLike, dumper, context);
 #endif /* HAVE_CULA */
 			}
 
@@ -1458,21 +1524,21 @@ extern "C" int graphicalInterface(int argc, char **argv,
 			context=MNS;
 	
 
-			if(incRED==0){
-				nested::run(mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, WhiteLogLike, dumper, context);
+			if(incRED==0 && incDM==0){
+				nested::run(IS,mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, WhiteLogLike, dumper, context);
 		}
-			else if(incRED==1){
+			else if(incRED==1 || incDM ==1 ){
 #ifdef HAVE_CULA
-				nested::run(mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, vHRedGPULogLike, dumper, context);
+				nested::run(IS,mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, vHRedGPULogLike, dumper, context);
 #else
-				nested::run(mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, vHRedLogLike, dumper, context);
+				nested::run(IS,mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, vHRedLogLike, dumper, context);
 #endif /* HAVE_CULA */
 		}
-			else if(incRED==2){
+			else if(incRED==2 || incDM==2 || incRED==3 || incDM==3){
 #ifdef HAVE_CULA
-				nested::run(mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, LRedGPULogLike, dumper, context);
+				nested::run(IS,mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, LRedGPULogLike, dumper, context);
 #else
-				nested::run(mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, LRedLogLike, dumper, context);
+				nested::run(IS,mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, LRedLogLike, dumper, context);
 #endif /* HAVE_CULA */
 			}
 		}

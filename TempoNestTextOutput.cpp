@@ -352,7 +352,7 @@ void TNtextOutput(pulsar *psr, int npsr, int newpar, long double *Tempo2Fit, voi
 			printf("Global EQUAD: %g +/- %g\n", paramlist[fitcount],paramlist[fitcount+ndim]);
 			fitcount++;
 		}
-		if(incRED ==1){
+		if(incRED ==1 || incRED ==3){
 			printf("Power Law Red Noise Model:\n");
 			printf("Log Amplitude: %g +/- %g\n",paramlist[fitcount],paramlist[fitcount+ndim]);
 			fitcount++;
@@ -368,7 +368,7 @@ void TNtextOutput(pulsar *psr, int npsr, int newpar, long double *Tempo2Fit, voi
 				coeff++;
 			}
 		}
-		if(((MNStruct *)context)->incDM ==1){
+		if(((MNStruct *)context)->incDM ==1 ||((MNStruct *)context)->incDM ==3 ){
 			printf("Power Law DM Model:\n");
 			printf("Log Amplitude: %g +/- %g\n",paramlist[fitcount],paramlist[fitcount+ndim]);
 			fitcount++;

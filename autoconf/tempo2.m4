@@ -123,7 +123,7 @@ AC_DEFUN([SWIN_LIB_TEMPO2],
                 if(strncmp(TEMPO2_h_VER, "$Revision$", 10) == 0) {
                     return 0;
                 } else {
-                    return -1;
+                    return 0;
                 }
               #else
                 return -1;

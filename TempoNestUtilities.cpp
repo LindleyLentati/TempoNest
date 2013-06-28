@@ -78,12 +78,12 @@ void readsummary(pulsar *psr, std::string longname, int ndim, void *context, lon
 	printf("number of lines %i \n",number_of_lines);
 	checkfile.close();
 	
-	if(number_of_lines == 1){
+	if(number_of_lines == 2){
 		std::ifstream summaryfile;
 		std::string fname = longname+"summary.txt";
 		summaryfile.open(fname.c_str());
 	
-		for(int i=0;i<number_of_lines;i++){
+		for(int i=0;i<1;i++){
 			
 			std::string line;
 			getline(summaryfile,line);
@@ -332,7 +332,7 @@ void readsummary(pulsar *psr, std::string longname, int ndim, void *context, lon
 
 }
 
-void getCustomDMatrix(pulsar *pulse, int *MarginList, double **TNDM, int **TempoFitNums, int *TempoJumpNums, double **Dpriors, int TimetoFit, int JumptoFit){
+void getCustomDMatrix(pulsar *pulse, int *MarginList, double **TNDM, int **TempoFitNums, int *TempoJumpNums, double **Dpriors, int incDM, int TimetoFit, int JumptoFit){
 	
 	double pdParamDeriv[MAX_PARAMS], dMultiplication;
 
@@ -380,8 +380,15 @@ void getCustomDMatrix(pulsar *pulse, int *MarginList, double **TNDM, int **Tempo
 				//	printf("%i %i %22.20e \n", i,j,pdParamDeriv[j]);
 			} 
 		} 
-	
-	
+
+		if(incDM == 2 || incDM ==3){	
+                double DMKappa=2.410*pow(10.0,-16);
+                	for(int i=0; i < pulse->nobs; i++) {
+                                TNDM[i][numToMargin]=((double)(pulse[0].obsn[i].bat-pulse[0].param[param_pepoch].val[0]))/(DMKappa*pow((double)pulse[0].obsn[i].freqSSB,2));
+                               TNDM[i][numToMargin+1]=pow(((double)(pulse[0].obsn[i].bat-pulse[0].param[param_pepoch].val[0])),2)/(DMKappa*pow((double)pulse[0].obsn[i].freqSSB,2));
+               			printf("DMbit %i %g %g \n", i,TNDM[i][numToMargin],TNDM[i][numToMargin+1]); 
+			}               
+		}
 		//Now set fit flags back to how they were
 	
 		for (int p=1;p<TimetoFit;p++) {

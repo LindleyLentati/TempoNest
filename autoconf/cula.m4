@@ -35,7 +35,7 @@ AC_DEFUN([SWIN_LIB_CULA],
   CULA_CFLAGS=""
   CULA_LIBS=""
 
-  CULALIB="-lcula_core -lcula_lapack -lcula_lapack_fortran -lcublas -lcudart -lcuda"
+  CULA_LIB="-lcula_lapack -lcuda"
 
   if test x"$CULA_LIB_PATH_64" != x; then
     CULA_LIBS="-L$CULA_LIB_PATH_64"
@@ -56,11 +56,18 @@ AC_DEFUN([SWIN_LIB_CULA],
   LIBS="$ac_save_LIBS $CULA_LIBS"
   CFLAGS="$ac_save_CFLAGS $CULA_CFLAGS"
 
-  AC_TRY_LINK([#include <cula_lapack_device.h>],[culaInitialize("");],
+  AC_LANG_PUSH(C++)
+  # test compilation of simple program
+  ac_save_CXXFLAGS="$CXXFLAGS"
+  ac_save_LIBS="$LIBS"
+  LIBS="$ac_save_LIBS $CULA_LIBS"
+  CXXFLAGS="$ac_save_CXXFLAGS $CULA_CFLAGS"
+
+  AC_TRY_LINK([#include <cula.hpp>],[culaStatus status = FakeculaInitialize();],
               have_cula=yes, have_cula=no)
 
   if test $have_cula = no; then
-    AC_TRY_LINK([#include <cula_lapack_device.h>],[culaInitialize("");],
+    AC_TRY_LINK([#include <cula_status.h>],[FakeculaInitialize();],
               have_cula=yes, have_cula=no)
   fi
 
@@ -86,5 +93,6 @@ AC_DEFUN([SWIN_LIB_CULA],
   AC_SUBST(CULA_LIBS)
   AM_CONDITIONAL(HAVE_CULA, [test x"$have_cula" = xyes])
 
+  AC_LANG_POP(C++)
 ])
 

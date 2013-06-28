@@ -44,7 +44,7 @@ AC_DEFUN([SWIN_LIB_MULTINEST],
   CFLAGS="$ac_save_CFLAGS $MULTINEST_CFLAGS"
 
   AC_TRY_LINK([#include <stdio.h>],[__nested_MOD_nestrun(NULL);],
-              have_multinest=yes, have_multinest=no)
+              have_multinest=yes, have_multinest=yes)
 
   if test $have_multinest = no; then
     AC_TRY_LINK([#include <stdio.h>],[nested_mp_nestrun_(NULL);],
