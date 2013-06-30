@@ -67,10 +67,10 @@ If you have any questions, or problems regarding the installation, or usage, ple
 \label{Section:Install}
 Compilation has been tested using gcc 4.6.1.  Other compilers, or combinations of compilers are thus currently unsupported.
 
-TempoNest has dependencies upon both Tempo2 and MultiNest, however in addition it requires installation of either the LAPACK linear algebra library or, if TempoNest is to be run using a GPU, the CULA linear algebra library.
+TempoNest has dependencies upon both Tempo2 and MultiNest, however in addition it requires access to gsl functions, and an installation of either the LAPACK linear algebra library or, if TempoNest is to be run using a GPU, the CULA linear algebra library.
 
 \subsection{Install MultiNest}
-Download the latest version of MultiNest (Note: to use MultiNest you will need to have access to the lapack linear algebra library which can be downloaded from \footnote{http://www.netlib.org/lapack/})  and open the file Makefile in the root directory.    You will need to change the compilers so that:
+Download the latest version of MultiNest (3.x) (Note: to use MultiNest you will need to have access to the lapack linear algebra library which can be downloaded from \footnote{http://www.netlib.org/lapack/})  and open the file Makefile in the root directory.    You will need to change the compilers so that:
 %
 
 \begin{lstlisting}
@@ -85,19 +85,27 @@ LAPACKLIB = -llapack
 
 
 %
-then type make and allow the source code to compile.  The MultiNest library that you will need to access later is located in the root directory, and is called libnest3.a.
+then type make and allow the source code to compile.  You will then need to create a shared version of the libnest3.a library, which can be done with the command:
+\begin{lstlisting}
+make libnest3.so
+\end{lstlisting}
+ %
+ The auto-configure script for TempoNest will then look for this file through the environment variable MULTINEST$\_$DIR
 
 \subsection{Install Tempo2}
 
-Download the latest version of Tempo2, and unpack it. Enter the root directory, and copy the folder T2runtime to a location of your choice.  You will have to set the environment variable TEMPO2 to be the location of this directory, either by typing the command:
-%
+Download the latest version of Tempo2 available via cvs using the command:
 \begin{lstlisting}
-setenv TEMPO2 /location of T2runtime/
+cvs -z3 -d:pserver:anonymous@tempo2.cvs.sourceforge.net:/cvsroot/tempo2 co -P tempo2
 \end{lstlisting}
-%
-at the command prompt or by editing your bashrc/cshrc file to do so permanently.  Then type:
+
+
+Enter the root directory, and copy the folder T2runtime to a location of your choice.  You will have to set the environment variable TEMPO2 to be the location of this directory.
+
+Then type:
 \begin{lstlisting}
-./configure --prefix = /install directory/
+./bootstrap
+./configure --prefix = install directory
 \end{lstlisting}
  %
  and allow the script to run, this will set up the Makefile for you without you having to do anything yourself.  Once the configure script has run type:
@@ -108,42 +116,51 @@ make plugins
 make plugins-install
 \end{lstlisting}
 
-This will compile and install the code to the directory given by the prefix command.  The libraries and include files you will need to link to TempoNest will be installed to the lib and include subdirectories in the install folder.
+This will compile and install the code to the directory given by the prefix command.  The libraries and include files you will need to link to TempoNest will be installed to the lib and include subdirectories in the install folder, which should be stored as the environment variables TEMPO2$\_$LIB and TEMPO2$\_$INC respectively.
 
 \subsection{Install TempoNest}
 
-TempoNest includes two Makefiles, MakefileGPU and MakefileNoGPU.  Depending on whether or not your system supports GPU calculations, one of these two should be renamed simply to Makefile.
-At that stage the installation process is broadly the same for either configuration.
+TempoNest supports both CPUs and GPUs, however at this stage the configure script only supports a CPU installation, with a GPU installation requiring more manual intervention.
+
 
 \subsubsection{TempoNest without GPUs}
 
-Enter the root folder containing TempoNest, and open the Makefile, as before you will need to set the compilers, but here you will also need to give the locations of the relevant MultiNest and Tempo2 libraries.  An example of the necessary settings is given below:
-
+Enter the root folder containing TempoNest and type:
+%
 \begin{lstlisting}
-FC = gfortran
-CC = gcc
-CXX = g++
-FFLAGS += -O3 
-CFLAGS += -O3 -DHAVE_CONFIG_H
-LAPACKLIB = -llapack -lblas
-
-NESTLIBDIR = /Install Directory for MultiNest/
-TEMPO2LIB  = /Install Directory for Tempo2/lib 
-TEMPO2INC  = /Install Directory for Tempo2/include
-TEMPO2SRC  = /Directory containing Tempo2 source code
+./autogen.sh
+./configure
 \end{lstlisting}
 %
+This should produce the Makefile required to install TempoNest.  You should check the output of this to make sure that the multinest and tempo2 libraries were found correctly.
+Then simply type:
+\begin{lstlisting}
+make && make install
+\end{lstlisting}
+%
+and the TempoNest plug-in will be compiled and copied to your Tempo2 plug-in directory.
+
 \subsubsection{TempoNest with GPUs}
 
-Provided the CULA linear algebra package has already been installed, the only additional line that might required editing in the Makefile is:
+In the autoconf subdirectory of the TempoNest source folder there is a file cula.m4, you will first have to open this and remove the word "Fake" from lines 66 and 70, which will cause the configure script to correctly identify the CULA libraries and use the correct compilation options when producing the plug-in.
+
+You will then need to compile the file TempoNestGPUFuncs.cu with the nvcc compiler  before you run the configure scripts to form a shared object libTNGPU.so that can then be linked against the TempoNest install.  This can be done with the following:
 
 \begin{lstlisting}
-CUFLAGS += -arch sm_13 -Xcompiler -O3
+nvcc -arch sm_20 -Xcompiler -O3 --shared -I${CULA_INC_PATH} -o libTNGPU.so TempoNestGPUFuncs.cu -L${CULA_LIB_PATH_64} -lcula_lapack -lcuda --compiler-options '-fPIC' 
 \end{lstlisting}
 %
-The arch $\mathrm{sm}\_13$ flag enables double precision support within the kernal if your GPU supports it.  If not this flag should be removed, otherwise everything is as before.
 
-With these set you should then simply be able to type make, and TempoNest will compile and link to the relevant libraries and should result in an executable called TempoNest being produced in the current directory.
+
+Move the file libTNGPU.so to the directory TEMPO2$\_$LIB and then as with the normal install type:
+\begin{lstlisting}
+./autogen.sh
+./configure
+make && make install
+\end{lstlisting}
+%
+This should detect the CULA libraries, and the GPU functions and allow you to use a GPU for all linear algebra in TempoNest.
+
 
 \section{Interface and Operation}
 \label{Section:Interface}
@@ -151,7 +168,7 @@ With these set you should then simply be able to type make, and TempoNest will c
 TempoNest is designed to be simple to use for anyone with (or indeed, without) previous experience with Tempo2.  As such, once any relevant parameters have been set, given a par file X.par, and a tim file X.tim, TempoNest can be run from the command line in it's root directory using the command:
 %
 \begin{lstlisting}
-./TempoNest -f X.par X.tim
+./tempo2 -gr temponest -f X.par X.tim
 \end{lstlisting}
 %
 The parameters that have been set to fit in the .par file will be those that are included in the timing model fit in TempoNest, therefore anyone used to using Tempo2 can immediately analyse their data using TempoNest.  In the following sections we will describe in more detail the different settings available for the analysis of pulsar timing data, as well as how to simulate data in TempoNest itself.
@@ -160,7 +177,7 @@ The parameters that have been set to fit in the .par file will be those that are
 \section{Included Models}
 \label{Section:Model}
 
-TempoNest allows for the simultaneous Bayesian  analysis of both the deterministic timing model, and additional stochastic signals beyond the white noise described by the TOA error bars that may be present in the data.  For a general overview of Bayesian analysis and the sampler MultiNest, a detailed description of all available model choices present in TempoNest, and examples of its application to simulated data refer to the TempoNest paper (Arxiv ref).  Below we will summarise the key aspects of the included models, without going into the mathematical details.
+TempoNest allows for the simultaneous Bayesian  analysis of both the deterministic timing model, and additional stochastic signals beyond the white noise described by the TOA error bars that may be present in the data.  For a general overview of Bayesian analysis and the sampler MultiNest, a detailed description of all available model choices present in TempoNest, and examples of its application to simulated data refer to the TempoNest paper (in prep).  Below we will summarise the key aspects of the included models, without going into the mathematical details.
 
 \subsection{The Timing Model}
 \label{section:timingmodel}
@@ -193,32 +210,32 @@ We can therefore rewrite the error $\sigma_i$ associated with each TOA $i$ as $\
 where $\alpha$ and $\beta$ represent the EFAC and EQUAD parameters applied to TOA $i$ respectively.  
 
 
-\subsection{Red Noise Models}
+\subsection{Red Noise and DM Models}
 
-TempoNest currently supports two models for the pulsar red noise.  The time domain method described in (\cite{2012arXiv1202.5932V} henceforth vHL2013) where a power law model is fitted to the residuals after the timing model has been subtracted, and the model-independant frequency domain method described in (Lentati L. et al. 2013 henceforth L2013) where the power at each frequency included in the model is parameterised separately.
+TempoNest currently supports two methods of modelling either the red noise or DM.  The time domain methods described in (\cite{2012arXiv1202.5932V} henceforth vHL2013) and Lee et al 2013 (in prep) where a power law is used to model either the red noise or DM, and the model-independant frequency domain method described in (Lentati L. et al. 2013 henceforth L2013) where the power at each frequency included in the model is parameterised separately.  TempoNest also allows for a power law to be fit to the same set of frequencies that are used in the model independant method so that both modelled and model independant methods can be used simultaneously.
 
 
 \section{TempoNest Parameters}
 \label{Section:params}
 
-In the root folder for TempoNest there is a file called TempoNestParams.c which contains all the user defined parameters necessary to run TempoNest.  In this section we will provide a complete list of all these parameters and their function in the program.  Values listed here will be those set by default.
+In the folder Examples/Example1 of the TempoNest source folder there is a file called defaultparameters.conf which contains all the user defined parameters necessary to run TempoNest.  In this section we will provide a complete list of all these parameters and their function in the program.  Values listed here will be those set by default.
 
 \subsection{General Parameters}
 
 %
 \begin{lstlisting}
-strcopy(root, `Example/results/TempoNestExample-');
+root = results/Example1-
 \end{lstlisting}
 %
-The root name for the output files generated by TempoNest, details of which will be described in Section \ref{Section:Example}.  In the Worked example this will result in a set of files being produced in the Example/results folder, each of which will have the prefix `TempoNestExample-' followed by the name of the pulsar, and the file extension.
+The root name for the output files generated by TempoNest, details of which will be described in Section \ref{Section:Example}.  In the Worked example this will result in a set of files being produced in the Example/results folder, each of which will have the prefix `Example1-' followed by the name of the pulsar, and the file extension.
 
 
 
 \begin{lstlisting}
-numTempo2its = 10;
+numTempo2its = 1;
 \end{lstlisting}
 %
-The number of iterations to have Tempo2 perform before starting the analysis.  This step can be used to set the priors on the timing model parameters, however its value will depend critically on whether or not Tempo2 is able to converge on the problem you wish to analyse with TempoNest.  If convergence is not possible this should be set to 1, and the priors should be set manually as described in section \ref{Section:customPriors}.
+The number of iterations to have Tempo2 perform before starting the analysis.  TempoNest takes the pre-fit values from this fit as the center of the prior for the following analysis, and the 1 sigma errors, redivded by the square root of the reduced chi square of the fit as the "sigma" value (see FitSig below).  Therefore if you wish to use the values in the .par file as the center of your prior this should be set to 1. However its value will depend critically on whether or not Tempo2 is able to converge on the problem you wish to analyse with TempoNest.  If convergence is not possible this should be set to 1, or 0 and the priors should be set manually as described in section \ref{Section:customPriors}.
 
 \begin{lstlisting}
 doLinearFit=0;
@@ -231,6 +248,35 @@ doMax=0;
 \end{lstlisting}
 %
 Toggles between either performing a maximum likelihood analysis of the parameter space to be investigated (doMax=1) or not (doMax=0).  The values of the timing model parameters returned by this process supersedes those returned by the initial Tempo2 analysis, but are overwritten by any prior that has been set manually. 
+
+\subsection{Marginalisation}
+
+TempoNest allows you to marginalise analytically over subsets of timing model parameters in order to reduce the dimensionality of the problem.  For example, when fitting jumps the basis functions that describe the jump are linear, and so marginalising over the amplitudes can greatly simplify an analysis.  TempoNest supports several options for this process:
+
+\begin{lstlisting}
+doTimeMargin=0
+doTimeMargin=1
+doTimeMargin=2
+\end{lstlisting}
+%
+These settings allow you to toggle between no marginalisation, marginalising over the quadratic spin down, and marginalising over all timing model models, except the jumps (0,1,2 respectively).
+
+\begin{lstlisting}
+doJumpMargin=0
+doJumpMargin=1
+\end{lstlisting}
+%
+These settings allow you to toggle between not marginalising over any jumps in the parameter file or marginalising over all of them (0,1 respectively).
+
+Note that, if any analytical marginalisation is performed the offset is also marginalised over be default in the Tempo2 design matrix.
+
+It is also possible to marginalise over customised sets of parameters.  This is done by setting a flag in the TempoPriors array corresponding to the particular parameter, for example, if the parameters to be fit were (RA, DEC, F0, F1, DM, PMRA, PMDEC, PX) and you wanted to marginalise over only DM analytically, you could include the following in the defaultparameters.conf file:
+
+\begin{lstlisting}
+TempoPriors[5][2]=1;
+\end{lstlisting}
+%
+Here the 5 references the fact that it is the 5th parameter that Tempo2 will read in, and the 2 is the element where this information is kept.  For more information on setting custom priors see section \ref{Section:customPriors}.
 
 \subsection{Model Selection}
 
@@ -274,13 +320,29 @@ Flag to include an additional red noise parameter in the analysis.  Supports thr
 0 : Include No Additional Red Noise parameters 
 1 : Include Red Noise using method vHL2013
 2 : Include Red Noise using method L2013
+3 : Fit a power law to the freqeuencies used in model 2 rather than allowing the power to vary independently
+\end{lstlisting}
+
+\subsubsection{DM}
+
+\begin{lstlisting}
+incDM = 0;
+\end{lstlisting}
+
+Flag to include an additional DM parameter in the analysis.  Supports three possible values:
+
+\begin{lstlisting}
+0 : Include No Additional DM parameters 
+1 : Include DM using method Lee et al 2013
+2 : Include DM using method Lentati et al 2013
+3 : Fit a power law to the frequencies used in model 2 rather than allowing the power to vary independently
 \end{lstlisting}
 
 \begin{lstlisting}
 numCoeff=3;
 \end{lstlisting}
 %
-If incRED is set to 2 such that the red noise model to be used is that of L2013, the numCoeff parameter sets the number of frequencies that should be included in the model.  If the observations span a length of time T, then the frequencies included will be n/T where n goes from 1 to numCoeff.
+If incRED or incDM is set to 2 such that the red noise/DM model to be used is that of L2013, the numCoeff parameter sets the number of frequencies that should be included in the model.  If the observations span a length of time T, then the frequencies included will be n/T where n goes from 1 to numCoeff.
 
 \subsection{Priors}
 
@@ -341,10 +403,21 @@ CoeffPrior[1]=-1;
 
 Finally if the model independent red noise of L2013 is used, the prior on the amplitudes of each frequency included in the model is uniform in Log space, here extending $10^{-15}$ to $10^{-1}$.
 
+\begin{lstlisting}
+DMAlphaPrior[0]=2;
+DMAlphaPrior[1]=6;
+
+DMAmpPrior[0]=-20;
+DMAmpPrior[1]=-10;
+\end{lstlisting}
+%
+The priors for the power law DM model of is the same as for the red noise.  The prior on Alpha (the negative spectral index) varies uniformly in this instance from 2 to 6 (so that the spectral index varies from -2 to -6), whilst the prior on the amplitude is uniform in log space, in this example extending from $10^{-20}$ to $10^{-10}$.
+%
+
 \subsubsection{Custom Priors (customPriors == 1)}
 \label{Section:customPriors}
 
-When customPriors is set to 1, TempoNest will access the function setTNPriors in the TempoNestParams.c file.  This allows the user to fill two arrays, TempoPriors and Dpriors, both of which will be explained below.
+When customPriors is set to 1, TempoNest will read in any lines from the defaultparameters.conf that relate to two arrays, TempoPriors and Dpriors, both of which will be explained below.
 
 TempoPriors contains information about the timing model parameters and any jumps to be included in the timing model.  Previously it was stated that if Tempo2 performs an initial evaluation of the timing model parameters then for each model parameter $m$ it will return a best fit value $m_0$ and an error $m_{\epsilon}$.  The TempoPriors array allows you to manually set this information in instances where Tempo2 fails to converge on a correct solution.
 
@@ -352,7 +425,7 @@ The order of the parameters in the TempoPriors array will be the same as the ord
 
 Note that you do not need to set all the priors manually.  If you only wish to manually specify the prior for one timing model parameter, and have Tempo2 set the rest via the FitSig parameter then only the corresponding element of the TempoPriors array need be specified.  If however Tempo2 doesn't converge then all the timing model priors will have to be set manually.
 
-The Dpriors array contains the double precision priors for all model parameters (timing model and stochastic) that MultiNest draws its samples from.  The order of the parameters in this array will be the timing model parameters, followed by any jumps, then EFAC, EQUAD and finally the red noise parameters (see the comments in the function itself).
+The Dpriors array contains the double precision priors for all model parameters (timing model and stochastic) that MultiNest draws its samples from.  The order of the parameters in this array will be the timing model parameters, followed by any jumps, then EFAC, EQUAD and finally the red noise and DM  parameters (see the comments in the function itself).
 
 For example, if FitSig has been set to 4, then the elements of the DPriors array that correspond to timing model parameter $m$ will be:
 
@@ -361,19 +434,18 @@ Dpriors[m][0] = -4;
 Dpriors[m][1] = 4;
 \end{lstlisting}
 
-A worked example of this process will be included in Example 3.
 
 
 \section{MultiNest Options}
 \label{Section:Advanced}
 
-In addition to those user settable parameters located in TempoNestParams.c there are a few parameters that MultiNest uses that can be adjusted if so desired located in the file MultiNestParams.c.  For most scenarios the default settings can be applied without concern, however for low dimensional problems significant speedups can be obtained by setting the following parameters, and indeed for large dimensional problems, or where the prior volume to be explored is large, these settings might need adjusting to obtain maximum performance.
+In addition to those user settable parameters located in the defaultparameters.conf file there are a few parameters that MultiNest uses that can be adjusted if so desired located in the file MultiNestParams.c.  For most scenarios the default settings can be applied without concern, however for low dimensional problems significant speedups can be obtained by setting the following parameters, and indeed for large dimensional problems, or where the prior volume to be explored is large, these settings might need adjusting to obtain maximum performance.
 
 \begin{lstlisting}
 IS=0;
 \end{lstlisting}  
   
-IS sets the flag to use importance nested sampling.  This feature is currently not present in the public release of MultiNest but will be included in an upcoming release, at which point more accurate evidence values can be obtained by setting this to one.  This will be particularly necessary when using constant efficiency mode for large dimensional problems.
+IS sets the flag to use importance nested sampling, at which point more accurate evidence values can be obtained by setting this to one.  This will be particularly necessary when using constant efficiency mode for large dimensional problems.
 
 \begin{lstlisting}
 modal=1;
@@ -557,11 +629,10 @@ In the folder Examples/Example1 you will find two files, J0030+0451.par and J003
 
 The .tim file contains the time of arrivals (TOAs) for the pulses, and the noise level, which in this example is set to $10^{-8}$ seconds for all the TOAs.  This is the correct noise level used for the simulation.
 
-TempoNest should come configured to already run on this example, therefore the parameters in the TempoNestParams.c file are set to:
+TempoNest should come configured to already run on this example, therefore the parameters in the defaultparameters.conf file are set to:
 
 \begin{lstlisting}
-strcopy(root, `Examples/Example1/results/White-');
-numTemp2its = 10;
+numTemp2its = 1;
 doLinearFit = 0;
 doMax = 0;
 
@@ -573,13 +644,13 @@ FitSig=4;
 \end{lstlisting}
 
 Therefore we are setting the prior range to be $\pm 4\sigma$ of the initial fit values that Tempo2 will return, and including only the timing model in the analysis.
-TempoNest can be run from it's root directory using the following command:
+TempoNest can be run from the Example1 folder by:
 %
 \begin{lstlisting}
-./TempoNest -f Examples/Example1/J0030+0451.par Examples/Example1/J0030+0451.tim
+temop2 -gr temponest -f J0030+0451.parJ0030+0451.tim
 \end{lstlisting}
 %
-When TempoNest first runs you will see the output from the fitting process being performed by Tempo2 for each of the 10 iterations.  By looking at the pre/post statistic for each fit you can see how much the current fit compares to the last, you should see this move towards 1 as the iterations progress.   MultiNest will then begin running. When MultiNest exits you should see something similar to Table \ref{Table:Tempo2Fit}, at which point the sampling is complete, and the results should be in the output folder with names 'White-J0030+0451-' followed by the file type.  
+When TempoNest first runs you will see the output from the fitting process being performed by Tempo2.   MultiNest will then begin running. When MultiNest exits you should see something similar to Table \ref{Table:Tempo2Fit}, at which point the sampling is complete, and the results should be in the output folder with names 'Example1-J0030+0451-' followed by the file type.  
 
 TempoNest includes a simple python plotting tool to allow you to visualise the posterior probability distribution for any model parameters included in the fit.  This is located in the source directory with the other TempoNest files and is called triplot.py.  It can be used from the command line with the following syntax:
 
@@ -632,7 +703,6 @@ For the second example we will now need to change some of the parameters in the 
 
 
 \begin{lstlisting}
-strcopy(root, `Examples/Example2/results/Red-');
 numTemp2its = 10;
 doLinearFit = 0;
 doMax = 1;
@@ -655,7 +725,6 @@ AmpPrior[0] = -15.0;
 AmpPrior[1] = -12.0;
 \end{lstlisting}
 
-Once these settings have been made, remake TempoNest by typing 'make' in the source directory.
 
 As before TempoNest will begin by performing the initial Tempo2 fit.  Afterwards however, instead of immediately beginning the analysis using MultiNest it will perform a maximum likelihood analysis. The final output of this should be similar to that shown below:
 
@@ -711,87 +780,12 @@ which will display a figure similar to that in Fig \ref{Fig:Ex2}.
 \end{minipage}
 \end{figure*}
 
-\subsection{Example 3: Using custom Priors when Tempo2 won't converge}
 
-For the third and final example shown here we will tackle a problem where Tempo2 fails to converge on a timing model solution because the number of TOAs is too few.
-The data for this example is located in Examples/Example3.  The par file, and hence the timing model, is the same as for example 1, however now the tim file contains only 8 TOAs over the course of 5 years.
+\subsection{Example 3: Red Noise and DM}
 
-We must first change the settings we would like to use in TempoNestParams.c as before.  In particular, because Tempo2 will not converge on a timing solution we must set all the priors that TempoNest needs manually (customPriors=1).  We will therefore use the following settings:
+Example 3 contains a more complex example where both red noise and DM variations are present in the data, along with an EFAC.
 
-\begin{lstlisting}
-strcopy(root, `Examples/Example3/results/White-');
-numTemp2its = 1;
-doLinearFit = 0;
-doMax = 0;
-
-incEFAC=0;
-incEQUAD=0;
-incRED=0;
-
-doTimeMargin=0;
-doJumpMargin=0;
-
-customPriors=1;
-
-FitSig=1000;
-\end{lstlisting}
-
-Note we have changed the number of iterations we wish Tempo2 to do to one, and have set FitSig to be 1000.  Next we need to set the priors in the setTNPriors function in TempoNestParams.c.  In principle for this sort of problem we would have no prior knowledge about where exactly in the parameter space the correct solution will lie, and therefore we would like to set as wide a prior range as possible.  This is perfectly possible with TempoNest, as long as you increase the number of live points MultiNest uses as the parameter space increases so that you sample the entire space there is no limit to how large the priors can be set.  Extremely large scale exploration however can take time however and so for the sake of brevity in this example we will set the central value for each timing model parameter $m_0$ to be the correct value, with the scaling parameter $m_{\epsilon}$ to be a sensible value based on our experience with this particular problem.  This is done by setting the values in the TempoPriors array :
-
-\begin{lstlisting}
-TempoPriors[0][0]=0.132894457099784;
-TempoPriors[0][1]=3.2289e-10;
-TempoPriors[1][0]=0.0848411933106807;
-TempoPriors[1][1]=7.4981e-10;
-TempoPriors[2][0]=205.530696088273;
-TempoPriors[2][1]=1.6671e-14;
-TempoPriors[3][0]=-4.30603883991342e-16;
-TempoPriors[3][1]=1.2981e-22;
-TempoPriors[4][0]=-4.05413525836408;
-TempoPriors[4][1]=0.0092892;
-TempoPriors[5][0]=-5.03376865001804;
-TempoPriors[5][1]=0.021785;
-TempoPriors[6][0]= 4.02291243326134;
-TempoPriors[6][1]=0.0059585 ;
-\end{lstlisting}
-
-Here then TempoPriors[m][0] reflects the reference value for parameter $m$, $m_0$, whilst TempoPriors[m][1] sets the scaling parameter $m_{\epsilon}$ (remember, arrays in C start from 0!).
-The order of the parameters in this array are the same as Tempo2 will read them in, ie:
-
-\begin{lstlisting}
-0 = RA
-1 = DEC
-2 = F0
-3 = F1
-4 = PMRA
-5 = PMDEC
-6 = PX
-\end{lstlisting}
-
-We would like to make one further change here, the greatest uncertainty comes from the frequency F0, and as such we would like to increase the FitSig parameter for this alone (this could clearly be done through the TempoPriors array, however sometimes this approach is simpler if you are not setting the values yourself).
-
-As such we set the elements of the Dpriors array that correspond to F0 to be a greater number:
-
-\begin{lstlisting}
-Dpriors[2][0] = -10000000;
-Dpriors[2][1] = 10000000;
-\end{lstlisting}
-
-With these options then set we can remake TempoNest and run it on the example.  As before we can then plot the posteriors which will produce something similar to those shown in Fig \ref{Fig:Ex3}.
-
-
-\begin{figure*}
-\begin{minipage}{200mm}
-\begin{center}$
-\begin{array}{c}
-\hspace{-2.0cm}
-\includegraphics[width=180mm]{Example3.pdf} 
-\end{array}$
-\end{center}
-\caption{One and two dimensional posteriors for the timing model parameters for example 3.}
-\label{Fig:Ex3}
-\end{minipage}
-\end{figure*}
+Start by fitting both a red noise and DM power law model using incDM=1, incRED=1 and including an EFAC.  Compare this with incDM=3, incRED=3 for different number of fourier coefficients.  With only 10 or 20 the constraints will be worse for the latter model, but they should converge to similar values as the number of coefficients increases.  Finally try mixing the models up using incRED=3 and incDM=2 or visa versa.  The posteriors for the individual coefficients will be highly non Gaussian, and in this case the evidence will clearly support the two power law models.
 
 This concludes the examples for TempoNest.  Feel free to generate your own data using the simulation routines and to try different models in the Bayesian analysis.  If you have any questions feel free to email me at ltl21@cam.ac.uk.
 

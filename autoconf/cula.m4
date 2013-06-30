@@ -63,11 +63,11 @@ AC_DEFUN([SWIN_LIB_CULA],
   LIBS="$ac_save_LIBS $CULA_LIBS"
   CXXFLAGS="$ac_save_CXXFLAGS $CULA_CFLAGS"
 
-  AC_TRY_LINK([#include <cula.hpp>],[culaStatus status = FakeculaInitialize();],
+  AC_TRY_LINK([#include <cula.hpp>],[culaStatus status = FAKEculaInitialize();],
               have_cula=yes, have_cula=no)
 
   if test $have_cula = no; then
-    AC_TRY_LINK([#include <cula_status.h>],[FakeculaInitialize();],
+    AC_TRY_LINK([#include <cula_status.h>],[FAKEculaInitialize();],
               have_cula=yes, have_cula=no)
   fi
 
