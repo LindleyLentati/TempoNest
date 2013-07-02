@@ -5,7 +5,7 @@
 
 void dpotrf(double **A, int msize, double &det);
 void dpotrfU(double **A, int msize, double &det);
-
+void dpotrfInfo(double **A, int msize, double &det, int &info);
 double *dpotrf_ctof(double **in, int rows, int cols);
 void dpotrf_ftoc(double *in, double **out, int rows, int cols);
 

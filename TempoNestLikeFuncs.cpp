@@ -624,6 +624,8 @@ void WhiteLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *conte
 		Chisq += pow(Resvec[o],2)/noiseval;
 		detN += log(noiseval);
 	}
+	
+	//printf("White: %g %g \n", detN, Chisq);
 
 	if(isnan(detN) || isinf(detN) || isnan(Chisq) || isinf(Chisq)){
 
@@ -826,11 +828,11 @@ void LRedLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *contex
 {
 
 	clock_t startClock,endClock;
-
+	double phase=0;
 	double *EFAC;
 	double EQUAD;
 	int pcount=0;
-
+	int bad=0;
 	int numfit=((MNStruct *)context)->numFitTiming + ((MNStruct *)context)->numFitJumps;
 	long double LDparams[numfit];
 	double Fitparams[numfit];
@@ -847,7 +849,7 @@ void LRedLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *contex
 			LDparams[p]=Cube[p]*(((MNStruct *)context)->LDpriors[p][1]) + (((MNStruct *)context)->LDpriors[p][0]);
 		}
 
-		double phase=(double)LDparams[0];
+		phase=(double)LDparams[0];
 		pcount++;
 		for(int p=1;p<((MNStruct *)context)->numFitTiming;p++){
 			((MNStruct *)context)->pulse->param[((MNStruct *)context)->TempoFitNums[p][0]].val[((MNStruct *)context)->TempoFitNums[p][1]] = LDparams[pcount];	
@@ -863,7 +865,9 @@ void LRedLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *contex
 		
 		for(int o=0;o<((MNStruct *)context)->pulse->nobs; o++){
 			Resvec[o]=(double)((MNStruct *)context)->pulse->obsn[o].residual+phase;
+			
 		}
+		//printf("Phase: %g \n", phase);
 	
 	}
 	else if(((MNStruct *)context)->doLinear==1){
@@ -891,12 +895,14 @@ void LRedLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *contex
 	else if(((MNStruct *)context)->numFitEFAC == 1){
 		EFAC=new double[1];
 		EFAC[0]=Cube[pcount];
+		
 		pcount++;
 	}
 	else if(((MNStruct *)context)->numFitEFAC > 1){
 		EFAC=new double[((MNStruct *)context)->numFitEFAC];
 		for(int p=0;p< ((MNStruct *)context)->numFitEFAC; p++){
 			EFAC[p]=Cube[pcount];
+			
 			pcount++;
 		}
 	}				
@@ -922,7 +928,7 @@ void LRedLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *contex
 
 	double tdet=0;
 	double timelike=0;
-
+	double timelike2=0;
 
 	for(int o=0;o<((MNStruct *)context)->pulse->nobs; o++){
 		//	printf("Noise %i %g %g %g\n",m1,Noise[m1],EFAC[flagList[m1]],EQUAD);
@@ -930,7 +936,9 @@ void LRedLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *contex
 			
 			tdet=tdet+log(WorkNoise[o]);
 			WorkNoise[o]=1.0/WorkNoise[o];
-			timelike=timelike+pow((((MNStruct *)context)->pulse->obsn[o].residual),2)*WorkNoise[o];
+			timelike=timelike+pow(Resvec[o],2)*WorkNoise[o];
+			timelike2=timelike2+pow((double)((MNStruct *)context)->pulse->obsn[o].residual,2)*WorkNoise[o];
+			//printf("CPUTlike: %i %g %g %g\n",o,timelike,timelike2,phase);
 	}
 
 	double *NFd = new double[totCoeff];
@@ -1179,8 +1187,8 @@ void LRedLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *contex
         }
 
 
-
-        dpotrf(PPFM, totCoeff, jointdet);
+	    int info=0;
+        dpotrfInfo(PPFM, totCoeff, jointdet,info);
         dpotrs(PPFM, WorkCoeff, totCoeff);
         for(int j=0;j<totCoeff;j++){
                 freqlike += NFd[j]*WorkCoeff[j];
@@ -1193,6 +1201,8 @@ void LRedLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *contex
 		lnew=-pow(10.0,200);
 		
 	}
+	
+	//printf("CPULike: %g %g %g %g %g %g \n", lnew, jointdet, tdet, freqdet, timelike, freqlike);
 	delete[] DMVec;
 	delete[] WorkCoeff;
 	delete[] EFAC;
@@ -1693,7 +1703,7 @@ void LRedMarginLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *
 	//printf("CPUChisq: %g %g %g %g %g %g \n",lnew,jointdet,tdet,freqdet,timelike,freqlike);
 
 // 	if(isinf(lnew) || isinf(jointdet) || isinf(tdet) || isinf(freqdet) || isinf(timelike) || isinf(freqlike)){
- 	printf("Chisq: %g %g %g %g %g %g \n",lnew,jointdet,tdet,freqdet,timelike,freqlike);
+ 	//printf("Chisq: %g %g %g %g %g %g \n",lnew,jointdet,tdet,freqdet,timelike,freqlike);
 // 	}
 
 }

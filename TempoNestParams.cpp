@@ -235,17 +235,15 @@ void setTNPriors(double **Dpriors, long double **TempoPriors, int TPsize, int DP
 		 *   printf("WARNING");
 		 * }
 		 *
-		 * At the moment I was too lazy to print warning messages, and the
-		 * default value from this file is used in that case.
 		 *
 		 * Note: the timing model parameters are not done implemented yet
 		 */
                 char buffer [50];
                 int n;
-                n=sprintf (buffer, "DPriors[%i][0]", i);
-		parameters.readInto(Dpriors[i][0], buffer, Dpriors[i][0]);
-		n=sprintf (buffer, "DPriors[%i][1]", i);
-		parameters.readInto(Dpriors[i][1], buffer, Dpriors[i][1]);
+                n=sprintf (buffer, "Dpriors[%i][0]", i);
+				parameters.readInto(Dpriors[i][0], buffer, Dpriors[i][0]);
+				n=sprintf (buffer, "Dpriors[%i][1]", i);
+				parameters.readInto(Dpriors[i][1], buffer, Dpriors[i][1]);
 
 	    } catch(ConfigFile::file_not_found oError) {
 		printf("WARNING: parameters file '%s' not found. Using defaults.\n", oError.filename.c_str());

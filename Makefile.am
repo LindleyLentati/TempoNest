@@ -1,4 +1,4 @@
-
+.PHONY: temponest temponest-install
 ACLOCAL_AMFLAGS = -I autoconf
 
 # Source files used by plugins that are not part of temponest

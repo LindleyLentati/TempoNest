@@ -386,7 +386,7 @@ void getCustomDMatrix(pulsar *pulse, int *MarginList, double **TNDM, int **Tempo
                 	for(int i=0; i < pulse->nobs; i++) {
                                 TNDM[i][numToMargin]=((double)(pulse[0].obsn[i].bat-pulse[0].param[param_pepoch].val[0]))/(DMKappa*pow((double)pulse[0].obsn[i].freqSSB,2));
                                TNDM[i][numToMargin+1]=pow(((double)(pulse[0].obsn[i].bat-pulse[0].param[param_pepoch].val[0])),2)/(DMKappa*pow((double)pulse[0].obsn[i].freqSSB,2));
-               			printf("DMbit %i %g %g \n", i,TNDM[i][numToMargin],TNDM[i][numToMargin+1]); 
+               			//printf("DMbit %i %g %g \n", i,TNDM[i][numToMargin],TNDM[i][numToMargin+1]); 
 			}               
 		}
 		//Now set fit flags back to how they were
