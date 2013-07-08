@@ -69,6 +69,8 @@ void extra_delays(pulsar *psr,int npsr);
 #ifdef HAVE_CULA
 extern "C" void copy_gmat_(double *G, int N);
 extern "C" void copy_floatgmat_(float *G, int N);
+extern "C" void copy_staticgmat_(double *G, int M, int N);
+extern "C" void copy_staticumat_(double *G, int M, int N);
 #endif /* HAVE_CULA */
 
 
@@ -116,6 +118,256 @@ MNStruct* init_struct(pulsar *pulseval,	 long double **LDpriorsval, int numberpu
 	return MNS;
 }
 
+void printPriors(pulsar *psr, long double **TempoPriors, double **Dpriors, int incEFAC, int incEQUAD, int incRED, int incDM, int numCoeff, int fitDMModel, std::string longname){
+
+
+	std::ofstream getdistparamnames;
+	std::string gdpnfname = longname+".paramnames";
+	getdistparamnames.open(gdpnfname.c_str());
+	
+	int getdistlabel=1;
+
+	if(TempoPriors[0][2] == 0){
+		getdistparamnames << getdistlabel;
+		getdistparamnames << " ";
+		getdistparamnames <<  "Phase\n";
+		getdistlabel++;
+	}
+	
+	printf("\nPriors:\n");
+	int paramsfitted=0;
+	
+	printf("Prior on Phase : %.25Lg -> %.25Lg\n",TempoPriors[paramsfitted][0]+Dpriors[paramsfitted][0]*TempoPriors[paramsfitted][1],TempoPriors[paramsfitted][0]+Dpriors[paramsfitted][1]*TempoPriors[paramsfitted][1]);
+	paramsfitted++;
+	
+	for (int p=0;p<MAX_PARAMS;p++) {
+		for (int k=0;k<psr[0].param[p].aSize;k++){
+				if(psr[0].param[p].fitFlag[k] == 1 && p != param_dmmodel){
+				
+					printf("Prior on %s : %.25Lg -> %.25Lg\n",psr[0].param[p].shortlabel[k], TempoPriors[paramsfitted][0]+Dpriors[paramsfitted][0]*TempoPriors[paramsfitted][1],TempoPriors[paramsfitted][0]+Dpriors[paramsfitted][1]*TempoPriors[paramsfitted][1]);
+					
+					
+					if(TempoPriors[paramsfitted][2] == 0){
+						getdistparamnames << getdistlabel;
+						getdistparamnames << " ";
+						getdistparamnames <<  psr[0].param[p].shortlabel[k];
+						getdistlabel++;
+					}
+
+					paramsfitted++;
+
+				}
+			}
+	}
+		
+	int jumpsfitted=0;
+	for(int i=0;i<=psr[0].nJumps;i++){
+		if(psr[0].fitJump[i] == 1){
+		
+			printf("Prior on Jump %i : %.25Lg -> %.25Lg\n",jumpsfitted+1, TempoPriors[paramsfitted][0]+Dpriors[paramsfitted][0]*TempoPriors[paramsfitted][1],TempoPriors[paramsfitted][0]+Dpriors[paramsfitted][1]*TempoPriors[paramsfitted][1]);
+			
+			if(TempoPriors[paramsfitted][2] == 0){
+				getdistparamnames << getdistlabel;
+				getdistparamnames << " ";
+				getdistparamnames <<  "Jump";
+				getdistparamnames << jumpsfitted+1;
+				getdistparamnames << "\n";
+			}
+
+			paramsfitted++;
+			jumpsfitted++;
+		}
+	} 
+	
+
+	
+		
+	if(incEFAC>0){
+		int EFACnum=1;
+		for(int i =0;i<incEFAC;i++){
+			printf("Prior on EFAC %i : %.5g -> %.5g\n",EFACnum, Dpriors[paramsfitted][0],Dpriors[paramsfitted][1]);
+			
+			getdistparamnames << getdistlabel;
+			getdistparamnames << " ";
+			getdistparamnames <<  "EFAC";
+			getdistparamnames << i+1;
+			getdistparamnames << "\n";
+			getdistlabel++;
+	
+			paramsfitted++;
+		}
+	}
+	
+	for(int i =0;i<incEQUAD;i++){
+	
+		printf("Prior on EQUAD : %.5g -> %.5g\n",Dpriors[paramsfitted][0],Dpriors[paramsfitted][1]);
+		
+		getdistparamnames << getdistlabel;
+		getdistparamnames << " ";
+		getdistparamnames <<  "EQUAD";
+		getdistparamnames << i+1;
+		getdistparamnames << "\n";
+		getdistlabel++;
+			
+		paramsfitted++;
+	}
+		
+	if(incRED==1 || incRED==3){
+	
+		printf("Prior on Red Noise Log Amplitude : %.5g -> %.5g\n",Dpriors[paramsfitted][0],Dpriors[paramsfitted][1]);
+		paramsfitted++;		
+		
+		printf("Prior on Red Noise Slope : %.5g -> %.5g\n",Dpriors[paramsfitted][0],Dpriors[paramsfitted][1]);
+		paramsfitted++;
+		
+		getdistparamnames << getdistlabel;
+		getdistparamnames << " ";
+		getdistparamnames <<  "RedAmp";
+		getdistparamnames << "\n";
+		getdistlabel++;	
+		
+		getdistparamnames << getdistlabel;
+		getdistparamnames << " ";
+		getdistparamnames <<  "RedSlope";
+		getdistparamnames << "\n";
+		getdistlabel++;
+			
+	}
+	else if(incRED==2){
+		int Coeffnum=1;
+		for(int i =0;i<numCoeff;i++){
+			printf("Prior on Red Noise Coefficient %i Log Amplitude : %.5g -> %.5g\n",Coeffnum,Dpriors[paramsfitted][0],Dpriors[paramsfitted][1]);
+			
+			getdistparamnames << getdistlabel;
+			getdistparamnames << " ";
+			getdistparamnames <<  "RedC";
+			getdistparamnames <<  i+1;
+			getdistparamnames << "\n";
+			getdistlabel++;
+				
+			paramsfitted++;	
+		}
+	}
+	else if(incRED==4){
+		 for(int i =0;i < 2*numCoeff;i++){
+			printf("Prior on fourier coefficients: %i %g %g \n",i, Dpriors[paramsfitted][0],Dpriors[paramsfitted][1]);
+			
+			getdistparamnames << getdistlabel;
+			getdistparamnames << " ";
+			getdistparamnames <<  "FourierC";
+			getdistparamnames <<  i+1;
+			getdistparamnames << "\n";
+			getdistlabel++;
+			
+			
+			paramsfitted++;	
+		}
+
+		for(int i =0; i< numCoeff; i++){
+		 	printf("Prior on Red Noise coefficients: %i %g %g \n",i, Dpriors[paramsfitted][0],Dpriors[paramsfitted][1]);
+		 	
+		 	getdistparamnames << getdistlabel;
+			getdistparamnames << " ";
+			getdistparamnames <<  "RedC";
+			getdistparamnames <<  i+1;
+			getdistparamnames << "\n";
+			getdistlabel++;
+			
+			
+			paramsfitted++;	
+	 	}
+	}
+	else if(incRED==5){
+
+		for(int i =0;i < 2*numCoeff;i++){
+				printf("Prior on fourier coefficients: %i %g %g \n",i, Dpriors[paramsfitted][0],Dpriors[paramsfitted][1]);
+				
+				getdistparamnames << getdistlabel;
+				getdistparamnames << " ";
+				getdistparamnames <<  "FourierC";
+				getdistparamnames <<  i+1;
+				getdistparamnames << "\n";
+				getdistlabel++;
+			
+			
+				paramsfitted++;	
+		}
+		
+			getdistparamnames << getdistlabel;
+			getdistparamnames << " ";
+			getdistparamnames <<  "RedAmp";
+			getdistparamnames << "\n";
+			getdistlabel++;	
+		
+			getdistparamnames << getdistlabel;
+			getdistparamnames << " ";
+			getdistparamnames <<  "RedSlope";
+			getdistparamnames << "\n";
+			getdistlabel++;
+
+			printf("Prior on Red Noise Log Amplitude : %.5g -> %.5g\n",Dpriors[paramsfitted][0],Dpriors[paramsfitted][1]);
+			paramsfitted++;		
+			printf("Prior on Red Noise Slope : %.5g -> %.5g\n",Dpriors[paramsfitted][0],Dpriors[paramsfitted][1]);
+			paramsfitted++;
+	}	
+			
+	if(incDM==1 || incDM==3){
+	
+		getdistparamnames << getdistlabel;
+		getdistparamnames << " ";
+		getdistparamnames <<  "DMAmp";
+		getdistparamnames << "\n";
+		getdistlabel++;	
+		
+		getdistparamnames << getdistlabel;
+		getdistparamnames << " ";
+		getdistparamnames <<  "DMSlope";
+		getdistparamnames << "\n";
+		getdistlabel++;
+		
+		
+		printf("Prior on DM Log Amplitude : %.5g -> %.5g\n",Dpriors[paramsfitted][0],Dpriors[paramsfitted][1]);
+		paramsfitted++;		
+		printf("Prior on DM Slope : %.5g -> %.5g\n",Dpriors[paramsfitted][0],Dpriors[paramsfitted][1]);
+		paramsfitted++;
+	}
+	else if(incDM==2){
+		int Coeffnum=1;
+		for(int i =0;i<numCoeff;i++){
+			printf("Prior on DM Coefficient %i Log Amplitude : %.5g -> %.5g\n",Coeffnum,Dpriors[paramsfitted][0],Dpriors[paramsfitted][1]);
+			
+			getdistparamnames << getdistlabel;
+			getdistparamnames << " ";
+			getdistparamnames <<  "DMC";
+			getdistparamnames <<  i+1;
+			getdistparamnames << "\n";
+			getdistlabel++;
+			
+			
+			paramsfitted++;	
+		}
+	}
+			
+	if(fitDMModel==1){
+		for(int i=0;i<psr[0].dmoffsDMnum;i++){
+		
+			getdistparamnames << getdistlabel;
+			getdistparamnames << " ";
+			getdistparamnames <<  "DMModel";
+			getdistparamnames <<  i+1;
+			getdistparamnames << "\n";
+			getdistlabel++;
+			
+			
+			printf("Prior for DMModel: %i %g %g \n",i,Dpriors[paramsfitted][0],Dpriors[paramsfitted][1]);
+			paramsfitted++;	
+		}
+	}
+	
+	getdistparamnames.close(); 
+			
+}
+
 
 void update_MNPriors(MNStruct* MNS, double ** DPriorsval, long double **priorsval, int linearPriors){
 
@@ -127,7 +379,7 @@ void update_MNPriors(MNStruct* MNS, double ** DPriorsval, long double **priorsva
 	//printf("lin p is 0\n");
 	for (int p=0;p<MAX_PARAMS;p++) {
         	for (int k=0;k<MNS->pulse->param[p].aSize;k++){
-                	if(MNS->pulse->param[p].fitFlag[k] == 1){
+                	if(MNS->pulse->param[p].fitFlag[k] == 1  && p != param_dmmodel){
 				if(p == param_ecc || p ==param_px || p == param_m2 || p==param_dm){
 					long double minprior=priorsval[paramsfitted][0]+DPriorsval[paramsfitted+linearPriors][0]*priorsval[paramsfitted][1];
 					if(minprior < 0 && priorsval[paramsfitted][2]==0){
@@ -186,7 +438,19 @@ void update_MNPriors(MNStruct* MNS, double ** DPriorsval, long double **priorsva
 
 	}
 
+	void update_MNstaticG(MNStruct* MNS, double **staticGMatrixVal, double staticdetval)
+	{
 
+		MNS->staticGMatrix=staticGMatrixVal;
+		MNS->staticTimeDet=staticdetval;
+	}
+	
+	void update_MNstaticDiagG(MNStruct* MNS, double **UMatrixVal, double *SVecval)
+	{
+
+		MNS->UMatrix=UMatrixVal;
+		MNS->SVec=SVecval;
+	}
 
 
 
@@ -456,6 +720,8 @@ extern "C" int graphicalInterface(int argc, char **argv,
 	int customPriors;
 	int Reddims=0;
 	int DMdims=0;
+	int DMModeldims=0;
+	int fitDMModel=0;
 	double *EFACPrior;
 	double *EQUADPrior;
 	double *AlphaPrior;
@@ -464,6 +730,7 @@ extern "C" int graphicalInterface(int argc, char **argv,
 	double *DMAmpPrior;
 	int numCoeff;
 	double *CoeffPrior;
+	double FourierSig;
 
 
 	char *Type = new char[100];
@@ -477,7 +744,7 @@ extern "C" int graphicalInterface(int argc, char **argv,
 
 
 
-	setupparams(Type, numTempo2its, doLinearFit, doMax, incEFAC, incEQUAD, incRED, incDM, doTimeMargin, doJumpMargin, FitSig, customPriors, EFACPrior, EQUADPrior, AlphaPrior, AmpPrior, DMAlphaPrior, DMAmpPrior, numCoeff, CoeffPrior); 
+	setupparams(Type, numTempo2its, doLinearFit, doMax, incEFAC, incEQUAD, incRED, incDM, doTimeMargin, doJumpMargin, FitSig, customPriors, EFACPrior, EQUADPrior, AlphaPrior, AmpPrior, DMAlphaPrior, DMAmpPrior, numCoeff, CoeffPrior, FourierSig); 
 
 
 
@@ -585,22 +852,35 @@ extern "C" int graphicalInterface(int argc, char **argv,
 	
 	
 	if(incRED==0)Reddims=0;
-        if(incRED==1)Reddims=2;
-        if(incRED==2)Reddims=numCoeff;
-        if(incRED==3)Reddims=2;
-        if(incRED==4)Reddims=3*numCoeff;
-        if(incRED==5)Reddims=2*numCoeff+2;
-        if(incDM==0)DMdims=0;
-        if(incDM==1)DMdims=2;
-        if(incDM==2)DMdims=numCoeff;
-        if(incDM==3)DMdims=2;
-        if(incDM==4)DMdims=3*numCoeff;
-        if(incDM==5)DMdims=2*numCoeff+2;
+	if(incRED==1)Reddims=2;
+	if(incRED==2)Reddims=numCoeff;
+	if(incRED==3)Reddims=2;
+	if(incRED==4)Reddims=3*numCoeff;
+	if(incRED==5)Reddims=2*numCoeff+2;
+	if(incDM==0)DMdims=0;
+	if(incDM==1)DMdims=2;
+	if(incDM==2)DMdims=numCoeff;
+	if(incDM==3)DMdims=2;
+	if(incDM==4)DMdims=3*numCoeff;
+	if(incDM==5)DMdims=2*numCoeff+2;
+        
+	//printf("DMModel flag: %i \n",psr[0].param[param_dmmodel].fitFlag[0]);
+	if(psr[0].param[param_dmmodel].fitFlag[0]==1){
+	//	printf("Fitting for DMModel using %i structure functions \n",psr[0].dmoffsDMnum);
+		DMModeldims=psr[0].dmoffsDMnum; 
+		fitDMModel=1;
+	}
+	
+	if(fitDMModel==1 && ( doTimeMargin != 0 || doJumpMargin != 0 || doLinearFit != 0)){
+			printf("DMModel currently only supports doTimeMargin= 0, doJumpMargin = 0, doLinear = 0");
+			return 0;
+	}
 
-        if(incRED == 1 && incDM != 1 && incDM != 0|| incRED != 1 && incRED != 0 && incDM == 1){
-                printf("Different methods for DM and red noise not currently supported, please use the same option for both");
-                return 0;
-        }
+	if((incRED == 1 && incDM != 1 && incDM != 0 )|| (incRED != 1 && incRED != 0 && incDM == 1)){
+		    printf("Different methods for DM and red noise not currently supported, please use the same option for both");
+		    return 0;
+	}
+        
 	std::string pulsarname=psr[0].name;
 	std::string longname=Type+pulsarname+"-";
 
@@ -608,9 +888,7 @@ extern "C" int graphicalInterface(int argc, char **argv,
 
 	for(int r=0;r<=longname.size();r++){root[r]=longname[r];}
 
-	std::ofstream getdistparamnames;
-	std::string gdpnfname = longname+".paramnames";
-	getdistparamnames.open(gdpnfname.c_str());
+
 
 
 
@@ -628,6 +906,9 @@ extern "C" int graphicalInterface(int argc, char **argv,
 	printf("Starting TempoNest\n");
 	printf("*****************************************************\n\n\n\n");
 	printf("Details of the fit:\n");
+#ifdef HAVE_CULA
+	printf("Using GPUs\n");
+#endif
 	printf("file root set to %s \n",root);
 
 	int systemcount=0;
@@ -636,11 +917,11 @@ extern "C" int graphicalInterface(int argc, char **argv,
 		if(incEFAC == 0){printf("Not Including EFAC\n");systemcount=0;}
 		if(incEFAC == 1){printf("Including One EFAC for all observations\n");systemcount=1;}
 		
-			std::string whiteflagname=pulsarname+"-whiteflags.txt";
-			std::ofstream whiteflagoutput;
-			whiteflagoutput.open(whiteflagname.c_str());
-			whiteflagoutput << 1;
-			whiteflagoutput <<  "\n";
+		std::string whiteflagname=pulsarname+"-whiteflags.txt";
+		std::ofstream whiteflagoutput;
+		whiteflagoutput.open(whiteflagname.c_str());
+		whiteflagoutput << 1;
+		whiteflagoutput <<  "\n";
 		
 	
 		
@@ -667,10 +948,10 @@ extern "C" int graphicalInterface(int argc, char **argv,
 					} else {
 	// 	
 	// 
-	// 				/* systemnames does not contain x */
-					printf("Found system %s \n",psr[0].obsn[o].flagVal[f]);
-					systemnames.push_back(psr[0].obsn[o].flagVal[f]);
-					systemcount++;
+		// 				/* systemnames does not contain x */
+						printf("Found system %s \n",psr[0].obsn[o].flagVal[f]);
+						systemnames.push_back(psr[0].obsn[o].flagVal[f]);
+						systemcount++;
 					}
 					found=1;
 				}
@@ -704,16 +985,18 @@ extern "C" int graphicalInterface(int argc, char **argv,
 		whiteflagoutput.close();
 	}
 
-        if(incEQUAD == 0){printf("Not Including EQUAD\n");}
-        if(incEQUAD == 1){printf("Including One EQUAD for all observations\n");}
-        if(incRED == 0){printf("Not Including Red Noise\n");}
-        if(incRED == 1){printf("Including Red Noise : Power Law Model\n");}
-        if(incRED == 2){printf("Including Red Noise : Model Independant - Fitting %i Coefficients\n", numCoeff);}
-        if(incRED ==3){printf("Including Red Noise: Power Law Model to %i Coefficients \n", numCoeff);}
-        if(incDM == 0){printf("Not Including DM\n");}
-        if(incDM == 1){printf("Including DM : Power Law Model\n");}
-        if(incDM == 2){printf("Including DM : Model Independant - Fitting %i Coefficients\n", numCoeff);}
-        if(incDM ==3){printf("Including DM: Power Law Model to %i Coefficients \n", numCoeff);}
+    if(incEQUAD == 0){printf("Not Including EQUAD\n");}
+    if(incEQUAD == 1){printf("Including One EQUAD for all observations\n");}
+    if(incRED == 0){printf("Not Including Red Noise\n");}
+    if(incRED == 1){printf("Including Red Noise : Power Law Model\n");}
+    if(incRED == 2){printf("Including Red Noise : Model Independant - Fitting %i Coefficients\n", numCoeff);}
+    if(incRED ==3){printf("Including Red Noise: Power Law Model to %i Coefficients \n", numCoeff);}
+    if(incRED ==4){printf("Including Red Noise Numerically: Model Independant - Fitting %i Coefficients\n \n", numCoeff);}
+    if(incRED ==5){printf("Including Red Noise Numerically: Power Law Model to %i Coefficients \n", numCoeff);}
+    if(incDM == 0){printf("Not Including DM\n");}
+    if(incDM == 1){printf("Including DM : Power Law Model\n");}
+    if(incDM == 2){printf("Including DM : Model Independant - Fitting %i Coefficients\n", numCoeff);}
+    if(incDM ==3){printf("Including DM: Power Law Model to %i Coefficients \n", numCoeff);}
 	
 	
 	int fitcount=0;
@@ -721,10 +1004,14 @@ extern "C" int graphicalInterface(int argc, char **argv,
 	fitcount++;
 	for (int p=0;p<MAX_PARAMS;p++) {
 	      for (int k=0;k<psr[0].param[p].aSize;k++){
-			if(psr[0].param[p].fitFlag[k] == 1){
+			if(psr[0].param[p].fitFlag[k] == 1 && p != param_dmmodel){
 				printf("fitting for: %s \n",psr[0].param[p].shortlabel[k]);
 				fitcount++;
 	    		}
+			if(psr[0].param[p].fitFlag[k] == 1 && p == param_dmmodel){
+                    printf("fitting for: %s \n",psr[0].param[p].shortlabel[k]);
+            }
+
 		}
 	}
 // 	printf("fitting for: %i \n",fitcount);
@@ -755,14 +1042,9 @@ extern "C" int graphicalInterface(int argc, char **argv,
 	TempoJumpNums=new int[numFitJumps];
 	//printf("allocated\n");
 	int paramsfitted=0;
-	int getdistlabel=1;
 
-	getdistparamnames << getdistlabel;
-	getdistparamnames << " ";
-	getdistparamnames <<  "Phase\n";
-	getdistlabel++;
 	TempoPriors[paramsfitted][0]=0;
-	TempoPriors[paramsfitted][1]=psr[0].offset_e/sqrt(psr[0].fitChisq/psr[0].fitNfree);
+	TempoPriors[paramsfitted][1]=psr[0].rmsPre*pow(10.0,-6);//offset_e/sqrt(psr[0].fitChisq/psr[0].fitNfree);
 	TempoFitNums[paramsfitted][0]=0;
 	TempoFitNums[paramsfitted][1]=0;
 	if(doTimeMargin != 0 || doJumpMargin != 0)TempoPriors[paramsfitted][2]=1;
@@ -770,11 +1052,8 @@ extern "C" int graphicalInterface(int argc, char **argv,
 	//printf("p plus\n");
 	for (int p=0;p<MAX_PARAMS;p++) {
 	      for (int k=0;k<psr[0].param[p].aSize;k++){
-			if(psr[0].param[p].fitFlag[k] == 1){
-				getdistparamnames << getdistlabel;
-				getdistparamnames << " ";
-				getdistparamnames <<  psr[0].param[p].shortlabel[k];
-				getdistparamnames << "\n";
+			if(psr[0].param[p].fitFlag[k] == 1 && p != param_dmmodel){
+				
 				TempoPriors[paramsfitted][0]=psr[0].param[p].prefit[k];
 				TempoPriors[paramsfitted][1]=psr[0].param[p].err[k]/sqrt(psr[0].fitChisq/psr[0].fitNfree);
 				Tempo2Fit[paramsfitted]=psr[0].param[p].val[k];
@@ -789,7 +1068,7 @@ extern "C" int graphicalInterface(int argc, char **argv,
 
 
 				paramsfitted++;
-				getdistlabel++;
+
 
 	    		}
 		}
@@ -798,11 +1077,7 @@ extern "C" int graphicalInterface(int argc, char **argv,
 	int jumpsfitted=0;
 	for(int i=0;i<=psr[0].nJumps;i++){
 		if(psr[0].fitJump[i] == 1){
-			getdistparamnames << getdistlabel;
-			getdistparamnames << " ";
-			getdistparamnames <<  "Jump";
-			getdistparamnames << i+1;
-			getdistparamnames << "\n";
+
 			//printf("gonna read ump %i %s \n",i,psr[0].jumpStr[i]);	
 			char str1[100],str2[100],str3[100],str4[100],str5[100];
 			int nread=sscanf(psr[0].jumpStr[i],"%s %s %s %s %s",str1,str2,str3,str4,str5);
@@ -818,81 +1093,10 @@ extern "C" int graphicalInterface(int argc, char **argv,
 			
 			paramsfitted++;
 			jumpsfitted++;
-			getdistlabel++;
+
 		}
 	}  
 
-//	printf("dont this\n");
-	for(int i =0;i<systemcount;i++){
-		getdistparamnames << getdistlabel;
-		getdistparamnames << " ";
-		getdistparamnames <<  "EFAC";
-		getdistparamnames << i+1;
-		getdistparamnames << "\n";
-		paramsfitted++;
-		getdistlabel++;
-	}
-	for(int i =0;i<incEQUAD;i++){
-		getdistparamnames << getdistlabel;
-		getdistparamnames << " ";
-		getdistparamnames <<  "EQUAD";
-		getdistparamnames << "\n";
-		paramsfitted++;
-		getdistlabel++;
-	}
-	if(incRED==1 || incRED==3){
-		getdistparamnames << getdistlabel;
-		getdistparamnames << " ";
-		getdistparamnames <<  "RedAmp";
-		getdistparamnames << "\n";
-		paramsfitted++;	
-		getdistlabel++;	
-		getdistparamnames << getdistlabel;
-		getdistparamnames << " ";
-		getdistparamnames <<  "RedSlope";
-		getdistparamnames << "\n";
-		paramsfitted++;
-		getdistlabel++;
-	}
-	else if(incRED==2){
-		for(int i =0;i<numCoeff;i++){
-			getdistparamnames << getdistlabel;
-			getdistparamnames << " ";
-			getdistparamnames <<  "RedC";
-			getdistparamnames <<  i+1;
-			getdistparamnames << "\n";
-			paramsfitted++;	
-			getdistlabel++;
-		}
-	}
-	if(incDM==1 || incDM ==3){
-		getdistparamnames << getdistlabel;
-		getdistparamnames << " ";
-		getdistparamnames <<  "DMAmp";
-		getdistparamnames << "\n";
-		paramsfitted++;	
-		getdistlabel++;	
-		getdistparamnames << getdistlabel;
-		getdistparamnames << " ";
-		getdistparamnames <<  "DMSlope";
-		getdistparamnames << "\n";
-		paramsfitted++;
-		getdistlabel++;
-	}
-	else if(incDM==2){
-		for(int i =0;i<numCoeff;i++){
-			getdistparamnames << getdistlabel;
-			getdistparamnames << " ";
-			getdistparamnames <<  "DMC";
-			getdistparamnames <<  i+1;
-			getdistparamnames << "\n";
-			paramsfitted++;	
-			getdistlabel++;
-		}
-	}
-
-	getdistparamnames.close();
-	//printf("nwhere\n");
 	// set the MultiNest sampling parameters
 	
 // 	return 0;
@@ -906,7 +1110,7 @@ extern "C" int graphicalInterface(int argc, char **argv,
 
 
 	double tol = 0.1;				// tol, defines the stopping criteria
-	int ndims = numFitJumps+fitcount+systemcount+incEQUAD+Reddims+DMdims;					// dimensionality (no. of free parameters)
+	int ndims = numFitJumps+fitcount+systemcount+incEQUAD+Reddims+DMdims+DMModeldims; // dimensionality (no. of free parameters)
 	int nPar = ndims;					// total no. of parameters including free & derived parameters
 	int nClsPar = 2;				// no. of parameters to do mode separation on
 	int updInt = 500;				// after how many iterations feedback is required & the output files should be updated
@@ -1046,6 +1250,38 @@ extern "C" int graphicalInterface(int argc, char **argv,
 				pcount++;
 			}
 		}	
+        else if(incRED==4){
+
+            for(int i =0;i < 2*numCoeff;i++){
+                    Dpriors[pcount][0]=-FourierSig*psr[p].rmsPre*pow(10.0,-6);
+                    Dpriors[pcount][1]=FourierSig*psr[p].rmsPre*pow(10.0,-6);
+ 
+                    pcount++;
+            }
+    
+    		for(int i =0; i< numCoeff; i++){
+                    Dpriors[pcount][0]=CoeffPrior[0];
+                    Dpriors[pcount][1]=CoeffPrior[1];
+                    pcount++;
+            }
+		}
+        else if(incRED==5){
+
+			for(int i =0;i < 2*numCoeff;i++){
+				Dpriors[pcount][0]=-FourierSig*psr[p].rmsPre*pow(10.0,-6);
+	            Dpriors[pcount][1]=FourierSig*psr[p].rmsPre*pow(10.0,-6);
+
+		        pcount++;
+			}
+
+            Dpriors[pcount][0]=AmpPrior[0];
+            Dpriors[pcount][1]=AmpPrior[1];
+            pcount++;
+            Dpriors[pcount][0]=AlphaPrior[0];
+            Dpriors[pcount][1]=AlphaPrior[1];
+            pcount++;
+        }	
+        
 		if(incDM==1 || incDM==3){
 			Dpriors[pcount][0]=DMAmpPrior[0];
 			Dpriors[pcount][1]=DMAmpPrior[1];
@@ -1061,6 +1297,15 @@ extern "C" int graphicalInterface(int argc, char **argv,
                                 pcount++;
                         }
                 }
+
+	if(fitDMModel==1){
+		for(int i=0;i<psr[0].dmoffsDMnum;i++){
+			Dpriors[pcount][0]=psr[0].dmoffsDM[i] - FitSig*psr[0].dmoffsDM_error[i];
+			Dpriors[pcount][1]=psr[0].dmoffsDM[i] + FitSig*psr[0].dmoffsDM_error[i];
+			printf("DMModel: %i %g %g \n",i,psr[0].dmoffsDM[i],psr[0].dmoffsDM_error[i]);
+			pcount++;
+		}
+	}
 
 		//printf("set up priors, pcount: %i \n",pcount);
 
@@ -1140,74 +1385,80 @@ extern "C" int graphicalInterface(int argc, char **argv,
 
 #endif /* HAVE_CULA */
 
-			printf("\nPriors:\n");
-			paramsfitted=0;
-			printf("Prior on Phase : %.25Lg -> %.25Lg\n",TempoPriors[paramsfitted][0]+Dpriors[paramsfitted][0]*TempoPriors[paramsfitted][1],TempoPriors[paramsfitted][0]+Dpriors[paramsfitted][1]*TempoPriors[paramsfitted][1]);
-			paramsfitted++;
-			for (int p=0;p<MAX_PARAMS;p++) {
-			for (int k=0;k<psr[0].param[p].aSize;k++){
-					if(psr[0].param[p].fitFlag[k] == 1){
-						printf("Prior on %s : %.25Lg -> %.25Lg\n",psr[0].param[p].shortlabel[k], TempoPriors[paramsfitted][0]+Dpriors[paramsfitted][0]*TempoPriors[paramsfitted][1],TempoPriors[paramsfitted][0]+Dpriors[paramsfitted][1]*TempoPriors[paramsfitted][1]);
-						paramsfitted++;
-		
-					}
-				}
-			}
-		
-			jumpsfitted=0;
-			for(int i=0;i<=psr[0].nJumps;i++){
-				if(psr[0].fitJump[i] == 1){
-					printf("Prior on Jump %i : %.25Lg -> %.25Lg\n",jumpsfitted+1, TempoPriors[paramsfitted][0]+Dpriors[paramsfitted][0]*TempoPriors[paramsfitted][1],TempoPriors[paramsfitted][0]+Dpriors[paramsfitted][1]*TempoPriors[paramsfitted][1]);
+			printPriors(psr, TempoPriors, Dpriors, systemcount, incEQUAD, incRED, incDM, numCoeff, fitDMModel, longname);
 
-					paramsfitted++;
-					jumpsfitted++;
-				}
-			}  
-		
-			if(incEFAC>0){
-				int EFACnum=1;
-				for(int i =0;i<systemcount;i++){
-					printf("Prior on EFAC %i : %.5g -> %.5g\n",EFACnum, Dpriors[paramsfitted][0],Dpriors[paramsfitted][1]);
-					paramsfitted++;
-				}
-			}
-			
-			for(int i =0;i<incEQUAD;i++){
-				printf("Prior on EQUAD : %.5g -> %.5g\n",Dpriors[paramsfitted][0],Dpriors[paramsfitted][1]);
-				paramsfitted++;
-			}
-			
-			if(incRED==1 || incRED==3){
-				printf("Prior on Red Noise Log Amplitude : %.5g -> %.5g\n",Dpriors[paramsfitted][0],Dpriors[paramsfitted][1]);
-				paramsfitted++;		
-				printf("Prior on Red Noise Slope : %.5g -> %.5g\n",Dpriors[paramsfitted][0],Dpriors[paramsfitted][1]);
-				paramsfitted++;
-			}
-			else if(incRED==2){
-				int Coeffnum=1;
-				for(int i =0;i<numCoeff;i++){
-					printf("Prior on Red Noise Coefficient %i Log Amplitude : %.5g -> %.5g\n",Coeffnum,Dpriors[paramsfitted][0],Dpriors[paramsfitted][1]);
-					paramsfitted++;	
-				}
-			}
-			
-			if(incDM==1 || incDM==3){
-				printf("Prior on DM Log Amplitude : %.5g -> %.5g\n",Dpriors[paramsfitted][0],Dpriors[paramsfitted][1]);
-				paramsfitted++;		
-				printf("Prior on DM Slope : %.5g -> %.5g\n",Dpriors[paramsfitted][0],Dpriors[paramsfitted][1]);
-				paramsfitted++;
-			}
-			else if(incDM==2){
-				int Coeffnum=1;
-				for(int i =0;i<numCoeff;i++){
-					printf("Prior on DM Coefficient %i Log Amplitude : %.5g -> %.5g\n",Coeffnum,Dpriors[paramsfitted][0],Dpriors[paramsfitted][1]);
-					paramsfitted++;	
-				}
-			}
 			printf("\n\n");
 			ndims=ndims-numToMargin;
 			if(incDM == 2 || incDM == 3 || incDM == 4 || incDM == 5)ndims +=2;
 			nPar=ndims;
+
+			if(incEFAC==0 && incEQUAD==0){
+				printf("Not Fitting for white noise: Pre computing Matrices.\n");
+				double **staticG=new double*[psr[0].nobs];
+				for(int i=0;i<psr[0].nobs;i++){
+					staticG[i]=new double[psr[0].nobs];
+				}
+				double statictdet=0;
+				makeStaticGMatrix(psr, Gsize, TNGM, staticG, statictdet);
+				update_MNstaticG(MNS, staticG, statictdet);
+				printf("Matrices generated, static matrix determinant: %g \n",statictdet);
+				context=MNS;
+				
+				
+#ifdef HAVE_CULA
+				double *staticGMatrixVec=new double[psr[0].nobs*psr[0].nobs];
+
+
+				for(int g=0;g<psr[0].nobs; g++){
+					for(int o=0;o<psr[0].nobs; o++){
+
+						staticGMatrixVec[g*psr[0].nobs + o]=staticG[o][g];
+					}
+				}
+
+				copy_staticgmat_(staticGMatrixVec, psr[0].nobs, psr[0].nobs);
+
+
+#endif /* HAVE_CULA */
+
+
+			}
+			
+			
+			if(incEFAC==1 || incEQUAD==1 && incEFAC!=2 && incEQUAD!=2){
+			
+				printf("Fitting for only one EFAC or EQUAD: Pre computing Matrices.\n");
+				double **UM=new double*[Gsize];
+				for(int i=0;i<Gsize;i++){
+					UM[i]=new double[psr[0].nobs];
+				}
+				double *SM=new double[Gsize];
+				makeStaticDiagGMatrix(psr, Gsize, TNGM, UM, SM);
+				update_MNstaticDiagG(MNS, UM, SM);
+				printf("Matrices generated\n");
+				context=MNS;
+				
+#ifdef HAVE_CULA
+				double *staticUMatrixVec=new double[Gsize*psr[0].nobs];
+
+
+				for(int g=0;g<psr[0].nobs; g++){
+					for(int o=0;o<Gsize; o++){
+
+						staticUMatrixVec[g*Gsize + o]=UM[o][g];
+					}
+				}
+
+				copy_staticumat_(staticUMatrixVec, Gsize, psr[0].nobs);
+
+
+#endif /* HAVE_CULA */
+
+
+			}			
+			
+			
+			
 		if(incRED==0 && incDM == 0){
 #ifdef HAVE_CULA
 			nested::run(IS,mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, WhiteMarginGPULogLike, dumper, context);
@@ -1222,7 +1473,7 @@ extern "C" int graphicalInterface(int argc, char **argv,
 			nested::run(IS,mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, vHRedMarginLogLike, dumper, context);
 #endif /* HAVE_CULA */
 		}
-		else if(incRED==2 || incDM==2 || incRED==3 || incDM==3){
+		else if(incRED==2 || incDM==2 || incRED==3 || incDM==3 || incRED==4 || incRED==5){
 #ifdef HAVE_CULA
 			nested::run(IS,mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, LRedMarginGPULogLike, dumper, context);
 #else
@@ -1240,71 +1491,9 @@ extern "C" int graphicalInterface(int argc, char **argv,
 
 		update_MNPriors(MNS,Dpriors, TempoPriors,0);
 		context=MNS;
-			printf("\nPriors:\n");
-			paramsfitted=0;
-			printf("Prior on Phase : %.25Lg -> %.25Lg\n",TempoPriors[paramsfitted][0]+Dpriors[paramsfitted][0]*TempoPriors[paramsfitted][1],TempoPriors[paramsfitted][0]+Dpriors[paramsfitted][1]*TempoPriors[paramsfitted][1]);
-			paramsfitted++;
-			for (int p=0;p<MAX_PARAMS;p++) {
-			for (int k=0;k<psr[0].param[p].aSize;k++){
-					if(psr[0].param[p].fitFlag[k] == 1){
-						printf("Prior on %s : %.25Lg -> %.25Lg\n",psr[0].param[p].shortlabel[k], TempoPriors[paramsfitted][0]+Dpriors[paramsfitted][0]*TempoPriors[paramsfitted][1],TempoPriors[paramsfitted][0]+Dpriors[paramsfitted][1]*TempoPriors[paramsfitted][1]);
-						paramsfitted++;
 		
-					}
-				}
-			}
 		
-			jumpsfitted=0;
-			for(int i=0;i<=psr[0].nJumps;i++){
-				if(psr[0].fitJump[i] == 1){
-					printf("Prior on Jump %i : %.25Lg -> %.25Lg\n",jumpsfitted+1, TempoPriors[paramsfitted][0]+Dpriors[paramsfitted][0]*TempoPriors[paramsfitted][1],TempoPriors[paramsfitted][0]+Dpriors[paramsfitted][1]*TempoPriors[paramsfitted][1]);
-
-					paramsfitted++;
-					jumpsfitted++;
-				}
-			}  
-		
-			if(incEFAC>0){
-				int EFACnum=1;
-				for(int i =0;i<systemcount;i++){
-					printf("Prior on EFAC %i : %.5g -> %.5g\n",EFACnum, Dpriors[paramsfitted][0],Dpriors[paramsfitted][1]);
-					paramsfitted++;
-				}
-			}
-			
-			for(int i =0;i<incEQUAD;i++){
-				printf("Prior on EQUAD : %.5g -> %.5g\n",Dpriors[paramsfitted][0],Dpriors[paramsfitted][1]);
-				paramsfitted++;
-			}
-			
-			if(incRED==1 || incRED==3){
-				printf("Prior on Red Noise Log Amplitude : %.5g -> %.5g\n",Dpriors[paramsfitted][0],Dpriors[paramsfitted][1]);
-				paramsfitted++;		
-				printf("Prior on Red Noise Slope : %.5g -> %.5g\n",Dpriors[paramsfitted][0],Dpriors[paramsfitted][1]);
-				paramsfitted++;
-			}
-			else if(incRED==2){
-				int Coeffnum=1;
-				for(int i =0;i<numCoeff;i++){
-					printf("Prior on Red Noise Coefficient %i Log Amplitude : %.5g -> %.5g\n",Coeffnum,Dpriors[paramsfitted][0],Dpriors[paramsfitted][1]);
-					paramsfitted++;	
-				}
-			}
-			
-			if(incDM==1 || incDM==3){
-				printf("Prior on DM Log Amplitude : %.5g -> %.5g\n",Dpriors[paramsfitted][0],Dpriors[paramsfitted][1]);
-				paramsfitted++;		
-				printf("Prior on DM Slope : %.5g -> %.5g\n",Dpriors[paramsfitted][0],Dpriors[paramsfitted][1]);
-				paramsfitted++;
-			}
-			else if(incDM==2){
-				int Coeffnum=1;
-				for(int i =0;i<numCoeff;i++){
-					printf("Prior on DM Coefficient %i Log Amplitude : %.5g -> %.5g\n",Coeffnum,Dpriors[paramsfitted][0],Dpriors[paramsfitted][1]);
-					paramsfitted++;	
-				}
-			}
-		//	printf("dims are: %i \n\n", ndims);
+		printPriors(psr, TempoPriors, Dpriors, systemcount, incEQUAD, incRED, incDM, numCoeff, fitDMModel, longname);
 
 		if(incRED==0 && incDM == 0){
 				nested::run(IS,mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, WhiteLogLike, dumper, context);
@@ -1316,7 +1505,7 @@ extern "C" int graphicalInterface(int argc, char **argv,
 				nested::run(IS,mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, vHRedLogLike, dumper, context);
 #endif /* HAVE_CULA */
 		}
-			else if(incRED==2 || incDM==2 || incRED==3 || incDM==3){
+			else if(incRED==2 || incDM==2 || incRED==3 || incDM==3 || incRED==4 || incRED==5){
 #ifdef HAVE_CULA
 				nested::run(IS,mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, LRedGPULogLike, dumper, context);
 #else
@@ -1359,7 +1548,38 @@ extern "C" int graphicalInterface(int argc, char **argv,
 				pcount++;
 			}
 		}	
-		
+        else if(incRED==4){
+
+            for(int i =0;i < 2*numCoeff;i++){
+                    Dpriors[pcount][0]=-FourierSig*psr[p].rmsPre*pow(10.0,-6);
+                    Dpriors[pcount][1]=FourierSig*psr[p].rmsPre*pow(10.0,-6);
+ 
+                    pcount++;
+            }
+    
+    		for(int i =0; i< numCoeff; i++){
+                    Dpriors[pcount][0]=CoeffPrior[0];
+                    Dpriors[pcount][1]=CoeffPrior[1];
+                    pcount++;
+            }
+		}
+        else if(incRED==5){
+
+			for(int i =0;i < 2*numCoeff;i++){
+				Dpriors[pcount][0]=-FourierSig*psr[p].rmsPre*pow(10.0,-6);
+	            Dpriors[pcount][1]=FourierSig*psr[p].rmsPre*pow(10.0,-6);
+
+		        pcount++;
+			}
+
+            Dpriors[pcount][0]=AmpPrior[0];
+            Dpriors[pcount][1]=AmpPrior[1];
+            pcount++;
+            Dpriors[pcount][0]=AlphaPrior[0];
+            Dpriors[pcount][1]=AlphaPrior[1];
+            pcount++;
+        }	
+        		
 		if(incDM==1 || incDM==3){
 			Dpriors[pcount][0]=DMAmpPrior[0];
 			Dpriors[pcount][1]=DMAmpPrior[1];
@@ -1388,7 +1608,7 @@ extern "C" int graphicalInterface(int argc, char **argv,
 		paramsfitted=1;
 		for (int p=0;p<MAX_PARAMS;p++) {
 		for (int k=0;k<psr[0].param[p].aSize;k++){
-				if(psr[0].param[p].fitFlag[k] == 1){
+				if(psr[0].param[p].fitFlag[k] == 1 && p != param_dmmodel){
 					((MNStruct *)context)->pulse->param[p].val[k]=TempoPriors[paramsfitted][0];
 					//printf("here: %i %.10Lg %.10Lg\n",paramsfitted,TempoPriors[paramsfitted][0],TempoPriors[paramsfitted][1]);
 					paramsfitted++;
@@ -1487,8 +1707,78 @@ extern "C" int graphicalInterface(int argc, char **argv,
 #endif
 
 			ndims=ndims-numToMargin;
-                        if(incDM == 2 || incDM == 3 || incDM == 4 || incDM == 5)ndims +=2;
-                        nPar=ndims;
+            if(incDM == 2 || incDM == 3 || incDM == 4 || incDM == 5)ndims +=2;
+            nPar=ndims;
+                        
+            printPriors(psr, TempoPriors, Dpriors, systemcount, incEQUAD, incRED, incDM, numCoeff, fitDMModel, longname);
+            
+              
+			if(incEFAC==0 && incEQUAD==0){
+				printf("Not Fitting for white noise: Pre computing Matrices.\n");
+				double **staticG=new double*[psr[0].nobs];
+				for(int i=0;i<psr[0].nobs;i++){
+					staticG[i]=new double[psr[0].nobs];
+				}
+				double statictdet=0;
+				makeStaticGMatrix(psr, Gsize, TNGM, staticG, statictdet);
+				update_MNstaticG(MNS, staticG, statictdet);
+				printf("Matrices generated, static matrix determinant: %g \n",statictdet);
+				context=MNS;
+				
+				
+#ifdef HAVE_CULA
+				double *staticGMatrixVec=new double[psr[0].nobs*psr[0].nobs];
+
+
+				for(int g=0;g<psr[0].nobs; g++){
+					for(int o=0;o<psr[0].nobs; o++){
+
+						staticGMatrixVec[g*psr[0].nobs + o]=staticG[o][g];
+					}
+				}
+
+				copy_staticgmat_(staticGMatrixVec, psr[0].nobs, psr[0].nobs);
+
+
+#endif /* HAVE_CULA */
+
+
+			}
+			
+			
+			if(incEFAC==1 || incEQUAD==1 && incEFAC!=2 && incEQUAD!=2){
+			
+				printf("Fitting for only one EFAC or EQUAD: Pre computing Matrices.\n");
+				double **UM=new double*[Gsize];
+				for(int i=0;i<Gsize;i++){
+					UM[i]=new double[psr[0].nobs];
+				}
+				double *SM=new double[Gsize];
+				makeStaticDiagGMatrix(psr, Gsize, TNGM, UM, SM);
+				update_MNstaticDiagG(MNS, UM, SM);
+				printf("Matrices generated");
+				context=MNS;
+				
+#ifdef HAVE_CULA
+				double *staticUMatrixVec=new double[Gsize*psr[0].nobs];
+
+
+				for(int g=0;g<psr[0].nobs; g++){
+					for(int o=0;o<Gsize; o++){
+
+						staticUMatrixVec[g*Gsize + o]=UM[o][g];
+					}
+				}
+
+				copy_staticumat_(staticUMatrixVec, Gsize, psr[0].nobs);
+
+
+#endif /* HAVE_CULA */
+
+
+			}
+			
+			
 
 			if(incRED==0 && incDM ==0){
 
@@ -1505,7 +1795,7 @@ extern "C" int graphicalInterface(int argc, char **argv,
 				nested::run(IS,mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, vHRedMarginLogLike, dumper, context);
 #endif /* HAVE_CULA */
 			}
-			else if(incRED==2 || incDM==2){
+			else if(incRED==2 || incDM==2 || incRED==3 || incDM==3 || incRED==4 || incRED==5){
 #ifdef HAVE_CULA
 				nested::run(IS,mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, LRedMarginGPULogLike, dumper, context);
 #else
@@ -1523,7 +1813,8 @@ extern "C" int graphicalInterface(int argc, char **argv,
 
 			context=MNS;
 	
-
+			printPriors(psr, TempoPriors, Dpriors, systemcount, incEQUAD, incRED, incDM, numCoeff, fitDMModel, longname);
+			
 			if(incRED==0 && incDM==0){
 				nested::run(IS,mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, WhiteLogLike, dumper, context);
 		}
@@ -1534,7 +1825,7 @@ extern "C" int graphicalInterface(int argc, char **argv,
 				nested::run(IS,mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, vHRedLogLike, dumper, context);
 #endif /* HAVE_CULA */
 		}
-			else if(incRED==2 || incDM==2 || incRED==3 || incDM==3){
+			else if(incRED==2 || incDM==2 || incRED==3 || incDM==3 || incRED==4 || incRED==5){
 #ifdef HAVE_CULA
 				nested::run(IS,mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, LRedGPULogLike, dumper, context);
 #else

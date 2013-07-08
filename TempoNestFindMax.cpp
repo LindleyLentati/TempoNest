@@ -73,6 +73,14 @@ void vHRedLogLikeMax(double *Cube, int &ndim, int &npars, double &lnew, void *co
 			pcount++;
 		}
 		
+		if(((MNStruct *)context)->pulse->param[param_dmmodel].fitFlag[0] == 1){
+			int DMnum=((MNStruct *)context)->pulse[0].dmoffsDMnum;
+			for(int i =0; i < DMnum; i++){
+				((MNStruct *)context)->pulse[0].dmoffsDM[i]=Cube[ndim-DMnum+i];
+			}
+		}
+		
+		
 		fastformBatsAll(((MNStruct *)context)->pulse,((MNStruct *)context)->numberpulsars);       /* Form Barycentric arrival times */
 		formResiduals(((MNStruct *)context)->pulse,((MNStruct *)context)->numberpulsars,1);       /* Form residuals */
 		
@@ -548,6 +556,14 @@ void WhiteLogLikeMax(double *Cube, int &ndim, int &npars, double &lnew, void *co
 			pcount++;
 		}
 		
+		if(((MNStruct *)context)->pulse->param[param_dmmodel].fitFlag[0] == 1){
+			int DMnum=((MNStruct *)context)->pulse[0].dmoffsDMnum;
+			for(int i =0; i < DMnum; i++){
+				((MNStruct *)context)->pulse[0].dmoffsDM[i]=Cube[ndim-DMnum+i];
+			}
+		}
+		
+		
 		fastformBatsAll(((MNStruct *)context)->pulse,((MNStruct *)context)->numberpulsars);       /* Form Barycentric arrival times */
 		formResiduals(((MNStruct *)context)->pulse,((MNStruct *)context)->numberpulsars,1);       /* Form residuals */
 		
@@ -843,6 +859,14 @@ void LRedLogLikeMax(double *Cube, int &ndim, int &npars, double &lnew, void *con
 			((MNStruct *)context)->pulse->jumpVal[((MNStruct *)context)->TempoJumpNums[p]]= LDparams[pcount];
 			pcount++;
 		}
+		
+		if(((MNStruct *)context)->pulse->param[param_dmmodel].fitFlag[0] == 1){
+			int DMnum=((MNStruct *)context)->pulse[0].dmoffsDMnum;
+			for(int i =0; i < DMnum; i++){
+				((MNStruct *)context)->pulse[0].dmoffsDM[i]=Cube[ndim-DMnum+i];
+			}
+		}
+		
 		
 		fastformBatsAll(((MNStruct *)context)->pulse,((MNStruct *)context)->numberpulsars);       /* Form Barycentric arrival times */
 		formResiduals(((MNStruct *)context)->pulse,((MNStruct *)context)->numberpulsars,1);       /* Form residuals */
@@ -1864,6 +1888,15 @@ void NelderMeadOptimum(int nParameters, long double *LdParameters, void *context
 		gsl_vector_set(vStart, pcount, 3.1);
 		gsl_vector_set(vStepSize, pcount, 0.25);
 		pcount++;
+	}
+	
+	if(((MNStruct *)context)->pulse->param[param_dmmodel].fitFlag[0] == 1){
+			int DMnum=((MNStruct *)context)->pulse[0].dmoffsDMnum;
+			for(int i =0; i < DMnum; i++){
+				gsl_vector_set(vStart, pcount, ((MNStruct *)context)->pulse->dmoffsDM[i]);
+				gsl_vector_set(vStepSize, pcount, 5*((MNStruct *)context)->pulse->dmoffsDM_error[i]);
+				pcount++;
+			}
 	}
 
   // Initial GSL vector of the vertex sizes, and the starting point

@@ -49,7 +49,8 @@ void setupparams(char *root,
 		double *DMAlphaPrior,
 		double *DMAmpPrior,
 		int &numCoeff,
-		double *CoeffPrior){
+		double *CoeffPrior,
+		double &FourierSig){
 
     //General parameters:
     //Root of the results files,relative to the directory in which TempoNest is run. This will be followed by the pulsar name, and then the individual output file extensions.
@@ -112,6 +113,8 @@ void setupparams(char *root,
 
     CoeffPrior[0]=-10;
     CoeffPrior[1]=0;
+    
+    FourierSig = 5;
 
     DMAlphaPrior[0]=1.1;
     DMAlphaPrior[1]=6.1;
@@ -158,6 +161,7 @@ void setupparams(char *root,
         parameters.readInto(AlphaPrior[0], "AlphaPrior[0]", AlphaPrior[0]);
         parameters.readInto(AlphaPrior[1], "AlphaPrior[1]", AlphaPrior[1]);
         parameters.readInto(AmpPrior[0], "AmpPrior[0]", AmpPrior[0]);
+        parameters.readInto(AmpPrior[1], "AmpPrior[1]", AmpPrior[1]);
         parameters.readInto(numCoeff, "numCoeff", numCoeff);
         parameters.readInto(CoeffPrior[0], "CoeffPrior[0]", CoeffPrior[0]);
         parameters.readInto(CoeffPrior[1], "CoeffPrior[1]", CoeffPrior[1]);
@@ -165,7 +169,7 @@ void setupparams(char *root,
         parameters.readInto(DMAlphaPrior[1], "DMAlphaPrior[1]", DMAlphaPrior[1]);
         parameters.readInto(DMAmpPrior[0], "DMAmpPrior[0]", DMAmpPrior[0]);
         parameters.readInto(DMAmpPrior[1], "DMAmpPrior[1]", DMAmpPrior[1]);
-        parameters.readInto(AmpPrior[1], "AmpPrior[1]", AmpPrior[1]);
+        parameters.readInto(FourierSig, "FourierSig", FourierSig);
 
     } catch(ConfigFile::file_not_found oError) {
         printf("WARNING: parameters file '%s' not found. Using defaults.\n", oError.filename.c_str());

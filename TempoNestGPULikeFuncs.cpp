@@ -1,10 +1,11 @@
 #include <stdio.h>
 #include <vector>
-#include "/usr/include/gsl/gsl_sf_gamma.h"
+#include <gsl/gsl_sf_gamma.h>
 #include "dgemm.h"
 #include "dgemv.h"
 #include "dpotri.h"
 #include "dpotrf.h"
+#include "dpotrs.h"
 #include "tempo2.h"
 #include "TempoNest.h"
 
@@ -12,13 +13,13 @@ double *TNFactorialList = new double[21];
 
 
 
-extern "C" void WhiteMarginGPUWrapper_(double *Noise, double *Res, double *likeInfo, int N, int G);
+extern "C" void WhiteMarginGPUWrapper_(double *Noise, double *Res, double *likeInfo, int N, int G, int incEFAC, int incEQUAD);
 
 extern "C" void vHRedGPUWrapper_(double *SpecInfo, double *BatVec,  double *DMVec, double *Res, double *NoiseVec, double *likeInfo, int N);
 extern "C" void vHRedMarginGPUWrapper_(double *Res, double *BatVec, double *DMVec, double *NoiseVec, double *SpecInfo, double *likeInfo, double *FactorialList, int N, int G);
 
-extern "C" void LRedGPUWrapper_(double *Freqs, double *resvec, double *BATvec, double *Noise, double **FNF, double *NFd, int N, int F);
-extern "C" void LRedMarginGPUWrapper_(double *Freqs, double *resvec, double *BATvec, double *Noise, double **FNF, double *NFd, double *likeVals, int N, int F, int G);
+extern "C" void LRedGPUWrapper_(double *Freqs, double *resvec, double *BATvec, double *DMVec, double *Noise, double **FNF, double *NFd, int N, int SF, int F, int incRED, int incDM);
+extern "C" void LRedMarginGPUWrapper_(double *Freqs, double *resvec, double *BATvec, double *DMVec, double *Noise, double **FNF, double *NFd, double *likeVals, int N, int SF, int F, int G, int incRED, int incDM, int incEFAC, int incEQUAD);
 
 extern "C" void vHRedDMMarginGPUWrapper_(double *Res, double *BatVec, double *NoiseVec, double *DMVec, double *SpecInfo, double *likeInfo, double *FactorialList, int N, int G);
 extern "C" void vHRedDMGPUWrapper_(double *SpecInfo, double *BatVec, double *Res, double *NoiseVec, double *DMVec, double *likeInfo, int N);
@@ -144,21 +145,44 @@ void WhiteMarginGPULogLike(double *Cube, int &ndim, int &npars, double &lnew, vo
 
 
 	double Chisq=0;
+	double det = 0;
 	double *Noise=new double[((MNStruct *)context)->pulse->nobs];
 
 	double *likeInfo=new double[2];
 
+	if(((MNStruct *)context)->numFitEFAC ==2 || ((MNStruct *)context)->numFitEQUAD ==2){
 
+		for(int o=0;o<((MNStruct *)context)->pulse->nobs; o++){
+			Noise[o]=pow(((((MNStruct *)context)->pulse->obsn[o].toaErr)*pow(10.0,-6))*EFAC[((MNStruct *)context)->sysFlags[o]],2) + EQUAD;
 
-	for(int o=0;o<((MNStruct *)context)->pulse->nobs; o++){
-		Noise[o]=pow(((((MNStruct *)context)->pulse->obsn[o].toaErr)*pow(10.0,-6))*EFAC[((MNStruct *)context)->sysFlags[o]],2) + EQUAD;
-
-	}
+		}
 	
-	WhiteMarginGPUWrapper_(Noise, Resvec, likeInfo, ((MNStruct *)context)->pulse->nobs, ((MNStruct *)context)->Gsize);
+		WhiteMarginGPUWrapper_(Noise, Resvec, likeInfo, ((MNStruct *)context)->pulse->nobs, ((MNStruct *)context)->Gsize,((MNStruct *)context)->numFitEFAC,((MNStruct *)context)->numFitEQUAD);
 
-	double det=likeInfo[0];
-	Chisq=likeInfo[1];
+		det=likeInfo[0];
+		Chisq=likeInfo[1];
+	}	
+	else if(((MNStruct *)context)->numFitEFAC == 1 || ((MNStruct *)context)->numFitEQUAD==1 && ((MNStruct *)context)->numFitEFAC !=2 && ((MNStruct *)context)->numFitEQUAD!=2){
+	
+		for(int o=0;o<((MNStruct *)context)->Gsize; o++){
+			Noise[o]=pow(EFAC[0],2)*((MNStruct *)context)->SVec[o] + EQUAD;
+			det += log(Noise[o]);
+			Noise[o] = 1.0/Noise[o];
+
+		}
+		
+		WhiteMarginGPUWrapper_(Noise, Resvec, likeInfo, ((MNStruct *)context)->pulse->nobs, ((MNStruct *)context)->Gsize,((MNStruct *)context)->numFitEFAC,((MNStruct *)context)->numFitEQUAD);
+
+		Chisq=likeInfo[1];
+	}	
+	else if(((MNStruct *)context)->numFitEFAC == 0 && ((MNStruct *)context)->numFitEQUAD == 0){
+	
+		det=((MNStruct *)context)->staticTimeDet;
+		
+		WhiteMarginGPUWrapper_(Noise, Resvec, likeInfo, ((MNStruct *)context)->pulse->nobs, ((MNStruct *)context)->Gsize,((MNStruct *)context)->numFitEFAC,((MNStruct *)context)->numFitEQUAD);
+
+		Chisq=likeInfo[1];
+	}
 
 	if(isnan(det) || isinf(det) || isnan(Chisq) || isinf(Chisq)){
 
@@ -166,7 +190,7 @@ void WhiteMarginGPULogLike(double *Cube, int &ndim, int &npars, double &lnew, vo
 	
 	}
 	else{
-		lnew = -0.5*(det+Chisq);	
+		lnew = -0.5*(((MNStruct *)context)->Gsize*log(2.0*M_PI) + det + Chisq);	
 
 
 	}
@@ -387,7 +411,7 @@ void vHRedGPULogLike(double *Cube, int &ndim, int &npars, double &lnew, void *co
 	long double LDparams[numfit];
 	double Fitparams[numfit];
 	double *Resvec=new double[((MNStruct *)context)->pulse->nobs];
-
+	double NLphase=0;
 	for(int p=0;p<ndim;p++){
 
 		Cube[p]=(((MNStruct *)context)->Dpriors[p][1]-((MNStruct *)context)->Dpriors[p][0])*Cube[p]+((MNStruct *)context)->Dpriors[p][0];
@@ -399,7 +423,7 @@ void vHRedGPULogLike(double *Cube, int &ndim, int &npars, double &lnew, void *co
 			LDparams[p]=Cube[p]*(((MNStruct *)context)->LDpriors[p][1]) + (((MNStruct *)context)->LDpriors[p][0]);
 		}
 
-		double phase=(double)LDparams[0];
+		NLphase=(double)LDparams[0];
 		pcount++;
 		for(int p=1;p<((MNStruct *)context)->numFitTiming;p++){
 			((MNStruct *)context)->pulse->param[((MNStruct *)context)->TempoFitNums[p][0]].val[((MNStruct *)context)->TempoFitNums[p][1]] = LDparams[pcount];	
@@ -410,12 +434,12 @@ void vHRedGPULogLike(double *Cube, int &ndim, int &npars, double &lnew, void *co
 			pcount++;
 		}
 		
-		fastformBatsAll(((MNStruct *)context)->pulse,((MNStruct *)context)->numberpulsars);       /* Form Barycentric arrival times */
-		formResiduals(((MNStruct *)context)->pulse,((MNStruct *)context)->numberpulsars,1);       /* Form residuals */
+	//	fastformBatsAll(((MNStruct *)context)->pulse,((MNStruct *)context)->numberpulsars);       /* Form Barycentric arrival times */
+	//	formResiduals(((MNStruct *)context)->pulse,((MNStruct *)context)->numberpulsars,1);       /* Form residuals */
 		
-		for(int o=0;o<((MNStruct *)context)->pulse->nobs; o++){
-			Resvec[o]=(double)((MNStruct *)context)->pulse->obsn[o].residual+phase;
-		}
+	//	for(int o=0;o<((MNStruct *)context)->pulse->nobs; o++){
+	//		Resvec[o]=(double)((MNStruct *)context)->pulse->obsn[o].residual+phase;
+	//	}
 	
 	}
 	else if(((MNStruct *)context)->doLinear==1){
@@ -492,6 +516,21 @@ void vHRedGPULogLike(double *Cube, int &ndim, int &npars, double &lnew, void *co
 		}
 	}
 	
+	//DO DMModel stuff if fitting for that
+	if(((MNStruct *)context)->doLinear==0){
+		if(((MNStruct *)context)->pulse->param[param_dmmodel].fitFlag[0] == 1){
+			for(int i =0; i < ((MNStruct *)context)->pulse[0].dmoffsDMnum; i++){
+				((MNStruct *)context)->pulse[0].dmoffsDM[i]=Cube[pcount];
+				pcount++;
+			}
+		}
+
+		fastformBatsAll(((MNStruct *)context)->pulse,((MNStruct *)context)->numberpulsars);       /* Form Barycentric arrival times */
+		formResiduals(((MNStruct *)context)->pulse,((MNStruct *)context)->numberpulsars,1);       /* Form residuals */
+		for(int o=0;o<((MNStruct *)context)->pulse->nobs; o++){
+			  Resvec[o]=(double)((MNStruct *)context)->pulse->obsn[o].residual+NLphase;
+		}
+	}
 
 	double *BatVec=new double[((MNStruct *)context)->pulse->nobs];
 	double *Noise=new double[((MNStruct *)context)->pulse->nobs];
@@ -499,6 +538,7 @@ void vHRedGPULogLike(double *Cube, int &ndim, int &npars, double &lnew, void *co
 		BatVec[o]=(double)((MNStruct *)context)->pulse->obsn[o].bat;
 		Noise[o]=pow(((((MNStruct *)context)->pulse->obsn[o].toaErr)*pow(10.0,-6))*EFAC[((MNStruct *)context)->sysFlags[o]],2) + EQUAD;
 	}
+
 
 
 	double *likeInfo=new double[2];
@@ -527,10 +567,8 @@ void vHRedGPULogLike(double *Cube, int &ndim, int &npars, double &lnew, void *co
 	delete[] SpecParm;
 	delete[] DMVec;
 
-		//printf("GPU Like: %g %g %g \n",lnew,Chisq,covdet);
+	//printf("GPU Like: %g %g %g \n",lnew,Chisq,covdet);
 }
-
-
 
 
 void LRedGPULogLike(double *Cube, int &ndim, int &npars, double &lnew, void *context)
@@ -552,6 +590,7 @@ void LRedGPULogLike(double *Cube, int &ndim, int &npars, double &lnew, void *con
 		Cube[p]=(((MNStruct *)context)->Dpriors[p][1]-((MNStruct *)context)->Dpriors[p][0])*Cube[p]+((MNStruct *)context)->Dpriors[p][0];
 	}
 
+
 	if(((MNStruct *)context)->doLinear==0){
 	
 		for(int p=0;p< ((MNStruct *)context)->numFitTiming + ((MNStruct *)context)->numFitJumps; p++){
@@ -568,6 +607,14 @@ void LRedGPULogLike(double *Cube, int &ndim, int &npars, double &lnew, void *con
 			((MNStruct *)context)->pulse->jumpVal[((MNStruct *)context)->TempoJumpNums[p]]= LDparams[pcount];
 			pcount++;
 		}
+		
+		if(((MNStruct *)context)->pulse->param[param_dmmodel].fitFlag[0] == 1){
+			int DMnum=((MNStruct *)context)->pulse[0].dmoffsDMnum;
+			for(int i =0; i < DMnum; i++){
+				((MNStruct *)context)->pulse[0].dmoffsDM[i]=Cube[ndim-DMnum+i];
+			}
+		}
+		
 		
 		fastformBatsAll(((MNStruct *)context)->pulse,((MNStruct *)context)->numberpulsars);       /* Form Barycentric arrival times */
 		formResiduals(((MNStruct *)context)->pulse,((MNStruct *)context)->numberpulsars,1);       /* Form residuals */
@@ -624,11 +671,16 @@ void LRedGPULogLike(double *Cube, int &ndim, int &npars, double &lnew, void *con
 	}
 
   	
+        int FitCoeff=2*(((MNStruct *)context)->numFitRedCoeff);
+
+        int totCoeff=0;
+        if(((MNStruct *)context)->incRED != 0)totCoeff+=FitCoeff;
+        if(((MNStruct *)context)->incDM != 0)totCoeff+=FitCoeff;
+
+        double *powercoeff=new double[totCoeff];
 
 
-	int FitCoeff=2*(((MNStruct *)context)->numFitRedCoeff);
 	double *WorkNoise=new double[((MNStruct *)context)->pulse->nobs];
-	double *powercoeff=new double[FitCoeff];
 
 	double tdet=0;
 	double timelike=0;
@@ -642,20 +694,19 @@ void LRedGPULogLike(double *Cube, int &ndim, int &npars, double &lnew, void *con
 			
 			tdet=tdet+log(WorkNoise[o]);
 			WorkNoise[o]=1.0/WorkNoise[o];
-			timelike=timelike+pow((((MNStruct *)context)->pulse->obsn[o].residual),2)*WorkNoise[o];
+			timelike=timelike+pow(Resvec[o],2)*WorkNoise[o];
 
 			BATvec[o]=(double)((MNStruct *)context)->pulse->obsn[o].bat;
 
 
 	}
 
-	double *NFd = new double[FitCoeff];
+	double *NFd = new double[totCoeff];
+        double **FNF=new double*[totCoeff];
+        for(int i=0;i<totCoeff;i++){
+                FNF[i]=new double[totCoeff];
+        }
 
-
-	double **FNF=new double*[FitCoeff];
-	for(int i=0;i<FitCoeff;i++){
-		FNF[i]=new double[FitCoeff];
-	}
 
 	double start,end;
 	int go=0;
@@ -682,64 +733,136 @@ void LRedGPULogLike(double *Cube, int &ndim, int &npars, double &lnew, void *con
 	double maxtspan=end-start;
 
 
-	double freqdet=0;
-	for (int i=0; i<FitCoeff/2; i++){
-		int pnum=pcount;
-		double pc=Cube[pcount];
-		
-		powercoeff[i]=pow(10.0,pc)/(maxtspan*24*60*60);///(365.25*24*60*60)/4;
-		powercoeff[i+FitCoeff/2]=powercoeff[i];
-		freqdet=freqdet+2*log(powercoeff[i]);
-		pcount++;
-	}
+	double *freqs = new double[totCoeff];
+
+        double *DMVec=new double[((MNStruct *)context)->pulse->nobs];
+        double DMKappa = 2.410*pow(10.0,-16);
+        int startpos=0;
+        double freqdet=0;
+        if(((MNStruct *)context)->incRED==2){
+                for (int i=0; i<FitCoeff/2; i++){
+                        int pnum=pcount;
+                        double pc=Cube[pcount];
+                        freqs[i]=double(i+1)/maxtspan;
+                        freqs[i+FitCoeff/2]=double(i+1)/maxtspan;
+
+                        powercoeff[i]=pow(10.0,pc)/(maxtspan*24*60*60);///(365.25*24*60*60)/4;
+                        powercoeff[i+FitCoeff/2]=powercoeff[i];
+                        freqdet=freqdet+2*log(powercoeff[i]);
+                        pcount++;
+                }
+                startpos=FitCoeff;
+
+        }
+        else if(((MNStruct *)context)->incRED==3){
+
+                double redamp=Cube[pcount];
+                pcount++;
+                double redindex=Cube[pcount];
+                pcount++;
+
+                 redamp=pow(10.0, redamp);
+
+                freqdet=0;
+                 for (int i=0; i<FitCoeff/2; i++){
+
+                        freqs[i]=double(i+1)/maxtspan;
+                        freqs[i+FitCoeff/2]=double(i+1)/maxtspan;
+
+                        powercoeff[i]=redamp*redamp*pow((freqs[i]*365.25),-1.0*redindex)/(maxtspan*24*60*60);///(365.25*24*60*60)/4;
+                        powercoeff[i+FitCoeff/2]=powercoeff[i];
+                        freqdet=freqdet+2*log(powercoeff[i]);
 
 
-	int coeffsize=FitCoeff/2;
-	double *freqs = new double[FitCoeff/2];
-	for(int i=0;i<FitCoeff/2;i++){
-		freqs[i]=double(i+1)/maxtspan;
-	}	
+                 }
+                startpos=FitCoeff;
+
+        }
+        if(((MNStruct *)context)->incDM==2){
+
+                for (int i=0; i<FitCoeff/2; i++){
+                        int pnum=pcount;
+                        double pc=Cube[pcount];
+                        freqs[startpos+i]=double(i+1)/maxtspan;
+                        freqs[startpos+i+FitCoeff/2]=double(i+1)/maxtspan;
+
+                        powercoeff[startpos+i]=pow(10.0,pc)/(maxtspan*24*60*60);///(365.25*24*60*60)/4;
+                        powercoeff[startpos+i+FitCoeff/2]=powercoeff[startpos+i];
+                        freqdet=freqdet+2*log(powercoeff[startpos+i]);
+                        pcount++;
+                }
+
+                for(int o=0;o<((MNStruct *)context)->pulse->nobs; o++){
+                        DMVec[o]=1.0/(DMKappa*pow((double)((MNStruct *)context)->pulse->obsn[o].freqSSB,2));
+                }
+
+
+        }
+        else if(((MNStruct *)context)->incDM==3){
+                double DMamp=Cube[pcount];
+                pcount++;
+                double DMindex=Cube[pcount];
+                pcount++;
+
+                DMamp=pow(10.0, DMamp);
+
+                 for (int i=0; i<FitCoeff/2; i++){
+                        freqs[startpos + i]=double(i+1)/maxtspan;
+                        freqs[startpos + i+FitCoeff/2]=double(i+1)/maxtspan;
+
+                        powercoeff[startpos+i]=DMamp*DMamp*pow((freqs[startpos+i]*365.25),-1.0*DMindex)/(maxtspan*24*60*60);///(365.25*24*60*60)/4;
+                        powercoeff[startpos+i+FitCoeff/2]=powercoeff[startpos+i];
+                        freqdet=freqdet+2*log(powercoeff[startpos+i]);
+
+
+                 }
+                for(int o=0;o<((MNStruct *)context)->pulse->nobs; o++){
+                        DMVec[o]=1.0/(DMKappa*pow((double)((MNStruct *)context)->pulse->obsn[o].freqSSB,2));
+                }
+        }
 	
 
-	LRedGPUWrapper_(freqs, Resvec, BATvec, WorkNoise, FNF, NFd, ((MNStruct *)context)->pulse->nobs, FitCoeff);
-
-
-	double **PPFM=new double*[FitCoeff];
-	for(int i=0;i<FitCoeff;i++){
-		PPFM[i]=new double[FitCoeff];
-		for(int j=0;j<FitCoeff;j++){
-			PPFM[i][j]=0;
-
-		}
-	}
-
-
-	for(int c1=0; c1<FitCoeff; c1++){
-		PPFM[c1][c1]=1.0/powercoeff[c1];
-	}
+	LRedGPUWrapper_(freqs, Resvec, BATvec, DMVec, WorkNoise, FNF, NFd, ((MNStruct *)context)->pulse->nobs, FitCoeff, totCoeff,((MNStruct *)context)->incRED, ((MNStruct *)context)->incDM);
 
 
 
-	for(int j=0;j<FitCoeff;j++){
-		for(int k=0;k<FitCoeff;k++){
+        double **PPFM=new double*[totCoeff];
+        for(int i=0;i<totCoeff;i++){
+                PPFM[i]=new double[totCoeff];
+                for(int j=0;j<totCoeff;j++){
+                        PPFM[i][j]=0;
+                }
+        }
 
-			PPFM[j][k]=PPFM[j][k]+FNF[j][k];
-		}
-	}
+        for(int c1=0; c1<totCoeff; c1++){
+                PPFM[c1][c1]=1.0/powercoeff[c1];
+        }
 
- 	
-	double jointdet=0;
-	dpotrf(PPFM, FitCoeff, jointdet);
-    dpotri(PPFM,FitCoeff);
 
-	double freqlike=0;
-	for(int i=0;i<FitCoeff;i++){
-		for(int j=0;j<FitCoeff;j++){
-			freqlike=freqlike+NFd[i]*PPFM[i][j]*NFd[j];
-		}
-	}
-	
-	lnew=-0.5*(jointdet+tdet+freqdet+timelike-freqlike);
+
+        for(int j=0;j<totCoeff;j++){
+                for(int k=0;k<totCoeff;k++){
+                        PPFM[j][k]=PPFM[j][k]+FNF[j][k];
+                }
+        }
+        
+        double jointdet=0;
+        double freqlike=0;
+       double *WorkCoeff = new double[totCoeff];
+       for(int o1=0;o1<totCoeff; o1++){
+                WorkCoeff[o1]=NFd[o1];
+        }
+
+
+
+        int info=0;
+        dpotrfInfo(PPFM, totCoeff, jointdet, info);
+        dpotrs(PPFM, WorkCoeff, totCoeff);
+        for(int j=0;j<totCoeff;j++){
+                freqlike += NFd[j]*WorkCoeff[j];
+        }
+        lnew=-0.5*(tdet+jointdet+freqdet+timelike-freqlike);
+
 
 	if(isnan(lnew) || isinf(lnew)){
 
@@ -749,6 +872,7 @@ void LRedGPULogLike(double *Cube, int &ndim, int &npars, double &lnew, void *con
 		
 	}
  	//printf("Like: %g %g %g %g %g %g\n",lnew,jointdet,tdet,freqdet,timelike,freqlike);
+	 //printf("CPULIKE: %g %g %g %g %g %g \n", lnew, jointdet,tdet,freqdet,timelike,freqlike);
 
 	delete[] EFAC;
 	delete[] WorkNoise;
@@ -757,6 +881,8 @@ void LRedGPULogLike(double *Cube, int &ndim, int &npars, double &lnew, void *con
 	delete[] BATvec;
 	delete[] NFd;
 	delete[] freqs;
+	delete[] DMVec;
+	delete[] WorkCoeff;
 
 	for (int j = 0; j < FitCoeff; j++){
 		delete[] PPFM[j];
@@ -774,6 +900,8 @@ void LRedGPULogLike(double *Cube, int &ndim, int &npars, double &lnew, void *con
 }
 
 
+
+
 void LRedMarginGPULogLike(double *Cube, int &ndim, int &npars, double &lnew, void *context)
 {
 
@@ -783,9 +911,12 @@ void LRedMarginGPULogLike(double *Cube, int &ndim, int &npars, double &lnew, voi
 	double *EFAC;
 	double EQUAD;
 	int pcount=0;
-	int totdims=((MNStruct *)context)->numFitTiming + ((MNStruct *)context)->numFitJumps + ((MNStruct *)context)->numFitEFAC + ((MNStruct *)context)->numFitEQUAD;
-	if(((MNStruct *)context)->incRED==2)totdims+=((MNStruct *)context)->numFitRedCoeff;
-	if(((MNStruct *)context)->incDM==2)totdims+=((MNStruct *)context)->numFitRedCoeff;
+        int totdims=((MNStruct *)context)->numFitTiming + ((MNStruct *)context)->numFitJumps + ((MNStruct *)context)->numFitEFAC + ((MNStruct *)context)->numFitEQUAD;
+        if(((MNStruct *)context)->incRED==2)totdims+=((MNStruct *)context)->numFitRedCoeff;
+        if(((MNStruct *)context)->incDM==2)totdims+=((MNStruct *)context)->numFitRedCoeff;
+        if(((MNStruct *)context)->incRED==3)totdims+=2;
+        if(((MNStruct *)context)->incDM==3)totdims+=2;
+	
 	int numfit=((MNStruct *)context)->numFitTiming + ((MNStruct *)context)->numFitJumps;
 	long double LDparams[numfit];
 	double Fitparams[numfit];
@@ -793,7 +924,7 @@ void LRedMarginGPULogLike(double *Cube, int &ndim, int &npars, double &lnew, voi
 	int fitcount=0;
 	for(int p=0;p<totdims;p++){
 		//printf("DP: %i %g %g \n", p, ((MNStruct *)context)->Dpriors[p][0], ((MNStruct *)context)->Dpriors[p][1]);
-		if(((MNStruct *)context)->Dpriors[p][1] != ((MNStruct *)context)->Dpriors[p][0]){
+		if(((MNStruct *)context)->Dpriors[p][0] != ((MNStruct *)context)->Dpriors[p][1]){
 		Cube[pcount]=(((MNStruct *)context)->Dpriors[p][1]-((MNStruct *)context)->Dpriors[p][0])*Cube[pcount]+((MNStruct *)context)->Dpriors[p][0];
 		//printf("Cube: %i %g %g %g \n", pcount, ((MNStruct *)context)->Dpriors[p][0], ((MNStruct *)context)->Dpriors[p][1], Cube[pcount]);
 		pcount++;
@@ -890,23 +1021,49 @@ void LRedMarginGPULogLike(double *Cube, int &ndim, int &npars, double &lnew, voi
 
 
 	int FitCoeff=2*(((MNStruct *)context)->numFitRedCoeff);
-	double *powercoeff=new double[FitCoeff];
 
+        int totCoeff=0;
+        if(((MNStruct *)context)->incRED != 0)totCoeff+=FitCoeff;
+        if(((MNStruct *)context)->incDM != 0)totCoeff+=FitCoeff;
 
+	double *powercoeff=new double[totCoeff];
+
+	double tdet=0;
+	double timelike=0;
+	double temptimedet=0;
 
 	double *Noise=new double[((MNStruct *)context)->pulse->nobs];
 	double *BATvec=new double[((MNStruct *)context)->pulse->nobs];
+	
+	if(((MNStruct *)context)->numFitEFAC == 1 || ((MNStruct *)context)->numFitEQUAD==1 && ((MNStruct *)context)->numFitEFAC !=2 && ((MNStruct *)context)->numFitEQUAD!=2){
+
+        for(int o=0;o<((MNStruct *)context)->Gsize; o++){
+                Noise[o]=pow(EFAC[0],2)*((MNStruct *)context)->SVec[o] + EQUAD;
+                temptimedet += log(Noise[o]);
+                Noise[o] = 1.0/Noise[o];
+        }
 
 
-	for(int o=0;o<((MNStruct *)context)->pulse->nobs; o++){
-		Noise[o]=pow(((((MNStruct *)context)->pulse->obsn[o].toaErr)*pow(10.0,-6))*EFAC[((MNStruct *)context)->sysFlags[o]],2) + EQUAD;
-		BATvec[o]=(double)((MNStruct *)context)->pulse->obsn[o].bat;
+		for(int o=0;o<((MNStruct *)context)->pulse->nobs; o++){
+			BATvec[o]=(double)((MNStruct *)context)->pulse->obsn[o].bat;
+		}
+		
+	}
+	
+	else if(((MNStruct *)context)->numFitEFAC == 2 || ((MNStruct *)context)->numFitEQUAD==2){
+
+		for(int o=0;o<((MNStruct *)context)->pulse->nobs; o++){
+			Noise[o]=pow(((((MNStruct *)context)->pulse->obsn[o].toaErr)*pow(10.0,-6))*EFAC[((MNStruct *)context)->sysFlags[o]],2) + EQUAD;
+			BATvec[o]=(double)((MNStruct *)context)->pulse->obsn[o].bat;
+		}
+		
 	}
 
-	double *NFd = new double[FitCoeff];
-	double **FNF=new double*[FitCoeff];
-	for(int i=0;i<FitCoeff;i++){
-		FNF[i]=new double[FitCoeff];
+
+	double *NFd = new double[totCoeff];
+	double **FNF=new double*[totCoeff];
+	for(int i=0;i<totCoeff;i++){
+		FNF[i]=new double[totCoeff];
 	}	
 	
 	double start,end;
@@ -931,71 +1088,155 @@ void LRedMarginGPULogLike(double *Cube, int &ndim, int &npars, double &lnew, voi
 	      }
 	  }
 
-	double maxtspan=end-start;
+	double maxtspan=1*(end-start);
 
-	double freqdet=0;
-	for (int i=0; i<FitCoeff/2; i++){
-		int pnum=pcount;
-		double pc=Cube[pcount];
-		
-		powercoeff[i]=pow(10.0,pc)/(maxtspan*24*60*60);///(365.25*24*60*60)/4;
-		powercoeff[i+FitCoeff/2]=powercoeff[i];
-		freqdet=freqdet+2*log(powercoeff[i]);
-		pcount++;
+        double *freqs = new double[totCoeff];
+
+        double *DMVec=new double[((MNStruct *)context)->pulse->nobs];
+        double DMKappa = 2.410*pow(10.0,-16);
+        int startpos=0;
+        double freqdet=0;
+        if(((MNStruct *)context)->incRED==2){
+                for (int i=0; i<FitCoeff/2; i++){
+                        int pnum=pcount;
+                        double pc=Cube[pcount];
+                        freqs[i]=double(i+1)/maxtspan;
+                        freqs[i+FitCoeff/2]=double(i+1)/maxtspan;
+
+                        powercoeff[i]=pow(10.0,pc)/(maxtspan*24*60*60);///(365.25*24*60*60)/4;
+                        powercoeff[i+FitCoeff/2]=powercoeff[i];
+                        freqdet=freqdet+2*log(powercoeff[i]);
+                        pcount++;
+                }
+                startpos=FitCoeff;
+
+        }
+        else if(((MNStruct *)context)->incRED==3){
+
+                double redamp=Cube[pcount];
+                pcount++;
+                double redindex=Cube[pcount];
+                pcount++;
+
+                 redamp=pow(10.0, redamp);
+
+                freqdet=0;
+                 for (int i=0; i<FitCoeff/2; i++){
+
+                        freqs[i]=double(i+1)/maxtspan;
+                        freqs[i+FitCoeff/2]=double(i+1)/maxtspan;
+
+                        powercoeff[i]=redamp*redamp*pow((freqs[i]*365.25),-1.0*redindex)/(maxtspan*24*60*60);///(365.25*24*60*60)/4;
+                        powercoeff[i+FitCoeff/2]=powercoeff[i];
+                        freqdet=freqdet+2*log(powercoeff[i]);
+
+
+                 }
+                startpos=FitCoeff;
+
+        }
+
+        if(((MNStruct *)context)->incDM==2){
+
+                for (int i=0; i<FitCoeff/2; i++){
+                        int pnum=pcount;
+                        double pc=Cube[pcount];
+                        freqs[startpos+i]=double(i+1)/maxtspan;
+                        freqs[startpos+i+FitCoeff/2]=double(i+1)/maxtspan;
+
+                        powercoeff[startpos+i]=pow(10.0,pc)/(maxtspan*24*60*60);///(365.25*24*60*60)/4;
+                        powercoeff[startpos+i+FitCoeff/2]=powercoeff[startpos+i];
+                        freqdet=freqdet+2*log(powercoeff[startpos+i]);
+                        pcount++;
+                }
+
+                for(int o=0;o<((MNStruct *)context)->pulse->nobs; o++){
+                        DMVec[o]=1.0/(DMKappa*pow((double)((MNStruct *)context)->pulse->obsn[o].freqSSB,2));
+                }
+
+
+        }
+        else if(((MNStruct *)context)->incDM==3){
+                double DMamp=Cube[pcount];
+                pcount++;
+                double DMindex=Cube[pcount];
+                pcount++;
+
+                DMamp=pow(10.0, DMamp);
+
+                 for (int i=0; i<FitCoeff/2; i++){
+                        freqs[startpos + i]=double(i+1)/maxtspan;
+                        freqs[startpos + i+FitCoeff/2]=double(i+1)/maxtspan;
+
+                        powercoeff[startpos+i]=DMamp*DMamp*pow((freqs[startpos+i]*365.25),-1.0*DMindex)/(maxtspan*24*60*60);///(365.25*24*60*60)/4;
+                        powercoeff[startpos+i+FitCoeff/2]=powercoeff[startpos+i];
+                        freqdet=freqdet+2*log(powercoeff[startpos+i]);
+
+
+                 }
+                for(int o=0;o<((MNStruct *)context)->pulse->nobs; o++){
+                        DMVec[o]=1.0/(DMKappa*pow((double)((MNStruct *)context)->pulse->obsn[o].freqSSB,2));
+                }
+
+        }
+
+
+
+
+
+	double *likeVals=new double[2];
+	LRedMarginGPUWrapper_(freqs, Resvec, BATvec, DMVec, Noise, FNF, NFd, likeVals, ((MNStruct *)context)->pulse->nobs, FitCoeff, totCoeff,((MNStruct *)context)->Gsize, ((MNStruct *)context)->incRED,((MNStruct *)context)->incDM,((MNStruct *)context)->numFitEFAC,((MNStruct *)context)->numFitEQUAD);
+	
+	tdet=likeVals[0];
+	timelike=likeVals[1];
+	
+	if(((MNStruct *)context)->numFitEFAC == 0 && ((MNStruct *)context)->numFitEQUAD == 0){
+			tdet=((MNStruct *)context)->staticTimeDet;
+	}
+	else if(((MNStruct *)context)->numFitEFAC == 1 || ((MNStruct *)context)->numFitEQUAD==1 && ((MNStruct *)context)->numFitEFAC !=2 && ((MNStruct *)context)->numFitEQUAD!=2){
+			tdet=temptimedet;
 	}
 
-
-	int coeffsize=FitCoeff/2;
-	double *freqs = new double[(FitCoeff/2)];
-	for(int i=0;i<FitCoeff/2;i++){
-		freqs[i]=double(i+1)/maxtspan;
-	}	
-	
-	double *likeVals=new double[2];
-	LRedMarginGPUWrapper_(freqs, Resvec, BATvec, Noise, FNF, NFd, likeVals, ((MNStruct *)context)->pulse->nobs, FitCoeff,((MNStruct *)context)->Gsize);
-	
-	double tdet=likeVals[0];
-	double timelike=likeVals[1];
-	
-	
-
-
-
-	double **PPFM=new double*[FitCoeff];
-	for(int i=0;i<FitCoeff;i++){
-		PPFM[i]=new double[FitCoeff];
-		for(int j=0;j<FitCoeff;j++){
+	double **PPFM=new double*[totCoeff];
+	for(int i=0;i<totCoeff;i++){
+		PPFM[i]=new double[totCoeff];
+		for(int j=0;j<totCoeff;j++){
 			PPFM[i][j]=0;
 		}
 	}
 
-
-	for(int c1=0; c1<FitCoeff; c1++){
+	for(int c1=0; c1<totCoeff; c1++){
 		PPFM[c1][c1]=1.0/powercoeff[c1];
+		//printf("PPRM: %i %g\n", c1, PPFM[c1][c1]);
 	}
 
 
 
-	for(int j=0;j<FitCoeff;j++){
-		for(int k=0;k<FitCoeff;k++){
-			
+	for(int j=0;j<totCoeff;j++){
+		for(int k=0;k<totCoeff;k++){
+			//printf("FNF: %i %i %g  %g\n", j,k,PPFM[j][k],FNF[j][k]);		
 			PPFM[j][k]=PPFM[j][k]+FNF[j][k];
 		}
 	}
-
- 	
-	double jointdet=0;
-	dpotrf(PPFM, FitCoeff, jointdet);
-    dpotri(PPFM,FitCoeff);
-
-	double freqlike=0;
-	for(int i=0;i<FitCoeff;i++){
-		for(int j=0;j<FitCoeff;j++){
-// 			printf("%i %i %g %g\n",i,j,NFd[i],PPFM[i][j]);
-			freqlike=freqlike+NFd[i]*PPFM[i][j]*NFd[j];
-		}
-	}
 	
+	double jointdet=0;
+	double freqlike=0;
+       double *WorkCoeff = new double[totCoeff];
+       for(int o1=0;o1<totCoeff; o1++){
+                WorkCoeff[o1]=NFd[o1];
+		//printf("NFd: %i %g \n", o1, WorkCoeff[o1]);
+        }
+
+
+
+	int info=0;
+	dpotrfInfo(PPFM, totCoeff, jointdet, info);
+	dpotrs(PPFM, WorkCoeff, totCoeff);
+	for(int j=0;j<totCoeff;j++){
+		freqlike += NFd[j]*WorkCoeff[j];
+	//	printf("Freqlike : %i %g %g %g \n", j, freqlike, NFd[j], WorkCoeff[j]);
+	}
+
 	lnew=-0.5*(tdet+jointdet+freqdet+timelike-freqlike);
 
 	if(isnan(lnew) || isinf(lnew)){
@@ -1004,18 +1245,18 @@ void LRedMarginGPULogLike(double *Cube, int &ndim, int &npars, double &lnew, voi
 	
 	}
 
-
+	delete[] WorkCoeff;
 	delete[] EFAC;
 	delete[] powercoeff;
 	delete[] NFd;
-
-	for (int j = 0; j < FitCoeff; j++){
+	delete[] DMVec;
+	for (int j = 0; j < totCoeff; j++){
 		delete[]PPFM[j];
 	}
 	delete[]PPFM;
 
 
-	for (int j = 0; j < FitCoeff; j++){
+	for (int j = 0; j < totCoeff; j++){
 		delete[]FNF[j];
 	}
 	delete[]FNF;
@@ -1023,10 +1264,13 @@ void LRedMarginGPULogLike(double *Cube, int &ndim, int &npars, double &lnew, voi
 	delete[] Noise;
 	delete[] Resvec;
 	
-	//printf("GPULike: %g %g %g %g %g %g\n",lnew,jointdet,tdet,freqdet,timelike,freqlike);
+//	printf("GPULike: %g %g %g %g %g %g\n",lnew,timelike, tdet, freqlike, jointdet, freqdet);
 //
+	// printf("CPULIKE: %g %g %g %g %g %g \n", lnew, jointdet,tdet,freqdet,timelike,freqlike);
 
 }
+
+
 
 
 

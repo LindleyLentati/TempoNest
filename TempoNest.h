@@ -35,6 +35,10 @@ typedef struct {
 	double **DMatrix;
 	double **FMatrix;
 	double **GMatrix;
+	double **staticGMatrix;  //staticGMatrix and staicTimedet for speeding up when no fitted white noise
+	double staticTimeDet;
+	double **UMatrix;     //UMatrix and SVec are for speeding up when only have 1EFAC and 1EQUAD
+	double *SVec; 
 	int numberpulsars;
 	int doLinear;
 	int numFitJumps;
@@ -117,6 +121,8 @@ void makeGDesign(pulsar *pulse, int &Gsize, int numtofit, double** staticGMatrix
 void getDMatrix(pulsar *pulse, int TimeToFit, int JumptoFit, int numToMargin, int **TempoFitNums, int *TempoJumpNums, double **Dpriors, int doJumpMargin, int doTimeMargin, double **TNDM);
 void getMarginDMatrix(pulsar *pulse, int TimetoFit, int JumptoFit, int numToMargin, int **TempoFitNums, int *TempoJumpNums, double **Dpriors, int doJumpMargin, int doTimeMargin, double **TNDM, int linearFit);
 void getCustomDMatrix(pulsar *pulse, int *MarginList, double **TNDM, int **TempoFitNums, int *TempoJumpNums, double **Dpriors, int incDM, int TimetoFit, int JumptoFit);
+void makeStaticGMatrix(pulsar *pulse, int Gsize, double **GMatrix, double** staticGMatrix, double &tdet);
+void makeStaticDiagGMatrix(pulsar *pulse, int Gsize, double **GMatrix, double** UMatrix, double *SVec);
 
 
 void readsummary(pulsar *psr, std::string longname, int ndim, void *context, long double *Tempo2Fit, int incRED, int ndims, int MarginTime, int MarginJumps, int doLinear);
@@ -141,6 +147,7 @@ void setupparams(char *Type,
 		double *DMAlphaPrior,
 		double *DMAmpPrior,
 		int &numCoeff,
-		double *CoeffPrior);
+		double *CoeffPrior,
+		double &FourierSig);
 
 void setTNPriors(double **Dpriors, long double **TempoPriors, int TPsize, int DPsize);

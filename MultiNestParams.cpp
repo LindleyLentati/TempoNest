@@ -1,3 +1,9 @@
+#include <string.h>
+#include <stdio.h>
+#include "configfile.h"
+
+
+
 //  Copyright (C) 2013 Lindley Lentati
 
 /*
@@ -57,5 +63,23 @@ void setupMNparams(int &IS, int &modal, int &ceff, int &nlive, double &efr){
 	//These numbers may well be adjusted with experience, for parameter estimation of a single modal "blob", these may be much lower than required.
 	//Also: In constant efficiency mode this must be set lower, to 0.05 for D<50 and 0.01 D>50.
 	efr=0.1;
+
+
+
+    // Use a configfile, if we can, to overwrite the defaults set in this file.
+         try {
+                 string strBuf;
+                 strBuf = string("defaultparameters.conf");
+                 ConfigFile parameters(strBuf);
+
+		parameters.readInto(IS, "IS", IS);
+		parameters.readInto(modal, "modal", modal);
+		parameters.readInto(ceff, "ceff", ceff);
+		parameters.readInto(nlive, "nlive", nlive);
+		parameters.readInto(efr, "efr", efr);
+ 
+	    } catch(ConfigFile::file_not_found oError) {
+		printf("WARNING: parameters file '%s' not found. Using defaults.\n", oError.filename.c_str());
+	    } // try
 
 }

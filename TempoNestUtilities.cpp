@@ -257,7 +257,15 @@ void readsummary(pulsar *psr, std::string longname, int ndim, void *context, lon
 			//printf("here \n");
 				
 		 
-		  	
+			  if(((MNStruct *)context)->doLinear==0){
+        		        if(((MNStruct *)context)->pulse->param[param_dmmodel].fitFlag[0] == 1){
+					int DMnum=((MNStruct *)context)->pulse[0].dmoffsDMnum;
+                        		for(int i =0; i < DMnum; i++){
+						printf("update DMoff: %i %g \n", i, paramlist[outputoption*ndim + ndim-DMnum+i]);
+                                		((MNStruct *)context)->pulse[0].dmoffsDM[i]=paramlist[outputoption*ndim + ndim-DMnum+i];
+                       			}
+                		}
+			}
 			
 				
 	
@@ -295,8 +303,8 @@ void readsummary(pulsar *psr, std::string longname, int ndim, void *context, lon
 				rs << psr->obsn[i].toaErr*pow(10.0,-6);
 				resfile << rs.str();
 				resfile << "\n";		
-
-				FITfuncs(psr[0].obsn[i].bat - psr[0].param[param_pepoch].val[0], pdParamDeriv, numtofit, psr, i,0);
+				printf("DMCorr Res: %i %g \n", i,(double)psr->obsn[i].residual);
+				//FITfuncs(psr[0].obsn[i].bat - psr[0].param[param_pepoch].val[0], pdParamDeriv, numtofit, psr, i,0);
 				for(int j=0; j<numtofit; j++) {
 					std::stringstream ss;
 					ss.precision(std::numeric_limits<double>::digits10);//override the default
@@ -668,6 +676,109 @@ void makeGDesign(pulsar *pulse, int &Gsize, int numtofit, double** staticGMatrix
 	printf("%i %i \n",pulse->nobs,Gsize)*/;
 
 // 	printf("Done SVD ALL");
+}
+
+void makeStaticGMatrix(pulsar *pulse, int Gsize, double **GMatrix, double** staticGMatrix, double &tdet){
+
+
+	double *Noise=new double[pulse->nobs];
+	for(int o=0;o < pulse->nobs; o++){
+		Noise[o]=pow(pulse->obsn[o].toaErr*pow(10.0,-6),2);
+	}
+
+	double **NG = new double*[pulse->nobs]; for (int k=0; k< pulse->nobs; k++) NG[k] = new double[Gsize];
+	for(int i=0;i< pulse->nobs;i++){
+		for(int j=0;j< Gsize; j++){
+			NG[i][j] = GMatrix[i][j]*Noise[i];
+		}
+	}
+
+	double **GG = new double*[Gsize]; for (int k=0; k< Gsize; k++) GG[k] = new double[Gsize];
+
+	dgemm(GMatrix, NG,GG,pulse->nobs, Gsize,pulse->nobs, Gsize, 'T','N');
+	
+	tdet=0;
+	dpotrf(GG, Gsize, tdet);
+	dpotri(GG,Gsize);
+	
+
+
+	dgemm(GMatrix, GG,NG, pulse->nobs, Gsize, Gsize, Gsize, 'N','N');
+
+	dgemm(NG, GMatrix, staticGMatrix, pulse->nobs, Gsize, pulse->nobs, Gsize, 'N','T');
+	
+	delete[] Noise;
+	
+	for (int j = 0; j < pulse->nobs; j++){
+		delete[] NG[j];
+	}
+	delete[] NG;
+
+	for (int j = 0; j < Gsize; j++){
+		delete[]GG[j];
+	}
+	delete[] GG;	
+	
+	
+}
+
+void makeStaticDiagGMatrix(pulsar *pulse, int Gsize, double **GMatrix, double** GNMatrix, double *SVec){
+
+
+	double *Noise=new double[pulse->nobs];
+	for(int o=0;o < pulse->nobs; o++){
+		Noise[o]=pow(pulse->obsn[o].toaErr*pow(10.0,-6),2);
+	}
+
+	double **NG = new double*[pulse->nobs]; for (int k=0; k< pulse->nobs; k++) NG[k] = new double[Gsize];
+	for(int i=0;i< pulse->nobs;i++){
+		for(int j=0;j< Gsize; j++){
+			NG[i][j] = GMatrix[i][j]*Noise[i];
+		}
+	}
+
+	double **GG = new double*[Gsize]; for (int k=0; k< Gsize; k++) GG[k] = new double[Gsize];
+
+	dgemm(GMatrix, NG,GG,pulse->nobs, Gsize,pulse->nobs, Gsize, 'T','N');
+	
+
+	double** U = new double*[Gsize]; for (int k=0; k<Gsize; k++) U[k] = new double[Gsize];
+	double** VT = new double*[Gsize]; for (int k=0; k<Gsize; k++) VT[k] = new double[Gsize];
+
+	dgesvd(GG,Gsize, Gsize, SVec, U, VT);
+	
+	double **GT = new double*[Gsize]; for (int k=0; k< Gsize; k++) GT[k] = new double[pulse->nobs];
+	
+	for(int i=0;i< Gsize;i++){
+			for(int j=0;j< pulse->nobs; j++){
+				GT[i][j]=GMatrix[j][i];
+			}
+		}
+		
+		
+	dgemm(U, GT,GNMatrix,Gsize,Gsize, Gsize, pulse->nobs, 'N','N');
+	
+
+	delete[] Noise;
+	
+	for (int j = 0; j < pulse->nobs; j++){
+		delete[] NG[j];
+		
+	}
+	delete[] NG;
+
+	for (int j = 0; j < Gsize; j++){
+		delete[]GG[j];
+		delete[]VT[j];
+		delete[] U[j];
+		delete[] GT[j];
+
+	}
+	delete[] GG;	
+	delete[]VT;
+	delete[] U;
+	delete[] GT;
+	
 }
 
 
