@@ -260,3 +260,46 @@ void setTNPriors(double **Dpriors, long double **TempoPriors, int TPsize, int DP
 
 
 }
+
+
+void setFrequencies(double *SampleFreq, int numfreqs){
+
+//This function sets or overwrites the default values for the sampled frequencies sent to multinest
+
+
+
+	for(int i =0;i < numfreqs; i++){	
+		SampleFreq[i]=i+1;
+	}
+
+	for(int i =0;i<numfreqs; i++){	
+
+
+	    // Use a configfile, if we can, to overwrite the defaults set in this file.
+	    try {
+		string strBuf;
+		strBuf = string("defaultparameters.conf");
+		ConfigFile parameters(strBuf);
+
+		/* We can check whether a value is not set in the file by doing
+		 * if(! parameters.readInto(variable, "name", default)) {
+		 *   printf("WARNING");
+		 * }
+		 *
+		 * At the moment I was too lazy to print warning messages, and the
+		 * default value from this file is used in that case.
+		 *
+		 * Note: the timing model parameters are not done implemented yet
+		 */
+		char buffer [50];
+		int n;
+  		n=sprintf (buffer, "SampleFreq[%i]", i);
+		parameters.readInto(SampleFreq[i], buffer, SampleFreq[i]);
+
+	    } catch(ConfigFile::file_not_found oError) {
+		printf("WARNING: parameters file '%s' not found. Using defaults.\n", oError.filename.c_str());
+	    } // try
+
+	}
+
+}

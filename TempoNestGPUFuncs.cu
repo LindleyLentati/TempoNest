@@ -1093,6 +1093,7 @@ extern "C" void LRedMarginGPUWrapper_(double *Freqs, double *resvec, double *BAT
 	}
 	else if(incEFAC == 2 || incEQUAD== 2){
 
+		//printf("here \n");
 		MatMulKernel<<<dimGrid, dimBlock>>>(N,N,N, G,Noise_d,GlobalGmat_d,NG_d);
 
 

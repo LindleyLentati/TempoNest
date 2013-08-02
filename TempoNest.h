@@ -46,6 +46,7 @@ typedef struct {
 	int numFitEFAC;
 	int numFitEQUAD;
 	int numFitRedCoeff;
+	double *sampleFreq;
 	int numdims;
 	int incRED;
 	int incDM;
@@ -151,3 +152,4 @@ void setupparams(char *Type,
 		double &FourierSig);
 
 void setTNPriors(double **Dpriors, long double **TempoPriors, int TPsize, int DPsize);
+void setFrequencies(double *samplefreqs, int numfreqs);

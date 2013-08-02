@@ -304,7 +304,7 @@ void readsummary(pulsar *psr, std::string longname, int ndim, void *context, lon
 				resfile << rs.str();
 				resfile << "\n";		
 				printf("DMCorr Res: %i %g \n", i,(double)psr->obsn[i].residual);
-				//FITfuncs(psr[0].obsn[i].bat - psr[0].param[param_pepoch].val[0], pdParamDeriv, numtofit, psr, i,0);
+				FITfuncs(psr[0].obsn[i].bat - psr[0].param[param_pepoch].val[0], pdParamDeriv, numtofit, psr, i,0);
 				for(int j=0; j<numtofit; j++) {
 					std::stringstream ss;
 					ss.precision(std::numeric_limits<double>::digits10);//override the default
@@ -725,6 +725,11 @@ void makeStaticGMatrix(pulsar *pulse, int Gsize, double **GMatrix, double** stat
 void makeStaticDiagGMatrix(pulsar *pulse, int Gsize, double **GMatrix, double** GNMatrix, double *SVec){
 
 
+		
+
+
+
+
 	double *Noise=new double[pulse->nobs];
 	for(int o=0;o < pulse->nobs; o++){
 		Noise[o]=pow(pulse->obsn[o].toaErr*pow(10.0,-6),2);
@@ -756,7 +761,7 @@ void makeStaticDiagGMatrix(pulsar *pulse, int Gsize, double **GMatrix, double** 
 		}
 		
 		
-	dgemm(U, GT,GNMatrix,Gsize,Gsize, Gsize, pulse->nobs, 'N','N');
+	dgemm(VT, GT,GNMatrix,Gsize,Gsize, Gsize, pulse->nobs, 'N','N');
 	
 
 	delete[] Noise;

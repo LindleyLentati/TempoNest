@@ -93,7 +93,7 @@ void fastformBatsAll(pulsar *psr,int npsr)
 
 }
 
-MNStruct* init_struct(pulsar *pulseval,	 long double **LDpriorsval, int numberpulsarsval,int numFitJumpsval,int numFitTimingval,int numFitEFACval, int numFitEQUADval, int numFitCoeffval, int **TempoFitNumsval,int *TempoJumpNumsval, int *sysFlagsval, int numdimsval, int incREDval, int incDMval, int TimeMarginVal, int JumpMarginVal, int doLinearVal)
+MNStruct* init_struct(pulsar *pulseval,	 long double **LDpriorsval, int numberpulsarsval,int numFitJumpsval,int numFitTimingval,int numFitEFACval, int numFitEQUADval, int numFitCoeffval, int **TempoFitNumsval,int *TempoJumpNumsval, int *sysFlagsval, int numdimsval, int incREDval, int incDMval, int TimeMarginVal, int JumpMarginVal, int doLinearVal, double *SampleFreqsVal)
 {
     MNStruct* MNS = (MNStruct*)malloc(sizeof(MNStruct));
 
@@ -114,6 +114,7 @@ MNStruct* init_struct(pulsar *pulseval,	 long double **LDpriorsval, int numberpu
 	MNS->TimeMargin=TimeMarginVal;
 	MNS->JumpMargin=JumpMarginVal;
 	MNS->doLinear=doLinearVal;
+	MNS->sampleFreq=SampleFreqsVal;
 
 	return MNS;
 }
@@ -151,6 +152,7 @@ void printPriors(pulsar *psr, long double **TempoPriors, double **Dpriors, int i
 						getdistparamnames << getdistlabel;
 						getdistparamnames << " ";
 						getdistparamnames <<  psr[0].param[p].shortlabel[k];
+						getdistparamnames << "\n";
 						getdistlabel++;
 					}
 
@@ -731,6 +733,7 @@ extern "C" int graphicalInterface(int argc, char **argv,
 	int numCoeff;
 	double *CoeffPrior;
 	double FourierSig;
+	double *SampleFreq;
 
 
 	char *Type = new char[100];
@@ -745,7 +748,9 @@ extern "C" int graphicalInterface(int argc, char **argv,
 
 
 	setupparams(Type, numTempo2its, doLinearFit, doMax, incEFAC, incEQUAD, incRED, incDM, doTimeMargin, doJumpMargin, FitSig, customPriors, EFACPrior, EQUADPrior, AlphaPrior, AmpPrior, DMAlphaPrior, DMAmpPrior, numCoeff, CoeffPrior, FourierSig); 
-
+	
+	SampleFreq=new double[numCoeff];
+	setFrequencies(SampleFreq,numCoeff);
 
 
 	
@@ -1129,7 +1134,7 @@ extern "C" int graphicalInterface(int argc, char **argv,
 	int maxiter = 0;				// max no. of iterations, a non-positive value means infinity. MultiNest will terminate if either it has done max no. of iterations or convergence criterion (defined through tol) has been satisfied
 	void *context = 0;				// not required by MultiNest, any additional information user wants to pass
 	//printf("Here \n");
-	MNStruct *MNS = init_struct(psr,TempoPriors,npsr,numFitJumps,fitcount,systemcount,incEQUAD, numCoeff, TempoFitNums,TempoJumpNums,numFlags, ndims, incRED,incDM, doTimeMargin,doJumpMargin, doLinearFit);
+	MNStruct *MNS = init_struct(psr,TempoPriors,npsr,numFitJumps,fitcount,systemcount,incEQUAD, numCoeff, TempoFitNums,TempoJumpNums,numFlags, ndims, incRED,incDM, doTimeMargin,doJumpMargin, doLinearFit, SampleFreq);
 	
 	
 	context=MNS;
@@ -1425,7 +1430,7 @@ extern "C" int graphicalInterface(int argc, char **argv,
 			}
 			
 			
-			if(incEFAC==1 || incEQUAD==1 && incEFAC!=2 && incEQUAD!=2){
+			if(systemcount==1 || incEQUAD==1 && systemcount<2 && incEQUAD!=2){
 			
 				printf("Fitting for only one EFAC or EQUAD: Pre computing Matrices.\n");
 				double **UM=new double*[Gsize];
@@ -1667,9 +1672,9 @@ extern "C" int graphicalInterface(int argc, char **argv,
                         }
 
                         int Gsize=psr[0].nobs-numToMargin;
-                        double **TNDM=new double*[psr[0].nobs];
+                        double **TNGDM=new double*[psr[0].nobs];
                         for(int i=0;i<psr[0].nobs;i++){
-                                TNDM[i]=new double[numToMargin];
+                                TNGDM[i]=new double[numToMargin];
                         }
 
                         double **TNGM=new double*[psr[0].nobs];
@@ -1678,10 +1683,10 @@ extern "C" int graphicalInterface(int argc, char **argv,
 
                         }
 
-                        getCustomDMatrix(psr, FitList, TNDM, TempoFitNums, TempoJumpNums, Dpriors, incDM, ((MNStruct *)context)->numFitTiming, ((MNStruct *)context)->numFitJumps);
+                        getCustomDMatrix(psr, FitList, TNGDM, TempoFitNums, TempoJumpNums, Dpriors, incDM, ((MNStruct *)context)->numFitTiming, ((MNStruct *)context)->numFitJumps);
                         //Get DMatrix for marginalisation, using T2 values if not custom or max, max if not custom, or else custom position.
                         //getMarginDMatrix(psr, fitcount, numFitJumps, numToMargin, TempoFitNums, TempoJumpNums, Dpriors, doJumpMargin, doTimeMargin, TNDM, 0);
-                        makeGDesign(psr, Gsize, numToMargin, TNGM, TNDM);
+                        makeGDesign(psr, Gsize, numToMargin, TNGM, TNGDM);
 
                         update_MNPriors(MNS,Dpriors, TempoPriors,2);
 			update_MNGDdata(MNS, numFitJumps+fitcount, TNDM, Gsize,TNGM);
@@ -1779,7 +1784,7 @@ extern "C" int graphicalInterface(int argc, char **argv,
 			}
 			
 			
-
+//			printf("incRED: %i \n",incRED);
 			if(incRED==0 && incDM ==0){
 
 #ifdef HAVE_CULA
@@ -1788,7 +1793,7 @@ extern "C" int graphicalInterface(int argc, char **argv,
 				nested::run(IS,mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, WhiteMarginLogLike, dumper, context);
 #endif /* HAVE_CULA */
 			}
-			else if(incRED==1 || incRED ==3 || incDM==1 || incDM==3){
+			else if(incRED==1 || incDM==1 ){
 #ifdef HAVE_CULA
 				nested::run(IS,mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, vHRedMarginGPULogLike, dumper, context);
 #else
@@ -1799,7 +1804,7 @@ extern "C" int graphicalInterface(int argc, char **argv,
 #ifdef HAVE_CULA
 				nested::run(IS,mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, LRedMarginGPULogLike, dumper, context);
 #else
-				nested::run(IS,mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, LRedMarginLogLike, dumper, context);
+ 				nested::run(IS,mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, LRedMarginLogLike, dumper, context);
 #endif /* HAVE_CULA */
 			}
 
