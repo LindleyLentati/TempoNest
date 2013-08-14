@@ -48,8 +48,10 @@ void setupparams(char *root,
 		double *AmpPrior,
 		double *DMAlphaPrior,
 		double *DMAmpPrior,
-		int &numCoeff,
-		double *CoeffPrior,
+		int &numRedCoeff,
+		int &numDMCoeff,
+		double *RedCoeffPrior,
+		double *DMCoeffPrior,
 		double &FourierSig){
 
     //General parameters:
@@ -109,10 +111,14 @@ void setupparams(char *root,
     AmpPrior[0]=-20;
     AmpPrior[1]=-10;
 
-    numCoeff=10;
+    numRedCoeff=10;
+    numDMCoeff=10;
 
-    CoeffPrior[0]=-10;
-    CoeffPrior[1]=0;
+    RedCoeffPrior[0]=-10;
+    RedCoeffPrior[1]=0;
+
+    DMCoeffPrior[0]=-10;
+    DMCoeffPrior[1]=0;
     
     FourierSig = 5;
 
@@ -162,9 +168,12 @@ void setupparams(char *root,
         parameters.readInto(AlphaPrior[1], "AlphaPrior[1]", AlphaPrior[1]);
         parameters.readInto(AmpPrior[0], "AmpPrior[0]", AmpPrior[0]);
         parameters.readInto(AmpPrior[1], "AmpPrior[1]", AmpPrior[1]);
-        parameters.readInto(numCoeff, "numCoeff", numCoeff);
-        parameters.readInto(CoeffPrior[0], "CoeffPrior[0]", CoeffPrior[0]);
-        parameters.readInto(CoeffPrior[1], "CoeffPrior[1]", CoeffPrior[1]);
+        parameters.readInto(numRedCoeff, "numRedCoeff", numRedCoeff);
+	parameters.readInto(numDMCoeff, "numDMCoeff", numDMCoeff);
+        parameters.readInto(RedCoeffPrior[0], "RedCoeffPrior[0]", RedCoeffPrior[0]);
+        parameters.readInto(RedCoeffPrior[1], "RedCoeffPrior[1]", RedCoeffPrior[1]);
+        parameters.readInto(DMCoeffPrior[0], "DMCoeffPrior[0]", DMCoeffPrior[0]);
+        parameters.readInto(DMCoeffPrior[1], "DMCoeffPrior[1]", DMCoeffPrior[1]);
         parameters.readInto(DMAlphaPrior[0], "DMAlphaPrior[0]", DMAlphaPrior[0]);
         parameters.readInto(DMAlphaPrior[1], "DMAlphaPrior[1]", DMAlphaPrior[1]);
         parameters.readInto(DMAmpPrior[0], "DMAmpPrior[0]", DMAmpPrior[0]);
@@ -262,17 +271,25 @@ void setTNPriors(double **Dpriors, long double **TempoPriors, int TPsize, int DP
 }
 
 
-void setFrequencies(double *SampleFreq, int numfreqs){
+void setFrequencies(double *SampleFreq, int numRedfreqs, int numDMfreqs){
 
 //This function sets or overwrites the default values for the sampled frequencies sent to multinest
 
 
-
-	for(int i =0;i < numfreqs; i++){	
-		SampleFreq[i]=i+1;
+	int startpoint=0;
+	for(int i =0;i < numRedfreqs; i++){	
+		SampleFreq[startpoint+i]=i+1;
+		//printf("making freqs %i %g", startpoint+i, SampleFreq[startpoint+i]);
+	
 	}
+	startpoint=startpoint+numRedfreqs;
+        for(int i =0;i < numDMfreqs; i++){
+                SampleFreq[startpoint+i]=i+1;
+		//printf("making freqs %i %g", startpoint+i, SampleFreq[startpoint+i]);
+        }
 
-	for(int i =0;i<numfreqs; i++){	
+	startpoint=0;
+	for(int i =0;i<numRedfreqs; i++){	
 
 
 	    // Use a configfile, if we can, to overwrite the defaults set in this file.
@@ -302,4 +319,35 @@ void setFrequencies(double *SampleFreq, int numfreqs){
 
 	}
 
+
+	startpoint=startpoint+numRedfreqs;
+	for(int i =0;i<numDMfreqs; i++){	
+
+
+	    // Use a configfile, if we can, to overwrite the defaults set in this file.
+	    try {
+		string strBuf;
+		strBuf = string("defaultparameters.conf");
+		ConfigFile parameters(strBuf);
+
+		/* We can check whether a value is not set in the file by doing
+		 * if(! parameters.readInto(variable, "name", default)) {
+		 *   printf("WARNING");
+		 * }
+		 *
+		 * At the moment I was too lazy to print warning messages, and the
+		 * default value from this file is used in that case.
+		 *
+		 * Note: the timing model parameters are not done implemented yet
+		 */
+		char buffer [50];
+		int n;
+  		n=sprintf (buffer, "SampleFreq[%i]", startpoint+i);
+		parameters.readInto(SampleFreq[startpoint+i], buffer, SampleFreq[startpoint+i]);
+
+	    } catch(ConfigFile::file_not_found oError) {
+		printf("WARNING: parameters file '%s' not found. Using defaults.\n", oError.filename.c_str());
+	    } // try
+
+	}
 }

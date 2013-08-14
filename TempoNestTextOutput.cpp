@@ -193,7 +193,7 @@ void TNtextOutput(pulsar *psr, int npsr, int newpar, long double *Tempo2Fit, voi
 	}
 	int pcount=1;
 	int fitcount=0;
-	 if(((MNStruct *)context)->Dpriors[0][0] != ((MNStruct *)context)->Dpriors[0][1])fitcount++;
+	 if(((MNStruct *)context)->LDpriors[0][2]==0)fitcount++;
 
       printf("\n\n");
       printf("PARAMETER          Tempo2-Fit              TempoNest-Fit          Uncertainty   Difference   Fit\n");
@@ -289,25 +289,32 @@ void TNtextOutput(pulsar *psr, int npsr, int newpar, long double *Tempo2Fit, voi
 		    }
 		  if (i==param_raj && psr[p].eclCoord==0)
 		    {
+	                char hmsstr[100];
+        	        longturn_hms(psr[p].param[param_raj].val[0]/(2*M_PI), hmsstr);
+                	strcpy(psr[p].rajStrPost,hmsstr);
+
 		      printf("%-15.15s %-25.25s %-25.25s %-13.5g %-13.5g\n","RAJ (hms)",psr[p].rajStrPre,psr[p].rajStrPost,
 			     (double)psr[p].param[i].err[k]*12.0*60.0*60.0/M_PI,
 			     ((double)psr[p].param[i].val[k]-(double)Tempo2Fit[pcount])*12.0*60.0*60.0/M_PI);
 		    }
 		  else if (i==param_decj && psr[p].eclCoord==0)
 		    {
+			char hmsstr[100];
+        	        longturn_dms(psr[p].param[param_decj].val[0]/(2*M_PI), hmsstr);
+	                strcpy(psr[p].decjStrPost,hmsstr);
+
 		      printf("%-15.15s %-25.25s %-25.25s %-13.5g %-13.5g\n","DECJ (dms)",psr[p].decjStrPre,psr[p].decjStrPost,
 			     (double)psr[p].param[i].err[k]*180.0*60.0*60.0/M_PI,
 			     ((double)psr[p].param[i].val[k]-(double)Tempo2Fit[pcount])*180.0*60.0*60.0/M_PI);
 		    }
 		
-			if(((MNStruct *)context)->Dpriors[pcount][0] != ((MNStruct *)context)->Dpriors[pcount][1])fitcount++;
+			if(((MNStruct *)context)->LDpriors[pcount][2]==0)fitcount++;
 			pcount++;
 		}
 	    }
 	}      
       printf("---------------------------------------------------------------------------------------------------\n");
       if (psr->rescaleErrChisq == 1 && psr->fitMode==1)
-
       if (psr[p].nconstraints>0){
 	printf("\nCONSTRAINTS:\n");
 	for (i=0; i < psr[p].nconstraints; i++){
@@ -323,17 +330,19 @@ void TNtextOutput(pulsar *psr, int npsr, int newpar, long double *Tempo2Fit, voi
 	  if (psr[p].fitJump[i]==1) {
 		if(doJumpMargin==0){
 			printf("Y\n");
+			fitcount++;
 		}
 		else if(doJumpMargin==1){
 			printf("M\n");
 		}
 		pcount++;
+		
 	  }
 	  else printf("N\n");
 	}
       }
   	
-	if(incRED != 0 || ((MNStruct *)context)->numFitEFAC > 0 || ((MNStruct *)context)->numFitEQUAD > 0){
+	if(incRED != 0 || ((MNStruct *)context)->incDM !=0 ||((MNStruct *)context)->numFitEFAC > 0 || ((MNStruct *)context)->numFitEQUAD > 0){
 	 	printf("------------------------------------------------------------------------------\n");
 		printf("Stochastic Parameters:\n");
 		if(((MNStruct *)context)->numFitEFAC == 1){
@@ -352,6 +361,14 @@ void TNtextOutput(pulsar *psr, int npsr, int newpar, long double *Tempo2Fit, voi
 			printf("Global EQUAD: %g +/- %g\n", paramlist[fitcount],paramlist[fitcount+ndim]);
 			fitcount++;
 		}
+		else if(((MNStruct *)context)->numFitEQUAD > 1){
+                        int system=1;
+                        for(int i =0;i<((MNStruct *)context)->numFitEFAC; i++){
+                                printf("EQUAD for system %i: %g +/- %g\n", system,paramlist[fitcount],paramlist[fitcount+ndim]);
+                                fitcount++;
+                                system++;
+                        }
+                }
 		if(incRED ==1 || incRED ==3){
 			printf("Power Law Red Noise Model:\n");
 			printf("Log Amplitude: %g +/- %g\n",paramlist[fitcount],paramlist[fitcount+ndim]);
@@ -376,9 +393,9 @@ void TNtextOutput(pulsar *psr, int npsr, int newpar, long double *Tempo2Fit, voi
 			fitcount++;
 		}
 		else if(((MNStruct *)context)->incDM==2){	
-			printf("Model Independant DM, %i Coefficients used:\n",((MNStruct *)context)->numFitRedCoeff);
+			printf("Model Independant DM, %i Coefficients used:\n",((MNStruct *)context)->numFitDMCoeff);
 			int coeff=1;
-			for(int i =0; i < ((MNStruct *)context)->numFitRedCoeff; i++){
+			for(int i =0; i < ((MNStruct *)context)->numFitDMCoeff; i++){
 				printf("Log Amplitude Coefficient %i: %g +/- %g\n", coeff,paramlist[fitcount],paramlist[fitcount+ndim]);	
 				fitcount++;
 				coeff++;

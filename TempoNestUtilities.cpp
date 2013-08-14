@@ -78,7 +78,7 @@ void readsummary(pulsar *psr, std::string longname, int ndim, void *context, lon
 	printf("number of lines %i \n",number_of_lines);
 	checkfile.close();
 	
-	if(number_of_lines == 2){
+	if(number_of_lines < 4){
 		std::ifstream summaryfile;
 		std::string fname = longname+"summary.txt";
 		summaryfile.open(fname.c_str());
@@ -94,7 +94,6 @@ void readsummary(pulsar *psr, std::string longname, int ndim, void *context, lon
 
 			int numlongparams=((MNStruct *)context)->numFitTiming+((MNStruct *)context)->numFitJumps;
 			long double *LDP = new long double[numlongparams];
-
 			pcount=0;
 			fitcount=0;
 			for(int j=0;j<((MNStruct *)context)->numFitTiming;j++){
@@ -303,7 +302,7 @@ void readsummary(pulsar *psr, std::string longname, int ndim, void *context, lon
 				rs << psr->obsn[i].toaErr*pow(10.0,-6);
 				resfile << rs.str();
 				resfile << "\n";		
-				printf("DMCorr Res: %i %g \n", i,(double)psr->obsn[i].residual);
+// 				printf("DMCorr Res: %i %g \n", i,(double)psr->obsn[i].residual);
 				FITfuncs(psr[0].obsn[i].bat - psr[0].param[param_pepoch].val[0], pdParamDeriv, numtofit, psr, i,0);
 				for(int j=0; j<numtofit; j++) {
 					std::stringstream ss;
@@ -388,8 +387,8 @@ void getCustomDMatrix(pulsar *pulse, int *MarginList, double **TNDM, int **Tempo
 				//	printf("%i %i %22.20e \n", i,j,pdParamDeriv[j]);
 			} 
 		} 
-
-		if(incDM == 2 || incDM ==3){	
+		int doDMMargin=0;
+		if(incDM == 2 || incDM ==3 && doDMMargin == 1){	
                 double DMKappa=2.410*pow(10.0,-16);
                 	for(int i=0; i < pulse->nobs; i++) {
                                 TNDM[i][numToMargin]=((double)(pulse[0].obsn[i].bat-pulse[0].param[param_pepoch].val[0]))/(DMKappa*pow((double)pulse[0].obsn[i].freqSSB,2));

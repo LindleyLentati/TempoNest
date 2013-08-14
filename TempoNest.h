@@ -46,6 +46,7 @@ typedef struct {
 	int numFitEFAC;
 	int numFitEQUAD;
 	int numFitRedCoeff;
+	int numFitDMCoeff;
 	double *sampleFreq;
 	int numdims;
 	int incRED;
@@ -55,6 +56,7 @@ typedef struct {
 	int **TempoFitNums;
 	int *TempoJumpNums;
 	int *sysFlags;
+	int systemcount;
 	int TimeMargin;
 	int JumpMargin;
 	std::string *name;
@@ -147,9 +149,11 @@ void setupparams(char *Type,
 		double *AmpPrior,
 		double *DMAlphaPrior,
 		double *DMAmpPrior,
-		int &numCoeff,
-		double *CoeffPrior,
+		int &numRedCoeff,
+		int &numDMCoeff,
+		double *RedCoeffPrior,
+                double *DMCoeffPrior,
 		double &FourierSig);
 
 void setTNPriors(double **Dpriors, long double **TempoPriors, int TPsize, int DPsize);
-void setFrequencies(double *samplefreqs, int numfreqs);
+void setFrequencies(double *samplefreqs, int numRedfreqs, int numDMfreqs);
