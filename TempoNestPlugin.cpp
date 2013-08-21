@@ -93,7 +93,7 @@ void fastformBatsAll(pulsar *psr,int npsr)
 
 }
 
-MNStruct* init_struct(pulsar *pulseval,	 long double **LDpriorsval, int numberpulsarsval,int numFitJumpsval,int numFitTimingval, int systemcountval, int numFitEFACval, int numFitEQUADval, int numFitRedCoeffval, int numFitDMCoeffval, int **TempoFitNumsval,int *TempoJumpNumsval, int *sysFlagsval, int numdimsval, int incREDval, int incDMval, int TimeMarginVal, int JumpMarginVal, int doLinearVal, double *SampleFreqsVal)
+MNStruct* init_struct(pulsar *pulseval,	 long double **LDpriorsval, int numberpulsarsval,int numFitJumpsval,int numFitTimingval, int systemcountval, int numFitEFACval, int numFitEQUADval, int numFitRedCoeffval, int numFitDMCoeffval, int **TempoFitNumsval,int *TempoJumpNumsval, int *sysFlagsval, int numdimsval, int incREDval, int incDMval, int incFloatDMval, int incFloatRedval, int TimeMarginVal, int JumpMarginVal, int doLinearVal, double *SampleFreqsVal)
 {
     MNStruct* MNS = (MNStruct*)malloc(sizeof(MNStruct));
 
@@ -113,6 +113,8 @@ MNStruct* init_struct(pulsar *pulseval,	 long double **LDpriorsval, int numberpu
 	MNS->numdims=numdimsval;
 	MNS->incRED=incREDval;
 	MNS->incDM=incDMval;
+	MNS->incFloatRed=incFloatRedval;
+	MNS->incFloatDM=incFloatDMval;
 	MNS->TimeMargin=TimeMarginVal;
 	MNS->JumpMargin=JumpMarginVal;
 	MNS->doLinear=doLinearVal;
@@ -723,6 +725,8 @@ extern "C" int graphicalInterface(int argc, char **argv,
 	int incEQUAD;
 	int incRED;
 	int incDM;
+	int incFloatRed=0;
+	int incFloatDM=0;
 	int doTimeMargin;
 	int doJumpMargin;
 	double FitSig;
@@ -737,6 +741,8 @@ extern "C" int graphicalInterface(int argc, char **argv,
 	double *AmpPrior;
 	double *DMAlphaPrior;
 	double *DMAmpPrior;
+	double *DMFreqPrior;
+	double *RedFreqPrior;
 	int numRedCoeff;
 	int numDMCoeff;
 	double *RedCoeffPrior;
@@ -755,9 +761,12 @@ extern "C" int graphicalInterface(int argc, char **argv,
 	DMAmpPrior=new double[2];
 	RedCoeffPrior=new double[2];
 	DMCoeffPrior=new double[2];
+	RedFreqPrior=new double[2];
+	DMFreqPrior=new double[2];
 
-
-	setupparams(Type, numTempo2its, doLinearFit, doMax, incEFAC, incEQUAD, incRED, incDM, doTimeMargin, doJumpMargin, FitSig, customPriors, EFACPrior, EQUADPrior, AlphaPrior, AmpPrior, DMAlphaPrior, DMAmpPrior, numRedCoeff, numDMCoeff, RedCoeffPrior, DMCoeffPrior, FourierSig); 
+	setupparams(Type, numTempo2its, doLinearFit, doMax, incEFAC, incEQUAD, incRED, incDM, doTimeMargin, doJumpMargin, FitSig, customPriors, EFACPrior, EQUADPrior, AlphaPrior, AmpPrior, DMAlphaPrior, DMAmpPrior, numRedCoeff, numDMCoeff, RedCoeffPrior, DMCoeffPrior, incFloatDM, DMFreqPrior, incFloatRed, RedFreqPrior, FourierSig); 
+	
+	
 	if(incRED < 2)numRedCoeff=0;
 	if(incDM < 2)numDMCoeff=0;	
 	SampleFreq=new double[numRedCoeff+numDMCoeff];
@@ -879,7 +888,9 @@ extern "C" int graphicalInterface(int argc, char **argv,
 	if(incDM==3)DMdims=2;
 	if(incDM==4)DMdims=3*numDMCoeff;
 	if(incDM==5)DMdims=2*numDMCoeff+2;
-        
+	if(incFloatDM>0)DMdims+=2*incFloatDM;
+    if(incFloatRed>0)Reddims+=2*incFloatRed;
+    
 	//printf("DMModel flag: %i \n",psr[0].param[param_dmmodel].fitFlag[0]);
 	if(psr[0].param[param_dmmodel].fitFlag[0]==1){
 	//	printf("Fitting for DMModel using %i structure functions \n",psr[0].dmoffsDMnum);
@@ -1020,7 +1031,8 @@ extern "C" int graphicalInterface(int argc, char **argv,
     if(incDM == 1){printf("Including DM : Power Law Model\n");}
     if(incDM == 2){printf("Including DM : Model Independant - Fitting %i Coefficients\n", numDMCoeff);}
     if(incDM ==3){printf("Including DM: Power Law Model to %i Coefficients \n", numDMCoeff);}
-	
+	if(incFloatDM==1){printf("Including Floating DM power spectrum coefficient\n");}
+    if(incFloatRed==1){printf("Including Floating Red noise power spectrum coefficient\n");}
 	
 	int fitcount=0;
 	printf("fitting for: Arbitrary Phase \n");
@@ -1132,7 +1144,7 @@ extern "C" int graphicalInterface(int argc, char **argv,
 	setupMNparams(IS, mmodal, ceff, nlive, efr);
 
 
-	double tol = 0.1;				// tol, defines the stopping criteria
+	double tol = 0.5;				// tol, defines the stopping criteria
 	int ndims = numFitJumps+fitcount+numEFAC+numEQUAD+Reddims+DMdims+DMModeldims; // dimensionality (no. of free parameters)
 	int nPar = ndims;					// total no. of parameters including free & derived parameters
 	int nClsPar = 2;				// no. of parameters to do mode separation on
@@ -1152,7 +1164,7 @@ extern "C" int graphicalInterface(int argc, char **argv,
 	int maxiter = 0;				// max no. of iterations, a non-positive value means infinity. MultiNest will terminate if either it has done max no. of iterations or convergence criterion (defined through tol) has been satisfied
 	void *context = 0;				// not required by MultiNest, any additional information user wants to pass
 	//printf("Here \n");
-	MNStruct *MNS = init_struct(psr,TempoPriors,npsr,numFitJumps,fitcount,systemcount,numEFAC,numEQUAD, numRedCoeff, numDMCoeff, TempoFitNums,TempoJumpNums,numFlags, ndims, incRED,incDM, doTimeMargin,doJumpMargin, doLinearFit, SampleFreq);
+	MNStruct *MNS = init_struct(psr,TempoPriors,npsr,numFitJumps,fitcount,systemcount,numEFAC,numEQUAD, numRedCoeff, numDMCoeff, TempoFitNums,TempoJumpNums,numFlags, ndims, incRED,incDM, incFloatDM,incFloatRed, doTimeMargin,doJumpMargin, doLinearFit, SampleFreq);
 	
 	
 	context=MNS;
@@ -1273,7 +1285,7 @@ extern "C" int graphicalInterface(int argc, char **argv,
 				pcount++;
 			}
 		}	
-        else if(incRED==4){
+		else if(incRED==4){
 
             for(int i =0;i < 2*numRedCoeff;i++){
                     Dpriors[pcount][0]=-FourierSig*psr[p].rmsPre*pow(10.0,-6);
@@ -1305,6 +1317,19 @@ extern "C" int graphicalInterface(int argc, char **argv,
             pcount++;
         }	
         
+        if(incFloatRed>0){
+        	for(int i =0; i < incFloatRed; i++){
+		        Dpriors[pcount][0]=RedFreqPrior[0];
+		        Dpriors[pcount][1]=RedFreqPrior[1];
+		        pcount++;
+		        Dpriors[pcount][0]=RedCoeffPrior[0];
+		        Dpriors[pcount][1]=RedCoeffPrior[1];
+		        pcount++;
+		    }
+		        
+        }
+        
+        
 		if(incDM==1 || incDM==3){
 			Dpriors[pcount][0]=DMAmpPrior[0];
 			Dpriors[pcount][1]=DMAmpPrior[1];
@@ -1313,14 +1338,23 @@ extern "C" int graphicalInterface(int argc, char **argv,
 			Dpriors[pcount][1]=DMAlphaPrior[1];
 			pcount++;
 		}
-                else if(incDM==2){
-                        for(int i =0; i< numDMCoeff; i++){
-                                Dpriors[pcount][0]=DMCoeffPrior[0];
-                                Dpriors[pcount][1]=DMCoeffPrior[1];
-                                pcount++;
-                        }
+        else if(incDM==2){
+                for(int i =0; i< numDMCoeff; i++){
+                        Dpriors[pcount][0]=DMCoeffPrior[0];
+                        Dpriors[pcount][1]=DMCoeffPrior[1];
+                        pcount++;
                 }
-
+        }
+        if(incFloatDM>0){
+        	for(int i =0; i < incFloatDM; i++){
+		        Dpriors[pcount][0]=DMFreqPrior[0];
+		        Dpriors[pcount][1]=DMFreqPrior[1];
+		        pcount++;
+		        Dpriors[pcount][0]=DMCoeffPrior[0];
+		        Dpriors[pcount][1]=DMCoeffPrior[1];
+		        pcount++;
+		    }
+        }
 	if(fitDMModel==1){
 		for(int i=0;i<psr[0].dmoffsDMnum;i++){
 			Dpriors[pcount][0]=psr[0].dmoffsDM[i] - FitSig*psr[0].dmoffsDM_error[i];
@@ -1602,6 +1636,18 @@ extern "C" int graphicalInterface(int argc, char **argv,
             Dpriors[pcount][1]=AlphaPrior[1];
             pcount++;
         }	
+        if(incFloatRed>0){
+        	for(int i =0; i < incFloatRed; i++){
+		        Dpriors[pcount][0]=RedFreqPrior[0];
+		        Dpriors[pcount][1]=RedFreqPrior[1];
+		        pcount++;
+		        Dpriors[pcount][0]=RedCoeffPrior[0];
+		        Dpriors[pcount][1]=RedCoeffPrior[1];
+		        pcount++;
+		    }
+		        
+        }
+        
         		
 		if(incDM==1 || incDM==3){
 			Dpriors[pcount][0]=DMAmpPrior[0];
@@ -1618,7 +1664,16 @@ extern "C" int graphicalInterface(int argc, char **argv,
 				pcount++;
 			}
 		}
-
+        if(incFloatDM>0){
+        	for(int i =0; i < incFloatDM; i++){
+		        Dpriors[pcount][0]=DMFreqPrior[0];
+		        Dpriors[pcount][1]=DMFreqPrior[1];
+		        pcount++;
+		        Dpriors[pcount][0]=DMCoeffPrior[0];
+		        Dpriors[pcount][1]=DMCoeffPrior[1];
+		        pcount++;
+		    }
+        }
 		int linearNum=numFitJumps+fitcount;
 		double **TNDM=new double*[psr[0].nobs];
 		for(int i=0;i<psr[0].nobs;i++){

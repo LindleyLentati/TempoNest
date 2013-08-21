@@ -52,6 +52,10 @@ void setupparams(char *root,
 		int &numDMCoeff,
 		double *RedCoeffPrior,
 		double *DMCoeffPrior,
+		int &FloatingDM,
+		double *DMFreqPrior,
+		int &FloatingRed,
+		double *RedFreqPrior,
 		double &FourierSig){
 
     //General parameters:
@@ -128,6 +132,14 @@ void setupparams(char *root,
 
     DMAmpPrior[0]=-18;
     DMAmpPrior[1]=-8;
+    
+	FloatingDM = 0;
+	DMFreqPrior[0]=1;
+	DMFreqPrior[1]=100;
+	
+	FloatingRed = 0;
+	RedFreqPrior[0]=1;
+	RedFreqPrior[1]=100;
 
 
     // Use a configfile, if we can, to overwrite the defaults set in this file.
@@ -155,7 +167,7 @@ void setupparams(char *root,
         parameters.readInto(incEFAC, "incEFAC", incEFAC);
         parameters.readInto(incEQUAD, "incEQUAD", incEQUAD);
         parameters.readInto(incRED, "incRED", incRED);
-	parameters.readInto(incDM, "incDM", incDM);
+		parameters.readInto(incDM, "incDM", incDM);
         parameters.readInto(doTimeMargin, "doTimeMargin", doTimeMargin);
         parameters.readInto(doJumpMargin, "doJumpMargin", doJumpMargin);
         parameters.readInto(customPriors, "customPriors", customPriors);
@@ -169,7 +181,7 @@ void setupparams(char *root,
         parameters.readInto(AmpPrior[0], "AmpPrior[0]", AmpPrior[0]);
         parameters.readInto(AmpPrior[1], "AmpPrior[1]", AmpPrior[1]);
         parameters.readInto(numRedCoeff, "numRedCoeff", numRedCoeff);
-	parameters.readInto(numDMCoeff, "numDMCoeff", numDMCoeff);
+		parameters.readInto(numDMCoeff, "numDMCoeff", numDMCoeff);
         parameters.readInto(RedCoeffPrior[0], "RedCoeffPrior[0]", RedCoeffPrior[0]);
         parameters.readInto(RedCoeffPrior[1], "RedCoeffPrior[1]", RedCoeffPrior[1]);
         parameters.readInto(DMCoeffPrior[0], "DMCoeffPrior[0]", DMCoeffPrior[0]);
@@ -178,6 +190,15 @@ void setupparams(char *root,
         parameters.readInto(DMAlphaPrior[1], "DMAlphaPrior[1]", DMAlphaPrior[1]);
         parameters.readInto(DMAmpPrior[0], "DMAmpPrior[0]", DMAmpPrior[0]);
         parameters.readInto(DMAmpPrior[1], "DMAmpPrior[1]", DMAmpPrior[1]);
+        
+        parameters.readInto(FloatingDM, "FloatingDM", FloatingDM);
+        parameters.readInto(DMFreqPrior[0], "DMFreqPrior[0]", DMFreqPrior[0]);
+        parameters.readInto(DMFreqPrior[1], "DMFreqPrior[1]", DMFreqPrior[1]);
+        parameters.readInto(FloatingRed, "FloatingRed", FloatingRed);
+        parameters.readInto(RedFreqPrior[0], "RedFreqPrior[0]", RedFreqPrior[0]);
+        parameters.readInto(RedFreqPrior[1], "RedFreqPrior[1]", RedFreqPrior[1]);
+
+
         parameters.readInto(FourierSig, "FourierSig", FourierSig);
 
     } catch(ConfigFile::file_not_found oError) {

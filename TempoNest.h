@@ -51,6 +51,8 @@ typedef struct {
 	int numdims;
 	int incRED;
 	int incDM;
+	int incFloatDM;
+	int incFloatRed;
 	int Gsize;
 	int Dsize;
 	int **TempoFitNums;
@@ -131,8 +133,8 @@ void makeStaticDiagGMatrix(pulsar *pulse, int Gsize, double **GMatrix, double** 
 void readsummary(pulsar *psr, std::string longname, int ndim, void *context, long double *Tempo2Fit, int incRED, int ndims, int MarginTime, int MarginJumps, int doLinear);
 
 void setupMNparams(int &IS, int &modal, int &ceff, int &nlive, double &efr);
-void setupparams(char *Type,
-		int &numTempo2its, 
+void setupparams(char *root,
+		int &numTempo2its,
 		int &doLinearFit, 
 		int &doMax,
 		int &incEFAC,
@@ -142,7 +144,7 @@ void setupparams(char *Type,
 		int &doTimeMargin,
 		int &doJumpMargin,
 		double &FitSig,
-		int &diffPriors,
+		int &customPriors,
 		double *EFACPrior,
 		double *EQUADPrior,
 		double *AlphaPrior,
@@ -152,7 +154,11 @@ void setupparams(char *Type,
 		int &numRedCoeff,
 		int &numDMCoeff,
 		double *RedCoeffPrior,
-                double *DMCoeffPrior,
+		double *DMCoeffPrior,
+		int &FloatingDM,
+		double *DMFreqPrior,
+		int &FloatingRed,
+		double *RedFreqPrior,
 		double &FourierSig);
 
 void setTNPriors(double **Dpriors, long double **TempoPriors, int TPsize, int DPsize);
