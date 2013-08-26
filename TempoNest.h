@@ -53,6 +53,8 @@ typedef struct {
 	int incDM;
 	int incFloatDM;
 	int incFloatRed;
+	int FloatDMstart;
+        int FloatRedstart;
 	int Gsize;
 	int Dsize;
 	int **TempoFitNums;

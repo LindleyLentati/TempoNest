@@ -1003,15 +1003,16 @@ void LRedMarginGPULogLike(double *Cube, int &ndim, int &npars, double &lnew, voi
 	int fitcount=0;
 	int reject=0;
 	for(int p=0;p<totdims;p++){
-	//	printf("DP: %i %g %g \n", p, ((MNStruct *)context)->Dpriors[p][0], ((MNStruct *)context)->Dpriors[p][1]);
+		//printf("DP: %i %g %g \n", p, ((MNStruct *)context)->Dpriors[p][0], ((MNStruct *)context)->Dpriors[p][1]);
 		if(((MNStruct *)context)->Dpriors[p][0] != ((MNStruct *)context)->Dpriors[p][1]){
-//			if(p ==134 || p == 136 || p ==138 ||p ==140 || p==142){
-//				((MNStruct *)context)->Dpriors[p][0] = Cube[pcount-2]+0.1;
-//				if(((MNStruct *)context)->Dpriors[p][0] > ((MNStruct *)context)->Dpriors[p][1]){reject=1;}
-//			}
+			if(((MNStruct *)context)->incFloatRed > 1 && p > ((MNStruct *)context)->FloatRedstart && (p-((MNStruct *)context)->FloatRedstart)%2 ==0 && p < ((MNStruct *)context)->FloatRedstart+2*((MNStruct *)context)->incFloatRed) {
+                        //printf("%i %i %i %i %i\n", p,((MNStruct *)context)->incFloatRed,((MNStruct *)context)->FloatRedstart,(p-((MNStruct *)context)->FloatRedstart)%2,((MNStruct *)context)->FloatRedstart+2*((MNStruct *)context)->incFloatRed);
+
+				((MNStruct *)context)->Dpriors[p][0] = Cube[pcount-2]+0.1;
+				if(((MNStruct *)context)->Dpriors[p][0] > ((MNStruct *)context)->Dpriors[p][1]){reject=1;}
+			}
 		Cube[pcount]=(((MNStruct *)context)->Dpriors[p][1]-((MNStruct *)context)->Dpriors[p][0])*Cube[pcount]+((MNStruct *)context)->Dpriors[p][0];
-//		if(p == 132 || p ==134 || p == 136 || p ==138 ||p ==140){printf("Current Cube %i %g \n", p, Cube[pcount]);}
-		//printf("Cube: %i %g %g %g \n", pcount, ((MNStruct *)context)->Dpriors[p][0], ((MNStruct *)context)->Dpriors[p][1], Cube[pcount]);
+		//printf("DP: %i %i %g %g %g \n", p, pcount, ((MNStruct *)context)->Dpriors[p][0], ((MNStruct *)context)->Dpriors[p][1], Cube[pcount]);
 		pcount++;
 		}
 	}
@@ -1288,17 +1289,35 @@ void LRedMarginGPULogLike(double *Cube, int &ndim, int &npars, double &lnew, voi
                  redamp=pow(10.0, redamp);
 
                 freqdet=0;
-                 for (int i=0; i<FitRedCoeff/2; i++){
+
+		for (int i=0; i<FitRedCoeff/2 - ((MNStruct *)context)->incFloatRed ; i++){
 
                         freqs[startpos+i]=(double)((MNStruct *)context)->sampleFreq[i]/maxtspan;
                         freqs[startpos+i+FitRedCoeff/2]=freqs[startpos+i];
-						//printf("Red Freq : %i %g \n", i,((MNStruct *)context)->sampleFreq[i]);
                         powercoeff[i]=redamp*redamp*pow((freqs[i]*365.25),-1.0*redindex)/(maxtspan*24*60*60);///(365.25*24*60*60)/4;
                         powercoeff[i+FitRedCoeff/2]=powercoeff[i];
                         freqdet=freqdet+2*log(powercoeff[i]);
-	//		printf("Reddet %i %g %g\n", i,powercoeff[i], freqdet);
 
-                 }
+
+		}
+
+                 for (int i=FitRedCoeff/2 - ((MNStruct *)context)->incFloatRed; i<FitRedCoeff/2; i++){
+                                //printf("Freq: %g \n", Cube[pcount]);
+                        freqs[startpos+i]=Cube[pcount]/maxtspan;
+                        freqs[startpos+i+FitRedCoeff/2]=freqs[startpos+i];
+                         pcount++;
+
+                        int pnum=pcount;
+                        double pc=Cube[pcount];
+                        pcount++;
+
+
+                        powercoeff[startpos+i]=pow(10.0,pc)/(maxtspan*24*60*60);///(365.25*24*60*60)/4;
+                        powercoeff[startpos+i+FitRedCoeff/2]=powercoeff[startpos+i];
+                        freqdet=freqdet+2*log(powercoeff[startpos+i]);
+
+                }
+
                 startpos=FitRedCoeff;
 
         }
@@ -1311,7 +1330,7 @@ void LRedMarginGPULogLike(double *Cube, int &ndim, int &npars, double &lnew, voi
                 for (int i=0; i<FitDMCoeff/2; i++){
                         int pnum=pcount;
                         double pc=Cube[pcount];
-                        freqs[startpos+i]=((MNStruct *)context)->sampleFreq[startpos/2+i]/maxtspan;
+                        freqs[startpos+i]=((MNStruct *)context)->sampleFreq[startpos/2 - ((MNStruct *)context)->incFloatRed+i]/maxtspan;
                         freqs[startpos+i+FitDMCoeff/2]=freqs[startpos+i];
 			//printf("DM Freq : %i %g \n", i,((MNStruct *)context)->sampleFreq[i]);
                         powercoeff[startpos+i]=pow(10.0,pc)/(maxtspan*24*60*60);///(365.25*24*60*60)/4;
@@ -1325,7 +1344,7 @@ void LRedMarginGPULogLike(double *Cube, int &ndim, int &npars, double &lnew, voi
                 for (int i=0; i<FitDMCoeff/2 - ((MNStruct *)context)->incFloatDM ; i++){
                         int pnum=pcount;
                         double pc=Cube[pcount];
-                        freqs[startpos+i]=((MNStruct *)context)->sampleFreq[startpos/2+i]/maxtspan;
+                        freqs[startpos+i]=((MNStruct *)context)->sampleFreq[startpos/2 - ((MNStruct *)context)->incFloatRed +i]/maxtspan;
                         freqs[startpos+i+FitDMCoeff/2]=freqs[startpos+i];
 			//printf("DM Freq : %i %g \n", i,((MNStruct *)context)->sampleFreq[i]);
                         powercoeff[startpos+i]=pow(10.0,pc)/(maxtspan*24*60*60);///(365.25*24*60*60)/4;
@@ -1377,7 +1396,8 @@ void LRedMarginGPULogLike(double *Cube, int &ndim, int &npars, double &lnew, voi
                 DMamp=pow(10.0, DMamp);
 // 		printf("DM: %g %g\n",DMamp,DMindex);
                  for (int i=0; i<FitDMCoeff/2; i++){
-                        freqs[startpos+i]=(double)((MNStruct *)context)->sampleFreq[startpos/2+i]/maxtspan;
+                        freqs[startpos+i]=(double)((MNStruct *)context)->sampleFreq[startpos/2- ((MNStruct *)context)->incFloatRed +i]/maxtspan;
+			//printf("%i %i %g\n", startpos+i,startpos/2- ((MNStruct *)context)->incFloatRed +i,(double)((MNStruct *)context)->sampleFreq[startpos/2- ((MNStruct *)context)->incFloatRed +i]);
                         freqs[startpos+i+FitDMCoeff/2]=freqs[startpos+i];
 
                         powercoeff[startpos+i]=DMamp*DMamp*pow((freqs[startpos+i]*365.25),-1.0*DMindex)/(maxtspan*24*60*60);///(365.25*24*60*60)/4;
@@ -1480,7 +1500,7 @@ void LRedMarginGPULogLike(double *Cube, int &ndim, int &npars, double &lnew, voi
 	delete[] freqs;
 	delete[] BATvec;
 	
-// 	printf("GPULike: %g %g %g %g %g %g\n",lnew,timelike, tdet, freqlike, jointdet, freqdet);
+ 	//printf("GPULike: %g %g %g %g %g %g\n",lnew,timelike, tdet, freqlike, jointdet, freqdet);
 //
 	// printf("CPULIKE: %g %g %g %g %g %g \n", lnew, jointdet,tdet,freqdet,timelike,freqlike);
 

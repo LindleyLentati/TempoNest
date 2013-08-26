@@ -384,18 +384,18 @@ void getCustomDMatrix(pulsar *pulse, int *MarginList, double **TNDM, int **Tempo
 			FITfuncs(pulse[0].obsn[i].bat - pulse[0].param[param_pepoch].val[0], pdParamDeriv, numToMargin, pulse, i,0);
 			for(int j=0; j<numToMargin; j++) {
 				TNDM[i][j]=pdParamDeriv[j];
-				//	printf("%i %i %22.20e \n", i,j,pdParamDeriv[j]);
+					//printf("Dmatrix: %i %i %22.20e \n", i,j,pdParamDeriv[j]);
 			} 
 		} 
-		int doDMMargin=0;
-		if(incDM == 2 || incDM ==3 && doDMMargin == 1){	
-                double DMKappa=2.410*pow(10.0,-16);
-                	for(int i=0; i < pulse->nobs; i++) {
-                                TNDM[i][numToMargin]=((double)(pulse[0].obsn[i].bat-pulse[0].param[param_pepoch].val[0]))/(DMKappa*pow((double)pulse[0].obsn[i].freqSSB,2));
-                               TNDM[i][numToMargin+1]=pow(((double)(pulse[0].obsn[i].bat-pulse[0].param[param_pepoch].val[0])),2)/(DMKappa*pow((double)pulse[0].obsn[i].freqSSB,2));
+//		int doDMMargin=0;
+//		if(incDM == 2 || incDM ==3 && doDMMargin == 1){	
+ //               double DMKappa=2.410*pow(10.0,-16);
+ //               	for(int i=0; i < pulse->nobs; i++) {
+ //                               TNDM[i][numToMargin]=((double)(pulse[0].obsn[i].bat-pulse[0].param[param_pepoch].val[0]))/(DMKappa*pow((double)pulse[0].obsn[i].freqSSB,2));
+ //                              TNDM[i][numToMargin+1]=pow(((double)(pulse[0].obsn[i].bat-pulse[0].param[param_pepoch].val[0])),2)/(DMKappa*pow((double)pulse[0].obsn[i].freqSSB,2));
                			//printf("DMbit %i %g %g \n", i,TNDM[i][numToMargin],TNDM[i][numToMargin+1]); 
-			}               
-		}
+////			}               
+//		}
 		//Now set fit flags back to how they were
 	
 		for (int p=1;p<TimetoFit;p++) {
@@ -619,7 +619,7 @@ void makeGDesign(pulsar *pulse, int &Gsize, int numtofit, double** staticGMatrix
 		for(int j=0;j<pulse->nobs;j++){
 // 			printf("h %i %i\n",i,j);
 			for(int k=0;k<pulse->nobs;k++){
-// 				printf("%i %i %i %g \n",i,j,k,U[j][k]);
+ 				//printf("U %i %i %i %i %g \n",pulse->nobs, numtofit, j,k,U[j][k]);
 				Umatrices[i][j][k]=U[j][k];
 				
 			}
@@ -655,7 +655,7 @@ void makeGDesign(pulsar *pulse, int &Gsize, int numtofit, double** staticGMatrix
 			for(int k=0;k<pulse->nobs;k++){
 				if(k>=numtofit){
 					staticGMatrix[Osum+j][Osum-Gsum+nfsum]=Umatrices[i][j][k];
-// 					printf("GBack %i %i %g \n",Osum+j,Osum-Gsum+nfsum,GBack[Osum+j][Osum-Gsum+nfsum]);
+ 					//printf("GBack %i %i %g \n",Osum+j,Osum-Gsum+nfsum,staticGMatrix[Osum+j][Osum-Gsum+nfsum]);
 					nfsum++;
 
 				}
@@ -738,6 +738,7 @@ void makeStaticDiagGMatrix(pulsar *pulse, int Gsize, double **GMatrix, double** 
 	for(int i=0;i< pulse->nobs;i++){
 		for(int j=0;j< Gsize; j++){
 			NG[i][j] = GMatrix[i][j]*Noise[i];
+
 		}
 	}
 
@@ -756,8 +757,10 @@ void makeStaticDiagGMatrix(pulsar *pulse, int Gsize, double **GMatrix, double** 
 	for(int i=0;i< Gsize;i++){
 			for(int j=0;j< pulse->nobs; j++){
 				GT[i][j]=GMatrix[j][i];
+				
 			}
 		}
+		
 		
 		
 	dgemm(VT, GT,GNMatrix,Gsize,Gsize, Gsize, pulse->nobs, 'N','N');

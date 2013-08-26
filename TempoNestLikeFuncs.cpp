@@ -2196,6 +2196,7 @@ void LRedMarginLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *
 		Noise=new double[((MNStruct *)context)->Gsize];
                 for(int o=0;o<((MNStruct *)context)->Gsize; o++){
                         Noise[o]=pow(EFAC[0],2)*((MNStruct *)context)->SVec[o] + EQUAD[0];
+                      //  printf("tdet: %i %g %g %g \n",o, EFAC[0],   EQUAD[0], ((MNStruct *)context)->SVec[o] );
                         tdet += log(Noise[o]);
                         Noise[o] = 1.0/Noise[o];
                 }
@@ -2408,7 +2409,7 @@ void LRedMarginLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *
                 DMamp=pow(10.0, DMamp);
 
                  for (int i=0; i<FitDMCoeff/2; i++){
-  			freqs[startpos+i]=(double)((MNStruct *)context)->sampleFreq[startpos/2+i]/maxtspan;
+  						freqs[startpos+i]=(double)((MNStruct *)context)->sampleFreq[startpos/2+i]/maxtspan;
                         freqs[startpos+i+FitDMCoeff/2]=freqs[startpos+i];
                         powercoeff[startpos+i]=DMamp*DMamp*pow((freqs[startpos+i]*365.25),-1.0*DMindex)/(maxtspan*24*60*60);///(365.25*24*60*60)/4;
                         powercoeff[startpos+i+FitDMCoeff/2]=powercoeff[startpos+i];
@@ -2543,7 +2544,7 @@ void LRedMarginLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *
 	}
 	delete[] GNG;
 	
-	//printf("CPUChisq: %g %g %g %g %g %g \n",lnew,jointdet,tdet,freqdet,timelike,freqlike);
+//	printf("CPUChisq: %g %g %g %g %g %g \n",lnew,jointdet,tdet,freqdet,timelike,freqlike);
 
 // 	if(isinf(lnew) || isinf(jointdet) || isinf(tdet) || isinf(freqdet) || isinf(timelike) || isinf(freqlike)){
  	//printf("Chisq: %g %g %g %g %g %g \n",lnew,jointdet,tdet,freqdet,timelike,freqlike);

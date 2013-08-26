@@ -68,6 +68,7 @@ AC_DEFUN([SWIN_LIB_CULA],
 
   if test $have_cula = no; then
     AC_TRY_LINK([#include <cula_status.h>],[culaInitialize();],
+
               have_cula=yes, have_cula=no)
   fi
 

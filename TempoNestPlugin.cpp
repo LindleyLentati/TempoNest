@@ -93,7 +93,7 @@ void fastformBatsAll(pulsar *psr,int npsr)
 
 }
 
-MNStruct* init_struct(pulsar *pulseval,	 long double **LDpriorsval, int numberpulsarsval,int numFitJumpsval,int numFitTimingval, int systemcountval, int numFitEFACval, int numFitEQUADval, int numFitRedCoeffval, int numFitDMCoeffval, int **TempoFitNumsval,int *TempoJumpNumsval, int *sysFlagsval, int numdimsval, int incREDval, int incDMval, int incFloatDMval, int incFloatRedval, int TimeMarginVal, int JumpMarginVal, int doLinearVal, double *SampleFreqsVal)
+MNStruct* init_struct(pulsar *pulseval,	 long double **LDpriorsval, int numberpulsarsval,int numFitJumpsval,int numFitTimingval, int systemcountval, int numFitEFACval, int numFitEQUADval, int numFitRedCoeffval, int numFitDMCoeffval, int **TempoFitNumsval,int *TempoJumpNumsval, int *sysFlagsval, int numdimsval, int incREDval, int incDMval, int incFloatDMval, int incFloatRedval, int DMFloatstartval, int RedFloatstartval, int TimeMarginVal, int JumpMarginVal, int doLinearVal, double *SampleFreqsVal)
 {
     MNStruct* MNS = (MNStruct*)malloc(sizeof(MNStruct));
 
@@ -115,6 +115,8 @@ MNStruct* init_struct(pulsar *pulseval,	 long double **LDpriorsval, int numberpu
 	MNS->incDM=incDMval;
 	MNS->incFloatRed=incFloatRedval;
 	MNS->incFloatDM=incFloatDMval;
+	MNS->FloatRedstart=RedFloatstartval;
+        MNS->FloatDMstart=DMFloatstartval;
 	MNS->TimeMargin=TimeMarginVal;
 	MNS->JumpMargin=JumpMarginVal;
 	MNS->doLinear=doLinearVal;
@@ -1164,7 +1166,11 @@ extern "C" int graphicalInterface(int argc, char **argv,
 	int maxiter = 0;				// max no. of iterations, a non-positive value means infinity. MultiNest will terminate if either it has done max no. of iterations or convergence criterion (defined through tol) has been satisfied
 	void *context = 0;				// not required by MultiNest, any additional information user wants to pass
 	//printf("Here \n");
-	MNStruct *MNS = init_struct(psr,TempoPriors,npsr,numFitJumps,fitcount,systemcount,numEFAC,numEQUAD, numRedCoeff, numDMCoeff, TempoFitNums,TempoJumpNums,numFlags, ndims, incRED,incDM, incFloatDM,incFloatRed, doTimeMargin,doJumpMargin, doLinearFit, SampleFreq);
+	
+	int FloatRedstart=numFitJumps+fitcount+numEFAC+numEQUAD+Reddims-incFloatRed*2;
+	int FloatDMstart=numFitJumps+fitcount+numEFAC+numEQUAD+Reddims+DMdims-incFloatDM*2;
+
+	MNStruct *MNS = init_struct(psr,TempoPriors,npsr,numFitJumps,fitcount,systemcount,numEFAC,numEQUAD, numRedCoeff, numDMCoeff, TempoFitNums,TempoJumpNums,numFlags, ndims, incRED,incDM, incFloatDM,incFloatRed, FloatDMstart, FloatRedstart, doTimeMargin,doJumpMargin, doLinearFit, SampleFreq);
 	
 	
 	context=MNS;
@@ -1365,17 +1371,16 @@ extern "C" int graphicalInterface(int argc, char **argv,
 	}
 
 		//printf("set up priors, pcount: %i \n",pcount);
-
+		
 		int MarginDMQuad=0;	
 		numToMargin=0;
-		if(incDM == 2 || incDM == 3 || incDM == 4 || incDM == 5 && MarginDMQuad == 1)numToMargin +=2;
+		//if(incDM == 2 || incDM == 3 || incDM == 4 || incDM == 5 && MarginDMQuad == 1)numToMargin +=2;
 		for(int i=0;i<((MNStruct *)context)->numFitTiming + ((MNStruct *)context)->numFitJumps;i++){
 			if(TempoPriors[i][2]==1){
 				numToMargin++;
 			}
 		}
 
-	
 		if(numToMargin>0 ){
 	
 			int *FitList=new int[ndims];
@@ -1383,7 +1388,7 @@ extern "C" int graphicalInterface(int argc, char **argv,
 				FitList[i]=0;
 			}
 			numToMargin=0;
-			if(incDM == 2 || incDM == 3 || incDM == 4 || incDM == 5 &&  MarginDMQuad == 1)numToMargin +=2;
+			//if(incDM == 2 || incDM == 3 || incDM == 4 || incDM == 5 &&  MarginDMQuad == 1)numToMargin +=2;
 			for(int i=0;i<((MNStruct *)context)->numFitTiming + ((MNStruct *)context)->numFitJumps;i++){
 				if(TempoPriors[i][2]==1){
 					FitList[i]=1;
@@ -1391,7 +1396,6 @@ extern "C" int graphicalInterface(int argc, char **argv,
 					numToMargin++;
 				}
 			}
-	
 			int Gsize=psr[0].nobs-numToMargin;
 			double **TNDM=new double*[psr[0].nobs];
 			for(int i=0;i<psr[0].nobs;i++){
@@ -1407,6 +1411,7 @@ extern "C" int graphicalInterface(int argc, char **argv,
 			getCustomDMatrix(psr, FitList, TNDM, TempoFitNums, TempoJumpNums, Dpriors, incDM, ((MNStruct *)context)->numFitTiming, ((MNStruct *)context)->numFitJumps);
 			//Get DMatrix for marginalisation, using T2 values if not custom or max, max if not custom, or else custom position.
 			//getMarginDMatrix(psr, fitcount, numFitJumps, numToMargin, TempoFitNums, TempoJumpNums, Dpriors, doJumpMargin, doTimeMargin, TNDM, 0);
+
 			makeGDesign(psr, Gsize, numToMargin, TNGM, TNDM);
 
 			update_MNPriors(MNS,Dpriors, TempoPriors,0);
@@ -1446,7 +1451,7 @@ extern "C" int graphicalInterface(int argc, char **argv,
 
 			printf("\n\n");
 			ndims=ndims-numToMargin;
-			if(incDM == 2 || incDM == 3 || incDM == 4 || incDM == 5)ndims +=2;
+			//if(incDM == 2 || incDM == 3 || incDM == 4 || incDM == 5 && MarginDMQuad == 1)ndims +=2;
 			nPar=ndims;
 
 			if(numEFAC==0 && numEQUAD==0){
@@ -1720,7 +1725,7 @@ extern "C" int graphicalInterface(int argc, char **argv,
 		//printf("set up priors, pcount: %i \n",pcount);
 		//
                 numToMargin=0;
-                if(incDM == 2 || incDM == 3 || incDM == 4 || incDM == 5)numToMargin +=2;
+             //   if(incDM == 2 || incDM == 3 || incDM == 4 || incDM == 5)numToMargin +=2;
                 for(int i=0;i<((MNStruct *)context)->numFitTiming + ((MNStruct *)context)->numFitJumps;i++){
                         if(TempoPriors[i][2]==1){
                                 numToMargin++;
@@ -1735,7 +1740,7 @@ extern "C" int graphicalInterface(int argc, char **argv,
                                 FitList[i]=0;
                         }
                         numToMargin=0;
-			if(incDM == 2 || incDM == 3 || incDM == 4 || incDM == 5)numToMargin +=2;
+		//	if(incDM == 2 || incDM == 3 || incDM == 4 || incDM == 5)numToMargin +=2;
                         for(int i=0;i<((MNStruct *)context)->numFitTiming + ((MNStruct *)context)->numFitJumps;i++){
                                 if(TempoPriors[i][2]==1){
                                         FitList[i]=1;
@@ -1785,7 +1790,7 @@ extern "C" int graphicalInterface(int argc, char **argv,
 #endif
 
 			ndims=ndims-numToMargin;
-            if(incDM == 2 || incDM == 3 || incDM == 4 || incDM == 5)ndims +=2;
+          //  if(incDM == 2 || incDM == 3 || incDM == 4 || incDM == 5)ndims +=2;
             nPar=ndims;
                         
             printPriors(psr, TempoPriors, Dpriors, numEFAC, numEQUAD, incRED, incDM, numRedCoeff, numDMCoeff, fitDMModel, longname);
