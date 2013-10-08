@@ -93,7 +93,7 @@ void fastformBatsAll(pulsar *psr,int npsr)
 
 }
 
-MNStruct* init_struct(pulsar *pulseval,	 long double **LDpriorsval, int numberpulsarsval,int numFitJumpsval,int numFitTimingval, int systemcountval, int numFitEFACval, int numFitEQUADval, int numFitRedCoeffval, int numFitDMCoeffval, int **TempoFitNumsval,int *TempoJumpNumsval, int *sysFlagsval, int numdimsval, int incREDval, int incDMval, int incFloatDMval, int incFloatRedval, int DMFloatstartval, int RedFloatstartval, int TimeMarginVal, int JumpMarginVal, int doLinearVal, double *SampleFreqsVal)
+MNStruct* init_struct(pulsar *pulseval,	 long double **LDpriorsval, int numberpulsarsval,int numFitJumpsval,int numFitTimingval, int systemcountval, int numFitEFACval, int numFitEQUADval, int numFitRedCoeffval, int numFitDMCoeffval,int numFitRedPLval, int numFitDMPLval, int **TempoFitNumsval,int *TempoJumpNumsval, int *sysFlagsval, int numdimsval, int incREDval, int incDMval, int incFloatDMval, int incFloatRedval, int DMFloatstartval, int RedFloatstartval, int TimeMarginVal, int JumpMarginVal, int doLinearVal, double *SampleFreqsVal)
 {
     MNStruct* MNS = (MNStruct*)malloc(sizeof(MNStruct));
 
@@ -107,6 +107,8 @@ MNStruct* init_struct(pulsar *pulseval,	 long double **LDpriorsval, int numberpu
 	MNS->numFitEQUAD=numFitEQUADval;
 	MNS->numFitRedCoeff=numFitRedCoeffval;
 	MNS->numFitDMCoeff=numFitDMCoeffval;
+	MNS->numFitRedPL=numFitRedPLval;
+	MNS->numFitDMPL=numFitDMPLval;
 	MNS->TempoFitNums=TempoFitNumsval;
 	MNS->TempoJumpNums=TempoJumpNumsval;
 	MNS->sysFlags=sysFlagsval;
@@ -125,7 +127,7 @@ MNStruct* init_struct(pulsar *pulseval,	 long double **LDpriorsval, int numberpu
 	return MNS;
 }
 
-void printPriors(pulsar *psr, long double **TempoPriors, double **Dpriors, int incEFAC, int incEQUAD, int incRED, int incDM, int numRedCoeff, int numDMCoeff, int fitDMModel, std::string longname){
+void printPriors(pulsar *psr, long double **TempoPriors, double **Dpriors, int incEFAC, int incEQUAD, int incRED, int incDM, int numRedCoeff, int numDMCoeff, int numFloatRed, int numFloatDM, int fitDMModel, std::string longname){
 
 
 	std::ofstream getdistparamnames;
@@ -323,6 +325,29 @@ void printPriors(pulsar *psr, long double **TempoPriors, double **Dpriors, int i
 			printf("Prior on Red Noise Slope : %.5g -> %.5g\n",Dpriors[paramsfitted][0],Dpriors[paramsfitted][1]);
 			paramsfitted++;
 	}	
+
+        if(numFloatRed>0){
+        	for(int i =0; i < numFloatRed; i++){
+		 	getdistparamnames << getdistlabel;
+			getdistparamnames << " ";
+			getdistparamnames <<  "RFF ";
+			getdistparamnames <<  i+1;
+			getdistparamnames << "\n";
+			getdistlabel++;
+
+		 	getdistparamnames << getdistlabel;
+			getdistparamnames << " ";
+			getdistparamnames <<  "RFA ";
+			getdistparamnames <<  i+1;
+			getdistparamnames << "\n";
+			getdistlabel++;
+
+			printf("Prior on Floating Red Noise Frequency %i : %.5g -> %.5g\n",i, Dpriors[paramsfitted][0],Dpriors[paramsfitted][1]);
+			paramsfitted++;		
+			printf("Prior on Floating Red Noise Log Amplitude %i : %.5g -> %.5g\n",i, Dpriors[paramsfitted][0],Dpriors[paramsfitted][1]);
+			paramsfitted++;
+		    }
+        }
 			
 	if(incDM==1 || incDM==3){
 	
@@ -360,6 +385,29 @@ void printPriors(pulsar *psr, long double **TempoPriors, double **Dpriors, int i
 			paramsfitted++;	
 		}
 	}
+
+        if(numFloatDM>0){
+        	for(int i =0; i < numFloatDM; i++){
+		 	getdistparamnames << getdistlabel;
+			getdistparamnames << " ";
+			getdistparamnames <<  "DMFF ";
+			getdistparamnames <<  i+1;
+			getdistparamnames << "\n";
+			getdistlabel++;
+
+		 	getdistparamnames << getdistlabel;
+			getdistparamnames << " ";
+			getdistparamnames <<  "DMFA ";
+			getdistparamnames <<  i+1;
+			getdistparamnames << "\n";
+			getdistlabel++;
+
+			printf("Prior on Floating DM Frequency %i : %.5g -> %.5g\n",i, Dpriors[paramsfitted][0],Dpriors[paramsfitted][1]);
+			paramsfitted++;		
+			printf("Prior on Floating DM Log Amplitude %i : %.5g -> %.5g\n",i, Dpriors[paramsfitted][0],Dpriors[paramsfitted][1]);
+			paramsfitted++;
+		    }
+        }
 			
 	if(fitDMModel==1){
 		for(int i=0;i<psr[0].dmoffsDMnum;i++){
@@ -747,6 +795,8 @@ extern "C" int graphicalInterface(int argc, char **argv,
 	double *RedFreqPrior;
 	int numRedCoeff;
 	int numDMCoeff;
+	int numRedPL;
+	int numDMPL;
 	double *RedCoeffPrior;
 	double *DMCoeffPrior;
 	double FourierSig;
@@ -766,7 +816,7 @@ extern "C" int graphicalInterface(int argc, char **argv,
 	RedFreqPrior=new double[2];
 	DMFreqPrior=new double[2];
 
-	setupparams(Type, numTempo2its, doLinearFit, doMax, incEFAC, incEQUAD, incRED, incDM, doTimeMargin, doJumpMargin, FitSig, customPriors, EFACPrior, EQUADPrior, AlphaPrior, AmpPrior, DMAlphaPrior, DMAmpPrior, numRedCoeff, numDMCoeff, RedCoeffPrior, DMCoeffPrior, incFloatDM, DMFreqPrior, incFloatRed, RedFreqPrior, FourierSig); 
+	setupparams(Type, numTempo2its, doLinearFit, doMax, incEFAC, incEQUAD, incRED, incDM, doTimeMargin, doJumpMargin, FitSig, customPriors, EFACPrior, EQUADPrior, AlphaPrior, AmpPrior, DMAlphaPrior, DMAmpPrior, numRedCoeff, numDMCoeff, numRedPL, numDMPL, RedCoeffPrior, DMCoeffPrior, incFloatDM, DMFreqPrior, incFloatRed, RedFreqPrior, FourierSig); 
 	
 	
 	if(incRED < 2)numRedCoeff=0;
@@ -881,13 +931,13 @@ extern "C" int graphicalInterface(int argc, char **argv,
 	if(incRED==0)Reddims=0;
 	if(incRED==1)Reddims=2;
 	if(incRED==2)Reddims=numRedCoeff;
-	if(incRED==3)Reddims=2;
+	if(incRED==3)Reddims=2*numRedPL;
 	if(incRED==4)Reddims=3*numRedCoeff;
 	if(incRED==5)Reddims=2*numRedCoeff+2;
 	if(incDM==0)DMdims=0;
 	if(incDM==1)DMdims=2;
 	if(incDM==2)DMdims=numDMCoeff;
-	if(incDM==3)DMdims=2;
+	if(incDM==3)DMdims=2*numDMPL;
 	if(incDM==4)DMdims=3*numDMCoeff;
 	if(incDM==5)DMdims=2*numDMCoeff+2;
 	if(incFloatDM>0)DMdims+=2*incFloatDM;
@@ -902,7 +952,7 @@ extern "C" int graphicalInterface(int argc, char **argv,
 	
 	if(fitDMModel==1 && ( doTimeMargin != 0 || doJumpMargin != 0 || doLinearFit != 0)){
 			printf("DMModel currently only supports doTimeMargin= 0, doJumpMargin = 0, doLinear = 0");
-			return 0;
+// 			return 0;
 	}
 
 	if((incRED == 1 && incDM != 1 && incDM != 0 )|| (incRED != 1 && incRED != 0 && incDM == 1)){
@@ -942,6 +992,9 @@ extern "C" int graphicalInterface(int argc, char **argv,
 
 	int systemcount=0;
 	int *numFlags=new int[psr[0].nobs];
+	for(int o=0;o<psr[0].nobs;o++){
+		numFlags[o]=0;
+	}
 //	if(incEFAC == 0 || incEFAC == 1){
 //		if(incEFAC == 0){printf("Not Including EFAC\n");systemcount=0;}
 //		if(incEFAC == 1){printf("Including One EFAC for all observations\n");systemcount=1;}
@@ -1170,7 +1223,7 @@ extern "C" int graphicalInterface(int argc, char **argv,
 	int FloatRedstart=numFitJumps+fitcount+numEFAC+numEQUAD+Reddims-incFloatRed*2;
 	int FloatDMstart=numFitJumps+fitcount+numEFAC+numEQUAD+Reddims+DMdims-incFloatDM*2;
 
-	MNStruct *MNS = init_struct(psr,TempoPriors,npsr,numFitJumps,fitcount,systemcount,numEFAC,numEQUAD, numRedCoeff, numDMCoeff, TempoFitNums,TempoJumpNums,numFlags, ndims, incRED,incDM, incFloatDM,incFloatRed, FloatDMstart, FloatRedstart, doTimeMargin,doJumpMargin, doLinearFit, SampleFreq);
+	MNStruct *MNS = init_struct(psr,TempoPriors,npsr,numFitJumps,fitcount,systemcount,numEFAC,numEQUAD, numRedCoeff, numDMCoeff, numRedPL, numDMPL, TempoFitNums,TempoJumpNums,numFlags, ndims, incRED,incDM, incFloatDM,incFloatRed, FloatDMstart, FloatRedstart, doTimeMargin,doJumpMargin, doLinearFit, SampleFreq);
 	
 	
 	context=MNS;
@@ -1277,12 +1330,14 @@ extern "C" int graphicalInterface(int argc, char **argv,
 			pcount++;
 		}	
 		if(incRED==1 || incRED==3){
-			Dpriors[pcount][0]=AmpPrior[0];
-			Dpriors[pcount][1]=AmpPrior[1];
-			pcount++;
-			Dpriors[pcount][0]=AlphaPrior[0];
-			Dpriors[pcount][1]=AlphaPrior[1];
-			pcount++;
+			for(int i =0; i< numRedPL; i++){
+				Dpriors[pcount][0]=AmpPrior[0];
+				Dpriors[pcount][1]=AmpPrior[1];
+				pcount++;
+				Dpriors[pcount][0]=AlphaPrior[0];
+				Dpriors[pcount][1]=AlphaPrior[1];
+				pcount++;
+			}
 		}	
 		else if(incRED==2){	
 			for(int i =0; i< numRedCoeff; i++){
@@ -1336,14 +1391,17 @@ extern "C" int graphicalInterface(int argc, char **argv,
         }
         
         
+        		
 		if(incDM==1 || incDM==3){
-			Dpriors[pcount][0]=DMAmpPrior[0];
-			Dpriors[pcount][1]=DMAmpPrior[1];
-			pcount++;
-			Dpriors[pcount][0]=DMAlphaPrior[0];
-			Dpriors[pcount][1]=DMAlphaPrior[1];
-			pcount++;
-		}
+			for(int i =0; i< numDMPL; i++){
+				Dpriors[pcount][0]=DMAmpPrior[0];
+				Dpriors[pcount][1]=DMAmpPrior[1];
+				pcount++;
+				Dpriors[pcount][0]=DMAlphaPrior[0];
+				Dpriors[pcount][1]=DMAlphaPrior[1];
+				pcount++;
+			}
+		}	
         else if(incDM==2){
                 for(int i =0; i< numDMCoeff; i++){
                         Dpriors[pcount][0]=DMCoeffPrior[0];
@@ -1447,7 +1505,7 @@ extern "C" int graphicalInterface(int argc, char **argv,
 
 #endif /* HAVE_CULA */
 
-			printPriors(psr, TempoPriors, Dpriors, numEFAC, numEQUAD, incRED, incDM, numRedCoeff, numDMCoeff, fitDMModel, longname);
+			printPriors(psr, TempoPriors, Dpriors, numEFAC, numEQUAD, incRED, incDM, numRedCoeff, numDMCoeff, incFloatRed,incFloatDM, fitDMModel, longname);
 
 			printf("\n\n");
 			ndims=ndims-numToMargin;
@@ -1555,7 +1613,7 @@ extern "C" int graphicalInterface(int argc, char **argv,
 		context=MNS;
 		
 		
-		printPriors(psr, TempoPriors, Dpriors, numEFAC, numEQUAD, incRED, incDM, numRedCoeff, numDMCoeff, fitDMModel, longname);
+		printPriors(psr, TempoPriors, Dpriors, numEFAC, numEQUAD, incRED, incDM, numRedCoeff, numDMCoeff, incFloatRed,incFloatDM,fitDMModel, longname);
 
 		if(incRED==0 && incDM == 0){
 				nested::run(IS,mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, WhiteLogLike, dumper, context);
@@ -1596,12 +1654,14 @@ extern "C" int graphicalInterface(int argc, char **argv,
 			pcount++;
 		}	
 		if(incRED==1 || incRED==3){
-			Dpriors[pcount][0]=AmpPrior[0];
-			Dpriors[pcount][1]=AmpPrior[1];
-			pcount++;
-			Dpriors[pcount][0]=AlphaPrior[0];
-			Dpriors[pcount][1]=AlphaPrior[1];
-			pcount++;
+			for(int i =0; i< numRedPL; i++){
+				Dpriors[pcount][0]=AmpPrior[0];
+				Dpriors[pcount][1]=AmpPrior[1];
+				pcount++;
+				Dpriors[pcount][0]=AlphaPrior[0];
+				Dpriors[pcount][1]=AlphaPrior[1];
+				pcount++;
+			}
 		}	
 		else if(incRED==2){	
 			for(int i =0; i< numRedCoeff; i++){
@@ -1655,12 +1715,14 @@ extern "C" int graphicalInterface(int argc, char **argv,
         
         		
 		if(incDM==1 || incDM==3){
-			Dpriors[pcount][0]=DMAmpPrior[0];
-			Dpriors[pcount][1]=DMAmpPrior[1];
-			pcount++;
-			Dpriors[pcount][0]=DMAlphaPrior[0];
-			Dpriors[pcount][1]=DMAlphaPrior[1];
-			pcount++;
+			for(int i =0; i< numDMPL; i++){
+				Dpriors[pcount][0]=DMAmpPrior[0];
+				Dpriors[pcount][1]=DMAmpPrior[1];
+				pcount++;
+				Dpriors[pcount][0]=DMAlphaPrior[0];
+				Dpriors[pcount][1]=DMAlphaPrior[1];
+				pcount++;
+			}
 		}	
 		else if(incDM==2){	
 			for(int i =0; i< numDMCoeff; i++){
@@ -1793,7 +1855,7 @@ extern "C" int graphicalInterface(int argc, char **argv,
           //  if(incDM == 2 || incDM == 3 || incDM == 4 || incDM == 5)ndims +=2;
             nPar=ndims;
                         
-            printPriors(psr, TempoPriors, Dpriors, numEFAC, numEQUAD, incRED, incDM, numRedCoeff, numDMCoeff, fitDMModel, longname);
+            printPriors(psr, TempoPriors, Dpriors, numEFAC, numEQUAD, incRED, incDM, numRedCoeff, numDMCoeff,incFloatRed,incFloatDM, fitDMModel, longname);
             
               
 			if(numEFAC==0 && numEQUAD==0){
@@ -1896,7 +1958,7 @@ extern "C" int graphicalInterface(int argc, char **argv,
 
 			context=MNS;
 	
-			printPriors(psr, TempoPriors, Dpriors, numEFAC, numEQUAD, incRED, incDM, numRedCoeff, numDMCoeff, fitDMModel, longname);
+			printPriors(psr, TempoPriors, Dpriors, numEFAC, numEQUAD, incRED, incDM, numRedCoeff, numDMCoeff,incFloatRed,incFloatDM, fitDMModel, longname);
 			
 			if(incRED==0 && incDM==0){
 				nested::run(IS,mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, WhiteLogLike, dumper, context);

@@ -1,5 +1,5 @@
 #ifdef __INTEL_COMPILER 			// if the MultiNest library was compiled with ifort
-       #define NESTRUN nested_mp_nestrun_
+	#define NESTRUN nested_mp_nestrun_
 #elif defined __GNUC__ 				// if the MultiNest library was compiled with gfortran
        #define NESTRUN __nested_MOD_nestrun
 #else

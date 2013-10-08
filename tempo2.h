@@ -28,7 +28,7 @@
 #include <stdio.h>
 #include <time.h>
 #define __Tempo2_h
-#define TEMPO2_h_VER "$Revision: 1.69 $"
+#define TEMPO2_h_VER "$Revision: 1.73 $"
 #define TSUN (4.925490947e-6L) // Solar constant for mass calculations.
 #define MAX_FREQ_DERIVATIVES 13    /* F0 -> Fn   where n=10                            */
 #define MAX_DM_DERIVATIVES   10    /* DM0 -> DMn where n=10                            */
@@ -181,7 +181,7 @@ enum label {param_raj,param_decj,param_f,param_pepoch,param_posepoch,
 	    param_a2dot,param_omdot,param_om2dot,param_orbpx,param_tasc,param_eps1,param_eps2,param_m2,param_gamma,
 	    param_mtot,param_glep,param_glph,param_glf0,param_glf1,param_glf2,
 	    param_glf0d,param_gltd,param_start,param_finish,param_track,param_bp,param_bpp,
-	    param_tzrmjd,param_tzrfrq,param_fddc,param_fddi,param_dr,param_dtheta,param_tspan,
+	    param_tzrmjd,param_tzrfrq,param_fddc,param_fddi,param_fd,param_dr,param_dtheta,param_tspan,
             param_bpjep,param_bpjph,param_bpja1,param_bpjec,param_bpjom,param_bpjpb,
             param_wave_om,param_kom,param_kin,param_shapmax,param_dth,param_a0,
 	    param_b0,param_xomdot,param_afac,param_eps1dot,param_eps2dot,param_tres,
@@ -190,7 +190,7 @@ enum label {param_raj,param_decj,param_f,param_pepoch,param_posepoch,
 	    param_h3,param_h4,param_nharm,param_stig,
             param_telx,param_tely,param_telz,param_telEpoch,param_quad_ifunc_p,
 	    param_quad_ifunc_c,param_tel_dx,param_tel_dy,param_tel_dz,
-	    param_tel_vx,param_tel_vy,param_tel_vz,param_tel_x0,param_tel_y0,param_tel_z0,param_gwm_amp};
+	    param_tel_vx,param_tel_vy,param_tel_vz,param_tel_x0,param_tel_y0,param_tel_z0,param_gwm_amp,param_gwecc};
 
 /*
  * These represent the possible constraints to the fit that have been implemented.
@@ -413,6 +413,26 @@ typedef struct pulsar {
   double gwm_epoch;
   double gwm_phi; // Polarisation angle
 
+  // Vikram Ravi's addition for eccentric, binary black hole systems
+  double gwecc_ra;
+  double gwecc_dec;
+  double gwecc_m1; // solar masses
+  double gwecc_m2;
+  double gwecc_e; // eccentricity
+  double gwecc_inc; // Orbital params as in relevant memo
+  double gwecc_theta_nodes;
+  double gwecc_nodes_orientation;
+  double gwecc_theta_0;
+  double gwecc_orbital_period; // years at earth
+  double gwecc_distance; // Mpc
+  double gwecc_redshift;
+  double gwecc_epoch; //Earth MJD
+  double gwecc_psrdist; // kpc
+  int gwecc_pulsarTermOn; //0 - earth, 1 - e + p, 2 - p only
+
+
+
+
   // General pulsar information
   double posPulsar[3];            /* 3-vector pointing at pulsar                                */
   double velPulsar[3];            /* 3-vector giving pulsar's velocity                          */  
@@ -550,6 +570,11 @@ typedef struct pulsar {
   char   T2equadFlagID[MAX_T2EQUAD][MAX_FLAG_LEN],T2equadFlagVal[MAX_T2EQUAD][MAX_FLAG_LEN];
   double T2equadVal[MAX_T2EQUAD];
   double T2globalEfac;
+  
+  // White noise models
+  char whiteNoiseModelFile[MAX_STRLEN];
+
+
   //some parameters for Ryan Shannon's simulations
   double rasim, decsim;
   int simflag;
@@ -688,6 +713,8 @@ long double DDmodel(pulsar *psr,int p,int obs,int param);
 void updateDD(pulsar *psr,double val,double err,int pos);
 double T2model(pulsar *psr,int p,int obs,int param,int arr);
 void updateT2(pulsar *psr,double val,double err,int pos,int arr);
+double T2_PTAmodel(pulsar *psr,int p,int obs,int param,int arr);
+void updateT2_PTA(pulsar *psr,double val,double err,int pos,int arr);
 double JVmodel(pulsar *psr,int p,int obs,int param,int arr);
 void updateJV(pulsar *psr,double val,double err,int pos,int arr);
 double DDKmodel(pulsar *psr,int p,int obs,int param);

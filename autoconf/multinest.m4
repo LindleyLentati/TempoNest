@@ -36,9 +36,9 @@ AC_DEFUN([SWIN_LIB_MULTINEST],
     MULTINEST_LIBS="-L$MULTINEST_DIR"
   fi
 
-  MULTINEST_LIBS="$MULTINEST_LIBS -lnest3 -llapack -lblas"
+  MULTINEST_LIBS="$MULTINEST_LIBS -lnest3 -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5 -lpthread"
 
-  ac_save_CFLAGS="$CFLAGS"
+  c_save_CFLAGS="$CFLAGS"
   ac_save_LIBS="$LIBS"
   LIBS="$ac_save_LIBS $MULTINEST_LIBS"
   CFLAGS="$ac_save_CFLAGS $MULTINEST_CFLAGS"

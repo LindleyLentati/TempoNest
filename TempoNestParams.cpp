@@ -50,6 +50,8 @@ void setupparams(char *root,
 		double *DMAmpPrior,
 		int &numRedCoeff,
 		int &numDMCoeff,
+		int &numRedPL,
+		int &numDMPL,
 		double *RedCoeffPrior,
 		double *DMCoeffPrior,
 		int &FloatingDM,
@@ -106,14 +108,22 @@ void setupparams(char *root,
     EQUADPrior[0]=-10;
     EQUADPrior[1]=-5;
 
-
+    numRedPL=0;
+    numDMPL=0;
 
     AlphaPrior[0]=1.1;
     AlphaPrior[1]=6.1;
 
-
     AmpPrior[0]=-20;
     AmpPrior[1]=-10;
+    
+    DMAlphaPrior[0]=1.1;
+    DMAlphaPrior[1]=6.1;
+
+    DMAmpPrior[0]=-18;
+    DMAmpPrior[1]=-8;
+    
+
 
     numRedCoeff=10;
     numDMCoeff=10;
@@ -126,12 +136,7 @@ void setupparams(char *root,
     
     FourierSig = 5;
 
-    DMAlphaPrior[0]=1.1;
-    DMAlphaPrior[1]=6.1;
 
-
-    DMAmpPrior[0]=-18;
-    DMAmpPrior[1]=-8;
     
 	FloatingDM = 0;
 	DMFreqPrior[0]=1;
@@ -182,6 +187,8 @@ void setupparams(char *root,
         parameters.readInto(AmpPrior[1], "AmpPrior[1]", AmpPrior[1]);
         parameters.readInto(numRedCoeff, "numRedCoeff", numRedCoeff);
 		parameters.readInto(numDMCoeff, "numDMCoeff", numDMCoeff);
+        parameters.readInto(numRedPL, "numRedPL", numRedPL);
+		parameters.readInto(numDMPL, "numDMPL", numDMPL);
         parameters.readInto(RedCoeffPrior[0], "RedCoeffPrior[0]", RedCoeffPrior[0]);
         parameters.readInto(RedCoeffPrior[1], "RedCoeffPrior[1]", RedCoeffPrior[1]);
         parameters.readInto(DMCoeffPrior[0], "DMCoeffPrior[0]", DMCoeffPrior[0]);

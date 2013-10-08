@@ -385,6 +385,19 @@ void TNtextOutput(pulsar *psr, int npsr, int newpar, long double *Tempo2Fit, voi
 				coeff++;
 			}
 		}
+
+		if(((MNStruct *)context)->incFloatRed > 0){
+			printf("Floating Red Noise, %i Coefficients used:\n",((MNStruct *)context)->incFloatRed);
+			for(int i =0; i < ((MNStruct *)context)->incFloatRed; i++){
+
+				printf("Frequency %i: %g +/- %g\n", i+1, paramlist[fitcount],paramlist[fitcount+ndim]);
+				fitcount++;
+				printf("Log Amplitude %i: %g +/- %g\n", i+1, paramlist[fitcount],paramlist[fitcount+ndim]);
+				fitcount++;
+		    }
+		}
+
+
 		if(((MNStruct *)context)->incDM ==1 ||((MNStruct *)context)->incDM ==3 ){
 			printf("Power Law DM Model:\n");
 			printf("Log Amplitude: %g +/- %g\n",paramlist[fitcount],paramlist[fitcount+ndim]);
@@ -401,6 +414,18 @@ void TNtextOutput(pulsar *psr, int npsr, int newpar, long double *Tempo2Fit, voi
 				coeff++;
 			}
 		}
+
+		if(((MNStruct *)context)->incFloatDM > 0){
+			printf("Floating DM, %i Coefficients used:\n",((MNStruct *)context)->incFloatDM);
+			for(int i =0; i < ((MNStruct *)context)->incFloatDM; i++){
+
+				printf("Frequency %i: %g +/- %g\n", i+1, paramlist[fitcount],paramlist[fitcount+ndim]);
+				fitcount++;
+				printf("Log Amplitude %i: %g +/- %g\n", i+1, paramlist[fitcount],paramlist[fitcount+ndim]);
+				fitcount++;
+		    }
+		}
+
 	}
       /* Whitening */
       if (psr[p].param[param_wave_om].paramSet[0]==1)

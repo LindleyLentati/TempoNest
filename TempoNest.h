@@ -47,6 +47,8 @@ typedef struct {
 	int numFitEQUAD;
 	int numFitRedCoeff;
 	int numFitDMCoeff;
+	int numFitRedPL;
+	int numFitDMPL;
 	double *sampleFreq;
 	int numdims;
 	int incRED;
@@ -155,6 +157,8 @@ void setupparams(char *root,
 		double *DMAmpPrior,
 		int &numRedCoeff,
 		int &numDMCoeff,
+		int &numRedPL,
+		int &numDMPL,
 		double *RedCoeffPrior,
 		double *DMCoeffPrior,
 		int &FloatingDM,

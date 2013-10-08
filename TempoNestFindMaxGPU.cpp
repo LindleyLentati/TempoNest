@@ -891,6 +891,7 @@ void LRedMarginGPULogLikeMax(double *Cube, int &ndim, int &npars, double &lnew, 
         if(((MNStruct *)context)->incDM==2)totdims+=((MNStruct *)context)->numFitRedCoeff;
         if(((MNStruct *)context)->incRED==3)totdims+=2;
         if(((MNStruct *)context)->incDM==3)totdims+=2;
+	if(((MNStruct *)context)->pulse->param[param_dmmodel].fitFlag[0] == 1)totdims+=((MNStruct *)context)->pulse->dmoffsDMnum;
 	
 	int numfit=((MNStruct *)context)->numFitTiming + ((MNStruct *)context)->numFitJumps;
 	long double LDparams[numfit];
@@ -923,6 +924,13 @@ void LRedMarginGPULogLikeMax(double *Cube, int &ndim, int &npars, double &lnew, 
 		for(int p=0;p<((MNStruct *)context)->numFitJumps;p++){
 			((MNStruct *)context)->pulse->jumpVal[((MNStruct *)context)->TempoJumpNums[p]]= LDparams[pcount];
 			pcount++;
+		}
+
+		if(((MNStruct *)context)->pulse->param[param_dmmodel].fitFlag[0] == 1){
+			int DMnum=((MNStruct *)context)->pulse[0].dmoffsDMnum;
+			for(int i =0; i < DMnum; i++){
+				((MNStruct *)context)->pulse[0].dmoffsDM[i]=Cube[ndim-DMnum+i];
+			}
 		}
 		
 		fastformBatsAll(((MNStruct *)context)->pulse,((MNStruct *)context)->numberpulsars);       /* Form Barycentric arrival times */
