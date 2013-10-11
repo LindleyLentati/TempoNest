@@ -17,6 +17,8 @@
 # library 'libnest' is not installed in a default location, let MULTINEST_DIR
 # point to the location of libnest
 #
+#  MULTINEST_LIBS="$MULTINEST_LIBS -lnest3 -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5 -lpthread"
+#  MULTINEST_LIBS="$MULTINEST_LIBS -lnest3 -llapack"
 # ----------------------------------------------------------
 AC_DEFUN([SWIN_LIB_MULTINEST],
 [
@@ -36,7 +38,7 @@ AC_DEFUN([SWIN_LIB_MULTINEST],
     MULTINEST_LIBS="-L$MULTINEST_DIR"
   fi
 
-  MULTINEST_LIBS="$MULTINEST_LIBS -lnest3 -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5 -lpthread"
+  MULTINEST_LIBS="$MULTINEST_LIBS -lnest3 -llapack"
 
   c_save_CFLAGS="$CFLAGS"
   ac_save_LIBS="$LIBS"

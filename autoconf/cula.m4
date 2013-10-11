@@ -21,6 +21,7 @@
 #    -L${CULA_LIB_PATH_64} -lcula_core -lcula_lapack -lcula_lapack_fortran -lcublas -lcudart -lcuda -I$(CULA_INC)
 #
 # TODO: Test whether the BLAS and LAPACK libraries really are required
+#  CULA_LIB="-lcula_lapack -lcuda"
 #
 # ----------------------------------------------------------
 AC_DEFUN([SWIN_LIB_CULA],
@@ -35,7 +36,7 @@ AC_DEFUN([SWIN_LIB_CULA],
   CULA_CFLAGS=""
   CULA_LIBS=""
 
-  CULA_LIB="-lcula_lapack -lcuda"
+  CULA_LIB=""
 
   if test x"$CULA_LIB_PATH_64" != x; then
     CULA_LIBS="-L$CULA_LIB_PATH_64"
