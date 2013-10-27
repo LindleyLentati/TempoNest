@@ -36,7 +36,8 @@ AC_DEFUN([SWIN_LIB_CULA],
   CULA_CFLAGS=""
   CULA_LIBS=""
 
-  CULA_LIB=""
+   CULA_LIB=""
+#   CULA_LIB="-lcula_lapack -lcuda"
 
   if test x"$CULA_LIB_PATH_64" != x; then
     CULA_LIBS="-L$CULA_LIB_PATH_64"

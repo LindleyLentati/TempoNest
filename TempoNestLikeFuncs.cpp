@@ -106,6 +106,22 @@ void vHRedLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *conte
 		
 		delete[] Fitvec;
 	}
+
+	if(((MNStruct *)context)->incStep > 0){
+		for(int i = 0; i < ((MNStruct *)context)->incStep; i++){
+			double StepAmp = Cube[pcount];
+			pcount++;
+			double StepTime = Cube[pcount];
+			pcount++;
+// 			printf("step: %g %g \n", StepAmp, StepTime);
+			for(int o1=0;o1<((MNStruct *)context)->pulse->nobs; o1++){
+				double time=((MNStruct *)context)->pulse->obsn[o1].bat;
+				if(time > StepTime){
+					Resvec[o1] += StepAmp;
+				}
+			}
+		}
+	}
 		
 
 	if(((MNStruct *)context)->numFitEFAC == 0){
@@ -254,13 +270,15 @@ void vHRedLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *conte
 		}
 	}	
 
+
+
 	double covdet=0;
 	double *WorkRes = new double[((MNStruct *)context)->pulse->nobs];
 	for(int o1=0;o1<((MNStruct *)context)->pulse->nobs; o1++){
 		WorkRes[o1]=Resvec[o1];
 	}
 	dpotrf(CovMatrix, ((MNStruct *)context)->pulse->nobs, covdet);
-    dpotrs(CovMatrix, WorkRes, ((MNStruct *)context)->pulse->nobs);
+    	dpotrs(CovMatrix, WorkRes, ((MNStruct *)context)->pulse->nobs);
 
 
 	double Chisq=0;
@@ -299,6 +317,7 @@ void vHRedMarginLogLike(double *Cube, int &ndim, int &npars, double &lnew, void 
 	double redamp, redalpha, DMamp, DMalpha;
 	int pcount=0;
 	int totdims=((MNStruct *)context)->numFitTiming + ((MNStruct *)context)->numFitJumps + ((MNStruct *)context)->numFitEFAC + ((MNStruct *)context)->numFitEQUAD;
+	totdims+=2*((MNStruct *)context)->incStep;
 	if(((MNStruct *)context)->incRED==1)totdims+=2;
 	if(((MNStruct *)context)->incDM==1)totdims+=2;
 	int numfit=((MNStruct *)context)->numFitTiming + ((MNStruct *)context)->numFitJumps;
@@ -374,6 +393,21 @@ void vHRedMarginLogLike(double *Cube, int &ndim, int &npars, double &lnew, void 
 	}
 	pcount=fitcount;
 	
+	if(((MNStruct *)context)->incStep > 0){
+		for(int i = 0; i < ((MNStruct *)context)->incStep; i++){
+			double StepAmp = Cube[pcount];
+			pcount++;
+			double StepTime = Cube[pcount];
+			pcount++;
+			for(int o1=0;o1<((MNStruct *)context)->pulse->nobs; o1++){
+				double time = (double)((MNStruct *)context)->pulse->obsn[o1].bat;
+				if( time > StepTime){
+					Resvec[o1] += StepAmp;
+				}
+			}
+		}
+	}
+
 	if(((MNStruct *)context)->numFitEFAC == 0){
 		EFAC=new double[((MNStruct *)context)->systemcount];
 		for(int o=0;o<((MNStruct *)context)->systemcount; o++){
@@ -523,6 +557,10 @@ void vHRedMarginLogLike(double *Cube, int &ndim, int &npars, double &lnew, void 
 		}
 	}	
 
+
+
+
+
 	double **CG = new double*[((MNStruct *)context)->pulse->nobs]; for(int o1=0;o1<((MNStruct *)context)->pulse->nobs;o1++)CG[o1]=new double[((MNStruct *)context)->Gsize];
 
 	double **GCG= new double*[((MNStruct *)context)->Gsize]; for(int o1=0;o1<((MNStruct *)context)->Gsize;o1++)GCG[o1]=new double[((MNStruct *)context)->Gsize];
@@ -594,6 +632,7 @@ void WhiteLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *conte
 	long double LDparams[numfit];
 	double Fitparams[numfit];
 	double *Resvec=new double[((MNStruct *)context)->pulse->nobs];
+
 	double NLphase=0;
 	for(int p=0;p<ndim;p++){
 
@@ -642,6 +681,21 @@ void WhiteLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *conte
 		}
 		
 		delete[] Fitvec;
+	}
+
+	
+	double **Steps;
+	if(((MNStruct *)context)->incStep > 0){
+		
+		Steps=new double*[((MNStruct *)context)->incStep];
+		
+		for(int i = 0; i < ((MNStruct *)context)->incStep; i++){
+			Steps[i]=new double[2];
+			Steps[i][0] = Cube[pcount];
+			pcount++;
+			Steps[i][1] = Cube[pcount];
+			pcount++;
+		}
 	}
 		
 
@@ -704,6 +758,20 @@ void WhiteLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *conte
         }
 
 
+	if(((MNStruct *)context)->incStep > 0){
+		for(int i = 0; i < ((MNStruct *)context)->incStep; i++){
+			double StepAmp = Steps[i][0];
+			double StepTime = Steps[i][1];
+
+			for(int o1=0;o1<((MNStruct *)context)->pulse->nobs; o1++){
+				double time=(double)((MNStruct *)context)->pulse->obsn[o1].bat ;
+				if( time > StepTime){
+					Resvec[o1] += StepAmp;
+				}
+			}
+		}
+	}
+
 
 
 
@@ -736,6 +804,12 @@ void WhiteLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *conte
 
 	delete[] EFAC;
 	delete[] Resvec;
+	if(((MNStruct *)context)->incStep > 0){
+		for(int i = 0; i < ((MNStruct *)context)->incStep; i++){
+			delete[] Steps[i];
+		}
+		delete[] Steps;
+	}
 
 
 }
@@ -751,7 +825,7 @@ void WhiteMarginLogLike(double *Cube, int &ndim, int &npars, double &lnew, void 
 	int pcount=0;
 
 	int totdims=((MNStruct *)context)->numFitTiming + ((MNStruct *)context)->numFitJumps + ((MNStruct *)context)->numFitEFAC + ((MNStruct *)context)->numFitEQUAD;
-
+	totdims +=2*((MNStruct *)context)->incStep;
 	int numfit=((MNStruct *)context)->numFitTiming + ((MNStruct *)context)->numFitJumps;
 	long double LDparams[numfit];
 	double Fitparams[numfit];
@@ -824,6 +898,21 @@ void WhiteMarginLogLike(double *Cube, int &ndim, int &npars, double &lnew, void 
 		delete[] Fitvec;
 	}
 	pcount=fitcount;
+// 	printf("pcount: %i \n",pcount);
+	if(((MNStruct *)context)->incStep > 0){
+		for(int i = 0; i < ((MNStruct *)context)->incStep; i++){
+			double StepAmp = Cube[pcount];
+			pcount++;
+			double StepTime = Cube[pcount];
+			pcount++;
+			for(int o1=0;o1<((MNStruct *)context)->pulse->nobs; o1++){
+				double time = ((MNStruct *)context)->pulse->obsn[o1].bat;
+				if(time > StepTime){
+					Resvec[o1] += StepAmp;
+				}
+			}
+		}
+	}
 
 	if(((MNStruct *)context)->numFitEFAC == 0){
 		EFAC=new double[((MNStruct *)context)->systemcount];
@@ -867,6 +956,10 @@ void WhiteMarginLogLike(double *Cube, int &ndim, int &npars, double &lnew, void 
 			pcount++;
                 }
         }
+
+
+
+
 	double *Noise;
 	double *GRes=new double[((MNStruct *)context)->Gsize];
 	double **NG = new double*[((MNStruct *)context)->pulse->nobs]; for (int k=0; k<((MNStruct *)context)->pulse->nobs; k++) NG[k] = new double[((MNStruct *)context)->Gsize];
@@ -1046,6 +1139,21 @@ void LRedLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *contex
 		}
 		
 		delete[] Fitvec;
+	}
+
+	if(((MNStruct *)context)->incStep > 0){
+		for(int i = 0; i < ((MNStruct *)context)->incStep; i++){
+			double StepAmp = Cube[pcount];
+			pcount++;
+			double StepTime = Cube[pcount];
+			pcount++;
+			for(int o1=0;o1<((MNStruct *)context)->pulse->nobs; o1++){
+				double time = (double)((MNStruct *)context)->pulse->obsn[o1].bat;
+				if(time > StepTime){
+					Resvec[o1] += StepAmp;
+				}
+			}
+		}
 	}
 		
 
@@ -1423,6 +1531,7 @@ void LRedMarginLogLike2(double *Cube, int &ndim, int &npars, double &lnew, void 
 	double *EQUAD;
 	int pcount=0;
 	int totdims=((MNStruct *)context)->numFitTiming + ((MNStruct *)context)->numFitJumps + ((MNStruct *)context)->numFitEFAC + ((MNStruct *)context)->numFitEQUAD;
+	totdims +=2*((MNStruct *)context)->incStep;
 	if(((MNStruct *)context)->incRED==2)totdims+=((MNStruct *)context)->numFitRedCoeff;
 	if(((MNStruct *)context)->incDM==2)totdims+=((MNStruct *)context)->numFitDMCoeff;
         if(((MNStruct *)context)->incRED==3)totdims+=2;
@@ -2044,6 +2153,7 @@ void LRedMarginLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *
 	double *EQUAD;
 	int pcount=0;
 	int totdims=((MNStruct *)context)->numFitTiming + ((MNStruct *)context)->numFitJumps + ((MNStruct *)context)->numFitEFAC + ((MNStruct *)context)->numFitEQUAD;
+	totdims +=2*((MNStruct *)context)->incStep;
 	if(((MNStruct *)context)->incRED==2)totdims+=((MNStruct *)context)->numFitRedCoeff;
 	if(((MNStruct *)context)->incDM==2)totdims+=((MNStruct *)context)->numFitDMCoeff;
 	if(((MNStruct *)context)->incFloatDM != 0)totdims+=2*((MNStruct *)context)->incFloatDM;
@@ -2121,7 +2231,21 @@ void LRedMarginLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *
 		
 		delete[] Fitvec;
 	}
-	pcount=fitcount;	
+	pcount=fitcount;
+
+	if(((MNStruct *)context)->incStep > 0){
+		for(int i = 0; i < ((MNStruct *)context)->incStep; i++){
+			double StepAmp = Cube[pcount];
+			pcount++;
+			double StepTime = Cube[pcount];
+			pcount++;
+			for(int o1=0;o1<((MNStruct *)context)->pulse->nobs; o1++){
+				if(((MNStruct *)context)->pulse->obsn[o1].bat > StepTime){
+					Resvec[o1] += StepAmp;
+				}
+			}
+		}
+	}	
 
 	if(((MNStruct *)context)->numFitEFAC == 0){
 		EFAC=new double[((MNStruct *)context)->systemcount];

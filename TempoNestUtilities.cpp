@@ -63,7 +63,7 @@ double iter_factorial(unsigned int n)
 void readsummary(pulsar *psr, std::string longname, int ndim, void *context, long double *Tempo2Fit, int incRED, int ndims, int doTimeMargin, int doJumpMargin, int doLinear){
 
 	int number_of_lines = 0;
-	int outputoption=0;
+	int outputoption=2;
 	char *outname;
 	int pcount=0;
 	int fitcount=0;

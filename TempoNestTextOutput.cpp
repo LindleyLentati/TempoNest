@@ -341,6 +341,17 @@ void TNtextOutput(pulsar *psr, int npsr, int newpar, long double *Tempo2Fit, voi
 	  else printf("N\n");
 	}
       }
+
+	if(((MNStruct *)context)->incStep > 0){
+		printf("%i Step Functions used:\n",((MNStruct *)context)->incStep);
+		for(int i =0; i < ((MNStruct *)context)->incStep; i++){
+
+			printf("Step Amp %i: %g +/- %g\n", i+1, paramlist[fitcount],paramlist[fitcount+ndim]);
+			fitcount++;
+			printf("Step Time %i: %g +/- %g\n", i+1, paramlist[fitcount],paramlist[fitcount+ndim]);
+			fitcount++;
+		}	
+	}
   	
 	if(incRED != 0 || ((MNStruct *)context)->incDM !=0 ||((MNStruct *)context)->numFitEFAC > 0 || ((MNStruct *)context)->numFitEQUAD > 0){
 	 	printf("------------------------------------------------------------------------------\n");
@@ -427,6 +438,8 @@ void TNtextOutput(pulsar *psr, int npsr, int newpar, long double *Tempo2Fit, voi
 		}
 
 	}
+
+
       /* Whitening */
       if (psr[p].param[param_wave_om].paramSet[0]==1)
 	{

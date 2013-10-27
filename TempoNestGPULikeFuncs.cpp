@@ -43,6 +43,7 @@ void WhiteMarginGPULogLike(double *Cube, int &ndim, int &npars, double &lnew, vo
 	int pcount=0;
 
 	int totdims=((MNStruct *)context)->numFitTiming + ((MNStruct *)context)->numFitJumps + ((MNStruct *)context)->numFitEFAC + ((MNStruct *)context)->numFitEQUAD;
+	totdims +=2*((MNStruct *)context)->incStep;
 	int numfit=((MNStruct *)context)->numFitTiming + ((MNStruct *)context)->numFitJumps;
 	long double LDparams[numfit];
 	double Fitparams[numfit];
@@ -115,6 +116,21 @@ void WhiteMarginGPULogLike(double *Cube, int &ndim, int &npars, double &lnew, vo
 		delete[] Fitvec;
 	}
 	pcount=fitcount;
+
+	if(((MNStruct *)context)->incStep > 0){
+		for(int i = 0; i < ((MNStruct *)context)->incStep; i++){
+			double StepAmp = Cube[pcount];
+			pcount++;
+			double StepTime = Cube[pcount];
+			pcount++;
+			for(int o1=0;o1<((MNStruct *)context)->pulse->nobs; o1++){
+				double time = ((MNStruct *)context)->pulse->obsn[o1].bat;
+				if(time > StepTime){
+					Resvec[o1] += StepAmp;
+				}
+			}
+		}
+	}
 
 	if(((MNStruct *)context)->numFitEFAC == 0){
 		EFAC=new double[((MNStruct *)context)->systemcount];
@@ -236,6 +252,7 @@ void vHRedMarginGPULogLike(double *Cube, int &ndim, int &npars, double &lnew, vo
 	double redamp, redalpha, DMamp, DMalpha;
 	int pcount=0;
 	int totdims=((MNStruct *)context)->numFitTiming + ((MNStruct *)context)->numFitJumps + ((MNStruct *)context)->numFitEFAC + ((MNStruct *)context)->numFitEQUAD;
+	totdims+=2*((MNStruct *)context)->incStep;
 	if(((MNStruct *)context)->incRED==1)totdims+=2;
 	if(((MNStruct *)context)->incDM==1)totdims+=2;
 	int numfit=((MNStruct *)context)->numFitTiming + ((MNStruct *)context)->numFitJumps;
@@ -310,6 +327,21 @@ void vHRedMarginGPULogLike(double *Cube, int &ndim, int &npars, double &lnew, vo
 		delete[] Fitvec;
 	}
 	pcount=fitcount;
+
+	if(((MNStruct *)context)->incStep > 0){
+		for(int i = 0; i < ((MNStruct *)context)->incStep; i++){
+			double StepAmp = Cube[pcount];
+			pcount++;
+			double StepTime = Cube[pcount];
+			pcount++;
+			for(int o1=0;o1<((MNStruct *)context)->pulse->nobs; o1++){
+				double time = (double)((MNStruct *)context)->pulse->obsn[o1].bat;
+				if( time > StepTime){
+					Resvec[o1] += StepAmp;
+				}
+			}
+		}
+	}
 
 	if(((MNStruct *)context)->numFitEFAC == 0){
 		EFAC=new double[((MNStruct *)context)->systemcount];
@@ -497,6 +529,20 @@ void vHRedGPULogLike(double *Cube, int &ndim, int &npars, double &lnew, void *co
 		delete[] Fitvec;
 	}
 
+	double **Steps;
+	if(((MNStruct *)context)->incStep > 0){
+		
+		Steps=new double*[((MNStruct *)context)->incStep];
+		
+		for(int i = 0; i < ((MNStruct *)context)->incStep; i++){
+			Steps[i]=new double[2];
+			Steps[i][0] = Cube[pcount];
+			pcount++;
+			Steps[i][1] = Cube[pcount];
+			pcount++;
+		}
+	}
+
 	if(((MNStruct *)context)->numFitEFAC == 0){
 		EFAC=new double[((MNStruct *)context)->systemcount];
 		for(int o=0;o<((MNStruct *)context)->systemcount; o++){
@@ -586,6 +632,20 @@ void vHRedGPULogLike(double *Cube, int &ndim, int &npars, double &lnew, void *co
 		}
 	}
 
+	if(((MNStruct *)context)->incStep > 0){
+		for(int i = 0; i < ((MNStruct *)context)->incStep; i++){
+			double StepAmp = Steps[i][0];
+			double StepTime = Steps[i][1];
+
+			for(int o1=0;o1<((MNStruct *)context)->pulse->nobs; o1++){
+				double time=(double)((MNStruct *)context)->pulse->obsn[o1].bat ;
+				if( time > StepTime){
+					Resvec[o1] += StepAmp;
+				}
+			}
+		}
+	}
+
 	double *BatVec=new double[((MNStruct *)context)->pulse->nobs];
 	double *Noise=new double[((MNStruct *)context)->pulse->nobs];
 	for(int o=0;o<((MNStruct *)context)->pulse->nobs; o++){
@@ -628,6 +688,12 @@ void vHRedGPULogLike(double *Cube, int &ndim, int &npars, double &lnew, void *co
 	delete[] Noise;
 	delete[] SpecParm;
 	delete[] DMVec;
+	if(((MNStruct *)context)->incStep > 0){
+		for(int i = 0; i < ((MNStruct *)context)->incStep; i++){
+			delete[] Steps[i];
+		}
+		delete[] Steps;
+	}
 
 	//printf("GPU Like: %g %g %g \n",lnew,Chisq,covdet);
 }
@@ -701,6 +767,21 @@ void LRedGPULogLike(double *Cube, int &ndim, int &npars, double &lnew, void *con
 		}
 		
 		delete[] Fitvec;
+	}
+
+	if(((MNStruct *)context)->incStep > 0){
+		for(int i = 0; i < ((MNStruct *)context)->incStep; i++){
+			double StepAmp = Cube[pcount];
+			pcount++;
+			double StepTime = Cube[pcount];
+			pcount++;
+			for(int o1=0;o1<((MNStruct *)context)->pulse->nobs; o1++){
+				double time = (double)((MNStruct *)context)->pulse->obsn[o1].bat;
+				if(time > StepTime){
+					Resvec[o1] += StepAmp;
+				}
+			}
+		}
 	}
 
 	if(((MNStruct *)context)->numFitEFAC == 0){
@@ -1138,6 +1219,7 @@ void LRedMarginGPULogLike(double *Cube, int &ndim, int &npars, double &lnew, voi
 	double *EQUAD;
 	int pcount=0;
         int totdims=((MNStruct *)context)->numFitTiming + ((MNStruct *)context)->numFitJumps + ((MNStruct *)context)->numFitEFAC + ((MNStruct *)context)->numFitEQUAD;
+	totdims +=2*((MNStruct *)context)->incStep;
         if(((MNStruct *)context)->incRED==2)totdims+=((MNStruct *)context)->numFitRedCoeff;
         if(((MNStruct *)context)->incDM==2)totdims+=((MNStruct *)context)->numFitDMCoeff;
         if(((MNStruct *)context)->incRED==3)totdims+=2*((MNStruct *)context)->numFitRedPL;
@@ -1229,6 +1311,20 @@ void LRedMarginGPULogLike(double *Cube, int &ndim, int &npars, double &lnew, voi
 		delete[] Fitvec;
 	}
 	pcount=fitcount;
+
+	if(((MNStruct *)context)->incStep > 0){
+		for(int i = 0; i < ((MNStruct *)context)->incStep; i++){
+			double StepAmp = Cube[pcount];
+			pcount++;
+			double StepTime = Cube[pcount];
+			pcount++;
+			for(int o1=0;o1<((MNStruct *)context)->pulse->nobs; o1++){
+				if(((MNStruct *)context)->pulse->obsn[o1].bat > StepTime){
+					Resvec[o1] += StepAmp;
+				}
+			}
+		}
+	}	
 
 
 	if(((MNStruct *)context)->numFitEFAC == 0){

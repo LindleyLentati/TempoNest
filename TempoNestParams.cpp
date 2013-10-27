@@ -58,7 +58,9 @@ void setupparams(char *root,
 		double *DMFreqPrior,
 		int &FloatingRed,
 		double *RedFreqPrior,
-		double &FourierSig){
+		double &FourierSig,
+		int &incStep,
+		double *StepAmpPrior){
 
     //General parameters:
     //Root of the results files,relative to the directory in which TempoNest is run. This will be followed by the pulsar name, and then the individual output file extensions.
@@ -146,6 +148,10 @@ void setupparams(char *root,
 	RedFreqPrior[0]=1;
 	RedFreqPrior[1]=100;
 
+	incStep = 0;
+	StepAmpPrior[0] = -1;
+	StepAmpPrior[1] = 1;
+
 
     // Use a configfile, if we can, to overwrite the defaults set in this file.
     try {
@@ -204,6 +210,10 @@ void setupparams(char *root,
         parameters.readInto(FloatingRed, "FloatingRed", FloatingRed);
         parameters.readInto(RedFreqPrior[0], "RedFreqPrior[0]", RedFreqPrior[0]);
         parameters.readInto(RedFreqPrior[1], "RedFreqPrior[1]", RedFreqPrior[1]);
+
+        parameters.readInto(incStep, "incStep", incStep);
+        parameters.readInto(StepAmpPrior[0], "StepAmpPrior[0]", StepAmpPrior[0]);
+        parameters.readInto(StepAmpPrior[1], "StepAmpPrior[1]", StepAmpPrior[1]);
 
 
         parameters.readInto(FourierSig, "FourierSig", FourierSig);
