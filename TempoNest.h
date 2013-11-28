@@ -67,6 +67,8 @@ typedef struct {
 	int JumpMargin;
 	std::string *name;
 	int incStep;
+	char *whiteflag;
+	int whitemodel;
 	
 } MNStruct;
 
@@ -168,7 +170,9 @@ void setupparams(char *root,
 		double *RedFreqPrior,
 		double &FourierSig,
 		int &incStep,
-		double *StepAmpPrior);
+		double *StepAmpPrior,
+		char *whiteflag,
+		int &whitemodel);
 
 void setTNPriors(double **Dpriors, long double **TempoPriors, int TPsize, int DPsize);
 void setFrequencies(double *samplefreqs, int numRedfreqs, int numDMfreqs);

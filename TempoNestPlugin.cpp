@@ -93,7 +93,7 @@ void fastformBatsAll(pulsar *psr,int npsr)
 
 }
 
-MNStruct* init_struct(pulsar *pulseval,	 long double **LDpriorsval, int numberpulsarsval,int numFitJumpsval,int numFitTimingval, int systemcountval, int numFitEFACval, int numFitEQUADval, int numFitRedCoeffval, int numFitDMCoeffval,int numFitRedPLval, int numFitDMPLval, int **TempoFitNumsval,int *TempoJumpNumsval, int *sysFlagsval, int numdimsval, int incREDval, int incDMval, int incFloatDMval, int incFloatRedval, int DMFloatstartval, int RedFloatstartval, int TimeMarginVal, int JumpMarginVal, int doLinearVal, double *SampleFreqsVal, int incStepVal)
+MNStruct* init_struct(pulsar *pulseval,	 long double **LDpriorsval, int numberpulsarsval,int numFitJumpsval,int numFitTimingval, int systemcountval, int numFitEFACval, int numFitEQUADval, int numFitRedCoeffval, int numFitDMCoeffval,int numFitRedPLval, int numFitDMPLval, int **TempoFitNumsval,int *TempoJumpNumsval, int *sysFlagsval, int numdimsval, int incREDval, int incDMval, int incFloatDMval, int incFloatRedval, int DMFloatstartval, int RedFloatstartval, int TimeMarginVal, int JumpMarginVal, int doLinearVal, double *SampleFreqsVal, int incStepVal, char *whiteflagval, int whitemodelval)
 {
     MNStruct* MNS = (MNStruct*)malloc(sizeof(MNStruct));
 
@@ -124,6 +124,8 @@ MNStruct* init_struct(pulsar *pulseval,	 long double **LDpriorsval, int numberpu
 	MNS->doLinear=doLinearVal;
 	MNS->sampleFreq=SampleFreqsVal;
 	MNS->incStep=incStepVal;
+	MNS->whiteflag=whiteflagval;
+	MNS->whitemodel=whitemodelval;
 
 	return MNS;
 }
@@ -610,6 +612,7 @@ extern "C" int graphicalInterface(int argc, char **argv,
 	int  displayParams,p;
 	int nGlobal,i,flagPolyco=0,it,k;
 	char polyco_args[128];
+	char polyco_file[128];
 	int newpar=0;
 	int onlypre=0;
 	//  char tempo2MachineType[MAX_FILELEN]="";
@@ -646,24 +649,12 @@ extern "C" int graphicalInterface(int argc, char **argv,
   nGlobal=0;
   /* Obtain command line arguments */
   logdbg("Running getInputs %d",psr[0].nits);
-  getInputs(psr,argc, commandLine, timFile,parFile,&listparms,&npsr,&nGlobal,&outRes,&writeModel,
-	    outputSO,&flagPolyco,polyco_args,&newpar,&onlypre,dcmFile,covarFuncFile,newparname);
   logdbg("Completed getInputs");
+  getInputs(psr,argc, commandLine, timFile,parFile,&listparms,&npsr,&nGlobal,&outRes,&writeModel,
+            outputSO,&flagPolyco,polyco_args,polyco_file,&newpar,&onlypre,dcmFile,covarFuncFile,newparname);
 
-	int doMaxLike=0;
-  for (i=1;i<argc;i++)
-    {
-	if (strcmp(commandLine[i],"-sim")==0 ){ // Doing Sim?
-		//printf("Doing sim\n");
-		doSim(argc, commandLine, psr, timFile, parFile);
-		return 0;
-	}
+  int doMaxLike=0;
 
-	if (strcmp(commandLine[i],"-maxlike")==0 ){ // Doing Sim?
-		//printf("Doing sim\n");
-		doMaxLike=1;
-	}
-    }
   logdbg("Reading par file");
   readParfile(psr,parFile,timFile,npsr); /* Read .par file to define the pulsar's initial parameters */  
   logdbg("Finished reading par file %d",psr[0].nits);
@@ -677,116 +668,8 @@ extern "C" int graphicalInterface(int argc, char **argv,
   logdbg("Running preProcess %d",psr[0].nits);
   preProcess(psr,npsr,argc,commandLine);
   logdbg("Completed preProcess %d",psr[0].nits);
-  if (flagPolyco> 0)  /* Running tempo2 in polyco mode? */
-  {
-    if (flagPolyco == 1)
-    {
-      longdouble mjd1, mjd2,maxha,freq;
-      int ncoeff,nspan; 
-      double seg_length; 
-      char sitename[128];
-      if (sscanf(polyco_args, "%Lf %Lf %d %d %Lf %s %Lf", &mjd1, &mjd2, &nspan,
-		 &ncoeff, &maxha,sitename,&freq)!=7)
-      {
-	fprintf(stderr, "Error parsing -polyco arguments! See tempo2 -h.\n");
-	printf("Have: %s\n",polyco_args);
-	exit(1);
-      }
-      if (psr[0].tempo1 == 0)
-	printf("WARNING: Should probably use -tempo1 option\n");
-
-      if (psr[0].param[param_tzrmjd].paramSet[0]==0)
-	{
-	  printf("WARNING: tzrmjd not set.  Setting to %g\n",(double)psr[0].param[param_pepoch].val[0]);
-	  psr[0].param[param_tzrmjd].paramSet[0]=1;
-	  psr[0].param[param_tzrmjd].val[0] = psr[0].param[param_pepoch].val[0];
-	}
-      if (psr[0].param[param_tzrfrq].paramSet[0]==0)
-	{
-	  printf("WARNING: tzrfrq not set.  Setting to %g\n",(double)1400.0);
-	  psr[0].param[param_tzrfrq].paramSet[0]=1;
-	  psr[0].param[param_tzrfrq].val[0] = 1400.0;
-	}
-      if (strlen(psr[0].tzrsite)<1)
-	{
-	  printf("WARNING: tzrsite not set.  Setting to %s\n",sitename);
-	  strcpy(psr[0].tzrsite,sitename);
-	}
-
-
-      polyco(psr,npsr,mjd1, mjd2,nspan,ncoeff,maxha,sitename,freq,coeff,1);
-    }
-    else if (flagPolyco==2)
-    {
-      long double seg_length;
-      int ntimecoeff, nfreqcoeff;
-      char sitename[64];
-      long double mjd_start, mjd_end;
-      long double freq_start, freq_end;
-
-      if (sscanf(polyco_args, "%s %Lf %Lf %Lf %Lf %d %d %Lf", sitename,
-		 &mjd_start, &mjd_end, &freq_start, &freq_end,
-		 &ntimecoeff, &nfreqcoeff, &seg_length)!=8)
-      {
-	fprintf(stderr, "Error parsing -pred arguments! See tempo2 -h.\n");
-	printf("Have: %s\n",polyco_args);
-	exit(1);
-      }
-      /* Actually want seg_length in days */
-      seg_length /= SECDAY;
-
-      if (ntimecoeff%2)
-      {
-	ntimecoeff++;
-	printf("Adjusting number of coefficients (time axis) to %d (must be even)\n", ntimecoeff);
-      }
-      if (nfreqcoeff%2)
-      {
-	nfreqcoeff++;
-	printf("Adjusting number of coefficients (frequency axis) to %d (must be even)\n", nfreqcoeff);
-      }
-      if (psr[0].param[param_tzrmjd].paramSet[0]==0)
-	{
-	  printf("WARNING: tzrmjd not set.  Setting to %g\n",(double)psr[0].param[param_pepoch].val[0]);
-	  psr[0].param[param_tzrmjd].paramSet[0]=1;
-	  psr[0].param[param_tzrmjd].val[0] = psr[0].param[param_pepoch].val[0];
-	}
-      if (psr[0].param[param_tzrfrq].paramSet[0]==0)
-	{
-	  printf("WARNING: tzrfrq not set.  Setting to %g\n",(double)1400.0);
-	  psr[0].param[param_tzrfrq].paramSet[0]=1;
-	  psr[0].param[param_tzrfrq].val[0] = 1400.0;
-	}
-      if (strlen(psr[0].tzrsite)<1)
-	{
-	  printf("WARNING: tzrsite not set.  Setting to %s\n",sitename);
-	  strcpy(psr[0].tzrsite,sitename);
-	}
-
-      ChebyModelSet cms;
-      ChebyModelSet_Construct(&cms, psr, sitename, mjd_start, mjd_end,
-			      seg_length, seg_length*0.1, 
-			      freq_start, freq_end, ntimecoeff, nfreqcoeff);
-      FILE *f = fopen("t2pred.dat", "w");
-      if (!f)
-      {
-	fprintf(stderr, "Could not open t2pred.dat for writing!\n");
-	exit(1);
-      }
-      ChebyModelSet_Write(&cms, f);
-      fclose(f);
-      long double rms, mav;
-      ChebyModelSet_Test(&cms, psr, ntimecoeff*5*cms.nsegments, 
-			 nfreqcoeff*5*cms.nsegments, &rms, &mav);
-      printf("Predictive model constructed and written to t2pred.dat.\n");
-      printf("RMS error = %.3Lg s MAV= %.3Lg s\n", 
-	     rms/psr[0].param[param_f].val[0], mav/psr[0].param[param_f].val[0]);
-      ChebyModelSet_Destroy(&cms);
-    }
-
-    return 0;
-  }
-  if (debugFlag==1)
+  
+   if (debugFlag==1)
     {
       logdbg("Number of iterations = %d",psr[0].nits);
       logdbg("Maximum number of parameters = %d",MAX_PARAMS);
@@ -833,8 +716,11 @@ extern "C" int graphicalInterface(int argc, char **argv,
 	int numStep=0;
 	double *StepAmpPrior;
 	double *StepTimePrior;
+	char wflag[100];
+	int whitemodel;
 
 	char *Type = new char[100];
+	char *WhiteName = new char[100];
 	EFACPrior=new double[2];
 	EQUADPrior=new double[2];
 	AlphaPrior=new double[2];
@@ -848,7 +734,7 @@ extern "C" int graphicalInterface(int argc, char **argv,
 	StepAmpPrior=new double[2];
 	StepTimePrior=new double[2];
 
-	setupparams(Type, numTempo2its, doLinearFit, doMax, incEFAC, incEQUAD, incRED, incDM, doTimeMargin, doJumpMargin, FitSig, customPriors, EFACPrior, EQUADPrior, AlphaPrior, AmpPrior, DMAlphaPrior, DMAmpPrior, numRedCoeff, numDMCoeff, numRedPL, numDMPL, RedCoeffPrior, DMCoeffPrior, incFloatDM, DMFreqPrior, incFloatRed, RedFreqPrior, FourierSig, numStep, StepAmpPrior); 
+	setupparams(Type, numTempo2its, doLinearFit, doMax, incEFAC, incEQUAD, incRED, incDM, doTimeMargin, doJumpMargin, FitSig, customPriors, EFACPrior, EQUADPrior, AlphaPrior, AmpPrior, DMAlphaPrior, DMAmpPrior, numRedCoeff, numDMCoeff, numRedPL, numDMPL, RedCoeffPrior, DMCoeffPrior, incFloatDM, DMFreqPrior, incFloatRed, RedFreqPrior, FourierSig, numStep, StepAmpPrior, WhiteName,whitemodel); 
 	
 	
 	if(incRED < 2)numRedCoeff=0;
@@ -999,7 +885,11 @@ extern "C" int graphicalInterface(int argc, char **argv,
 
 	for(int r=0;r<=longname.size();r++){root[r]=longname[r];}
 
+	std::string wname=WhiteName;
 
+	if(wname.size() >= 100){printf("white noise flag is too long, needs to be less than 100 characters, currently %i .\n",wname.size());return 0;}
+
+	for(int r=0;r<=wname.size();r++){wflag[r]=wname[r];}
 
 
 
@@ -1021,7 +911,7 @@ extern "C" int graphicalInterface(int argc, char **argv,
 	printf("Using GPUs\n");
 #endif
 	printf("file root set to %s \n",root);
-
+	
 	int systemcount=0;
 	int *numFlags=new int[psr[0].nobs];
 	for(int o=0;o<psr[0].nobs;o++){
@@ -1049,14 +939,14 @@ extern "C" int graphicalInterface(int argc, char **argv,
 		
 //	}
 //	else{
-		if(incEFAC == 2){printf("Including One EFAC for each observing system\n");}
-		if(incEQUAD == 2){printf("Including One EQUAD for each observing system\n");}
+		if(incEFAC > 0 || incEQUAD > 0){printf("using white noise model %i\n", whitemodel);}
+// 		if(incEFAC == 2){printf("Including One EFAC for each %s\n", wflag);}
+// 		if(incEQUAD == 2){printf("Including One EQUAD for each %s\n", wflag);}
 		std::vector<std::string>systemnames;
 		for(int o=0;o<psr[0].nobs;o++){
 			int found=0;
 			for (int f=0;f<psr[0].obsn[o].nFlags;f++){
-				
-				if(strcasecmp(psr[0].obsn[o].flagID[f],"-sys")==0){
+				if(strcasecmp(psr[0].obsn[o].flagID[f],wflag)==0){
 					
 					if(std::find(systemnames.begin(), systemnames.end(), psr[0].obsn[o].flagVal[f]) != systemnames.end()) {
 	// 				/* systemnames contains x */
@@ -1064,7 +954,7 @@ extern "C" int graphicalInterface(int argc, char **argv,
 	// 	
 	// 
 		// 				/* systemnames does not contain x */
-						if(incEFAC==2 || incEQUAD==2){printf("Found system %s \n",psr[0].obsn[o].flagVal[f]);}
+						if(incEFAC==2 || incEQUAD==2){printf("Found %s %s \n",wflag, psr[0].obsn[o].flagVal[f]);}
 						systemnames.push_back(psr[0].obsn[o].flagVal[f]);
 						systemcount++;
 					}
@@ -1072,42 +962,42 @@ extern "C" int graphicalInterface(int argc, char **argv,
 				}
 
 			}
-			if(found==0 && (incEFAC==2 || incEQUAD==2)){printf("Observation %i is missing the -sys flag, please check before continuing\n",o);return 0;}
+			if(found==0 && (incEFAC==2 || incEQUAD==2)){printf("Observation %i is missing the %s flag, please check before continuing\n",wflag,o);return 0;}
 		}
 		if(incEFAC==2 || incEQUAD==2){printf("total number of systems: %i \n",systemcount);}
 		if(systemcount==0 && (incEFAC < 2 && incEQUAD < 2)){systemcount=1;}
 		
-		std::string whiteflagname=pulsarname+"-whiteflags.txt";
-		std::ofstream whiteflagoutput;
-		whiteflagoutput.open(whiteflagname.c_str());
-		whiteflagoutput << systemcount;
-		whiteflagoutput <<  "\n";
+// 		std::string whiteflagname=pulsarname+"-whiteflags.txt";
+// 		std::ofstream whiteflagoutput;
+// 		whiteflagoutput.open(whiteflagname.c_str());
+// 		whiteflagoutput << systemcount;
+// 		whiteflagoutput <<  "\n";
 		
 		for(int o=0;o<psr[0].nobs;o++){
 			for (int f=0;f<psr[0].obsn[o].nFlags;f++){
 			
-				if(strcasecmp(psr[0].obsn[o].flagID[f],"-sys")==0){
+				if(strcasecmp(psr[0].obsn[o].flagID[f],wflag)==0){
 					for (int l=0;l<systemcount;l++){
 						if(psr[0].obsn[o].flagVal[f] == systemnames[l]){
 							numFlags[o]=l;
-							whiteflagoutput << numFlags[o];
-							whiteflagoutput <<  "\n";
+// 							whiteflagoutput << numFlags[o];
+// 							whiteflagoutput <<  "\n";
 						}
 					}
 				}
 	
 			}
 		}
-		whiteflagoutput.close();
+// 		whiteflagoutput.close();
 //	}
 
 
     if(incEFAC == 0){printf("Not Including EFAC\n");numEFAC=0;}
     if(incEFAC == 1){printf("Including One EFAC for all observations\n");numEFAC=1;}
-    if(incEFAC == 2){printf("Including One EFAC for each system\n");numEFAC=systemcount;}	
+    if(incEFAC == 2){printf("Including One EFAC for each %s\n", wflag);numEFAC=systemcount;}	
     if(incEQUAD == 0){printf("Not Including EQUAD\n");numEQUAD=0;}
     if(incEQUAD == 1){printf("Including One EQUAD for all observations\n");numEQUAD=1;}
-    if(incEQUAD == 2){printf("Including One EQUAD for each system\n");numEQUAD=systemcount;}
+    if(incEQUAD == 2){printf("Including One EQUAD for each %s\n", wflag);numEQUAD=systemcount;}
     if(incRED == 0){printf("Not Including Red Noise\n");}
     if(incRED == 1){printf("Including Red Noise : Power Law Model\n");}
     if(incRED == 2){printf("Including Red Noise : Model Independant - Fitting %i Coefficients\n", numRedCoeff);}
@@ -1255,7 +1145,7 @@ extern "C" int graphicalInterface(int argc, char **argv,
 	int FloatRedstart=numFitJumps+fitcount+numEFAC+numEQUAD+Reddims-incFloatRed*2;
 	int FloatDMstart=numFitJumps+fitcount+numEFAC+numEQUAD+Reddims+DMdims-incFloatDM*2;
 
-	MNStruct *MNS = init_struct(psr,TempoPriors,npsr,numFitJumps,fitcount,systemcount,numEFAC,numEQUAD, numRedCoeff, numDMCoeff, numRedPL, numDMPL, TempoFitNums,TempoJumpNums,numFlags, ndims, incRED,incDM, incFloatDM,incFloatRed, FloatDMstart, FloatRedstart, doTimeMargin,doJumpMargin, doLinearFit, SampleFreq, numStep);
+	MNStruct *MNS = init_struct(psr,TempoPriors,npsr,numFitJumps,fitcount,systemcount,numEFAC,numEQUAD, numRedCoeff, numDMCoeff, numRedPL, numDMPL, TempoFitNums,TempoJumpNums,numFlags, ndims, incRED,incDM, incFloatDM,incFloatRed, FloatDMstart, FloatRedstart, doTimeMargin,doJumpMargin, doLinearFit, SampleFreq, numStep, wflag, whitemodel);
 	
 	
 	context=MNS;
@@ -1263,8 +1153,8 @@ extern "C" int graphicalInterface(int argc, char **argv,
 #ifdef HAVE_CULA
 
 	culaStatus status;
-    status = culaInitialize();
-    store_factorial();
+    	status = culaInitialize();
+    	store_factorial();
     
 #endif /* HAVE_CULA */
  // 	printf("Di\n"); 

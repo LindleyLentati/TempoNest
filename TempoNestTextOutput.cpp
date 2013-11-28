@@ -37,6 +37,7 @@
 #include "constraints.h"
 #include "TKfit.h"
 #include "TempoNest.h"
+#include <algorithm>
 
 //#define TSUN (4.925490947e-6L) (Should be tempo2.h now).
 
@@ -352,34 +353,62 @@ void TNtextOutput(pulsar *psr, int npsr, int newpar, long double *Tempo2Fit, voi
 			fitcount++;
 		}	
 	}
+                std::vector<int>systempos;
+                std::vector<int>sysflag;
+                std::vector<std::string>systemnames;
+		
+                if(((MNStruct *)context)->numFitEFAC > 1 || ((MNStruct *)context)->numFitEQUAD > 1){
+                        for(int o=0;o<((MNStruct *)context)->pulse[0].nobs;o++){
+                                int found=0;
+                                for (int f=0;f<((MNStruct *)context)->pulse[0].obsn[o].nFlags;f++){
+
+                                        if(strcasecmp(((MNStruct *)context)->pulse[0].obsn[o].flagID[f],((MNStruct *)context)->whiteflag)==0){
+
+                                                if(std::find(systemnames.begin(), systemnames.end(), ((MNStruct *)context)->pulse[0].obsn[o].flagVal[f]) != systemnames.end()) {
+                                                } else {
+
+                                                        systempos.push_back(o);
+                                                        sysflag.push_back(f);
+                                                        systemnames.push_back(((MNStruct *)context)->pulse[0].obsn[o].flagVal[f]);
+
+                                                }
+                                                found=1;
+                                        }
+
+                                }
+                        }
+                }
+
   	
 	if(incRED != 0 || ((MNStruct *)context)->incDM !=0 ||((MNStruct *)context)->numFitEFAC > 0 || ((MNStruct *)context)->numFitEQUAD > 0){
-	 	printf("------------------------------------------------------------------------------\n");
-		printf("Stochastic Parameters:\n");
-		if(((MNStruct *)context)->numFitEFAC == 1){
-			printf("Global EFAC: %g +/- %g\n", paramlist[fitcount],paramlist[fitcount+ndim]);
-			fitcount++;
-		}
-		else if(((MNStruct *)context)->numFitEFAC > 1){
-			int system=1;
-			for(int i =0;i<((MNStruct *)context)->numFitEFAC; i++){
-				printf("EFAC for system %i: %g +/- %g\n", system,paramlist[fitcount],paramlist[fitcount+ndim]);
-				fitcount++;
-				system++;
-			}
-		}
-		if(((MNStruct *)context)->numFitEQUAD ==1){
-			printf("Global EQUAD: %g +/- %g\n", paramlist[fitcount],paramlist[fitcount+ndim]);
-			fitcount++;
-		}
-		else if(((MNStruct *)context)->numFitEQUAD > 1){
+                printf("------------------------------------------------------------------------------\n");
+                printf("Stochastic Parameters:\n");
+                if(((MNStruct *)context)->numFitEFAC == 1){
+                        printf("Global EFAC: %g +/- %g\n", paramlist[fitcount],paramlist[fitcount+ndim]);
+                        fitcount++;
+                }
+                else if(((MNStruct *)context)->numFitEFAC > 1){
                         int system=1;
                         for(int i =0;i<((MNStruct *)context)->numFitEFAC; i++){
-                                printf("EQUAD for system %i: %g +/- %g\n", system,paramlist[fitcount],paramlist[fitcount+ndim]);
+                                printf("EFAC for %s %s: %g +/- %g\n",((MNStruct *)context)->whiteflag, ((MNStruct *)context)->pulse[0].obsn[systempos[i]].flagVal[sysflag[i]] ,paramlist[fitcount],paramlist[fitcount+ndim]);
                                 fitcount++;
                                 system++;
                         }
                 }
+
+                if(((MNStruct *)context)->numFitEQUAD ==1){
+                        printf("Global EQUAD: %g +/- %g\n", paramlist[fitcount],paramlist[fitcount+ndim]);
+                        fitcount++;
+                }
+                else if(((MNStruct *)context)->numFitEQUAD > 1){
+                        int system=1;
+                        for(int i =0;i<((MNStruct *)context)->numFitEFAC; i++){
+                                printf("EQUAD for %s %s: %g +/- %g\n", ((MNStruct *)context)->whiteflag, ((MNStruct *)context)->pulse[0].obsn[systempos[i]].flagVal[sysflag[i]],paramlist[fitcount],paramlist[fitcount+ndim]);
+                                fitcount++;
+                                system++;
+                        }
+                }
+
 		if(incRED ==1 || incRED ==3){
 			printf("Power Law Red Noise Model:\n");
 			printf("Log Amplitude: %g +/- %g\n",paramlist[fitcount],paramlist[fitcount+ndim]);

@@ -36,8 +36,8 @@ AC_DEFUN([SWIN_LIB_CULA],
   CULA_CFLAGS=""
   CULA_LIBS=""
 
-   CULA_LIB=""
-#   CULA_LIB="-lcula_lapack -lcuda"
+#   CULA_LIB=""
+   CULA_LIB="-lcula_lapack -lcuda"
 
   if test x"$CULA_LIB_PATH_64" != x; then
     CULA_LIBS="-L$CULA_LIB_PATH_64"
@@ -65,11 +65,11 @@ AC_DEFUN([SWIN_LIB_CULA],
   LIBS="$ac_save_LIBS $CULA_LIBS"
   CXXFLAGS="$ac_save_CXXFLAGS $CULA_CFLAGS"
 
-  AC_TRY_LINK([#include <cula.hpp>],[culaStatus status = FAKEculaInitialize();],
+  AC_TRY_LINK([#include <cula.hpp>],[culaStatus status = culaInitialize();],
               have_cula=yes, have_cula=no)
 
   if test $have_cula = no; then
-    AC_TRY_LINK([#include <cula_status.h>],[FAKEculaInitialize();],
+    AC_TRY_LINK([#include <cula_status.h>],[culaInitialize();],
 
               have_cula=yes, have_cula=no)
   fi

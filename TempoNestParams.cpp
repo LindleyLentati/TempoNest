@@ -60,7 +60,9 @@ void setupparams(char *root,
 		double *RedFreqPrior,
 		double &FourierSig,
 		int &incStep,
-		double *StepAmpPrior){
+		double *StepAmpPrior,
+		char *whiteflag,
+		int &whitemodel){
 
     //General parameters:
     //Root of the results files,relative to the directory in which TempoNest is run. This will be followed by the pulsar name, and then the individual output file extensions.
@@ -79,10 +81,16 @@ void setupparams(char *root,
     //Central point of prior for non linear search will be set at this value unless set otherwise in custom priors.
     doMax=0;
 
-    //ModelChoice
+    //ModelChoices
+
+    //White noise
+
 
     incEFAC=0; //include EFAC: 0 = none, 1 = one for all residuals, 2 = one for each observing system
     incEQUAD=0; //include EQUAD: 0 = no, 1 = yes
+    strcpy( whiteflag, "-sys");
+    whitemodel=0;
+
     incRED=0; //include Red Noise model: 0 = no, 1 = power law model (vHL2013), 2 = model independent (L2013)
     incDM=0; //include Red Noise model: 0 = no, 1 = power law model (vHL2013), 2 = model independent (L2013)
 
@@ -215,6 +223,9 @@ void setupparams(char *root,
         parameters.readInto(StepAmpPrior[0], "StepAmpPrior[0]", StepAmpPrior[0]);
         parameters.readInto(StepAmpPrior[1], "StepAmpPrior[1]", StepAmpPrior[1]);
 
+	parameters.readInto(strBuf, "whiteflag", string("-sys"));
+        strcpy(whiteflag, strBuf.data());
+	parameters.readInto(whitemodel, "whitemodel", whitemodel);
 
         parameters.readInto(FourierSig, "FourierSig", FourierSig);
 

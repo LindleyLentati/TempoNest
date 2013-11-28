@@ -28,7 +28,7 @@
 #include <stdio.h>
 #include <time.h>
 #define __Tempo2_h
-#define TEMPO2_h_VER "$Revision: 1.73 $"
+#define TEMPO2_h_VER "$Revision: 1.76 $"
 #define TSUN (4.925490947e-6L) // Solar constant for mass calculations.
 #define MAX_FREQ_DERIVATIVES 13    /* F0 -> Fn   where n=10                            */
 #define MAX_DM_DERIVATIVES   10    /* DM0 -> DMn where n=10                            */
@@ -47,7 +47,7 @@
 #define MAX_PARAMS           500   /* Maximum number of parameters                     */
 #define MAX_JUMPS            2000  /* Maximum number of phase jumps                    */
 #define MAX_WHITE            100   /* Maximum number of parameters for whitening       */
-#define MAX_IFUNC            500   /* Maximum number of parameters for interpolation function  */
+#define MAX_IFUNC            800   /* Maximum number of parameters for interpolation function  */
 #define MAX_TEL_CLK_OFFS     500   /* Maximum number of parameters for telescope clock offset */
 #define MAX_TEL_DX           500   /* Maximum number of parameters for interpolation function  */
 #define MAX_TEL_DY           500   /* Maximum number of parameters for interpolation function  */
@@ -55,6 +55,8 @@
 #define MAX_FIT              10000  /* Maximum number of parameters to fit for */
 #define MAX_T2EFAC           50    /* Maximum number of T2EFACs allowed                */
 #define MAX_T2EQUAD          50    /* Maximum number of T2EQUADs allowed               */
+#define MAX_TNEF           50    /* Maximum number of T2EFACs allowed                */
+#define MAX_TNEQ          50    /* Maximum number of T2EQUADs allowed               */
 #define MAX_BPJ_JUMPS        5     /* Maximum number of jumps in binary params - for BPJ model */
 #define MAX_TOFFSET          10    /* Number of time jumps allowed in .par file        */
 #define MAX_QUAD             150   /* Maximum number of frequency channels in quadrupolar function */
@@ -355,7 +357,7 @@ typedef struct observation {
   longdouble torb;                /* Combined binary delays */
   longdouble nphase;              /* allows the pulse number to be determined                   */
   longdouble phase;               
-  unsigned long long pulseN;                    /* Pulse number */
+  long long pulseN;                    /* Pulse number */
 
   char flagID[MAX_FLAGS][MAX_FLAG_LEN];     /* Flags in .tim file                                         */
   char flagVal[MAX_FLAGS][MAX_FLAG_LEN];
@@ -412,7 +414,8 @@ typedef struct pulsar {
   double gwm_decj;
   double gwm_epoch;
   double gwm_phi; // Polarisation angle
-
+  double gwm_dphase; // Phase offset (similar to GLPH)
+ 
   // Vikram Ravi's addition for eccentric, binary black hole systems
   double gwecc_ra;
   double gwecc_dec;
@@ -570,6 +573,14 @@ typedef struct pulsar {
   char   T2equadFlagID[MAX_T2EQUAD][MAX_FLAG_LEN],T2equadFlagVal[MAX_T2EQUAD][MAX_FLAG_LEN];
   double T2equadVal[MAX_T2EQUAD];
   double T2globalEfac;
+
+  //TNEF/TNEQ
+  int    nTNEF,nTNEQ;
+  char   TNEFFlagID[MAX_TNEF][MAX_FLAG_LEN],TNEFFlagVal[MAX_TNEF][MAX_FLAG_LEN];
+  double TNEFVal[MAX_TNEF];
+  char   TNEQFlagID[MAX_TNEQ][MAX_FLAG_LEN],TNEQFlagVal[MAX_TNEQ][MAX_FLAG_LEN];
+  double TNEQVal[MAX_TNEQ];
+
   
   // White noise models
   char whiteNoiseModelFile[MAX_STRLEN];
@@ -602,9 +613,9 @@ int zoom_graphics(float xcurs2,float ycurs2,int flag);
 void getInputs(pulsar *psr,int argc, char *argv[],char timFile[][MAX_FILELEN],
 	       char parFile[][MAX_FILELEN],int *displayParams,int *npsr,
 	       int *nGlobal,int *outRes,int *writeModel,char *outputSO,int *polyco,
-	       char *polyco_args, int *newpar,int *onlypre,char *dcmFile,char *covarFuncFile,char* newparname);
+	       char *polyco_args, char *polyco_file, int *newpar,int *onlypre,char *dcmFile,char *covarFuncFile,char* newparname);
 void polyco(pulsar *psr,int npsr,longdouble polyco_MJD1,longdouble polyco_MJD2,int nspan,int ncoeff,
-	    longdouble maxha,char *sitename,longdouble freq,longdouble coeff[MAX_COEFF],int trueDM);
+	    longdouble maxha,char *sitename,longdouble freq,longdouble coeff[MAX_COEFF],int trueDM,char* polyco_file);
 void readParfile(pulsar *psr,char parFile[][MAX_FILELEN],char timFile[][MAX_FILELEN],int npsr);
 void readParfileGlobal(pulsar *psr,int npsr,char tpar[MAX_STRLEN][MAX_FILELEN],
 		       char ttim[MAX_STRLEN][MAX_FILELEN]);

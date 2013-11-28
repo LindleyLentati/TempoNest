@@ -221,10 +221,20 @@ void vHRedLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *conte
 	double noiseval=0;	
 	for(int o1=0;o1<((MNStruct *)context)->pulse->nobs; o1++){
                 if(((MNStruct *)context)->numFitEQUAD < 2 && ((MNStruct *)context)->numFitEFAC < 2){
-                        noiseval=pow(((((MNStruct *)context)->pulse->obsn[o1].toaErr)*pow(10.0,-6))*EFAC[0],2) + EQUAD[0];
+			if(((MNStruct *)context)->whitemodel == 0){
+				noiseval=pow(((((MNStruct *)context)->pulse->obsn[o1].toaErr)*pow(10.0,-6))*EFAC[0],2) + EQUAD[0];
+			}
+			else if(((MNStruct *)context)->whitemodel == 1){
+				noiseval= EFAC[0]*EFAC[0]*(pow(((((MNStruct *)context)->pulse->obsn[o1].toaErr)*pow(10.0,-6)),2) + EQUAD[0]);
+			}
                 }
                 else if(((MNStruct *)context)->numFitEQUAD > 1 || ((MNStruct *)context)->numFitEFAC > 1){
-                        noiseval=pow(((((MNStruct *)context)->pulse->obsn[o1].toaErr)*pow(10.0,-6))*EFAC[((MNStruct *)context)->sysFlags[o1]],2) + EQUAD[((MNStruct *)context)->sysFlags[o1]];
+			if(((MNStruct *)context)->whitemodel == 0){
+                       	 	noiseval=pow(((((MNStruct *)context)->pulse->obsn[o1].toaErr)*pow(10.0,-6))*EFAC[((MNStruct *)context)->sysFlags[o1]],2) + EQUAD[((MNStruct *)context)->sysFlags[o1]];
+			}
+			else if(((MNStruct *)context)->whitemodel == 1){
+                       	 	noiseval=EFAC[((MNStruct *)context)->sysFlags[o1]]*EFAC[((MNStruct *)context)->sysFlags[o1]]*(pow(((((MNStruct *)context)->pulse->obsn[o1].toaErr)*pow(10.0,-6)),2) + EQUAD[((MNStruct *)context)->sysFlags[o1]]);
+			}
                 }
 
 		CovMatrix[o1][o1] += noiseval;
@@ -504,17 +514,27 @@ void vHRedMarginLogLike(double *Cube, int &ndim, int &npars, double &lnew, void 
 	}
 
 
-        double noiseval=0;
-        for(int o1=0;o1<((MNStruct *)context)->pulse->nobs; o1++){
+	double noiseval=0;	
+	for(int o1=0;o1<((MNStruct *)context)->pulse->nobs; o1++){
                 if(((MNStruct *)context)->numFitEQUAD < 2 && ((MNStruct *)context)->numFitEFAC < 2){
-                        noiseval=pow(((((MNStruct *)context)->pulse->obsn[o1].toaErr)*pow(10.0,-6))*EFAC[0],2) + EQUAD[0];
+			if(((MNStruct *)context)->whitemodel == 0){
+				noiseval=pow(((((MNStruct *)context)->pulse->obsn[o1].toaErr)*pow(10.0,-6))*EFAC[0],2) + EQUAD[0];
+			}
+			else if(((MNStruct *)context)->whitemodel == 1){
+				noiseval= EFAC[0]*EFAC[0]*(pow(((((MNStruct *)context)->pulse->obsn[o1].toaErr)*pow(10.0,-6)),2) + EQUAD[0]);
+			}
                 }
                 else if(((MNStruct *)context)->numFitEQUAD > 1 || ((MNStruct *)context)->numFitEFAC > 1){
-                        noiseval=pow(((((MNStruct *)context)->pulse->obsn[o1].toaErr)*pow(10.0,-6))*EFAC[((MNStruct *)context)->sysFlags[o1]],2) + EQUAD[((MNStruct *)context)->sysFlags[o1]];
+			if(((MNStruct *)context)->whitemodel == 0){
+                       	 	noiseval=pow(((((MNStruct *)context)->pulse->obsn[o1].toaErr)*pow(10.0,-6))*EFAC[((MNStruct *)context)->sysFlags[o1]],2) + EQUAD[((MNStruct *)context)->sysFlags[o1]];
+			}
+			else if(((MNStruct *)context)->whitemodel == 1){
+                       	 	noiseval=EFAC[((MNStruct *)context)->sysFlags[o1]]*EFAC[((MNStruct *)context)->sysFlags[o1]]*(pow(((((MNStruct *)context)->pulse->obsn[o1].toaErr)*pow(10.0,-6)),2) + EQUAD[((MNStruct *)context)->sysFlags[o1]]);
+			}
                 }
 
-                CovMatrix[o1][o1] += noiseval;
-        }
+		CovMatrix[o1][o1] += noiseval;
+	}
 	
 
 		
@@ -780,12 +800,24 @@ void WhiteLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *conte
 	double noiseval=0;
 	double detN=0;
 	for(int o=0;o<((MNStruct *)context)->pulse->nobs; o++){
+
                 if(((MNStruct *)context)->numFitEQUAD < 2 && ((MNStruct *)context)->numFitEFAC < 2){
-                        noiseval=pow(((((MNStruct *)context)->pulse->obsn[o].toaErr)*pow(10.0,-6))*EFAC[0],2) + EQUAD[0];
+			if(((MNStruct *)context)->whitemodel == 0){
+				noiseval=pow(((((MNStruct *)context)->pulse->obsn[o].toaErr)*pow(10.0,-6))*EFAC[0],2) + EQUAD[0];
+			}
+			else if(((MNStruct *)context)->whitemodel == 1){
+				noiseval= EFAC[0]*EFAC[0]*(pow(((((MNStruct *)context)->pulse->obsn[o].toaErr)*pow(10.0,-6)),2) + EQUAD[0]);
+			}
                 }
                 else if(((MNStruct *)context)->numFitEQUAD > 1 || ((MNStruct *)context)->numFitEFAC > 1){
-                        noiseval=pow(((((MNStruct *)context)->pulse->obsn[o].toaErr)*pow(10.0,-6))*EFAC[((MNStruct *)context)->sysFlags[o]],2) + EQUAD[((MNStruct *)context)->sysFlags[o]];
+			if(((MNStruct *)context)->whitemodel == 0){
+                       	 	noiseval=pow(((((MNStruct *)context)->pulse->obsn[o].toaErr)*pow(10.0,-6))*EFAC[((MNStruct *)context)->sysFlags[o]],2) + EQUAD[((MNStruct *)context)->sysFlags[o]];
+			}
+			else if(((MNStruct *)context)->whitemodel == 1){
+                       	 	noiseval=EFAC[((MNStruct *)context)->sysFlags[o]]*EFAC[((MNStruct *)context)->sysFlags[o]]*(pow(((((MNStruct *)context)->pulse->obsn[o].toaErr)*pow(10.0,-6)),2) + EQUAD[((MNStruct *)context)->sysFlags[o]]);
+			}
                 }
+	
 	
 
 		Chisq += pow(Resvec[o],2)/noiseval;
@@ -971,10 +1003,17 @@ void WhiteMarginLogLike(double *Cube, int &ndim, int &npars, double &lnew, void 
 	
 	if(((MNStruct *)context)->numFitEFAC >1 || ((MNStruct *)context)->numFitEQUAD > 1){
 		Noise=new double[((MNStruct *)context)->pulse->nobs];
-		for(int o=0;o<((MNStruct *)context)->pulse->nobs; o++){
-			Noise[o]=pow(((((MNStruct *)context)->pulse->obsn[o].toaErr)*pow(10.0,-6))*EFAC[((MNStruct *)context)->sysFlags[o]],2) + EQUAD[((MNStruct *)context)->sysFlags[o]];
+		
+		if(((MNStruct *)context)->whitemodel == 0){
+			for(int o=0;o<((MNStruct *)context)->pulse->nobs; o++){
+				Noise[o]=pow(((((MNStruct *)context)->pulse->obsn[o].toaErr)*pow(10.0,-6))*EFAC[((MNStruct *)context)->sysFlags[o]],2) + EQUAD[((MNStruct *)context)->sysFlags[o]];
+			}
 		}
-
+		else if(((MNStruct *)context)->whitemodel == 1){
+			for(int o=0;o<((MNStruct *)context)->pulse->nobs; o++){
+				Noise[o]=EFAC[((MNStruct *)context)->sysFlags[o]]*EFAC[((MNStruct *)context)->sysFlags[o]]*(pow(((((MNStruct *)context)->pulse->obsn[o].toaErr)*pow(10.0,-6)),2) + EQUAD[((MNStruct *)context)->sysFlags[o]]);
+			}
+		}
 
 		for(int i=0;i<((MNStruct *)context)->pulse->nobs;i++){
 			for(int j=0;j<((MNStruct *)context)->Gsize; j++){
@@ -1009,12 +1048,23 @@ void WhiteMarginLogLike(double *Cube, int &ndim, int &npars, double &lnew, void 
 	
 	else if(((MNStruct *)context)->numFitEFAC == 1 || ((MNStruct *)context)->numFitEQUAD==1 && ((MNStruct *)context)->numFitEFAC < 2 && ((MNStruct *)context)->numFitEQUAD < 2){
 		Noise=new double[((MNStruct *)context)->Gsize];
-		for(int o=0;o<((MNStruct *)context)->Gsize; o++){
-			Noise[o]=pow(EFAC[0],2)*((MNStruct *)context)->SVec[o] + EQUAD[0];
-			det += log(Noise[o]);
-			Noise[o] = 1.0/Noise[o];
-
+		if(((MNStruct *)context)->whitemodel == 0){
+			for(int o=0;o<((MNStruct *)context)->Gsize; o++){
+				Noise[o]=pow(EFAC[0],2)*((MNStruct *)context)->SVec[o] + EQUAD[0];
+				det += log(Noise[o]);
+				Noise[o] = 1.0/Noise[o];
+	
+			}
 		}
+		else if(((MNStruct *)context)->whitemodel == 1){
+			for(int o=0;o<((MNStruct *)context)->Gsize; o++){
+				Noise[o]=pow(EFAC[0],2)*(((MNStruct *)context)->SVec[o] + EQUAD[0]);
+				det += log(Noise[o]);
+				Noise[o] = 1.0/Noise[o];
+	
+			}
+		}
+
 		double *UGRes=new double[((MNStruct *)context)->Gsize];
 		dgemv(((MNStruct *)context)->UMatrix,Resvec,UGRes,((MNStruct *)context)->Gsize,((MNStruct *)context)->pulse->nobs,'N');
 		
@@ -1215,18 +1265,32 @@ void LRedLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *contex
 	double timelike=0;
 	double timelike2=0;
 
-	for(int o=0;o<((MNStruct *)context)->pulse->nobs; o++){
-// 		printf("here %i \n", o);
-// 		printf("Noise %i %i %g\n",o,((MNStruct *)context)->sysFlags[o],EQUAD[0]);
-		WorkNoise[o]=pow(((((MNStruct *)context)->pulse->obsn[o].toaErr)*pow(10.0,-6))*EFAC[((MNStruct *)context)->sysFlags[o]],2) + EQUAD[((MNStruct *)context)->sysFlags[o]];
-		
-		tdet=tdet+log(WorkNoise[o]);
-		WorkNoise[o]=1.0/WorkNoise[o];
-		timelike=timelike+pow(Resvec[o],2)*WorkNoise[o];
-		timelike2=timelike2+pow((double)((MNStruct *)context)->pulse->obsn[o].residual,2)*WorkNoise[o];
-// 		printf("CPUTlike: %i %g %g %g\n",o,timelike,timelike2,phase);
+	if(((MNStruct *)context)->whitemodel == 0){
+		for(int o=0;o<((MNStruct *)context)->pulse->nobs; o++){
+			
+			WorkNoise[o]=pow(((((MNStruct *)context)->pulse->obsn[o].toaErr)*pow(10.0,-6))*EFAC[((MNStruct *)context)->sysFlags[o]],2) + EQUAD[((MNStruct *)context)->sysFlags[o]];
+			
+			tdet=tdet+log(WorkNoise[o]);
+			WorkNoise[o]=1.0/WorkNoise[o];
+			timelike=timelike+pow(Resvec[o],2)*WorkNoise[o];
+			timelike2=timelike2+pow((double)((MNStruct *)context)->pulse->obsn[o].residual,2)*WorkNoise[o];
+
+		}
+	}
+	else if(((MNStruct *)context)->whitemodel == 1){
+		for(int o=0;o<((MNStruct *)context)->pulse->nobs; o++){
+			
+			WorkNoise[o]=EFAC[((MNStruct *)context)->sysFlags[o]]*EFAC[((MNStruct *)context)->sysFlags[o]]*(pow(((((MNStruct *)context)->pulse->obsn[o].toaErr)*pow(10.0,-6)),2) + EQUAD[((MNStruct *)context)->sysFlags[o]]);
+			
+			tdet=tdet+log(WorkNoise[o]);
+			WorkNoise[o]=1.0/WorkNoise[o];
+			timelike=timelike+pow(Resvec[o],2)*WorkNoise[o];
+			timelike2=timelike2+pow((double)((MNStruct *)context)->pulse->obsn[o].residual,2)*WorkNoise[o];
+
+		}
 	}
 
+	
 	double *NFd = new double[totCoeff];
 	double **FMatrix=new double*[((MNStruct *)context)->pulse->nobs];
 	for(int i=0;i<((MNStruct *)context)->pulse->nobs;i++){
@@ -2319,9 +2383,17 @@ void LRedMarginLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *
 	
 	if(((MNStruct *)context)->numFitEFAC >1 || ((MNStruct *)context)->numFitEQUAD > 1){
 		Noise=new double[((MNStruct *)context)->pulse->nobs];
-		for(int o=0;o<((MNStruct *)context)->pulse->nobs; o++){
-			Noise[o]=pow(((((MNStruct *)context)->pulse->obsn[o].toaErr)*pow(10.0,-6))*EFAC[((MNStruct *)context)->sysFlags[o]],2) + EQUAD[((MNStruct *)context)->sysFlags[o]];
+		if(((MNStruct *)context)->whitemodel == 0){
+			for(int o=0;o<((MNStruct *)context)->pulse->nobs; o++){
+				Noise[o]=pow(((((MNStruct *)context)->pulse->obsn[o].toaErr)*pow(10.0,-6))*EFAC[((MNStruct *)context)->sysFlags[o]],2) + EQUAD[((MNStruct *)context)->sysFlags[o]];
+			}
 		}
+		else if(((MNStruct *)context)->whitemodel == 1){
+			for(int o=0;o<((MNStruct *)context)->pulse->nobs; o++){
+				Noise[o]=EFAC[((MNStruct *)context)->sysFlags[o]]*EFAC[((MNStruct *)context)->sysFlags[o]]*(pow(((((MNStruct *)context)->pulse->obsn[o].toaErr)*pow(10.0,-6)),2) + EQUAD[((MNStruct *)context)->sysFlags[o]]);
+			}
+		}
+
 
 		
 		for(int i=0;i<((MNStruct *)context)->pulse->nobs;i++){
@@ -2362,12 +2434,20 @@ void LRedMarginLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *
 
         else if(((MNStruct *)context)->numFitEFAC == 1 || ((MNStruct *)context)->numFitEQUAD==1 && ((MNStruct *)context)->numFitEFAC < 2 && ((MNStruct *)context)->numFitEQUAD < 2){
 		Noise=new double[((MNStruct *)context)->Gsize];
-                for(int o=0;o<((MNStruct *)context)->Gsize; o++){
-                        Noise[o]=pow(EFAC[0],2)*((MNStruct *)context)->SVec[o] + EQUAD[0];
-                      //  printf("tdet: %i %g %g %g \n",o, EFAC[0],   EQUAD[0], ((MNStruct *)context)->SVec[o] );
-                        tdet += log(Noise[o]);
-                        Noise[o] = 1.0/Noise[o];
-                }
+		if(((MNStruct *)context)->whitemodel == 0){
+			for(int o=0;o<((MNStruct *)context)->Gsize; o++){
+				Noise[o]=pow(EFAC[0],2)*((MNStruct *)context)->SVec[o] + EQUAD[0];
+				tdet += log(Noise[o]);
+				Noise[o] = 1.0/Noise[o];
+			}
+		}
+		if(((MNStruct *)context)->whitemodel == 1){
+			for(int o=0;o<((MNStruct *)context)->Gsize; o++){
+				Noise[o]=pow(EFAC[0],2)*(((MNStruct *)context)->SVec[o] + EQUAD[0]);
+				tdet += log(Noise[o]);
+				Noise[o] = 1.0/Noise[o];
+			}
+		}
                 
         		for(int i=0;i<((MNStruct *)context)->Gsize;i++){
 					for(int j=0;j<((MNStruct *)context)->pulse->nobs; j++){
