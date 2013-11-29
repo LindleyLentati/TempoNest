@@ -1647,10 +1647,11 @@ void LRedMarginGPULogLike(double *Cube, int &ndim, int &npars, double &lnew, voi
 				powercoeff[i]+= PLcomp;
 				powercoeff[i+FitRedCoeff/2]+= PLcomp;
 
-/*
-				double rho = (Agw*Agw/12.0/(M_PI*M_PI))*pow(f1yr,(-3)) * pow(freqs[i]*365.25,(-redindex))/(maxtspan*24*60*60);
+
+// 				double rho = (Agw*Agw/12.0/(M_PI*M_PI))*pow(f1yr,(-3)) * pow(freqs[i]*365.25,(-redindex))/(maxtspan*24*60*60);
+				double rho = (Agw*Agw)*pow(f1yr,(-3)) * pow(freqs[i]*365.25,(-redindex))/(maxtspan*24*60*60);
 				powercoeff[i]+= rho;
-				powercoeff[i+FitRedCoeff/2]+= rho;*/
+				powercoeff[i+FitRedCoeff/2]+= rho;
 			}
 		}
 				
