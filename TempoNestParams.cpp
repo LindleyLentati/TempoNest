@@ -105,49 +105,51 @@ void setupparams(char *root,
     customPriors=0; 
 
 
-    //FitSig sets the priors for all timing model and jump parameters for both non linear and linear timing models.
-    //For the non linear fit, Fitsig multiples the error returned by Tempo2, and sets the prior to be the best fit value returned by tempo2 +/- the scaled error.
-    // For the linear fit, multiplies the ratio of the rms of the designmatrix vector for each timing model parameter, and the rms of the residuals returned by Tempo2.
-    FitSig=5;
+	//FitSig sets the priors for all timing model and jump parameters for both non linear and linear timing models.
+	//For the non linear fit, Fitsig multiples the error returned by Tempo2, and sets the prior to be the best fit value returned by tempo2 +/- the scaled error.
+	// For the linear fit, multiplies the ratio of the rms of the designmatrix vector for each timing model parameter, and the rms of the residuals returned by Tempo2.
+	FitSig=5;
+	
+	//Remaining priors for the stochastic parameters.  
+	EFACPrior[0]=0.1;
+	EFACPrior[1]=10;
+	
+	
+	EQUADPrior[0]=-10;
+	EQUADPrior[1]=-5;
+	
+	numRedPL=0;
+	numDMPL=0;
 
-    //Remaining priors for the stochastic parameters.  
-    EFACPrior[0]=0.1;
-    EFACPrior[1]=10;
+	numRedCoeff=10;
+	numDMCoeff=10;
+
+// 	varyRedCoeff=0;
+// 	varyDMCoeff=0;
+	
+	AlphaPrior[0]=1.1;
+	AlphaPrior[1]=6.1;
+	
+	AmpPrior[0]=-20;
+	AmpPrior[1]=-10;
+	
+	DMAlphaPrior[0]=1.1;
+	DMAlphaPrior[1]=6.1;
+	
+	DMAmpPrior[0]=-18;
+	DMAmpPrior[1]=-8;
+
+	
+	RedCoeffPrior[0]=-10;
+	RedCoeffPrior[1]=0;
+	
+	DMCoeffPrior[0]=-10;
+	DMCoeffPrior[1]=0;
+	
+	FourierSig = 5;
 
 
-    EQUADPrior[0]=-10;
-    EQUADPrior[1]=-5;
-
-    numRedPL=0;
-    numDMPL=0;
-
-    AlphaPrior[0]=1.1;
-    AlphaPrior[1]=6.1;
-
-    AmpPrior[0]=-20;
-    AmpPrior[1]=-10;
-    
-    DMAlphaPrior[0]=1.1;
-    DMAlphaPrior[1]=6.1;
-
-    DMAmpPrior[0]=-18;
-    DMAmpPrior[1]=-8;
-    
-
-
-    numRedCoeff=10;
-    numDMCoeff=10;
-
-    RedCoeffPrior[0]=-10;
-    RedCoeffPrior[1]=0;
-
-    DMCoeffPrior[0]=-10;
-    DMCoeffPrior[1]=0;
-    
-    FourierSig = 5;
-
-
-    
+	
 	FloatingDM = 0;
 	DMFreqPrior[0]=1;
 	DMFreqPrior[1]=100;
@@ -155,7 +157,7 @@ void setupparams(char *root,
 	FloatingRed = 0;
 	RedFreqPrior[0]=1;
 	RedFreqPrior[1]=100;
-
+	
 	incStep = 0;
 	StepAmpPrior[0] = -1;
 	StepAmpPrior[1] = 1;
@@ -228,6 +230,10 @@ void setupparams(char *root,
 	parameters.readInto(whitemodel, "whitemodel", whitemodel);
 
         parameters.readInto(FourierSig, "FourierSig", FourierSig);
+
+//         parameters.readInto(varyRedCoeff, "varyRedCoeff", varyRedCoeff);
+//         parameters.readInto(varyDMCoeff, "varyDMCoeff", varyDMCoeff);
+
 
     } catch(ConfigFile::file_not_found oError) {
         printf("WARNING: parameters file '%s' not found. Using defaults.\n", oError.filename.c_str());
