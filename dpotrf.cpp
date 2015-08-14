@@ -21,7 +21,7 @@ void dpotrf(double **A, int msize, double &det)
 
 	det=det*2;
 
-  
+  	//printf("info: %i \n", info);
   delete a;
 
 }

@@ -39,14 +39,18 @@ typedef struct {
 	double staticTimeDet;
 	double **UMatrix;     //UMatrix and SVec are for speeding up when only have 1EFAC and 1EQUAD
 	double *SVec; 
+	double *maxLikeRes;
 	int numberpulsars;
 	int doLinear;
 	int numFitJumps;
 	int numFitTiming;
 	int numFitEFAC;
+	int EPolTerms;
 	int numFitEQUAD;
+	int *includeEQsys;
 	int numFitRedCoeff;
 	int numFitDMCoeff;
+	int totCoeff;
 	int numFitRedPL;
 	int numFitDMPL;
 	double *sampleFreq;
@@ -55,13 +59,16 @@ typedef struct {
 	int incDM;
 	int incFloatDM;
 	int incFloatRed;
+	int yearlyDM;
+	int incsinusoid;
 	int FloatDMstart;
-        int FloatRedstart;
+    	int FloatRedstart;
 	int Gsize;
 	int Dsize;
 	int **TempoFitNums;
 	int *TempoJumpNums;
 	int *sysFlags;
+	double *TobsInfo;
 	int systemcount;
 	int TimeMargin;
 	int JumpMargin;
@@ -69,63 +76,117 @@ typedef struct {
 	int incStep;
 	char *whiteflag;
 	int whitemodel;
-	
+	int varyRedCoeff;
+	int varyDMCoeff;
+	int incGWB;
+	int incDMEvent;
+	int incDMShapeEvent;
+	int numDMShapeCoeff; 
+	int incRedShapeEvent;
+	int MarginRedShapeCoeff;
+	int numRedShapeCoeff;
+	int incDMScatterShapeEvent;
+	int numDMScatterShapeCoeff;
+	int RedPriorType;
+	int DMPriorType;
+	int EQUADPriorType;
+	int EFACPriorType;
+	int useOriginalErrors;
+	int incShannonJitter;
+	int incDMScatter;
+	int numFitDMScatterCoeff;
+	int incNGJitter;
+	int numNGJitterEpochs;
+	double **NGJitterMatrix;
+	int *NGJitterSysFlags;
+	int incGlitch;
+	int incGlitchTerms;
+	int incBreakingIndex;
+	int FitLowFreqCutoff;
+	int uselongdouble;
+	int incGroupNoise;
+	int numFitGroupNoiseCoeff;
+	int **FitForGroup;
+	int numGroupstoFit;
+	int printResiduals;
+	int *GroupNoiseFlags;
+	int FitSolarWind;
+	int FitWhiteSolarWind;
+	/*GPTA stuff*/
+
+	int numshapecoeff;
+	int numshapestoccoeff;
+	int TOAnumber;
+	int FixProfile;
+	double *MeanProfileShape;
+	double MeanProfileBeta;
+	long double **ProfileInfo;
+	long double ***ProfileData;
+	long double ReferencePeriod;
+	double *Factorials;
+	double *Binomial;
+	/*Grade Stuff: Need to track Grades and store previous likelihood things for hierarchial evaluation*/
+
+	int doGrades;
+	int *PolyChordGrades;
+
+	int PreviousInfo;
+	double PreviousJointDet;
+	double PreviousFreqDet;
+	double PreviousUniformPrior;
+        double *LastParams;
+	double **PreviousTNT;
+	double **PreviousNT;
+	double *PreviousNoise;
+	int *hypercube_indices;
+
 } MNStruct;
 
 
+void assigncontext(void *context);
+void assignGPUcontext(void *context);
 
 double iter_factorial(unsigned int n);
 void store_factorial();
 void fastephemeris_routines(pulsar *psr,int npsr);
 void fastformBatsAll(pulsar *psr,int npsr);
+void outputProfile(int ndim);
+
+void TNtextOutput(pulsar *psr, int npsr, int newpar, long double *Tempo2Fit, void *context, int incRED, int ndims, std::vector<double> paramlist, double Evidence, int MarginTime, int MarginJumps, int doLinear, std::string longname, double **paramarray);
+void getmaxlikeDM(pulsar *pulse,std::string longname, int ndim, void *context, double **paramsarray);
 
 
-void TNtextOutput(pulsar *psr, int npsr, int newpar, long double *Tempo2Fit, void *context, int incRED, int ndims, std::vector<double> paramlist, double Evidence, int MarginTime, int MarginJumps, int doLinear, std::string longname);
+double  AllTOALike(int &ndim, double *Cube, int &npars, double *DerivedParams, void *context);
+double  AllTOAJitterLike(int &ndim, double *Cube, int &npars, double *DerivedParams, void *context);
+double  AllTOASim(int &ndim, double *Cube, int &npars, double *DerivedParams, void *context);
+double AllTOAStocProfLike(int &ndim, double *Cube, int &npars, double *DerivedParams, void *context);
+double AllTOAMaxLike(int &ndim, double *Cube, int &npars, double *DerivedParams, void *context);
+double  AllTOAWriteMaxLike(std::string longname, int &ndim);
+double AllTOAMarginStocProfLike(int &ndim, double *Cube, int &npars, double *DerivedParams, void *context);
+double TemplateProfLike(int &ndim, double *Cube, int &npars, double *DerivedParams, void *context);
+void  WriteMaxTemplateProf(std::string longname, int &ndim);
+void  WriteSubIntStocProfLike(std::string longname, int &ndim);
 
-
-void NelderMeadOptimum(int nParameters, long double *pdParameters, void *context);
-void NelderMeadOptimumSubset(int nParameters, long double *LdParameters, void *context,std::vector<double>& paramlist, std::string longname);
-void NelderMeadMargin(int nParameters, long double *LdParameters, void *context, std::vector<double>& paramlist, std::string longname);
-void FindMLHypervisor(int nParameters, void *context, std::string longname);
-void GPUFindMLHypervisor(int nParameters, void *context, std::string longname);
-
-void doSim(int argc, char **commandLine, pulsar *psr, char timFile[][MAX_FILELEN], char parFile[][MAX_FILELEN]);
-void TNSimRedfromTim(int argc, char **commandLine, pulsar *psr, char timFile[][MAX_FILELEN], char parFile[][MAX_FILELEN], double EFAC, double EQUAD, int doRed, double redlogamp, double redslope, int updateEFAC, int updateEQUAD, int doDM, double DMlogamp, double DMslope,long idum);
-
-
-//Linear timing model likelihood functions and utilities
-void getLinearPriors(pulsar *psr,  double **Dmatrix, long double **LDpriors, double **Dpriors, int numtofit, int fitsig);
-void convertFromLinear(pulsar *psr, std::string longname, int ndim, void *context);
-void TNupdateParameters(pulsar *psr,int p,double *val,double *error, double *outval);
-void TNIupdateParameters(pulsar *psr,int p,double *val,double *error, double *outval);
-
+double SubIntStocProfLike(int &ndim, double *Cube, int &npars, double *DerivedParams, void *context);
 //non linear timing model likelihood functions
-void WhiteLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *context);
-void WhiteMarginLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *context);
-void vHRedLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *context);
-void vHRedMarginLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *context);
+double  WhiteLogLike(int &ndim, double *Cube, int &npars, double *DerivedParams, void *context);
+double NewLRedMarginLogLike(int &ndim, double *Cube, int &npars, double *DerivedParams, void *context);
 void LRedLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *context);
-void LRedMarginLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *context);
+double LRedNumericalLogLike(int &ndim, double *Cube, int &npars, double *DerivedParams, void *context);
 
-void LRedDMMarginLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *context);
+//non-Gaussian noise likelihoods
+void subtractMLsolution(void *context);
+void processPDF(void *context, std::string longname);
+void TempoNestNGConvolvedLikeFunc(double *Cube, int &ndim, int &npars, double &lnew, void *context);
+void TempoNestNGLikeFunc(double *Cube, int &ndim, int &npars, double &lnew, void *context);
 
-//GPU linear timing model likelihood functions
-void WhiteMarginGPULinearLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *context);
-void vHRedGPULinearLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *context);
-void vHRedMarginGPULinearLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *context);
-void LRedGPULinearLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *context);
-void LRedMarginGPULinearLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *context);
 
 //GPU non linear timing model likelihood functions
 void WhiteMarginGPULogLike(double *Cube, int &ndim, int &npars, double &lnew, void *context);
-void vHRedGPULogLike(double *Cube, int &ndim, int &npars, double &lnew, void *context);
-void vHRedMarginGPULogLike(double *Cube, int &ndim, int &npars, double &lnew, void *context);
 void LRedGPULogLike(double *Cube, int &ndim, int &npars, double &lnew, void *context);
-void LRedMarginGPULogLike(double *Cube, int &ndim, int &npars, double &lnew, void *context);
+double NewLRedMarginGPULogLike(int &ndim, double *Cube, int &npars, double *DerivedParams, void *globalcontext);
 
-void LRedDMMarginGPULogLike(double *Cube, int &ndim, int &npars, double &lnew, void *context);
-void vHRedDMMarginGPULogLike(double *Cube, int &ndim, int &npars, double &lnew, void *context);
-void vHRedDMGPULogLike(double *Cube, int &ndim, int &npars, double &lnew, void *context);
+
 
 
 //Functions to calculate the design matrices or 'G' marginalisation matrices
@@ -135,16 +196,20 @@ void getMarginDMatrix(pulsar *pulse, int TimetoFit, int JumptoFit, int numToMarg
 void getCustomDMatrix(pulsar *pulse, int *MarginList, double **TNDM, int **TempoFitNums, int *TempoJumpNums, double **Dpriors, int incDM, int TimetoFit, int JumptoFit);
 void makeStaticGMatrix(pulsar *pulse, int Gsize, double **GMatrix, double** staticGMatrix, double &tdet);
 void makeStaticDiagGMatrix(pulsar *pulse, int Gsize, double **GMatrix, double** UMatrix, double *SVec);
-
+void getCustomDMatrixLike(void *context, double **TNDM);
+void getNGJitterMatrix(pulsar *pulse, double **JitterMatrix, int &NumEpochs);
+void getNGJitterMatrixEpochs(pulsar *pulse, int &NumEpochs);
 
 void readsummary(pulsar *psr, std::string longname, int ndim, void *context, long double *Tempo2Fit, int incRED, int ndims, int MarginTime, int MarginJumps, int doLinear);
 
-void setupMNparams(int &IS, int &modal, int &ceff, int &nlive, double &efr);
-void setupparams(char *root,
+void setupMNparams(int &IS, int &modal, int &ceff, int &nlive, double &efr, int &sample, int &updInt, int &nClsPar, int &Nchords);
+void setupparams(int &useGPUS,
+		char *root,
 		int &numTempo2its,
 		int &doLinearFit, 
 		int &doMax,
 		int &incEFAC,
+		int &EPolyTerms,
 		int &incEQUAD,
 		int &incRED,
 		int &incDM,
@@ -153,26 +218,79 @@ void setupparams(char *root,
 		double &FitSig,
 		int &customPriors,
 		double *EFACPrior,
+		double *EPolyPriors,
 		double *EQUADPrior,
 		double *AlphaPrior,
 		double *AmpPrior,
 		double *DMAlphaPrior,
 		double *DMAmpPrior,
-		int &numRedCoeff,
-		int &numDMCoeff,
+		double &numRedCoeff,
+		double &numDMCoeff,
 		int &numRedPL,
 		int &numDMPL,
 		double *RedCoeffPrior,
 		double *DMCoeffPrior,
 		int &FloatingDM,
 		double *DMFreqPrior,
+		int &yearlyDM,
+		int &incsinusoid,
 		int &FloatingRed,
 		double *RedFreqPrior,
 		double &FourierSig,
 		int &incStep,
 		double *StepAmpPrior,
 		char *whiteflag,
-		int &whitemodel);
+		int &whitemodel,
+		int &varyRedCoeff,
+		int &varyDMCoeff,
+		int &incGWB,
+		double *GWBAmpPrior,
+		int &RedPriorType,
+		int &DMPriorType,
+		int &EQUADPriorType,
+		int &EFACPriorType,
+		int &useOriginalErrors,
+		int &incShannonJitter,
+		int &incDMEvent,
+		double *DMEventStartPrior,
+		double *DMEventLengthPrior,
+		int &incDMShapeEvent,
+		int &numDMShapeCoeff,
+		double *DMShapeCoeffPrior,
+		int &incRedShapeEvent,
+		int &numRedShapeCoeff,
+		int &MarginRedShapeCoeff,
+		double *RedShapeCoeffPrior,
+		int &incDMScatterShapeEvent,
+		int &numDMScatterShapeCoeff,
+		double *DMScatterShapeCoeffPrior,
+		int &incDMScatter,
+		int &numDMScatterCoeff,
+		double *DMScatterAmpPrior,
+		double *DMScatterAlphaPrior,
+		double *DMScatterFreqPrior,
+		int &incNGJitter,
+		int &incGlitch,
+                int &incGlitchTerms,
+                double &GlitchFitSig,
+		int &incBreakingIndex,
+		int &FitLowFreqCutoff,
+		int &uselongdouble,
+		int &incGroupNoise,
+		int &numGroupCoeff,
+		double *GroupNoiseAmpPrior,
+		double *GroupNoiseAlphaPrior,
+		int &FitSolarWind,
+		int &FitWhiteSolarWind,
+		double *SolarWindPrior,
+		double *WhiteSolarWindPrior,
+		int &GPTA,
+		int &numGPTAshapecoeff,
+		int &numGPTAstocshapecoeff,
+		char *GroupNoiseFlag,
+		int &FixProfile);
 
 void setTNPriors(double **Dpriors, long double **TempoPriors, int TPsize, int DPsize);
-void setFrequencies(double *samplefreqs, int numRedfreqs, int numDMfreqs);
+void setFrequencies(double *SampleFreq, int numRedfreqs, int numDMfreqs, int numRedLogFreqs, int numDMLogFreqs, double RedLowFreq, double DMLowFreq, double RedMidFreq, double DMMidFreq);
+void GetGroupsToFit(int incGroupNoise, int **FitForGroup);
+void setShapePriors(double **ShapePriors, int numcoeff);

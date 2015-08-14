@@ -33,6 +33,11 @@
 #include <math.h>
 #include <string.h>
 #include <vector>
+#include <sstream>
+#include <iterator>
+#include <cstring>
+#include <iostream>
+#include <fstream>
 #include "tempo2.h"
 #include "constraints.h"
 #include "TKfit.h"
@@ -122,15 +127,15 @@ int longturn_dms(long double turn, char *dms){
 
 
 
-void TNtextOutput(pulsar *psr, int npsr, int newpar, long double *Tempo2Fit, void *context,int incRED, int ndim, std::vector<double> paramlist, double Evidence,int doTimeMargin, int doJumpMargin, int doLinear, std::string longname)
+void TNtextOutput(pulsar *psr, int npsr, int newpar, long double *Tempo2Fit, void *context,int incRED, int ndim, std::vector<double> paramlist, double Evidence,int doTimeMargin, int doJumpMargin, int doLinear, std::string longname, double **paramarray)
 {
   double rms_pre=0.0,rms_post=0.0;
   double mean_pre=0.0,mean_post=0.0,chisqr;
-  int i,p,count,k;
+  int i,p,count,k, whitefitcount;
   FILE *fout;
 	char *fname;
 
-
+	whitefitcount=0;
     logdbg("In textOutput");
 
   for (p=0;p<npsr;p++)
@@ -356,8 +361,8 @@ void TNtextOutput(pulsar *psr, int npsr, int newpar, long double *Tempo2Fit, voi
                 std::vector<int>systempos;
                 std::vector<int>sysflag;
                 std::vector<std::string>systemnames;
-		
-                if(((MNStruct *)context)->numFitEFAC > 1 || ((MNStruct *)context)->numFitEQUAD > 1){
+
+               // if(((MNStruct *)context)->numFitEFAC > 1 || ((MNStruct *)context)->numFitEQUAD > 1){
                         for(int o=0;o<((MNStruct *)context)->pulse[0].nobs;o++){
                                 int found=0;
                                 for (int f=0;f<((MNStruct *)context)->pulse[0].obsn[o].nFlags;f++){
@@ -377,50 +382,89 @@ void TNtextOutput(pulsar *psr, int npsr, int newpar, long double *Tempo2Fit, voi
 
                                 }
                         }
-                }
-
-  	
+              //  }
+        printf("fitcount %i %i\n", fitcount, whitefitcount);	
 	if(incRED != 0 || ((MNStruct *)context)->incDM !=0 ||((MNStruct *)context)->numFitEFAC > 0 || ((MNStruct *)context)->numFitEQUAD > 0){
+		whitefitcount=fitcount;
                 printf("------------------------------------------------------------------------------\n");
                 printf("Stochastic Parameters:\n");
                 if(((MNStruct *)context)->numFitEFAC == 1){
-                        printf("Global EFAC: %g +/- %g\n", paramlist[fitcount],paramlist[fitcount+ndim]);
+			whitefitcount=fitcount;
+                        printf("Global EFAC: %g +/- %g\n", paramarray[fitcount][0], paramarray[fitcount][1]);
                         fitcount++;
                 }
                 else if(((MNStruct *)context)->numFitEFAC > 1){
                         int system=1;
+			whitefitcount=fitcount;
                         for(int i =0;i<((MNStruct *)context)->numFitEFAC; i++){
-                                printf("EFAC for %s %s: %g +/- %g\n",((MNStruct *)context)->whiteflag, ((MNStruct *)context)->pulse[0].obsn[systempos[i]].flagVal[sysflag[i]] ,paramlist[fitcount],paramlist[fitcount+ndim]);
+                                printf("EFAC for %s %s: %g +/- %g\n",((MNStruct *)context)->whiteflag, ((MNStruct *)context)->pulse[0].obsn[systempos[i]].flagVal[sysflag[i]] ,paramarray[fitcount][0], paramarray[fitcount][1]);
                                 fitcount++;
                                 system++;
                         }
                 }
 
                 if(((MNStruct *)context)->numFitEQUAD ==1){
-                        printf("Global EQUAD: %g +/- %g\n", paramlist[fitcount],paramlist[fitcount+ndim]);
+                        printf("Global EQUAD: %g +/- %g\n",paramarray[fitcount][0], paramarray[fitcount][1]);
                         fitcount++;
                 }
                 else if(((MNStruct *)context)->numFitEQUAD > 1){
+                        for(int o=0;o<((MNStruct *)context)->systemcount; o++){
+                                 if(((MNStruct *)context)->includeEQsys[o] == 1){
+					printf("EQUAD for %s %s: %g +/- %g\n", ((MNStruct *)context)->whiteflag, ((MNStruct *)context)->pulse[0].obsn[systempos[o]].flagVal[sysflag[o]],paramarray[fitcount][0], paramarray[fitcount][1]);
+					fitcount++;
+
+                                }
+                        }
+
+//                        int system=1;
+  //                      for(int i =0;i<((MNStruct *)context)->numFitEFAC; i++){
+    //                            printf("EQUAD for %s %s: %g +/- %g\n", ((MNStruct *)context)->whiteflag, ((MNStruct *)context)->pulse[0].obsn[systempos[i]].flagVal[sysflag[i]],paramlist[fitcount],paramlist[fitcount+ndim]);
+      //                          fitcount++;
+        //                        system++;
+          //              }
+                }
+
+                if(((MNStruct *)context)->incShannonJitter ==1){
+                        printf("Global SQUAD: %g +/- %g\n", paramarray[fitcount][0], paramarray[fitcount][1]);
+                        fitcount++;
+                }
+                else if(((MNStruct *)context)->incShannonJitter > 1){
                         int system=1;
-                        for(int i =0;i<((MNStruct *)context)->numFitEFAC; i++){
-                                printf("EQUAD for %s %s: %g +/- %g\n", ((MNStruct *)context)->whiteflag, ((MNStruct *)context)->pulse[0].obsn[systempos[i]].flagVal[sysflag[i]],paramlist[fitcount],paramlist[fitcount+ndim]);
+                        for(int i =0;i<((MNStruct *)context)->incShannonJitter; i++){
+                                printf("SQUAD for %s %s: %g +/- %g\n", ((MNStruct *)context)->whiteflag, ((MNStruct *)context)->pulse[0].obsn[systempos[i]].flagVal[sysflag[i]],paramarray[fitcount][0], paramarray[fitcount][1]);
                                 fitcount++;
                                 system++;
                         }
                 }
 
+		if(((MNStruct *)context)->FitLowFreqCutoff > 0){
+		        printf("Red Noise Model Low Frequency Cutoff: %g +/- %g \n",paramarray[fitcount][0], paramarray[fitcount][1]);
+                        fitcount++;
+		}
+
+		printf("fit counts %i %i \n", whitefitcount, fitcount);
 		if(incRED ==1 || incRED ==3){
 			printf("Power Law Red Noise Model:\n");
-			printf("Log Amplitude: %g +/- %g\n",paramlist[fitcount],paramlist[fitcount+ndim]);
+			printf("Log Amplitude: %g +/- %g\n",paramarray[fitcount][0], paramarray[fitcount][1]);
 			fitcount++;
-			printf("Spectral Index: %g +/- %g\n",paramlist[fitcount],paramlist[fitcount+ndim]);	
+			printf("Spectral Index: %g +/- %g\n",paramarray[fitcount][0], paramarray[fitcount][1]);	
 			fitcount++;
+		}
+		if(incRED ==4){
+			printf("Power Law Red Noise Model with Corner Frequency:\n");
+                        printf("Log Amplitude: %g +/- %g\n",paramarray[fitcount][0], paramarray[fitcount][1]);
+                        fitcount++;
+                        printf("Spectral Index: %g +/- %g\n",paramarray[fitcount][0], paramarray[fitcount][1]);
+                        fitcount++;
+			printf("Log Corner Frequency: %g +/- %g\n",paramarray[fitcount][0], paramarray[fitcount][1]);
+                        fitcount++;
+
 		}
 		else if(incRED ==2){	
 			printf("Model Independant Red Noise, %i Coefficients used:\n",((MNStruct *)context)->numFitRedCoeff);
 			int coeff=1;
 			for(int i =0; i < ((MNStruct *)context)->numFitRedCoeff; i++){
-				printf("Log Amplitude Coefficient %i: %g +/- %g\n", coeff,paramlist[fitcount],paramlist[fitcount+ndim]);	
+				printf("Log Amplitude Coefficient %i: %g +/- %g\n", coeff,paramarray[fitcount][0], paramarray[fitcount][1]);	
 				fitcount++;
 				coeff++;
 			}
@@ -430,26 +474,29 @@ void TNtextOutput(pulsar *psr, int npsr, int newpar, long double *Tempo2Fit, voi
 			printf("Floating Red Noise, %i Coefficients used:\n",((MNStruct *)context)->incFloatRed);
 			for(int i =0; i < ((MNStruct *)context)->incFloatRed; i++){
 
-				printf("Frequency %i: %g +/- %g\n", i+1, paramlist[fitcount],paramlist[fitcount+ndim]);
+				printf("Frequency %i: %g +/- %g\n", i+1,paramarray[fitcount][0], paramarray[fitcount][1]);
 				fitcount++;
-				printf("Log Amplitude %i: %g +/- %g\n", i+1, paramlist[fitcount],paramlist[fitcount+ndim]);
+				printf("Log Amplitude %i: %g +/- %g\n", i+1,paramarray[fitcount][0], paramarray[fitcount][1]);
 				fitcount++;
 		    }
 		}
 
+		if(((MNStruct *)context)->incGWB == 1){
+			fitcount++;
+		}
 
 		if(((MNStruct *)context)->incDM ==1 ||((MNStruct *)context)->incDM ==3 ){
 			printf("Power Law DM Model:\n");
-			printf("Log Amplitude: %g +/- %g\n",paramlist[fitcount],paramlist[fitcount+ndim]);
+			printf("Log Amplitude: %g +/- %g\n",paramarray[fitcount][0], paramarray[fitcount][1]);
 			fitcount++;
-			printf("Spectral Index: %g +/- %g\n",paramlist[fitcount],paramlist[fitcount+ndim]);	
+			printf("Spectral Index: %g +/- %g\n",paramarray[fitcount][0], paramarray[fitcount][1]);	
 			fitcount++;
 		}
 		else if(((MNStruct *)context)->incDM==2){	
 			printf("Model Independant DM, %i Coefficients used:\n",((MNStruct *)context)->numFitDMCoeff);
 			int coeff=1;
 			for(int i =0; i < ((MNStruct *)context)->numFitDMCoeff; i++){
-				printf("Log Amplitude Coefficient %i: %g +/- %g\n", coeff,paramlist[fitcount],paramlist[fitcount+ndim]);	
+				printf("Log Amplitude Coefficient %i: %g +/- %g\n", coeff,paramarray[fitcount][0], paramarray[fitcount][1]);	
 				fitcount++;
 				coeff++;
 			}
@@ -459,9 +506,9 @@ void TNtextOutput(pulsar *psr, int npsr, int newpar, long double *Tempo2Fit, voi
 			printf("Floating DM, %i Coefficients used:\n",((MNStruct *)context)->incFloatDM);
 			for(int i =0; i < ((MNStruct *)context)->incFloatDM; i++){
 
-				printf("Frequency %i: %g +/- %g\n", i+1, paramlist[fitcount],paramlist[fitcount+ndim]);
+				printf("Frequency %i: %g +/- %g\n", i+1,paramarray[fitcount][0], paramarray[fitcount][1]);
 				fitcount++;
-				printf("Log Amplitude %i: %g +/- %g\n", i+1, paramlist[fitcount],paramlist[fitcount+ndim]);
+				printf("Log Amplitude %i: %g +/- %g\n", i+1,paramarray[fitcount][0], paramarray[fitcount][1]);
 				fitcount++;
 		    }
 		}
@@ -1011,19 +1058,46 @@ void TNtextOutput(pulsar *psr, int npsr, int newpar, long double *Tempo2Fit, voi
 	  }
 	printf("Total time span = %.3f days = %.3f years\n",end-start,(end-start)/365.25);
       }
-    
+
+
+
+        std::ofstream tablefile;
+        std::string tablefilename = longname+"_table.tex";
+        tablefile.open(tablefilename.c_str());
+
+	tablefile <<  "\n";
+        tablefile <<  "\\documentclass{article}\n";
+        tablefile <<  "\\begin{document}\n";
+	tablefile <<  "\\begin{table*}\n";
+	tablefile <<  "\\caption{Stochastic parameter estimates for PSR " << psr[p].name << "}\n";
+	tablefile <<  "\\begin{tabular}{ll}\n";
+	tablefile <<  "\\hline\\hline\n";
+	tablefile <<  "\\multicolumn{2}{c}{Fit and data-set} \\\\ \n";
+	tablefile <<  "\\hline\n";
+	tablefile <<  "Pulsar name\\dotfill & "<<psr[p].name <<" \\\\ \n";
+	tablefile <<  "MJD range\\dotfill & "<<psr[p].param[param_start].val[0] << "---"<< psr[p].param[param_finish].val[0] <<" \\\\ \n";
+	tablefile <<  "Number of TOAs\\dotfill & "<< psr[p].nFit <<" \\\\\n";
+	tablefile <<  "\\hline\n";
+	tablefile <<  "\\multicolumn{2}{c}{Stochastic Parameters} \\\\ \n";
+	tablefile <<  "\\hline\n";
+	printf("start of T@ parms %i\n", whitefitcount);    
       if (1==1)  /* Write a new .par file */
 	{
 		
 		std::string parname=longname+".par";
-		printf("name size: %i \n",parname.size());
+		
+		//printf("name size: %i \n",parname.size());
 		fname=(char*)parname.c_str();
 		//fname="newpar.par";
 		printf("writing par file %s. \n",fname);
-	  FILE *fout2;
-	  char fname2[1000];
-	  char str1[100],str2[100],str3[100],str4[100],str5[100];
-	  int nread;
+	        FILE *fout2;
+	  	
+	        char fname2[1000];
+
+
+
+	        char str1[100],str2[100],str3[100],str4[100],str5[100];
+	        int nread;
 
 		char hmsstr[100];
 		longturn_hms(psr[p].param[param_raj].val[0]/(2*M_PI), hmsstr);
@@ -1193,8 +1267,282 @@ void TNtextOutput(pulsar *psr, int npsr, int newpar, long double *Tempo2Fit, voi
 		fprintf(fout2,"JUMP %s %s %s %.14g %d\n",str1,str2,str3,psr[p].jumpVal[i],psr[p].fitJump[i]);
 	      else if (strcasecmp(str1,"NAME")==0 || strcasecmp(str1,"TEL")==0 || str1[0]=='-')
 		fprintf(fout2,"JUMP %s %s %.14g %d\n",str1,str2,psr[p].jumpVal[i],psr[p].fitJump[i]);
-	    }	  
+	    }	
+	printf("end of T2 parms %i \n", whitefitcount);	
 
+  	    //Add glitches to par file
+  	    if(((MNStruct *)context)->incGlitch > 0){
+
+		int NumExistingGlitches=0;
+		for (k=0;k<psr[p].param[param_glep].aSize;k++){
+                	if (psr[p].param[param_glep].paramSet[k]==1){
+				NumExistingGlitches++;
+			}
+		}
+
+		for(int i = 0 ; i < ((MNStruct *)context)->incGlitch; i++){
+			fprintf(fout2,"GLEP_%i %g\n", i+1+NumExistingGlitches, paramarray[whitefitcount][2]);
+			whitefitcount++;
+			fprintf(fout2,"GLPH_%i %g %i\n", i+1+NumExistingGlitches, 0.0, 1);
+			fprintf(fout2,"GLF0_%i %g %i\n", i+1+NumExistingGlitches, paramarray[whitefitcount][2], 1); 
+			whitefitcount++;
+		}
+	    }
+
+
+            //Add EFACS/EQUADS
+            if(((MNStruct *)context)->numFitEFAC == 1){
+                        fprintf(fout2,"TNGlobalEF %g\n", pow(10.0,paramarray[whitefitcount][2]));
+                        whitefitcount++;
+            }
+            else if(((MNStruct *)context)->numFitEFAC > 1){
+                    int system=1;
+                    for(int i =0;i<((MNStruct *)context)->numFitEFAC; i++){
+                            fprintf(fout2,"TNEF %s %s %g\n",((MNStruct *)context)->whiteflag, ((MNStruct *)context)->pulse[0].obsn[systempos[i]].flagVal[sysflag[i]] ,pow(10.0,paramarray[whitefitcount][2]));
+				printf("Writing efac to par file: %i %s %g %g \n", i,  ((MNStruct *)context)->pulse[0].obsn[systempos[i]].flagVal[sysflag[i]] , paramarray[whitefitcount][2], pow(10.0,paramarray[whitefitcount][2]));
+			    tablefile <<  "EFAC "<< ((MNStruct *)context)->whiteflag <<" "<< ((MNStruct *)context)->pulse[0].obsn[systempos[i]].flagVal[sysflag[i]] <<" \\dotfill & "<< paramarray[whitefitcount][0] <<" $\\pm$ "<< paramarray[whitefitcount][1] <<"  \\\\ \n";
+                            whitefitcount++;
+                            system++;
+                    }
+            }
+
+            if(((MNStruct *)context)->numFitEQUAD ==1){
+                    fprintf(fout2,"TNGLobalEQ %g\n", paramarray[whitefitcount][2]);
+                    whitefitcount++;
+            }
+            else if(((MNStruct *)context)->numFitEQUAD > 1){
+                    /*int system=1;
+                    for(int i =0;i<((MNStruct *)context)->numFitEFAC; i++){
+                            fprintf(fout2, "TNEQ %s %s %g\n", ((MNStruct *)context)->whiteflag, ((MNStruct *)context)->pulse[0].obsn[systempos[i]].flagVal[sysflag[i]],paramarray[whitefitcount][2]);
+			    tablefile <<  "Log$_{10}$[EQUAD] "<< ((MNStruct *)context)->whiteflag <<" "<< ((MNStruct *)context)->pulse[0].obsn[systempos[i]].flagVal[sysflag[i]] <<" \\dotfill & "<< paramarray[whitefitcount][0] <<" $\\pm$ "<< paramarray[whitefitcount][1] <<"  \\\\ \n";
+                            whitefitcount++;
+                            system++;
+                    }*/
+			for(int o=0;o<((MNStruct *)context)->systemcount; o++){
+				 if(((MNStruct *)context)->includeEQsys[o] == 1){
+					fprintf(fout2, "TNEQ %s %s %g\n", ((MNStruct *)context)->whiteflag, ((MNStruct *)context)->pulse[0].obsn[systempos[o]].flagVal[sysflag[o]],paramarray[whitefitcount][2]);
+                            		tablefile <<  "Log$_{10}$[EQUAD] "<< ((MNStruct *)context)->whiteflag <<" "<< ((MNStruct *)context)->pulse[0].obsn[systempos[o]].flagVal[sysflag[o]] <<" \\dotfill & "<< paramarray[whitefitcount][0] <<" $\\pm$ "<< paramarray[whitefitcount][1] <<"  \\\\ \n";
+                            		whitefitcount++;
+				}
+				else{
+					 fprintf(fout2, "TNEQ %s %s %g\n", ((MNStruct *)context)->whiteflag, ((MNStruct *)context)->pulse[0].obsn[systempos[o]].flagVal[sysflag[o]],-10.0);
+				}
+			}
+            }
+
+            if(((MNStruct *)context)->incShannonJitter ==1){
+                    fprintf(fout2,"TNGLOBALSQ %g\n", paramarray[whitefitcount][2]);
+                    whitefitcount++;
+            }
+            else if(((MNStruct *)context)->incShannonJitter  > 1){
+                    int system=1;
+                    for(int i =0;i<((MNStruct *)context)->incShannonJitter ; i++){
+                            fprintf(fout2, "TNSQ %s %s %g\n", ((MNStruct *)context)->whiteflag, ((MNStruct *)context)->pulse[0].obsn[systempos[i]].flagVal[sysflag[i]],paramarray[whitefitcount][2]-1.5);
+                            tablefile <<  "Log$_{10}$[SQUAD] "<< ((MNStruct *)context)->whiteflag <<" "<< ((MNStruct *)context)->pulse[0].obsn[systempos[i]].flagVal[sysflag[i]] <<" \\dotfill & "<< paramarray[whitefitcount][0] <<" $\\pm$ "<< paramarray[whitefitcount][1]-1.5 <<"  \\\\ \n";
+                            whitefitcount++;
+                            system++;
+                    }
+            }
+
+	    if(((MNStruct *)context)->incNGJitter >0){
+
+		for(int i =0; i < ((MNStruct *)context)->incNGJitter; i++){
+			fprintf(fout2, "TNECORR %s %s %g\n", ((MNStruct *)context)->whiteflag, psr->TNECORRFlagVal[i],pow(10.0,paramarray[whitefitcount][2])/pow(10.0,-6));
+                            tablefile <<  "Log$_{10}$[TNECORR] "<< ((MNStruct *)context)->whiteflag <<" "<< ((MNStruct *)context)->pulse[0].obsn[systempos[i]].flagVal[sysflag[i]] <<" \\dotfill & "<< paramarray[whitefitcount][0] <<" $\\pm$ "<< paramarray[whitefitcount][1] <<"  \\\\ \n";
+                            whitefitcount++;
+                    }
+
+
+
+            }
+
+	printf("end of White parms\n");
+	if(((MNStruct *)context)->FitLowFreqCutoff > 0){
+		fprintf(fout2, "TNRedFLow %g\n", paramarray[whitefitcount][2]);
+		fprintf(fout2, "TNRedFMid %g\n", 2.0);
+                tablefile <<  "Red FLow \\dotfill & "<< paramarray[whitefitcount][0] <<" $\\pm$ "<< paramarray[whitefitcount][1] <<"  \\\\ \n";
+                whitefitcount++;
+	}
+	if(incRED ==1 || incRED ==3){
+		printf("STart of Red 3 parms %i \n", whitefitcount);
+		fprintf(fout2, "TNRedAmp %g\n", paramarray[whitefitcount][2]);
+		tablefile <<  "Log$_{10}$[Red Amp] \\dotfill & "<< paramarray[whitefitcount][0] <<" $\\pm$ "<< paramarray[whitefitcount][1] <<"  \\\\ \n";
+		whitefitcount++;
+		fprintf(fout2, "TNRedGam %g\n", paramarray[whitefitcount][2]);
+		fprintf(fout2, "TNRedC %i\n", ((MNStruct *)context)->numFitRedCoeff);
+		tablefile <<  "Red Index \\dotfill & "<< paramarray[whitefitcount][0] <<" $\\pm$ "<< paramarray[whitefitcount][1] <<"  \\\\ \n";	
+		whitefitcount++;
+		printf("end of Red3 parms\n");
+	}
+	if(incRED==4){
+		fprintf(fout2, "TNRedAmp %g\n", paramarray[whitefitcount][2]);
+                tablefile <<  "Log$_{10}$[Red Amp] \\dotfill & "<< paramarray[whitefitcount][0] <<" $\\pm$ "<< paramarray[whitefitcount][1] <<"  \\\\ \n";
+                whitefitcount++;
+                fprintf(fout2, "TNRedGam %g\n", paramarray[whitefitcount][2]);
+                tablefile <<  "Red Index \\dotfill & "<< paramarray[whitefitcount][0] <<" $\\pm$ "<< paramarray[whitefitcount][1] <<"  \\\\ \n";
+                whitefitcount++;
+		fprintf(fout2, "TNRedCorner %g\n", pow(10,paramarray[whitefitcount][2]));
+                tablefile <<  "Red Corner Freq \\dotfill & "<< paramarray[whitefitcount][0] <<" $\\pm$ "<< paramarray[whitefitcount][1] <<"  \\\\ \n";
+                whitefitcount++;
+
+                fprintf(fout2, "TNRedC %i\n", ((MNStruct *)context)->numFitRedCoeff);
+	}
+	if(((MNStruct *)context)->incGWB == 1){
+		whitefitcount++;
+	}
+        if(((MNStruct *)context)->incRedShapeEvent != 0){
+                for(int i =0; i < ((MNStruct *)context)->incRedShapeEvent; i++){
+
+                        double ShapeletPos = paramarray[whitefitcount][2];
+                        whitefitcount++;
+                        double ShapeletWidth = paramarray[whitefitcount][2];
+                        whitefitcount++;
+                        double ShapeletAmp = paramarray[whitefitcount][2];
+			if(((MNStruct *)context)->MarginRedShapeCoeff  == 0){
+				for(int shape=0; shape < ((MNStruct *)context)->numRedShapeCoeff; shape++){
+					whitefitcount++;
+				}
+			}
+
+                        fprintf(fout2, "TNShapeletEvent %i %g %g %g\n", 1, ShapeletPos, ShapeletWidth, 0.0);
+
+                }
+        }
+
+	printf("end of Red parms\n");	
+	if(((MNStruct *)context)->incDM ==1 ||((MNStruct *)context)->incDM ==3 ){
+		fprintf(fout2, "TNDMAmp %g\n", paramarray[whitefitcount][2]);
+                tablefile <<  "Log$_{10}$[DM Amp] \\dotfill & "<< paramarray[whitefitcount][0] <<" $\\pm$ "<< paramarray[whitefitcount][1] <<"  \\\\ \n";
+                whitefitcount++;
+		 fprintf(fout2, "TNDMGam %g\n", paramarray[whitefitcount][2]);
+                fprintf(fout2, "TNDMC %i\n", ((MNStruct *)context)->numFitDMCoeff);
+
+                tablefile <<  "DM Index \\dotfill & "<< paramarray[whitefitcount][0] <<" $\\pm$ "<< paramarray[whitefitcount][1] <<"  \\\\ \n";
+                whitefitcount++;
+
+	}
+	if(((MNStruct *)context)->incDMShapeEvent != 0){
+                for(int i =0; i < ((MNStruct *)context)->incDMShapeEvent; i++){
+
+			double ShapeletPos = paramarray[whitefitcount][2];
+			whitefitcount++;
+			double ShapeletWidth = paramarray[whitefitcount][2];
+                        whitefitcount++;
+			double ShapeletAmp = paramarray[whitefitcount][2];
+			for(int shape=0; shape < ((MNStruct *)context)->numDMShapeCoeff; shape++){
+                        	whitefitcount++;
+			}
+
+			fprintf(fout2, "TNShapeletEvent %i %g %g %g\n", 1, ShapeletPos, ShapeletWidth, 2.0);
+
+		}
+        }
+
+	if(((MNStruct *)context)->incDMScatter == 1 ){
+
+                double Amp = paramarray[whitefitcount][2];
+                tablefile <<  "Log$_{10}$[Band DM Amp] \\dotfill & "<< paramarray[whitefitcount][0] <<" $\\pm$ "<< paramarray[whitefitcount][1] <<"  \\\\ \n";
+                whitefitcount++;
+                double Spec = paramarray[whitefitcount][2];
+                tablefile <<  "Band DM Index \\dotfill & "<< paramarray[whitefitcount][0] <<" $\\pm$ "<< paramarray[whitefitcount][1] <<"  \\\\ \n";
+                whitefitcount++;
+                int NC = (((MNStruct *)context)->numFitDMScatterCoeff);
+
+                fprintf(fout2, "TNBandNoise %g %g %g %g %i\n", 0.0, 1000.0, Amp, Spec, NC);
+	}
+
+        if(((MNStruct *)context)->incDMScatter ==4 ){
+
+                double Amp = paramarray[whitefitcount][2];
+                tablefile <<  "Log$_{10}$[Band DM Amp] \\dotfill & "<< paramarray[whitefitcount][0] <<" $\\pm$ "<< paramarray[whitefitcount][1] <<"  \\\\ \n";
+                whitefitcount++;
+                double Spec = paramarray[whitefitcount][2];
+                tablefile <<  "Band DM Index \\dotfill & "<< paramarray[whitefitcount][0] <<" $\\pm$ "<< paramarray[whitefitcount][1] <<"  \\\\ \n";
+                whitefitcount++;
+                int NC = (((MNStruct *)context)->numFitDMScatterCoeff);
+
+                fprintf(fout2, "TNBandNoise %g %g %g %g %i\n", 0.0, 1000.0, Amp, Spec, NC);
+
+                Amp = paramarray[whitefitcount][2];
+                tablefile <<  "Log$_{10}$[Band DM Amp] \\dotfill & "<< paramarray[whitefitcount][0] <<" $\\pm$ "<< paramarray[whitefitcount][1] <<"  \\\\ \n";
+                whitefitcount++;
+                Spec = paramarray[whitefitcount][2];
+                tablefile <<  "Band DM Index \\dotfill & "<< paramarray[whitefitcount][0] <<" $\\pm$ "<< paramarray[whitefitcount][1] <<"  \\\\ \n";
+                whitefitcount++;
+
+                fprintf(fout2, "TNBandNoise %g %g %g %g %i\n", 1000.0, 2000.0, Amp, Spec, NC);
+
+
+                Amp = paramarray[whitefitcount][2];
+                tablefile <<  "Log$_{10}$[Band DM Amp] \\dotfill & "<< paramarray[whitefitcount][0] <<" $\\pm$ "<< paramarray[whitefitcount][1] <<"  \\\\ \n";
+                whitefitcount++;
+                Spec = paramarray[whitefitcount][2];
+                tablefile <<  "Band DM Index \\dotfill & "<< paramarray[whitefitcount][0] <<" $\\pm$ "<< paramarray[whitefitcount][1] <<"  \\\\ \n";
+                whitefitcount++;
+
+                fprintf(fout2, "TNBandNoise %g %g %g %g %i\n", 2000.0, 10000.0, Amp, Spec, NC);
+
+
+
+        }
+
+
+	if(((MNStruct *)context)->incDMScatter ==5 ){
+
+		double Amp = paramarray[whitefitcount][2];
+		tablefile <<  "Log$_{10}$[Band DM Amp] \\dotfill & "<< paramarray[whitefitcount][0] <<" $\\pm$ "<< paramarray[whitefitcount][1] <<"  \\\\ \n";
+                whitefitcount++;
+		double Spec = paramarray[whitefitcount][2];
+		tablefile <<  "Band DM Index \\dotfill & "<< paramarray[whitefitcount][0] <<" $\\pm$ "<< paramarray[whitefitcount][1] <<"  \\\\ \n";
+                whitefitcount++;
+		int NC = (((MNStruct *)context)->numFitDMScatterCoeff);
+		
+		fprintf(fout2, "TNBandDM %g %g %i\n", Amp, Spec, NC);
+
+
+	}
+
+	for(int g =0; g < ((MNStruct *)context)->incGroupNoise; g++){
+
+		int GrouptoFit = 0;
+		if(((MNStruct *)context)->FitForGroup[g][0] == -1){
+			printf("Result of group: %i %g %i \n", g, paramarray[whitefitcount][2], floor(paramarray[whitefitcount][2]));
+			GrouptoFit = floor(paramarray[whitefitcount][2]);
+			whitefitcount++;
+
+		}
+		else{
+			GrouptoFit = ((MNStruct *)context)->FitForGroup[g][0];
+				
+		}
+
+                if(((MNStruct *)context)->FitForGroup[g][1] == 1){
+                        printf("Result of group Start: %i %g %i \n", g, paramarray[whitefitcount][2], floor(paramarray[whitefitcount][2]));
+                        whitefitcount++;
+			printf("Result of group Finish: %i %g %i \n", g, paramarray[whitefitcount][2], floor(paramarray[whitefitcount][2]));
+                        whitefitcount++;
+
+                }
+
+
+		double Amp = paramarray[whitefitcount][2];
+                tablefile <<  "Log$_{10}$[Group Noise Amp] \\dotfill & "<< paramarray[whitefitcount][0] <<" $\\pm$ "<< paramarray[whitefitcount][1] <<"  \\\\ \n";
+                whitefitcount++;
+		double Spec = paramarray[whitefitcount][2];
+                tablefile <<  "Group Noise Index \\dotfill & "<< paramarray[whitefitcount][0] <<" $\\pm$ "<< paramarray[whitefitcount][1] <<"  \\\\ \n";
+                whitefitcount++;
+		int NC = ((MNStruct *)context)->numFitGroupNoiseCoeff;
+		
+		fprintf(fout2, "TNGroupNoise %s %s %g %g %i\n", ((MNStruct *)context)->whiteflag, ((MNStruct *)context)->pulse[0].obsn[systempos[GrouptoFit]].flagVal[sysflag[GrouptoFit]], Amp, Spec, NC);
+
+
+
+
+
+		
+	
+
+	}
 	  /* Add whitening flags */
 	  if (psr[p].param[param_wave_om].paramSet[0]==1)
 	    {
@@ -1251,7 +1599,16 @@ void TNtextOutput(pulsar *psr, int npsr, int newpar, long double *Tempo2Fit, voi
 			fprintf(fout2,"CONSTRAIN DMMODEL\n");
 		  }
 	  }
-	  fclose(fout2);	 
+	  fclose(fout2);	
+
+
+	  tablefile <<  "\\hline\n";
+	  tablefile <<  "\\end{tabular}\n";
+	  tablefile <<  "\\label{Table:"<<psr[p].name<<"}\n";
+	  tablefile <<  "\\end{table*} \n";
+          tablefile <<  "\\end{document}\n";
+	  tablefile <<  "\n";
+	  tablefile.close();	
 	    }
 	}
       /* printf("Precision: routine, precision, comment\n");

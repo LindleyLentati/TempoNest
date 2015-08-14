@@ -56,7 +56,7 @@ AC_DEFUN([SWIN_LIB_TEMPO2],
   CFLAGS="$ac_save_CFLAGS $TEMPO2_CFLAGS"
 
   AC_TRY_LINK([#include <stdio.h>],[readParfile("");],
-              have_tempo2=yes, have_tempo2=yes)
+              have_tempo2=yes, have_tempo2=no)
 
   AC_MSG_RESULT($have_tempo2)
 

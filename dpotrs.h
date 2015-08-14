@@ -4,7 +4,7 @@
 #include <algorithm>
 
 void dpotrs(double **A, double *B, int msize);
-
+void dpotrsInfo(double **A, double *B, int msize, int &info);
 double *dpotrs_ctof(double **in, int rows, int cols);
 void dpotrs_ftoc(double *in, double **out, int rows, int cols);
 

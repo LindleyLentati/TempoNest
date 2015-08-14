@@ -123,6 +123,7 @@ extern "C" {
   void T2Predictor_Init(T2Predictor *t2p);
   void T2Predictor_Copy(T2Predictor *into_t2p, const T2Predictor *from_t2p);
   int  T2Predictor_Insert(T2Predictor *into_t2p, const T2Predictor *from_t2p);
+  void T2Predictor_Keep(T2Predictor*, unsigned nmjd, const long double* mjd);
   void T2Predictor_Destroy(T2Predictor *t2p);
 
   /* I/O etc */

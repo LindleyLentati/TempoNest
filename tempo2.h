@@ -10,7 +10,7 @@
 *    TEMPO2 is distributed in the hope that it will be useful, 
 *    but WITHOUT ANY WARRANTY; without even the implied warranty of 
 *    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the 
-*    GNU General Public License for more details. 
+*    GNU General Public License for more details.  
 *    You should have received a copy of the GNU General Public License 
 *    along with TEMPO2.  If not, see <http://www.gnu.org/licenses/>. 
 */
@@ -28,7 +28,7 @@
 #include <stdio.h>
 #include <time.h>
 #define __Tempo2_h
-#define TEMPO2_h_VER "$Revision: 1.76 $"
+#define TEMPO2_h_VER "$Revision: 1.112 $"
 #define TSUN (4.925490947e-6L) // Solar constant for mass calculations.
 #define MAX_FREQ_DERIVATIVES 13    /* F0 -> Fn   where n=10                            */
 #define MAX_DM_DERIVATIVES   10    /* DM0 -> DMn where n=10                            */
@@ -42,25 +42,30 @@
 #define MAX_STRLEN           1000  /* Maximum length for strings                       */
 #define MAX_FILELEN          500   /* Maximum filename length                          */
 #define MAX_STOREPRECISION   50    /* How many routines in TEMPO2 store precision information */
-#define MAX_OBSN_VAL         10000 /* Maximum number of TOAs                           */ 
+#define MAX_OBSN_VAL         20000 /* Maximum number of TOAs                           */ 
 #define MAX_SITE             100   /* Maximum number of observatory sites              */
-#define MAX_PARAMS           500   /* Maximum number of parameters                     */
+#define MAX_PARAMS           2000   /* Maximum number of parameters                     */
 #define MAX_JUMPS            2000  /* Maximum number of phase jumps                    */
 #define MAX_WHITE            100   /* Maximum number of parameters for whitening       */
-#define MAX_IFUNC            800   /* Maximum number of parameters for interpolation function  */
+#define MAX_IFUNC            1000   /* Maximum number of parameters for interpolation function  */
 #define MAX_TEL_CLK_OFFS     500   /* Maximum number of parameters for telescope clock offset */
 #define MAX_TEL_DX           500   /* Maximum number of parameters for interpolation function  */
 #define MAX_TEL_DY           500   /* Maximum number of parameters for interpolation function  */
 #define MAX_TEL_DZ           500   /* Maximum number of parameters for interpolation function  */
 #define MAX_FIT              10000  /* Maximum number of parameters to fit for */
-#define MAX_T2EFAC           50    /* Maximum number of T2EFACs allowed                */
-#define MAX_T2EQUAD          50    /* Maximum number of T2EQUADs allowed               */
-#define MAX_TNEF           50    /* Maximum number of T2EFACs allowed                */
-#define MAX_TNEQ          50    /* Maximum number of T2EQUADs allowed               */
+#define MAX_T2EFAC           100    /* Maximum number of T2EFACs allowed                */
+#define MAX_T2EQUAD          100    /* Maximum number of T2EQUADs allowed               */
+#define MAX_TNEF           50    /* Maximum number of TNEFACs allowed                */
+#define MAX_TNEQ          50    /* Maximum number of TNEQUADs allowed               */
+#define MAX_TNGN	50 /* maximum number of TNGroupNoise parameters allowed*/
+#define MAX_TNBN        50 /*maximum number of TNBandNoise parameters allowd*/
+#define MAX_TNECORR       50    /* Maximum number of TNECORRss allowed               */
+#define MAX_TNDMEv		   10    /*Maximum number of TNDMEvents allowed */
+#define MAX_TNSQ          50    /* Maximum number of TNEQUADs allowed               */
 #define MAX_BPJ_JUMPS        5     /* Maximum number of jumps in binary params - for BPJ model */
 #define MAX_TOFFSET          10    /* Number of time jumps allowed in .par file        */
 #define MAX_QUAD             150   /* Maximum number of frequency channels in quadrupolar function */
-#define MAX_DMX              64    /* Max number of DM steps allowed */
+#define MAX_DMX             512    /* Max number of DM steps allowed */
 #define MAX_FLAGS            20    /* Maximum number of flags in .tim file/observation */
 #define MAX_FLAG_LEN         32    /* Maximum number of characters in each flag */
 #define MAX_CLK_CORR         30    /* Maximum number of steps in the correction to TT  */ 
@@ -92,7 +97,8 @@
 #define UT1_FILE "/clock/ut1.dat" 
 
 /* Path for file containing IERS EOP C04 series */
-#define EOPC04_FILE "earth/eopc04_IAU2000.62-now"
+//#define EOPC04_FILE "earth/eopc04_IAU2000.62-now"
+// This is now defined in tempo2.C
 
 /* Path for file containing TDB-TDT ephemeris */
 #define TDBTDT_FILE "/ephemeris/TDB.1950.2050"
@@ -111,23 +117,7 @@
 #define T2C_IAU2000B 1
 #define T2C_TEMPO   2
 
-
-/* define some functions for log message 
- * M.Keith 2012 - let me know if this fails to compile anywhere.
- * mkeith@pulsarastronomy.net
- **/
-#define LOG_OUTFILE stdout
-#define WHERESTR  "[%s:%d] "
-#define WHEREARG  __FILE__, __LINE__
-#define ENDL "\n"
-#define WHEREERR "******\nERROR [%s:%d] "
-#define WHERETCHK "[%s:%d] T=%.2f s: "
-#define _LOG(...) fprintf(LOG_OUTFILE,__VA_ARGS__)
-#define logmsg(_fmt, ...) _LOG(WHERESTR _fmt ENDL, WHEREARG,##__VA_ARGS__)
-#define logdbg(_fmt, ...)  if(debugFlag)logmsg(_fmt,##__VA_ARGS__)
-#define logerr(_fmt, ...) _LOG(WHEREERR _fmt ENDL, WHEREARG,##__VA_ARGS__)
-#define logtchk(_fmt, ...) if(tcheck)_LOG(WHERETCHK _fmt ENDL, WHEREARG,(clock()-timer_clk)/(float)CLOCKS_PER_SEC,##__VA_ARGS__)
-
+#include "TKlog.h"
 
 
 /* Type for doing extra precision computations: longdouble */
@@ -187,18 +177,21 @@ enum label {param_raj,param_decj,param_f,param_pepoch,param_posepoch,
             param_bpjep,param_bpjph,param_bpja1,param_bpjec,param_bpjom,param_bpjpb,
             param_wave_om,param_kom,param_kin,param_shapmax,param_dth,param_a0,
 	    param_b0,param_xomdot,param_afac,param_eps1dot,param_eps2dot,param_tres,
+	    param_wave_dm, param_waveepoch_dm,
             param_dshk,param_ephver,param_daop,param_iperharm,param_dmassplanet,param_waveepoch,param_ifunc,param_clk_offs,
             param_dmx,param_dmxr1,param_dmxr2,param_dmmodel,param_gwsingle,param_cgw,param_quad_om,
 	    param_h3,param_h4,param_nharm,param_stig,
             param_telx,param_tely,param_telz,param_telEpoch,param_quad_ifunc_p,
 	    param_quad_ifunc_c,param_tel_dx,param_tel_dy,param_tel_dz,
-	    param_tel_vx,param_tel_vy,param_tel_vz,param_tel_x0,param_tel_y0,param_tel_z0,param_gwm_amp,param_gwecc};
+	    param_tel_vx,param_tel_vy,param_tel_vz,param_tel_x0,param_tel_y0,param_tel_z0,param_gwm_amp,param_gwecc,param_gwb_amp,
+	    param_dm_sin1yr,param_dm_cos1yr,param_brake,param_stateSwitchT,param_df1};
 
 /*
  * These represent the possible constraints to the fit that have been implemented.
  */
 enum constraint {
 	constraint_dmmodel_mean,
+	constraint_dmmodel_dm1,
 	constraint_dmmodel_cw_0,
 	constraint_dmmodel_cw_1,
 	constraint_dmmodel_cw_2,
@@ -253,17 +246,13 @@ extern int MAX_PSR;
 extern int MAX_OBSN;
 extern double ECLIPTIC_OBLIQUITY;
 
-extern int debugFlag;   /* Global = 1 if debug mode is running */
 extern int forceGlobalFit;   /* Global = 1 if we are forcing a global fit */
-extern int writeResiduals;   /* Global = 1 if we are writing out post-fit residuals */
-extern int tcheck;   /* Global = 1 if time check message should be printed is running */
-extern clock_t timer_clk;
 extern int veryFast;    /* Global to run the code fast */
 extern char tempo2MachineType[MAX_FILELEN];
 extern int displayCVSversion; /* Display CVS version */
 
 extern char dcmFile[MAX_FILELEN];
-extern char covarFuncFile[MAX_FILELEN];;
+extern char covarFuncFile[MAX_FILELEN];
 extern char tempo2_plug_path[32][MAX_STRLEN];
 extern int tempo2_plug_path_len;
 
@@ -300,7 +289,11 @@ typedef struct
 
 typedef struct observation {
   longdouble sat;                 /* Site arrival time                                          */
+  longdouble origsat;
+  longdouble sat_day;
+  longdouble sat_sec;
   longdouble bat;                 /* Infinite frequency barycentric arrival time                */
+  longdouble batCorr;
   longdouble bbat;                /* Arrival time at binary barycentre                          */
   longdouble pet;                 /* Pulsar emission time                                       */
   int clockCorr;                  /* = 1 for clock corrections to be applied, = 0 for BAT       */
@@ -309,12 +302,23 @@ typedef struct observation {
                                   /* = -1 if not included in fit                                */
   longdouble prefitResidual;      /* Pre-fit residual                                           */
   longdouble residual;            /* residual                                                   */
+  double      addedNoise;
+  double      TNRedSignal;	  /* Model red noise signal from temponest fit */
+  double      TNRedErr;		  /* Error on Model red noise signal from temponest fit */
+  double      TNDMSignal;         /* Model DM signal from temponest fit */
+  double      TNDMErr;            /* Error on Model DM signal from temponest fit */
+  double      TNGroupSignal;      /* Model Group Noise signal from temponest fit */
+  double      TNGroupErr;         /* Error on Model Group Noise signal from temponest fit */
   double      freq;               /* Frequency of observation (in MHz)                          */
   double      freqSSB;            /* Frequency of observation in barycentric frame (in Hz)      */
   double      toaErr;             /* Error on TOA (in us)                                       */
   double      toaDMErr;           /* Error on TOA due to DM (in us)                             */
   double      origErr;            /* Original error on TOA after reading tim file (in us)       */
   double      phaseOffset;        /* Phase offset                                               */
+
+  double averagebat;
+  double averageres;
+  double averageerr;
   char        fname[MAX_FILELEN]; /* Name of data file giving TOA                               */
   char        telID[100];         /* Telescope ID                                               */
   clock_correction correctionsTT[MAX_CLK_CORR]; /* chain of corrections from site TOA to chosen realisation of TT */
@@ -373,6 +377,7 @@ typedef struct pulsar {
   /*                                                                 */
   /* Note: when adding a new parameter, initialise it in intialise.c */
   /*                                                                 */
+  char eopc04_file[MAX_FILELEN];
   int  fixedFormat;              /* = 0 for separate .par and .tim files, > 0 indicates number of lines to skip */
   parameter param[MAX_PARAMS];
   char rajStrPre[100],decjStrPre[100];   /* String containing RAJ and DECJ  (prefit)              */
@@ -416,6 +421,15 @@ typedef struct pulsar {
   double gwm_phi; // Polarisation angle
   double gwm_dphase; // Phase offset (similar to GLPH)
  
+   // Ryan's gw burst parameters
+  double gwb_epoch;
+  double gwb_width;
+   double gwb_raj;
+  double gwb_decj;
+  double gwb_geom_c;
+  double gwb_geom_p;
+
+
   // Vikram Ravi's addition for eccentric, binary black hole systems
   double gwecc_ra;
   double gwecc_dec;
@@ -474,6 +488,7 @@ typedef struct pulsar {
   int    fitParamI[MAX_FIT];
   int    fitParamK[MAX_FIT];
   int    fitMode;                 /* = 0 not fitting with errors, = 1 fitting with errors (MODE 1) */
+  int    robust;
   int    rescaleErrChisq;         /* = 1 to rescale errors based on the reduced chisq, = 0 not to do this */
   double offset;                  /* Offset, always fitted for */
   double offset_e;                /* Error in the offset */
@@ -487,6 +502,7 @@ typedef struct pulsar {
   int nobs;                       /* Number of observations in .tim file                        */
   int units;  /* TDB or SI units (tempo emulation mode uses TDB) 
                                      see #define definition above for possible units            */
+  int setUnits;
   int tempo1; /* = 1 if tempo1 is emulated */
   int dilateFreq;  /* whether or not to apply SS time dilation to RFs */
   int timeEphemeris;              /* Which code to use for Einstein delay */
@@ -501,6 +517,7 @@ typedef struct pulsar {
   char clockFromOverride[64];    /* Clock code to assume TOAs are measured against (e.g. UTC to turn off clock corrections, or TDB/TCG to turn off those + Einstein delay */
   char JPL_EPHEMERIS[MAX_FILELEN];
   char ephemeris[MAX_FILELEN];
+  int  useCalceph;
   storePrecision storePrec[MAX_STOREPRECISION];
   int  nStorePrecision;
   int  bootStrap;           /* > 0 if calculating errors using bootstrap Monte-Carlo method */
@@ -514,7 +531,12 @@ typedef struct pulsar {
   /* For whitening */
   double wave_sine[MAX_WHITE], wave_sine_err[MAX_WHITE];
   double wave_cos[MAX_WHITE],  wave_cos_err[MAX_WHITE];
-  int    nWhite;
+   double wave_sine_dm[MAX_WHITE], wave_sine_dm_err[MAX_WHITE];
+  double wave_cos_dm[MAX_WHITE], wave_cos_dm_err[MAX_WHITE];
+
+
+
+  int    nWhite, nWhite_dm;
   double waveScale;
 
   // Quadrapolar function
@@ -574,13 +596,76 @@ typedef struct pulsar {
   double T2equadVal[MAX_T2EQUAD];
   double T2globalEfac;
 
-  //TNEF/TNEQ
-  int    nTNEF,nTNEQ;
+  //TNEF/TNEQ/TNECORR
+  int    nTNEF,nTNEQ, nTNSQ, nTNECORR;
   char   TNEFFlagID[MAX_TNEF][MAX_FLAG_LEN],TNEFFlagVal[MAX_TNEF][MAX_FLAG_LEN];
   double TNEFVal[MAX_TNEF];
+  double TNGlobalEF;
   char   TNEQFlagID[MAX_TNEQ][MAX_FLAG_LEN],TNEQFlagVal[MAX_TNEQ][MAX_FLAG_LEN];
   double TNEQVal[MAX_TNEQ];
+  double TNGlobalEQ;
+  double addTNGlobalEQ;
+  char   TNSQFlagID[MAX_TNSQ][MAX_FLAG_LEN],TNSQFlagVal[MAX_TNSQ][MAX_FLAG_LEN];
+  double TNSQVal[MAX_TNSQ];
+  char   TNECORRFlagID[MAX_TNECORR][MAX_FLAG_LEN],TNECORRFlagVal[MAX_TNECORR][MAX_FLAG_LEN];
+  double TNECORRVal[MAX_TNECORR];
+  
+  
+	//Stochastic Parameters
+	double TNRedAmp;
+	double TNRedGam;
+	int TNRedC;
+	double TNRedCoeffs[200];
+	double TNRedFLow;
+	double TNRedCorner;
+	double TNDMAmp;
+	double TNDMGam;
+	int TNDMC;
+	double TNDMCoeffs[200];
+	int TNsubtractDM;
+	int TNsubtractRed;
+	int AverageResiduals; 
+	int outputTMatrix; 
+	double TNBandDMAmp;
+	double TNBandDMGam;
+	int TNBandDMC;
 
+
+
+        int    nTNBandNoise;
+	double TNBandNoiseLF[MAX_TNBN];
+	double TNBandNoiseHF[MAX_TNBN];
+        double TNBandNoiseAmp[MAX_TNBN];
+        double TNBandNoiseGam[MAX_TNBN];
+        int TNBandNoiseC[MAX_TNBN];
+
+	int    nTNGroupNoise;
+	char   TNGroupNoiseFlagID[MAX_TNGN][MAX_FLAG_LEN],TNGroupNoiseFlagVal[MAX_TNGN][MAX_FLAG_LEN];
+	double TNGroupNoiseAmp[MAX_TNGN];
+	double TNGroupNoiseGam[MAX_TNGN];
+	int TNGroupNoiseC[MAX_TNGN];
+	
+
+  
+  //DMEvent Parameters
+  int nDMEvents;
+  double TNDMEvStart[MAX_TNDMEv];
+  double TNDMEvLength[MAX_TNDMEv];
+  double TNDMEvAmp[MAX_TNDMEv];
+  double TNDMEvGam[MAX_TNDMEv];
+  int TNDMEvOff[MAX_TNDMEv];
+  int TNDMEvLin[MAX_TNDMEv];
+  int TNDMEvQuad[MAX_TNDMEv];
+  
+   //ShapeletEvent Parameters
+  int nTNShapeletEvents;
+  int TNShapeletEvN[MAX_TNDMEv];  //Numbers of terms in the event
+  double TNShapeletEvPos[MAX_TNDMEv];  //central position
+  double TNShapeletEvWidth[MAX_TNDMEv];  //Overall Width 
+  double TNShapeletEvFScale[MAX_TNDMEv];  //Scaling dependence with observational frequency
+
+  
+  
   
   // White noise models
   char whiteNoiseModelFile[MAX_STRLEN];
@@ -673,6 +758,7 @@ void preProcessSimple3 (pulsar *psr);
 void useSelectFile(char *fname,pulsar *psr,int npsr);
 void processSimultaneous(char *line,pulsar *psr, int npsr);
 void processFlag(char *line,pulsar *psr,int npsr);
+void logicFlag(char *line,pulsar *psr,int npsr);
 void toa2utc(pulsar *psr,int npsr);
 void utc2tai(pulsar *psr,int npsr);
 void tt2tb(pulsar *psr,int npsr);
@@ -680,7 +766,10 @@ void tai2tt(pulsar *psr,int npsr);
 void tai2ut1(pulsar *psr,int npsr);
 void vectorPulsar(pulsar *psr,int npsr);
 void readEphemeris(pulsar *psr,int npsr,int addEphemNoise);
+void readOneEphemeris(pulsar *psr,int npsr,int addEphemNoise, int obsNumber);
+void readEphemeris_calceph(pulsar *psr,int npsr);
 void get_obsCoord(pulsar *psr,int npsr);
+void get_OneobsCoord(pulsar *psr,int npsr, int obs);
 double calcRMS(pulsar *psr,int p);
 
 void allocateMemory(pulsar *psr,int realloc);
@@ -702,12 +791,13 @@ double hms_turn(char *line);
 double turn_deg(double turn);
 longdouble fortran_mod(longdouble a,longdouble p);
 int fortran_nint(double x);
+long fortran_nlong(longdouble x);
 void equ2ecl(double *x);
 void copyParam(parameter p1,parameter *p2);
 void copyPSR(pulsar *p,int p1,int p2);
 longdouble getParameterValue(pulsar *psr,int param,int arr);
 void simplePlot(pulsar *psr, double unitFlag);
-float solarWindModel(pulsar psr,int iobs);
+double solarWindModel(pulsar psr,int iobs);
 
 /* BINARY MODELS */
 double MSSmodel(pulsar *psr,int p,int obs,int param);
@@ -794,7 +884,7 @@ get_obsCoord_IAU2000B(double observatory_trs[3],
 
 /* redwards stuff to get earth orientation parameters */
 void get_EOP(double mjd, double *xp, double *yp, double *dut1, 
-	     double *dut1dot, int dispWarnings);
+	     double *dut1dot, int dispWarnings,char *eopcFile);
 /* ... and tropospheric delays ... */
 void compute_tropospheric_delays(pulsar *psr,int npsr);
 
@@ -803,8 +893,10 @@ void compute_tropospheric_delays(pulsar *psr,int npsr);
 }
 #endif
 
-#endif /* Defined __Tempo2_h */
+/* We nowadays also distribute the GWsim functions in libtempo2, with the
+ * GWsim.h header distributed separately. This define tells us we have the
+ * header
+ * */
+#define HAVE_GWSIM_H
 
-
-
-
+#endif /* __Tempo2_h */

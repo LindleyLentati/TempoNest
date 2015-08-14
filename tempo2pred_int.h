@@ -75,6 +75,7 @@ int ChebyModelSet_Read(ChebyModelSet *cms, FILE *f);
 
 void ChebyModelSet_Init(ChebyModelSet *cms);
 int ChebyModelSet_Insert(ChebyModelSet *cms, const ChebyModelSet *from);
+void ChebyModelSet_Keep(ChebyModelSet *cms, unsigned nmjd, const long double* mjd);
 void ChebyModelSet_Destroy(ChebyModelSet *cms);
 
 

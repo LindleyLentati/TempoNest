@@ -18,6 +18,22 @@ void dpotrs(double **A, double *B, int msize)
 
 }
 
+void dpotrsInfo(double **A, double *B, int msize, int &info)
+{
+
+
+	double *a;
+	char UPLO='L';
+	int NRHS=1;
+	a = dpotrs_ctof(A, msize, msize); 
+	
+	dpotrs_(&UPLO, &msize, &NRHS, a, &msize, B, &msize, &info);
+	dpotrs_ftoc(a, A, msize, msize);
+  
+  delete a;
+
+}
+
 
 double* dpotrs_ctof(double **in, int rows, int cols)
 {

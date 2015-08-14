@@ -2,6 +2,8 @@
 
 #ifndef __TKmatrix_h
 #define __TKmatrix_h
+
+
 /*
 *    This file is part of TEMPO2. 
 * 
@@ -25,10 +27,13 @@
 *    pp. 1549-1574 (bibtex: 2006MNRAS.372.1549E) when discussing the
 *    timing model.
 */
-void TKmultMatrix_sq(double **idcm,double **u,int ndata,int npol,double **uout);
-void TKmultMatrixVec_sq(double **idcm,double *b,int ndata,double *bout);
-void TKmultMatrix(double **idcm,double **u,int ndata,int ndata2,int npol,double **uout);
-void TKmultMatrixVec(double **idcm,double *b,int ndata,int ndata2,double *bout);
+#ifdef __cplusplus
+extern "C" {
+#endif
+void TKmultMatrix_sq( double **idcm, double **u,int ndata,int npol,double **uout);
+void TKmultMatrixVec_sq( double **idcm, double *b,int ndata,double *bout);
+void TKmultMatrix( double **idcm, double **u,int ndata,int ndata2,int npol,double **uout);
+void TKmultMatrixVec( double **idcm, double *b,int ndata,int ndata2,double *bout);
 
 double** malloc_uinv(int n);
 double **malloc_blas(int n,int m);
@@ -36,8 +41,13 @@ void free_blas(double** matrix);
 void free_uinv(double** uinv);
 int get_blas_rows(double** uinv);
 int get_blas_cols(double** uinv);
+#ifdef __cplusplus
+}
+#endif
 
+
+#ifdef __Tempo2_h
 void free_2dLL(longdouble** m);
 longdouble** malloc_2dLL(int rows,int cols);
-
+#endif
 #endif

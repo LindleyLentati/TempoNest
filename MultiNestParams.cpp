@@ -32,14 +32,14 @@
 */
 
 
-void setupMNparams(int &IS, int &modal, int &ceff, int &nlive, double &efr){
+void setupMNparams(int &IS, int &modal, int &ceff, int &nlive, double &efr, int &sample, int &updInt, int &nClsPar, int &Nchords){
 
 
 	//IS: flag to use importance sampling, will be supported by upcoming release of multinest, at which point it should be set to 1
 	IS=0;
 	
 	//modal: flag to allow multinest to search for multiple modes in the data. 1 = multimodal, 0 = single mode
-	modal=1;
+	modal=0;
 
 	//ceff: flag to set multinest to constant efficiency mode.  Adjusts sampling to maintain the efficiency set by the efr parameter. This is usefull for large dimensional problems (> 20dim), however the accuracy of the evidence suffers if importance sampling isn't used.
 	ceff=0;
@@ -64,7 +64,16 @@ void setupMNparams(int &IS, int &modal, int &ceff, int &nlive, double &efr){
 	//Also: In constant efficiency mode this must be set lower, to 0.05 for D<50 and 0.01 D>50.
 	efr=0.1;
 
+	//do sampling? 0 = No, 1 = Yes
+	sample = 1;
 
+	//updInt: How often the output files are updated
+	updInt = 2000;
+
+	//nClsPar:  Number of parameters to cluster over when doing multi modal analysis
+	nClsPar = 1;
+
+	Nchords = 1;
 
     // Use a configfile, if we can, to overwrite the defaults set in this file.
          try {
@@ -77,7 +86,10 @@ void setupMNparams(int &IS, int &modal, int &ceff, int &nlive, double &efr){
 		parameters.readInto(ceff, "ceff", ceff);
 		parameters.readInto(nlive, "nlive", nlive);
 		parameters.readInto(efr, "efr", efr);
- 
+ 		parameters.readInto(sample, "sample", sample);
+ 		parameters.readInto(updInt, "updInt", updInt);
+ 		parameters.readInto(nClsPar, "nClsPar", nClsPar);
+		parameters.readInto(Nchords, "Nchords", Nchords);
 	    } catch(ConfigFile::file_not_found oError) {
 		printf("WARNING: parameters file '%s' not found. Using defaults.\n", oError.filename.c_str());
 	    } // try
