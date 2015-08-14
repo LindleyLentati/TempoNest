@@ -1,0 +1,72 @@
+This is BibTeX, Version 0.99d (TeX Live 2012)
+Capacity: max_strings=35307, hash_size=35307, hash_prime=30011
+The top-level auxiliary file: TempoNestManual.aux
+The style file: apsrev4-1.bst
+Reallocated singl_function (elt_size=4) to 100 items from 50.
+Reallocated singl_function (elt_size=4) to 100 items from 50.
+Reallocated singl_function (elt_size=4) to 100 items from 50.
+Reallocated singl_function (elt_size=4) to 100 items from 50.
+Reallocated singl_function (elt_size=4) to 100 items from 50.
+Reallocated singl_function (elt_size=4) to 100 items from 50.
+Reallocated wiz_functions (elt_size=4) to 6000 items from 3000.
+Database file #1: TempoNestManualNotes.bib
+Warning--I didn't find a database entry for "2008MNRAS.384..449F"
+Warning--I didn't find a database entry for "2009MNRAS.398.1601F"
+Warning--I didn't find a database entry for "2006MNRAS.369..655H"
+Warning--I didn't find a database entry for "2006ChJAS...6b.169H"
+Warning--I didn't find a database entry for "2004MNRAS.353.1311H"
+Warning--I didn't find a database entry for "2012arXiv1202.5932V"
+control{REVTEX41Control}, control.key{N/A}, control.author{N/A}, control.editor{N/A}, control.title{N/A}, control.pages{N/A}, control.year{N/A}, control.eprint{N/A}, 
+control{apsrev41Control}, control.key{N/A}, control.author{08}, control.editor{1}, control.title{}, control.pages{0}, control.year{1}, control.eprint{N/A}, 
+Warning--jnrlst (dependency: not reversed) set 1
+Reallocated singl_function (elt_size=4) to 100 items from 50.
+merlin.mbs apsrev4-1.bst 2010-07-25 4.21a (PWD, AO, DPC) hacked
+Control: key (0) 
+Control: author (8) initials jnrlst
+Control: editor formatted (1) identically to author
+Control: production of article title (-1) disabled
+Control: page (0) single
+Control: year (1) truncated
+Control: production of eprint (0) enabled
+You've used 5 entries,
+            5847 wiz_defined-function locations,
+            1622 strings with 15057 characters,
+and the built_in function-call counts, 1747 in all, are:
+= -- 108
+> -- 13
+< -- 33
++ -- 13
+- -- 19
+* -- 230
+:= -- 167
+add.period$ -- 3
+call.type$ -- 5
+change.case$ -- 15
+chr.to.int$ -- 13
+cite$ -- 5
+duplicate$ -- 184
+empty$ -- 63
+format.name$ -- 0
+if$ -- 267
+int.to.chr$ -- 1
+int.to.str$ -- 12
+missing$ -- 31
+newline$ -- 61
+num.names$ -- 0
+pop$ -- 98
+preamble$ -- 1
+purify$ -- 12
+quote$ -- 0
+skip$ -- 65
+stack$ -- 0
+substring$ -- 52
+swap$ -- 147
+text.length$ -- 0
+text.prefix$ -- 0
+top$ -- 10
+type$ -- 45
+warning$ -- 1
+while$ -- 9
+width$ -- 0
+write$ -- 64
+(There were 7 warnings)
