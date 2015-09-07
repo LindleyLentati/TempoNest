@@ -383,7 +383,7 @@ void TNtextOutput(pulsar *psr, int npsr, int newpar, long double *Tempo2Fit, voi
                                 }
                         }
               //  }
-        printf("fitcount %i %i\n", fitcount, whitefitcount);	
+//        printf("fitcount %i %i\n", fitcount, whitefitcount);	
 	if(incRED != 0 || ((MNStruct *)context)->incDM !=0 ||((MNStruct *)context)->numFitEFAC > 0 || ((MNStruct *)context)->numFitEQUAD > 0){
 		whitefitcount=fitcount;
                 printf("------------------------------------------------------------------------------\n");
@@ -442,7 +442,7 @@ void TNtextOutput(pulsar *psr, int npsr, int newpar, long double *Tempo2Fit, voi
                         fitcount++;
 		}
 
-		printf("fit counts %i %i \n", whitefitcount, fitcount);
+//		printf("fit counts %i %i \n", whitefitcount, fitcount);
 		if(incRED ==1 || incRED ==3){
 			printf("Power Law Red Noise Model:\n");
 			printf("Log Amplitude: %g +/- %g\n",paramarray[fitcount][0], paramarray[fitcount][1]);
@@ -1080,7 +1080,7 @@ void TNtextOutput(pulsar *psr, int npsr, int newpar, long double *Tempo2Fit, voi
 	tablefile <<  "\\hline\n";
 	tablefile <<  "\\multicolumn{2}{c}{Stochastic Parameters} \\\\ \n";
 	tablefile <<  "\\hline\n";
-	printf("start of T@ parms %i\n", whitefitcount);    
+//	printf("start of T@ parms %i\n", whitefitcount);    
       if (1==1)  /* Write a new .par file */
 	{
 		
@@ -1268,7 +1268,7 @@ void TNtextOutput(pulsar *psr, int npsr, int newpar, long double *Tempo2Fit, voi
 	      else if (strcasecmp(str1,"NAME")==0 || strcasecmp(str1,"TEL")==0 || str1[0]=='-')
 		fprintf(fout2,"JUMP %s %s %.14g %d\n",str1,str2,psr[p].jumpVal[i],psr[p].fitJump[i]);
 	    }	
-	printf("end of T2 parms %i \n", whitefitcount);	
+//	printf("end of T2 parms %i \n", whitefitcount);	
 
   	    //Add glitches to par file
   	    if(((MNStruct *)context)->incGlitch > 0){
@@ -1356,7 +1356,7 @@ void TNtextOutput(pulsar *psr, int npsr, int newpar, long double *Tempo2Fit, voi
 
             }
 
-	printf("end of White parms\n");
+//	printf("end of White parms\n");
 	if(((MNStruct *)context)->FitLowFreqCutoff > 0){
 		fprintf(fout2, "TNRedFLow %g\n", paramarray[whitefitcount][2]);
 		fprintf(fout2, "TNRedFMid %g\n", 2.0);
@@ -1364,7 +1364,7 @@ void TNtextOutput(pulsar *psr, int npsr, int newpar, long double *Tempo2Fit, voi
                 whitefitcount++;
 	}
 	if(incRED ==1 || incRED ==3){
-		printf("STart of Red 3 parms %i \n", whitefitcount);
+//		printf("STart of Red 3 parms %i \n", whitefitcount);
 		fprintf(fout2, "TNRedAmp %g\n", paramarray[whitefitcount][2]);
 		tablefile <<  "Log$_{10}$[Red Amp] \\dotfill & "<< paramarray[whitefitcount][0] <<" $\\pm$ "<< paramarray[whitefitcount][1] <<"  \\\\ \n";
 		whitefitcount++;
@@ -1372,7 +1372,7 @@ void TNtextOutput(pulsar *psr, int npsr, int newpar, long double *Tempo2Fit, voi
 		fprintf(fout2, "TNRedC %i\n", ((MNStruct *)context)->numFitRedCoeff);
 		tablefile <<  "Red Index \\dotfill & "<< paramarray[whitefitcount][0] <<" $\\pm$ "<< paramarray[whitefitcount][1] <<"  \\\\ \n";	
 		whitefitcount++;
-		printf("end of Red3 parms\n");
+//		printf("end of Red3 parms\n");
 	}
 	if(incRED==4){
 		fprintf(fout2, "TNRedAmp %g\n", paramarray[whitefitcount][2]);
@@ -1409,7 +1409,7 @@ void TNtextOutput(pulsar *psr, int npsr, int newpar, long double *Tempo2Fit, voi
                 }
         }
 
-	printf("end of Red parms\n");	
+//	printf("end of Red parms\n");	
 	if(((MNStruct *)context)->incDM ==1 ||((MNStruct *)context)->incDM ==3 ){
 		fprintf(fout2, "TNDMAmp %g\n", paramarray[whitefitcount][2]);
                 tablefile <<  "Log$_{10}$[DM Amp] \\dotfill & "<< paramarray[whitefitcount][0] <<" $\\pm$ "<< paramarray[whitefitcount][1] <<"  \\\\ \n";

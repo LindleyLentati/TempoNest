@@ -44,6 +44,7 @@
 #include <vector>
 #include <algorithm>
 #include <float.h>
+#include "multinest.h"
 #include "polychord.h"
 #include "TempoNest.h"
 
@@ -86,6 +87,17 @@ readEphemeris(psr,npsr,0); /* Re-evaluate ephemeris with correct TB */
 
 }
 
+
+void fastSubIntephemeris_routines(pulsar *psr,int npsr)
+{
+//vectorPulsar(psr,npsr); /* 1. Form a vector pointing at the pulsar */
+//readEphemeris(psr,npsr,0);/* 2. Read the ephemeris */
+get_obsCoord(psr,npsr);   /* 3. Get Coordinate of observatory relative to Earth's centre */
+//tt2tb(psr,npsr); /* Observatory/time-dependent part of TT-TB */
+//readEphemeris(psr,npsr,0); /* Re-evaluate ephemeris with correct TB */
+
+}
+
 void fastformBatsAll(pulsar *psr,int npsr)
 {
     //clock_corrections(psr,npsr); /* Clock corrections ... */
@@ -96,7 +108,18 @@ void fastformBatsAll(pulsar *psr,int npsr)
 
 }
 
-MNStruct* init_struct(pulsar *pulseval,	 long double **LDpriorsval, int numberpulsarsval,int numFitJumpsval,int numFitTimingval, int systemcountval, int numFitEFACval, int numFitEQUADval, int numFitRedCoeffval, int numFitDMCoeffval,int numFitRedPLval, int numFitDMPLval, int **TempoFitNumsval,int *TempoJumpNumsval, int *sysFlagsval, int numdimsval, int incREDval, int incDMval, int incFloatDMval, int incFloatRedval, int DMFloatstartval, int RedFloatstartval, int TimeMarginVal, int JumpMarginVal, int doLinearVal, double *SampleFreqsVal, int incStepVal, char *whiteflagval, int whitemodelval, int varyRedCoeffval, int varyDMCoeffval, int yearlyDMval, int incsinusoidval, int EPolTermsval, int incGWBval,int RedPriorType,int DMPriorType,int EQUADPriorType,int EFACPriorType,int useOriginalErrors, int incShannonJitter, int incDMEvent, int incDMShapeEvent, int numDMShapeCoeff, int incDMScatter, int numFitDMScatterCoeff, int incRedShapeEvent, int numRedShapeCoeff, int MarginRedShapeCoeff, int incDMScatterShapeEvent, int numDMScatterShapeCoeff, int incNGJitter, int incGlitch, int incGlitchTerms, int incBreakingIndex, int FitLowFreqCutoff, int uselongdouble, int incGroupNoise, int numFitGroupNoiseCoeff, int **FitForGroup, int numGroupstoFit, int *GroupNoiseFlags, int FitSolarWind, int FitWhiteSolarWind)
+
+void fastformSubIntBatsAll(pulsar *psr,int npsr)
+{
+        //clock_corrections(psr,npsr); /* Clock corrections ... */
+        fastSubIntephemeris_routines(psr,npsr); /* Ephemeris routines ... */
+  	extra_delays(psr,npsr); /* Other time delays ... */
+	formBats(psr,npsr); /* Form Barycentric arrival times */
+	secularMotion(psr,npsr);
+
+}
+
+MNStruct* init_struct(pulsar *pulseval,	 long double **LDpriorsval, int numberpulsarsval,int numFitJumpsval,int numFitTimingval, int systemcountval, int numFitEFACval, int numFitEQUADval, int numFitRedCoeffval, int numFitDMCoeffval,int numFitRedPLval, int numFitDMPLval, int **TempoFitNumsval,int *TempoJumpNumsval, int *sysFlagsval, int numdimsval, int incREDval, int incDMval, int incFloatDMval, int incFloatRedval, int DMFloatstartval, int RedFloatstartval, int TimeMarginVal, int JumpMarginVal, int doLinearVal, double *SampleFreqsVal, int incStepVal, char *whiteflagval, int whitemodelval, int varyRedCoeffval, int varyDMCoeffval, int yearlyDMval, int incsinusoidval, int EPolTermsval, int incGWBval,int RedPriorType,int DMPriorType,int EQUADPriorType,int EFACPriorType,int useOriginalErrors, int incShannonJitter, int incDMEvent, int incDMShapeEvent, int numDMShapeCoeff, int incDMScatter, int numFitDMScatterCoeff, int incRedShapeEvent, int numRedShapeCoeff, int MarginRedShapeCoeff, int incDMScatterShapeEvent, int numDMScatterShapeCoeff, int incNGJitter, int incGlitch, int incGlitchTerms, int incBreakingIndex, int FitLowFreqCutoff, int uselongdouble, int incGroupNoise, int numFitGroupNoiseCoeff, int **FitForGroup, int numGroupstoFit, int *GroupNoiseFlags, int FitSolarWind, int FitWhiteSolarWind, int interpolateProfile, double InterpolatedTime, int sampler, int GPTAnumstoccoeff)
 {
     MNStruct* MNS = (MNStruct*)malloc(sizeof(MNStruct));
 
@@ -164,6 +187,10 @@ MNStruct* init_struct(pulsar *pulseval,	 long double **LDpriorsval, int numberpu
 	MNS->GroupNoiseFlags=GroupNoiseFlags;
 	MNS->FitSolarWind = FitSolarWind;
 	MNS->FitWhiteSolarWind = FitWhiteSolarWind;
+	MNS->InterpolateProfile = interpolateProfile;
+	MNS->InterpolatedTime = InterpolatedTime*pow(10.0, -9);
+	MNS->sampler = sampler;
+	MNS->numshapestoccoeff = GPTAnumstoccoeff;
 
 	return MNS;
 }
@@ -215,10 +242,11 @@ void printPriors(pulsar *psr, long double **TempoPriors, double **Dpriors, int i
 	int jumpsfitted=0;
 	for(int i=0;i<=psr[0].nJumps;i++){
 		if(psr[0].fitJump[i] == 1){
-		
-			printf("Prior on Jump %i : %.25Lg -> %.25Lg\n",jumpsfitted+1, TempoPriors[paramsfitted][0]+Dpriors[paramsfitted][0]*TempoPriors[paramsfitted][1],TempoPriors[paramsfitted][0]+Dpriors[paramsfitted][1]*TempoPriors[paramsfitted][1]);
-			
+	
 			if(TempoPriors[paramsfitted][2] == 0){
+	
+				printf("Prior on Jump %i : %.25Lg -> %.25Lg\n",jumpsfitted+1, TempoPriors[paramsfitted][0]+Dpriors[paramsfitted][0]*TempoPriors[paramsfitted][1],TempoPriors[paramsfitted][0]+Dpriors[paramsfitted][1]*TempoPriors[paramsfitted][1]);
+			
 				getdistparamnames << getdistlabel;
 				getdistparamnames << " ";
 				getdistparamnames <<  "Jump";
@@ -969,6 +997,19 @@ void printPriors(pulsar *psr, long double **TempoPriors, double **Dpriors, int i
 		}
 	}
 
+	for(int i =0; i<((MNStruct *)context)->numshapestoccoeff; i++){
+		printf("Prior on Profile Shape Stochasticitiy Coeff %i Log Amplitude : %.5g -> %.5g\n",i,-10.0, 1.0);
+
+		getdistparamnames << getdistlabel;
+		getdistparamnames << " ";
+		getdistparamnames <<  "PS";
+		getdistparamnames <<  i+1;
+		getdistparamnames << "\n";
+		getdistlabel++;
+
+
+		paramsfitted++;
+	}
 
 	
 	getdistparamnames.close(); 
@@ -1236,6 +1277,9 @@ extern "C" int graphicalInterface(int argc, char **argv,
 	int GPTAnumshapecoeff=0;
 	int GPTAnumstocshapecoeff=0;
 	int FixProfile = 0;
+	int FitTemplate = 0;
+	int interpolateProfile = 0;
+	double InterpolatedTime = 1;
 
 	char root[100]; 
 	int numTempo2its;
@@ -1375,7 +1419,7 @@ extern "C" int graphicalInterface(int argc, char **argv,
 	GroupNoiseAmpPrior=new double[2];
 	GroupNoiseAlphaPrior=new double[2];
 
-	setupparams(useGPUS, Type, numTempo2its, doLinearFit, doMax, incEFAC, numEPolTerms, incEQUAD, incRED, incDM, doTimeMargin, doJumpMargin, FitSig, customPriors, EFACPrior, EPolPrior, EQUADPrior, AlphaPrior, AmpPrior, DMAlphaPrior, DMAmpPrior, numRedCoeff, numDMCoeff, numRedPL, numDMPL, RedCoeffPrior, DMCoeffPrior, incFloatDM, DMFreqPrior, yearlyDM, incsinusoid, incFloatRed, RedFreqPrior, FourierSig, numStep, StepAmpPrior, WhiteName,whitemodel, varyRedCoeff, varyDMCoeff, incGWB, GWBAmpPrior, RedPriorType, DMPriorType, EQUADPriorType, EFACPriorType, useOriginalErrors, incShannonJitter, incDMEvent, DMEventStartPrior, DMEventLengthPrior,incDMShapeEvent, numDMShapeCoeff, DMShapeCoeffPrior, incRedShapeEvent, numRedShapeCoeff, MarginRedShapeCoeff, RedShapeCoeffPrior, incDMScatterShapeEvent, numDMScatterShapeCoeff, DMScatterShapeCoeffPrior,incDMScatter, numDMScatterCoeff, DMScatterAmpPrior, DMScatterAlphaPrior, DMScatterFreqPrior, incNGJitter, incGlitch, incGlitchTerms, GlitchFitSig, incBreakingIndex, FitLowFreqCutoff, uselongdouble, incGroupNoise, numGroupCoeff, GroupNoiseAmpPrior, GroupNoiseAlphaPrior, FitSolarWind, FitWhiteSolarWind, SolarWindPrior, WhiteSolarWindPrior,  GPTA, GPTAnumshapecoeff, GPTAnumstocshapecoeff, GroupNoiseName, FixProfile); 
+	setupparams(useGPUS, Type, numTempo2its, doLinearFit, doMax, incEFAC, numEPolTerms, incEQUAD, incRED, incDM, doTimeMargin, doJumpMargin, FitSig, customPriors, EFACPrior, EPolPrior, EQUADPrior, AlphaPrior, AmpPrior, DMAlphaPrior, DMAmpPrior, numRedCoeff, numDMCoeff, numRedPL, numDMPL, RedCoeffPrior, DMCoeffPrior, incFloatDM, DMFreqPrior, yearlyDM, incsinusoid, incFloatRed, RedFreqPrior, FourierSig, numStep, StepAmpPrior, WhiteName,whitemodel, varyRedCoeff, varyDMCoeff, incGWB, GWBAmpPrior, RedPriorType, DMPriorType, EQUADPriorType, EFACPriorType, useOriginalErrors, incShannonJitter, incDMEvent, DMEventStartPrior, DMEventLengthPrior,incDMShapeEvent, numDMShapeCoeff, DMShapeCoeffPrior, incRedShapeEvent, numRedShapeCoeff, MarginRedShapeCoeff, RedShapeCoeffPrior, incDMScatterShapeEvent, numDMScatterShapeCoeff, DMScatterShapeCoeffPrior,incDMScatter, numDMScatterCoeff, DMScatterAmpPrior, DMScatterAlphaPrior, DMScatterFreqPrior, incNGJitter, incGlitch, incGlitchTerms, GlitchFitSig, incBreakingIndex, FitLowFreqCutoff, uselongdouble, incGroupNoise, numGroupCoeff, GroupNoiseAmpPrior, GroupNoiseAlphaPrior, FitSolarWind, FitWhiteSolarWind, SolarWindPrior, WhiteSolarWindPrior,  GPTA, GPTAnumshapecoeff, GPTAnumstocshapecoeff, GroupNoiseName, FixProfile, FitTemplate, interpolateProfile, InterpolatedTime); 
 
 
 	FitForGroup = new int*[incGroupNoise];
@@ -1388,7 +1432,7 @@ extern "C" int graphicalInterface(int argc, char **argv,
 
 	GetGroupsToFit(incGroupNoise, FitForGroup);
 	for(int i =0; i < incGroupNoise; i++){
-		printf("Check Groups %i %i \n", i, FitForGroup[i]);
+//		printf("Check Groups %i %i \n", i, FitForGroup[i]);
 		if(FitForGroup[i][0] ==-1)numGroupstoFit++;
 		if(FitForGroup[i][1] == 1)numGroupTimestoFit++;
 	}
@@ -1697,7 +1741,7 @@ extern "C" int graphicalInterface(int argc, char **argv,
 		}
 	}
 
-	if(incEFAC > 0 || incEQUAD > 0 || incShannonJitter > 0){printf("using white noise model %i\n", whitemodel);}
+//	if(incEFAC > 0 || incEQUAD > 0 || incShannonJitter > 0){printf("using white noise model %i\n", whitemodel);}
 
 	std::vector<std::string>systemnames;
 	for(int o=0;o<psr[0].nobs;o++){
@@ -1846,10 +1890,10 @@ extern "C" int graphicalInterface(int argc, char **argv,
 
 
 
-	if(incEFAC == 0){printf("Not Including EFAC\n");numEFAC=0;}
+//	if(incEFAC == 0){printf("Not Including EFAC\n");numEFAC=0;}
 	if(incEFAC == 1){printf("Including One EFAC for all observations\n");numEFAC=1;}
 	if(incEFAC == 2){printf("Including One EFAC for each %s\n", wflag);numEFAC=systemcount;}	
-	if(incEQUAD == 0){printf("Not Including EQUAD\n");numEQUAD=0;}
+//	if(incEQUAD == 0){printf("Not Including EQUAD\n");numEQUAD=0;}
 	if(incEQUAD == 1){printf("Including One EQUAD for all observations\n");numEQUAD=1;}
 	if(incEQUAD == 2){printf("Including One EQUAD for each %s\n", wflag);numEQUAD=systemcount;}
 	if(incEQUAD == 3){printf("Including One EQUAD for the %i included TNEQ in par file\n",psr[0].nTNEQ);numEQUAD=psr[0].nTNEQ;}
@@ -1858,13 +1902,13 @@ extern "C" int graphicalInterface(int argc, char **argv,
 	if(incNGJitter == 1){printf("Including ECORR for %i systems\n", psr->nTNECORR);numNGJitter=psr->nTNECORR;}
 	if(FitSolarWind == 1){printf("Including Deterministic Solar Wind\n");}
 	if(FitWhiteSolarWind == 1){printf("Including Stochastic Solar Wind \n");}
-	if(incRED == 0){printf("Not Including Red Noise\n");}
+//	if(incRED == 0){printf("Not Including Red Noise\n");}
 	if(incRED == 1){printf("Including Red Noise : Power Law Model\n");}
 	if(incRED == 2){printf("Including Red Noise : Model Independant - Fitting %i Coefficients\n", int(numRedCoeff));}
 	if(incRED ==3){printf("Including Red Noise: Power Law Model to %i Coefficients \n", int(numRedCoeff));}
 	if(incRED ==4){printf("Including Red Noise: Power Law Model with Corner Freq to %i Coefficients\n \n", int(numRedCoeff));}
 	if(incRED ==5){printf("Including Red Noise Numerically: Power Law Model to %i Coefficients \n", int(numRedCoeff));}
-	if(incDM == 0){printf("Not Including DM\n");}
+//	if(incDM == 0){printf("Not Including DM\n");}
 	if(incDM == 1){printf("Including DM : Power Law Model\n");}
 	if(incDM == 2){printf("Including DM : Model Independant - Fitting %i Coefficients\n", int(numDMCoeff));}
 	if(incDM ==3){printf("Including DM: %i Component Power Law Model to %i Coefficients \n", numDMPL, int(numDMCoeff));}
@@ -1928,7 +1972,7 @@ extern "C" int graphicalInterface(int argc, char **argv,
 	TempoJumpNums=new int[numFitJumps];
 	//printf("allocated\n");
 	int paramsfitted=0;
-	printf("Offset and error: %g %g %g\n", psr[0].offset, psr[0].offset_e, psr[0].offset_e/sqrt(psr[0].fitChisq/psr[0].fitNfree));
+//	printf("Offset and error: %g %g %g\n", psr[0].offset, psr[0].offset_e, psr[0].offset_e/sqrt(psr[0].fitChisq/psr[0].fitNfree));
 	TempoPriors[paramsfitted][0]=psr[0].offset;
 	TempoPriors[paramsfitted][1]=psr[0].offset_e;//offset_e/sqrt(psr[0].fitChisq/psr[0].fitNfree);
 
@@ -1962,7 +2006,7 @@ extern "C" int graphicalInterface(int argc, char **argv,
 
 				paramsfitted++;
 
-				printf("TempoPriors %i %Lg %Lg\n", paramsfitted-1, TempoPriors[paramsfitted-1][0], TempoPriors[paramsfitted-1][1]);
+//				printf("TempoPriors %i %Lg %Lg\n", paramsfitted-1, TempoPriors[paramsfitted-1][0], TempoPriors[paramsfitted-1][1]);
 	    		}
 		}
 	}
@@ -1971,11 +2015,11 @@ extern "C" int graphicalInterface(int argc, char **argv,
 	for(int i=0;i<=psr[0].nJumps;i++){
 		if(psr[0].fitJump[i] == 1){
 
-			printf("gonna read jump %i %s \n",i,psr[0].jumpStr[i]);	
+//			printf("gonna read jump %i %s \n",i,psr[0].jumpStr[i]);	
 			char str1[100],str2[100],str3[100],str4[100],str5[100];
 			int nread=sscanf(psr[0].jumpStr[i],"%s %s %s %s %s",str1,str2,str3,str4,str5);
 			double prejump=atof(str3);
-			printf("Pre jump %i %g %g\n",i,prejump,psr[0].jumpVal[i]);
+//			printf("Pre jump %i %g %g\n",i,prejump,psr[0].jumpVal[i]);
 			
 			TempoPriors[paramsfitted][0]=psr[0].jumpVal[i];
 			TempoPriors[paramsfitted][1]=psr[0].jumpValErr[i]/sqrt(psr[0].fitChisq/psr[0].fitNfree);
@@ -1993,6 +2037,7 @@ extern "C" int graphicalInterface(int argc, char **argv,
 	// set the MultiNest sampling parameters
 	
 // 	return 0;
+	int sampler = 1;
 	int Nchords=1; 	
 	int IS = 1;					// do Nested Importance Sampling?
 	int mmodal = 0;					// do mode separation?
@@ -2003,7 +2048,7 @@ extern "C" int graphicalInterface(int argc, char **argv,
 	int nClsPar = 1;				// no. of parameters to do mode separation on
 	int updInt = 2000;				// after how many iterations feedback is required & the output files should be updated
 
-	setupMNparams(IS, mmodal, ceff, nlive, efr, sample, updInt, nClsPar, Nchords);
+	setupMNparams(sampler, IS, mmodal, ceff, nlive, efr, sample, updInt, nClsPar, Nchords);
 
 
 
@@ -2029,7 +2074,7 @@ extern "C" int graphicalInterface(int argc, char **argv,
 	int FloatRedstart=numFitJumps+fitcount+numEFAC+numEQUAD+Reddims-incFloatRed*2;
 	int FloatDMstart=numFitJumps+fitcount+numEFAC+numEQUAD+Reddims+DMdims-incFloatDM*2;
 
-	MNStruct *MNS = init_struct(psr,TempoPriors,npsr,numFitJumps,fitcount,systemcount,numEFAC,numEQUAD, int(numRedCoeff), int(numDMCoeff), numRedPL, numDMPL, TempoFitNums,TempoJumpNums,numFlags, ndims, incRED,incDM, incFloatDM,incFloatRed, FloatDMstart, FloatRedstart, doTimeMargin,doJumpMargin, doLinearFit, SampleFreq, numStep, wflag, whitemodel,varyRedCoeff, varyDMCoeff,yearlyDM, incsinusoid, numEPolTerms, incGWB,RedPriorType, DMPriorType, EQUADPriorType,EFACPriorType,useOriginalErrors,numSQUAD, incDMEvent, incDMShapeEvent, numDMShapeCoeff, incDMScatter,numDMScatterCoeff, incRedShapeEvent, numRedShapeCoeff, MarginRedShapeCoeff, incDMScatterShapeEvent, numDMScatterShapeCoeff, incNGJitter, incGlitch, incGlitchTerms, incBreakingIndex, FitLowFreqCutoff, uselongdouble, incGroupNoise, numGroupCoeff, FitForGroup, numGroupstoFit,GroupNoiseSys, FitSolarWind, FitWhiteSolarWind);
+	MNStruct *MNS = init_struct(psr,TempoPriors,npsr,numFitJumps,fitcount,systemcount,numEFAC,numEQUAD, int(numRedCoeff), int(numDMCoeff), numRedPL, numDMPL, TempoFitNums,TempoJumpNums,numFlags, ndims, incRED,incDM, incFloatDM,incFloatRed, FloatDMstart, FloatRedstart, doTimeMargin,doJumpMargin, doLinearFit, SampleFreq, numStep, wflag, whitemodel,varyRedCoeff, varyDMCoeff,yearlyDM, incsinusoid, numEPolTerms, incGWB,RedPriorType, DMPriorType, EQUADPriorType,EFACPriorType,useOriginalErrors,numSQUAD, incDMEvent, incDMShapeEvent, numDMShapeCoeff, incDMScatter,numDMScatterCoeff, incRedShapeEvent, numRedShapeCoeff, MarginRedShapeCoeff, incDMScatterShapeEvent, numDMScatterShapeCoeff, incNGJitter, incGlitch, incGlitchTerms, incBreakingIndex, FitLowFreqCutoff, uselongdouble, incGroupNoise, numGroupCoeff, FitForGroup, numGroupstoFit,GroupNoiseSys, FitSolarWind, FitWhiteSolarWind, interpolateProfile, InterpolatedTime, sampler, GPTAnumstocshapecoeff);
 	
 	MNS->includeEQsys = includeEQsys;	
 
@@ -2037,7 +2082,7 @@ extern "C" int graphicalInterface(int argc, char **argv,
 	if(incShannonJitter>0){
 		MNS->TobsInfo = TobsInfo;
 	}
-	printf("Check NG: %i %i\n", incNGJitter, ndims );
+//	printf("Check NG: %i %i\n", incNGJitter, ndims );
 	if(incNGJitter ==1){
 		//printf("Calling\n");
 		double **NGJitterMatrix;
@@ -2131,7 +2176,7 @@ extern "C" int graphicalInterface(int argc, char **argv,
     Dpriors = new double*[ndims]; for(int i = 0; i < ndims; i++){Dpriors[i]=new double[2];};
 
   	
-     long double *TNMaxParameters = new long double[ndims];
+//     long double *TNMaxParameters = new long double[ndims];
 
 
 	int findbrakeparam=0;
@@ -2170,16 +2215,16 @@ extern "C" int graphicalInterface(int argc, char **argv,
     if(customPriors == 1){
 		setTNPriors(Dpriors, TempoPriors, ((MNStruct *)context)->numFitTiming+((MNStruct *)context)->numFitJumps,ndims);
 
-		for(int i = 0; i < ((MNStruct *)context)->numFitTiming; i++){
-			printf("After Set %i %Lg %Lg \n", i, TempoPriors[i][0], TempoPriors[i][1]);
-		}
+//		for(int i = 0; i < ((MNStruct *)context)->numFitTiming; i++){
+//			printf("After Set %i %Lg %Lg \n", i, TempoPriors[i][0], TempoPriors[i][1]);
+//		}
 
 		update_MNPriors(MNS,Dpriors, TempoPriors,0);
 
 
-                for(int i = 0; i < ((MNStruct *)context)->numFitTiming; i++){
-                        printf("After Update %i %Lg %Lg \n", i, TempoPriors[i][0], TempoPriors[i][1]);
-                }
+//                for(int i = 0; i < ((MNStruct *)context)->numFitTiming; i++){
+//                        printf("After Update %i %Lg %Lg \n", i, TempoPriors[i][0], TempoPriors[i][1]);
+//                }
 		context=MNS;
 		
 		int pcount=1;
@@ -2585,6 +2630,7 @@ extern "C" int graphicalInterface(int argc, char **argv,
                                 pcount++;
 
                         }
+			
 
 	
 			Dpriors[pcount][0]=GroupNoiseAmpPrior[0];
@@ -2598,7 +2644,7 @@ extern "C" int graphicalInterface(int argc, char **argv,
 
 
 
-		printf("set up priors, pcount: %i \n",pcount);
+//		printf("set up priors, pcount: %i \n",pcount);
 		
 		int MarginDMQuad=0;	
 		numToMargin=0;
@@ -2610,7 +2656,8 @@ extern "C" int graphicalInterface(int argc, char **argv,
 		}
 
 		if(numToMargin>0 ){
-	
+//			printf("Am i going into here? \n");
+			//sleep(5);	
 			int *FitList=new int[ndims];
 			for(int i=0;i<ndims;i++){
 				FitList[i]=0;
@@ -2620,23 +2667,23 @@ extern "C" int graphicalInterface(int argc, char **argv,
 			for(int i=0;i<((MNStruct *)context)->numFitTiming + ((MNStruct *)context)->numFitJumps;i++){
 				if(TempoPriors[i][2]==1){
 					FitList[i]=1;
-					printf("marginalising over param: %i \n",i);
+					printf("marginalising over timing param: %i \n",i);
 					numToMargin++;
 				}
 			}
-			int Gsize=psr[0].nobs-numToMargin;
-			double **TNDM=new double*[psr[0].nobs];
-			for(int i=0;i<psr[0].nobs;i++){
-				TNDM[i]=new double[numToMargin];
-			}
+//			int Gsize=psr[0].nobs-numToMargin;
+//			double **TNDM=new double*[psr[0].nobs];
+//			for(int i=0;i<psr[0].nobs;i++){
+//				TNDM[i]=new double[numToMargin];
+//			}
 	
-			double **TNGM=new double*[psr[0].nobs];
-			for(int i=0;i<psr[0].nobs;i++){
-				TNGM[i]=new double[psr[0].nobs];
+//			double **TNGM=new double*[psr[0].nobs];
+//			for(int i=0;i<psr[0].nobs;i++){
+//				TNGM[i]=new double[psr[0].nobs];
+//
+//			}
 
-			}
-
-			getCustomDMatrix(psr, FitList, TNDM, TempoFitNums, TempoJumpNums, Dpriors, incDM, ((MNStruct *)context)->numFitTiming, ((MNStruct *)context)->numFitJumps);
+			getCustomDMatrix(psr, FitList, TempoFitNums, TempoJumpNums, Dpriors, incDM, ((MNStruct *)context)->numFitTiming, ((MNStruct *)context)->numFitJumps);
 
 			update_MNPriors(MNS,Dpriors, TempoPriors,0);
 
@@ -2653,9 +2700,9 @@ extern "C" int graphicalInterface(int argc, char **argv,
 			update_MNPriors(MNS,Dpriors, TempoPriors,0);
 			context=MNS;
 			
-                for(int i = 0; i < ((MNStruct *)context)->numFitTiming; i++){
-                        printf("After Update  2%i %Lg %Lg \n", i, TempoPriors[i][0], TempoPriors[i][1]);
-                }
+//                for(int i = 0; i < ((MNStruct *)context)->numFitTiming; i++){
+ //                       printf("After Update  2%i %Lg %Lg \n", i, TempoPriors[i][0], TempoPriors[i][1]);
+ //               }
 
 			printPriors(psr, TempoPriors, Dpriors, numEFAC, numEQUAD, incRED, incDM, numRedCoeff, numDMCoeff, incFloatRed,incFloatDM, fitDMModel, longname, numStep, varyRedCoeff, varyDMCoeff,yearlyDM, incsinusoid, numEPolTerms,numSQUAD,context);
 
@@ -2807,7 +2854,7 @@ extern "C" int graphicalInterface(int argc, char **argv,
 			if(((MNStruct *)context)->Dpriors[p][0] != ((MNStruct *)context)->Dpriors[p][1]){
 				PriorsArray[pcount]=((MNStruct *)context)->Dpriors[p][0];
 				PriorsArray[pcount+ndims]=((MNStruct *)context)->Dpriors[p][1];
-				printf("param %i in, %g %g \n", pcount, PriorsArray[pcount], PriorsArray[pcount+ndims]); 
+			//	printf("param %i in, %g %g \n", pcount, PriorsArray[pcount], PriorsArray[pcount+ndims]); 
 				pcount++;
 			}
 		
@@ -2942,13 +2989,13 @@ extern "C" int graphicalInterface(int argc, char **argv,
 
 
 		}
-
+		((MNStruct *)context)->PriorsArray = PriorsArray;
 	        ((MNStruct *)context)->hypercube_indices = hypercube_indices;	
 		((MNStruct *)context)->doGrades = do_grades;
 		((MNStruct *)context)->PolyChordGrades = grades;	
 
 		assigncontext(context);
-		printf("about to sample\n");
+//		printf("about to sample\n");
 
 #ifdef HAVE_CULA
 		assignGPUcontext(context);
@@ -2963,10 +3010,20 @@ extern "C" int graphicalInterface(int argc, char **argv,
 
 			}
 			else{
-				chord::Sample(NewLRedMarginLogLike, ndims, NDerived, nlive, Nchords,  PriorsArray, root, context, output, do_grades, maxgrade, grades, grade_repeats, hypercube_indices, physical_indices);
-			}  
+				if(sampler == 0){
+				 nested::run(IS,mmodal, ceff, nlive, tol, efr, ndims, ndims, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, LRedLikeMNWrap, dumper, context);
+				}
+				if(sampler == 1){
+					chord::Sample(NewLRedMarginLogLike, ndims, NDerived, nlive, Nchords,  PriorsArray, root, context, output, do_grades, maxgrade, grades, grade_repeats, hypercube_indices, physical_indices);
+				}
+		       }   
 #else
-				chord::Sample(NewLRedMarginLogLike, ndims, NDerived, nlive, Nchords,  PriorsArray, root, context, output, do_grades, maxgrade, grades, grade_repeats, hypercube_indices, physical_indices);
+				if(sampler == 0){
+				nested::run(IS,mmodal, ceff, nlive, tol, efr, ndims, ndims, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, LRedLikeMNWrap, dumper, context);
+                                }
+                                if(sampler == 1){
+					chord::Sample(NewLRedMarginLogLike, ndims, NDerived, nlive, Nchords,  PriorsArray, root, context, output, do_grades, maxgrade, grades, grade_repeats, hypercube_indices, physical_indices);
+				}
 #endif 
 		}
 	}
@@ -2993,7 +3050,6 @@ extern "C" int graphicalInterface(int argc, char **argv,
 
 			long double ***ProfileData = new long double**[((MNStruct *)context)->pulse->nobs];
 			long double **ProfileInfo = new long double*[((MNStruct *)context)->pulse->nobs];
-	
 
 
 			 for(int t = 0; t < ((MNStruct *)context)->pulse->nobs; t++){
@@ -3038,17 +3094,22 @@ extern "C" int graphicalInterface(int argc, char **argv,
 				ProfileInfo[t][0] = FoldingPeriod;
 				ProfileInfo[t][1] = (long double)ds[6];
 
-
+				double oneflux = 0;	
 				for(int i =0; i < Nbins; i++){
 					getline(ProfileFile,line);
 					std::istringstream lineStream( line );
 					std::istream_iterator< long double > pbegin(lineStream),eof;
 					std::vector<long double> prof(pbegin,eof);
 					ProfileData[t][i][1] = prof[1];
+					oneflux = oneflux + ProfileData[t][i][1];
 			 
 				}   
 			 
 				ProfileFile.close();
+
+				if(oneflux == 0){
+					printf("Profile %i is all zeros, please remove from tim file \n", t);
+				}
 
 
 /*
@@ -3081,7 +3142,7 @@ extern "C" int graphicalInterface(int argc, char **argv,
 				//printf("compare Tobs: %i %.10g %.10g \n",t , Tobs, testTobs);
                                 double PNoiseVal = 0;
 
-                                std::string noisename = "profiles/newnoisevals"; //"/home/ltl21/scratch/Pulsars/ProfileData/J1909-10cm/profiles/newnoisevals";
+                                /*std::string noisename = "profiles/newnoisevals"; //"/home/ltl21/scratch/Pulsars/ProfileData/J1909-10cm/profiles/newnoisevals";
                                 std::ifstream noiseFile;
                                 noiseFile.open(noisename.c_str());
                                 for(int i = 0; i < ((MNStruct *)context)->pulse->nobs; i++){
@@ -3097,6 +3158,7 @@ extern "C" int graphicalInterface(int argc, char **argv,
                                 }
                                 noiseFile.close();
 				printf("Noise %i %g \n", t, PNoiseVal);
+				*/
 				/*
 				long double Sat1;
 				long double Sat2;
@@ -3187,7 +3249,7 @@ extern "C" int graphicalInterface(int argc, char **argv,
 			int nprofcoeff = GPTAnumshapecoeff;
 			int numshapestoccoeff = GPTAnumstocshapecoeff;
 
-			int shapedims = nprofcoeff + numshapestoccoeff + 1;
+			int shapedims = nprofcoeff + numshapestoccoeff;
 
 			int maxshapecoeff = 0;
 			if(nprofcoeff+1>=numshapestoccoeff+1){
@@ -3223,10 +3285,9 @@ extern "C" int graphicalInterface(int argc, char **argv,
 			ndims = nprofcoeff+1+numFitJumps+fitcount+numEFAC+numEQUAD+numSQUAD+numshapestoccoeff+Reddims+DMdims;
 			nPar = 0;
 
-			int FitTemplate = 0;
 
 			if(FixProfile == 1){ndims -= (nprofcoeff+1);}
-			if(FitTemplate == 1){ndims = 2;}
+			if(FitTemplate == 1){ndims = 2; shapedims=0;}
 			double *MeanProfileShape  = new double[nprofcoeff];
 
 		        printf("Starting GPTA %i %i %i\n", ndims, nprofcoeff, numshapestoccoeff);
@@ -3287,61 +3348,126 @@ extern "C" int graphicalInterface(int argc, char **argv,
 
 			double betaminp = 0;
 			double betamaxp = 0;
+			double *BetaPrior = new double[2];
 
-			setShapePriors(shapecoeffprior, shapedims);
+			setShapePriors(shapecoeffprior, BetaPrior, shapedims);
 
 			double MeanBeta=0;
-			betaminp=shapecoeffprior[nprofcoeff][0];
-			betamaxp=shapecoeffprior[nprofcoeff][1];
 		        for(int p = 0; p < nprofcoeff; p++){
 
-		                printf("Shape Prior %i %.10g %.10g \n", pcount,shapecoeffprior[p][0], shapecoeffprior[p][1]);
-				if(FixProfile == 0){
+				if(FixProfile == 0 && FitTemplate == 0){
+					printf("Shape Prior %i %.10g %.10g \n", pcount,shapecoeffprior[p][0], shapecoeffprior[p][1]);
 					PriorsArray[pcount]=shapecoeffprior[p][0];
 					PriorsArray[pcount+ndims]=shapecoeffprior[p][1];
 					pcount++;
 				}
-				else{
+				else if(FixProfile == 1 && FitTemplate == 0){
 					MeanProfileShape[p] = shapecoeffprior[p][0];
 				}
 	
 		        }
 			if(FixProfile == 0 || FitTemplate == 1){
-				printf("Beta Prior: %i %i %g %g %g %g\n", nprofcoeff, pcount, betaminp, betamaxp, shapecoeffprior[nprofcoeff][0], shapecoeffprior[nprofcoeff][1]);
-				PriorsArray[pcount] = betaminp;
-				PriorsArray[pcount+ndims] = betamaxp;	
+				printf("Beta Prior: %i %i %g %g\n", nprofcoeff, pcount, BetaPrior[0], BetaPrior[1]);
+				PriorsArray[pcount] = BetaPrior[0];
+				PriorsArray[pcount+ndims] = BetaPrior[1];	
 				pcount++;
 			}
 			else{
-				MeanBeta = betaminp;
+				MeanBeta = BetaPrior[0];
 			}
 		        for(int p = 0; p < numshapestoccoeff; p++){
-				printf("Shape Power Prior %i %i %.10g %.10g \n", p,pcount, shapecoeffprior[nprofcoeff+1+p][0], shapecoeffprior[nprofcoeff+1+p][1]);
+				printf("p %i %i %i\n", p, pcount, ndims);
+				printf("Shape Power Prior %i %i %i %.10g %.10g \n", p,pcount, numshapestoccoeff, shapecoeffprior[nprofcoeff+p][0], shapecoeffprior[nprofcoeff+p][1]);
 
-                                PriorsArray[pcount]=shapecoeffprior[nprofcoeff+1+p][0];
-                                PriorsArray[pcount+ndims]=shapecoeffprior[nprofcoeff+1+p][1];
+                                PriorsArray[pcount]=shapecoeffprior[nprofcoeff+p][0];
+                                PriorsArray[pcount+ndims]=shapecoeffprior[nprofcoeff+p][1];
                                 pcount++;
 
                         }
 
-
+			printf("set priors \n");
+			((MNStruct *)context)->PriorsArray = PriorsArray;
 			((MNStruct *)context)->FixProfile = FixProfile;
 			((MNStruct *)context)->MeanProfileShape = MeanProfileShape;	
 			((MNStruct *)context)->MeanProfileBeta = MeanBeta;
 			//outputProfile(ndims);
 			//return 0;
 
+			assigncontext(context);
 
-			
-		        assigncontext(context);
-			if(sample==1){
-			//	chord::Sample(TemplateProfLike, ndims, NDerived, nlive, Nchords,  PriorsArray, root, context, output, do_grades, maxgrade, grades, grade_repeats, hypercube_indices, physical_indices);
-				chord::Sample(SubIntStocProfLike, ndims, NDerived, nlive, Nchords,  PriorsArray, root, context, output, do_grades, maxgrade, grades, grade_repeats, hypercube_indices, physical_indices);
-			
+
+			if(interpolateProfile == 1){
+
+				int Nbin = (int)ProfileInfo[0][1];
+				long double timetointerpolate = pow(10.0, -9)*InterpolatedTime;
+				int numtointerpolate = int(ceil(((MNStruct *)context)->ReferencePeriod/Nbin/timetointerpolate));
+				long double finalInterpTime = ((MNStruct *)context)->ReferencePeriod/Nbin/numtointerpolate;
+				((MNStruct *)context)->InterpolatedTime = finalInterpTime;
+
+				printf("Final interp time %.10g %.10Lg \n", InterpolatedTime, finalInterpTime);
+
+				double ***StoredShapelets = new double**[numtointerpolate];
+				for(int i = 0; i < numtointerpolate; i++){
+					StoredShapelets[i] = new double*[Nbin];
+					for(int j = 0; j < Nbin; j++){
+						 StoredShapelets[i][j] = new double[numshapestoccoeff];
+						for(int k = 0; k < numshapestoccoeff; k++){
+							StoredShapelets[i][j][k] = 0;
+						}
+					}
+				}
+
+				double **InterpolatedMeanProfile = new double *[numtointerpolate];
+				double **InterpolatedJitterProfile = new double *[numtointerpolate];
+				for(int i = 0; i < numtointerpolate; i++){
+					InterpolatedMeanProfile[i] = new double[Nbin];
+					InterpolatedJitterProfile[i] = new double[Nbin];
+					for(int j = 0; j < Nbin; j++){
+						InterpolatedMeanProfile[i][j] = 0;
+						InterpolatedJitterProfile[i][j] = 0;
+					}	
+				}
+
+
+				PreComputeShapelets(StoredShapelets, InterpolatedMeanProfile, InterpolatedJitterProfile, finalInterpTime, numtointerpolate, MeanBeta);
+
+				((MNStruct *)context)->InterpolatedShapelets = StoredShapelets;
+				((MNStruct *)context)->InterpolatedMeanProfile = InterpolatedMeanProfile;
+				((MNStruct *)context)->InterpolatedJitterProfile = InterpolatedJitterProfile;
+				((MNStruct *)context)->NumToInterpolate = numtointerpolate;
+				//return 0;
 			}
-			//WriteMaxTemplateProf(longname, ndims);
-			//AllTOAWriteMaxLike(longname, ndims);
-			WriteSubIntStocProfLike(longname, ndims);
+
+
+			assigncontext(context);
+
+
+			if(sample==1){
+				if(FitTemplate == 1){
+					if(sampler == 0){
+						nested::run(IS,mmodal, ceff, nlive, tol, efr, ndims, ndims, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, TemplateProfLikeMNWrap, dumper, context);
+					}
+					if(sampler == 1){
+						chord::Sample(TemplateProfLike, ndims, NDerived, nlive, Nchords,  PriorsArray, root, context, output, do_grades, maxgrade, grades, grade_repeats, hypercube_indices, physical_indices);
+					}
+				}
+				else{
+					if(sampler == 0){
+						nested::run(IS,mmodal, ceff, nlive, tol, efr, ndims, ndims, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, SubIntStocProfLikeMNWrap, dumper, context);
+					}
+					if(sampler == 1){
+						chord::Sample(SubIntStocProfLike, ndims, NDerived, nlive, Nchords,  PriorsArray, root, context, output, do_grades, maxgrade, grades, grade_repeats, hypercube_indices, physical_indices);
+					}
+				}
+			}
+
+			if(FitTemplate == 1){
+				WriteMaxTemplateProf(longname, ndims);
+			}
+			else{
+				//AllTOAWriteMaxLike(longname, ndims);
+				WriteSubIntStocProfLike(longname, ndims);
+			}
 			return 0;
 			
 

@@ -26,6 +26,8 @@
 */
 
 
+#include <sys/time.h>
+#include <time.h>
 #include <stdio.h>
 #include <vector>
 #include <gsl/gsl_sf_gamma.h>
@@ -1109,8 +1111,8 @@ double  FastNewLRedMarginLogLike(int &ndim, double *Cube, int &npars, double *De
 	if(((MNStruct *)globalcontext)->uselongdouble > 0 ){
 		fpu_fix_start(&oldcw);
 	}
-	
-*/
+*/	
+
 
 	double tdet=0;
 	double timelike=0;
@@ -1120,8 +1122,7 @@ double  FastNewLRedMarginLogLike(int &ndim, double *Cube, int &npars, double *De
 		tdet -= log(Noise[o]);
 	}
 
-/*
-	dd_real ddtimelike=0.0;
+/*	dd_real ddtimelike=0.0;
 	if(((MNStruct *)globalcontext)->uselongdouble ==1){
 		for(int o=0; o<((MNStruct *)globalcontext)->pulse->nobs; o++){
 			dd_real res = (dd_real)Resvec[o];
@@ -1223,12 +1224,12 @@ double  FastNewLRedMarginLogLike(int &ndim, double *Cube, int &npars, double *De
 		
 	}
 
-/*
-        if(((MNStruct *)globalcontext)->uselongdouble > 0 ){
+
+/*        if(((MNStruct *)globalcontext)->uselongdouble > 0 ){
                 fpu_fix_end(&oldcw);
         }
-*/
 
+*/
 
 	delete[] WorkCoeff;
 	delete[] NTd;
@@ -1251,10 +1252,29 @@ double  FastNewLRedMarginLogLike(int &ndim, double *Cube, int &npars, double *De
 }
 
 
+void LRedLikeMNWrap(double *Cube, int &ndim, int &npars, double &lnew, void *context){
+
+
+
+        for(int p=0;p<ndim;p++){
+
+                Cube[p]=(((MNStruct *)globalcontext)->PriorsArray[p+ndim]-((MNStruct *)globalcontext)->PriorsArray[p])*Cube[p]+((MNStruct *)globalcontext)->PriorsArray[p];
+        }
+
+
+	double *DerivedParams = new double[npars];
+
+	double result = NewLRedMarginLogLike(ndim, Cube, npars, DerivedParams, context);
+
+
+	delete[] DerivedParams;
+
+	lnew = result;
+
+}
 
 double  NewLRedMarginLogLike(int &ndim, double *Cube, int &npars, double *DerivedParams, void *context){
 
-	
 	double uniformpriorterm=0;
 	clock_t startClock,endClock;
 
@@ -1660,16 +1680,18 @@ double  NewLRedMarginLogLike(int &ndim, double *Cube, int &npars, double *Derive
 		if(((MNStruct *)globalcontext)->LDpriors[i][2]==1)TimetoMargin++;
 	}
 
-
-	double **TNDM=new double*[((MNStruct *)globalcontext)->pulse->nobs];
-	for(int i=0;i<((MNStruct *)globalcontext)->pulse->nobs;i++){
-		TNDM[i]=new double[TimetoMargin];
-	}
+	double **TNDM;
 
 	if(TimetoMargin != ((MNStruct *)globalcontext)->numFitTiming+((MNStruct *)globalcontext)->numFitJumps){
 
+
+		TNDM=new double*[((MNStruct *)globalcontext)->pulse->nobs]; 
+		for(int i=0;i<((MNStruct *)globalcontext)->pulse->nobs;i++){
+			TNDM[i]=new double[TimetoMargin];
+		}
+
+
 		getCustomDMatrixLike(globalcontext, TNDM);
-	
 
 		double* S = new double[TimetoMargin];
 		double** U = new double*[((MNStruct *)globalcontext)->pulse->nobs];
@@ -1680,7 +1702,6 @@ double  NewLRedMarginLogLike(int &ndim, double *Cube, int &npars, double *Derive
 		for (int k=0; k<TimetoMargin; k++) VT[k] = new double[TimetoMargin];
 
 		dgesvd(TNDM,((MNStruct *)globalcontext)->pulse->nobs, TimetoMargin, S, U, VT);
-
 		delete[]S;	
 
 		for (int j = 0; j < TimetoMargin; j++){
@@ -1704,16 +1725,9 @@ double  NewLRedMarginLogLike(int &ndim, double *Cube, int &npars, double *Derive
 		delete[]U;
 		
 	}
-	else{
-		
-		for(int j=0;j<((MNStruct *)globalcontext)->pulse->nobs;j++){
-			for(int k=0;k < TimetoMargin;k++){
-					TNDM[j][k]=((MNStruct *)globalcontext)->DMatrix[j][k];
-			}
-		}
-		
-	}	
-
+	else{	
+		TNDM = ((MNStruct *)globalcontext)->DMatrix;
+	}
 
 
 //////////////////////////////////////////////////////////////////////////////////////////  
@@ -2170,7 +2184,7 @@ double  NewLRedMarginLogLike(int &ndim, double *Cube, int &npars, double *Derive
 				freqs[startpos+i]=((MNStruct *)globalcontext)->sampleFreq[startpos/2 - ((MNStruct *)globalcontext)->incFloatRed+i]/maxtspan;
 				freqs[startpos+i+FitDMCoeff/2]=freqs[startpos+i];
 	
-				powercoeff[startpos+i]=pow(10.0,pc)/(maxtspan*24*60*60);
+				powercoeff[startpos+i]=pow(10.0,2*pc);
 				powercoeff[startpos+i+FitDMCoeff/2]=powercoeff[startpos+i];
 				freqdet=freqdet+2*log(powercoeff[startpos+i]);
 				pcount++;
@@ -2999,9 +3013,7 @@ double  NewLRedMarginLogLike(int &ndim, double *Cube, int &npars, double *Derive
 /////////////////////////////////////////////////////////////////////////////////////////////  
 /////////////////////////Get Time domain likelihood//////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////  
-
-/*
-	static unsigned int oldcw;
+/*	static unsigned int oldcw;
 	if(((MNStruct *)globalcontext)->uselongdouble > 0 ){
 		fpu_fix_start(&oldcw);
 	//	printf("oldcw %i \n", oldcw);
@@ -3018,8 +3030,8 @@ double  NewLRedMarginLogLike(int &ndim, double *Cube, int &npars, double *Derive
 		tdet -= log(Noise[o]);
 	}
 
-/*
-	dd_real ddtimelike=0.0;
+
+/*	dd_real ddtimelike=0.0;
 	if(((MNStruct *)globalcontext)->uselongdouble ==1){
 		for(int o=0; o<((MNStruct *)globalcontext)->pulse->nobs; o++){
 			dd_real res = (dd_real)Resvec[o];
@@ -3044,7 +3056,6 @@ double  NewLRedMarginLogLike(int &ndim, double *Cube, int &npars, double *Derive
 		//printf("qdtimelike %15.10e\n", qdtimelike.x[0]);
         }
 
-
 */
 
 //////////////////////////////////////////////////////////////////////////////////////////  
@@ -3063,7 +3074,7 @@ double  NewLRedMarginLogLike(int &ndim, double *Cube, int &npars, double *Derive
 	
 	for(int i =0;i<((MNStruct *)globalcontext)->pulse->nobs;i++){
 		for(int j =0;j<TimetoMargin; j++){
-			TotalMatrix[i][j]=TNDM[i][j];
+			TotalMatrix[i][j]= TNDM[i][j];
 		}
 		
 		for(int j =0;j<totCoeff; j++){
@@ -3075,6 +3086,18 @@ double  NewLRedMarginLogLike(int &ndim, double *Cube, int &npars, double *Derive
 			//printf("Red shape: %i %i %g \n", i, j, RedShapeletMatrix[i][j]);
 		}
 	}
+
+        for (int j = 0; j < ((MNStruct *)globalcontext)->pulse->nobs; j++){
+                delete[] FMatrix[j];
+        }
+        delete[] FMatrix;
+	if(TimetoMargin != ((MNStruct *)globalcontext)->numFitTiming+((MNStruct *)globalcontext)->numFitJumps){
+		for (int j = 0; j < ((MNStruct *)globalcontext)->pulse->nobs; j++){
+                	delete[] TNDM[j];
+        	}
+        	delete[] TNDM;
+	}
+
 
 //////////////////////////////////////////////////////////////////////////////////////////  
 ///////////////////////Do Algebra/////////////////////////////////////////////////////////
@@ -3104,8 +3127,8 @@ double  NewLRedMarginLogLike(int &ndim, double *Cube, int &npars, double *Derive
 
 	dgemv(NT,Resvec,NTd,((MNStruct *)globalcontext)->pulse->nobs,totalsize,'T');
 
-/*
-        dd_real ddfreqlike = 0.0;
+
+/*        dd_real ddfreqlike = 0.0;
         dd_real ddsigmadet = 0.0;
 
         dd_real ddfreqlikeChol = 0.0;
@@ -3347,7 +3370,6 @@ double  NewLRedMarginLogLike(int &ndim, double *Cube, int &npars, double *Derive
 
 	}
 
-
 */
 	for(int j=0;j<totCoeff;j++){
 			TNT[TimetoMargin+j][TimetoMargin+j] += 1.0/powercoeff[j];
@@ -3428,8 +3450,7 @@ double  NewLRedMarginLogLike(int &ndim, double *Cube, int &npars, double *Derive
 		
 	}
 
-/*
-	//printf("lnew double : %g", lnew);
+/*	//printf("lnew double : %g", lnew);
 	if(((MNStruct *)globalcontext)->uselongdouble ==1){
 
 		dd_real ddAllLike = -0.5*(tdet+ddsigmadet+freqdet+ddtimelike-ddfreqlike) + uniformpriorterm;
@@ -3476,8 +3497,6 @@ double  NewLRedMarginLogLike(int &ndim, double *Cube, int &npars, double *Derive
                 fpu_fix_end(&oldcw);
         }
 */
-
-
 	if(badshape == 1){lnew=-pow(10.0,20);}
 
 
@@ -3495,15 +3514,11 @@ double  NewLRedMarginLogLike(int &ndim, double *Cube, int &npars, double *Derive
 	
 	for (int j = 0; j < ((MNStruct *)globalcontext)->pulse->nobs; j++){
 		delete[] TotalMatrix[j];
-		delete[] TNDM[j];
-		delete[] FMatrix[j];
 		delete[] NT[j];
 		
 
 	}
 	delete[] TotalMatrix;
-	delete[] TNDM;
-	delete[] FMatrix;
 	delete[] NT;
 	
 
@@ -5093,14 +5108,14 @@ double  LRedNumericalLogLike(int &ndim, double *Cube, int &npars, double *Derive
 /////////////////////////Get Time domain likelihood//////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////// 
 
-/* 
-	static unsigned int oldcw;
+ 
+/*	static unsigned int oldcw;
 	if(((MNStruct *)globalcontext)->uselongdouble > 0 ){
 		fpu_fix_start(&oldcw);
 	}
-	
+*/	
 
-*/
+
 	double tdet=0;
 	double timelike=0;
 
@@ -5109,8 +5124,8 @@ double  LRedNumericalLogLike(int &ndim, double *Cube, int &npars, double *Derive
 		tdet -= log(Noise[o]);
 	}
 
-/*
-	dd_real ddtimelike=0.0;
+
+/*	dd_real ddtimelike=0.0;
 	if(((MNStruct *)globalcontext)->uselongdouble ==1){
 		for(int o=0; o<((MNStruct *)globalcontext)->pulse->nobs; o++){
 			dd_real res = (dd_real)Resvec[o];
@@ -5132,8 +5147,8 @@ double  LRedNumericalLogLike(int &ndim, double *Cube, int &npars, double *Derive
                         qdtimelike+=chicomp;
                 }
         }
-*/
 
+*/
 /////////////////////////////////////////////////////////////////////////////////////////////  
 /////////////////////////Get Fourier domain likelihood///////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////// 
@@ -9381,6 +9396,26 @@ double  AllTOAMarginStocProfLike(int &ndim, double *Cube, int &npars, double *De
 
 
 
+void TemplateProfLikeMNWrap(double *Cube, int &ndim, int &npars, double &lnew, void *context){
+
+
+
+        for(int p=0;p<ndim;p++){
+
+                Cube[p]=(((MNStruct *)globalcontext)->PriorsArray[p+ndim]-((MNStruct *)globalcontext)->PriorsArray[p])*Cube[p]+((MNStruct *)globalcontext)->PriorsArray[p];
+        }
+
+
+	double *DerivedParams = new double[npars];
+
+	double result = TemplateProfLike(ndim, Cube, npars, DerivedParams, context);
+
+
+	delete[] DerivedParams;
+
+	lnew = result;
+
+}
 
 double  TemplateProfLike(int &ndim, double *Cube, int &npars, double *DerivedParams, void *context){
 
@@ -9626,7 +9661,14 @@ void  WriteMaxTemplateProf(std::string longname, int &ndim){
         int number_of_lines = 0;
 
         std::ifstream checkfile;
-        std::string checkname = longname+"_phys_live.txt";
+	std::string checkname;
+	if(((MNStruct *)globalcontext)->sampler == 0){
+	        checkname = longname+"phys_live.points";
+	}
+        if(((MNStruct *)globalcontext)->sampler == 1){
+                checkname = longname+"_phys_live.txt";
+        }
+	printf("%i %s \n", ((MNStruct *)globalcontext)->sampler, checkname.c_str());
         checkfile.open(checkname.c_str());
         std::string line;
         while (getline(checkfile, line))
@@ -9635,7 +9677,13 @@ void  WriteMaxTemplateProf(std::string longname, int &ndim){
         checkfile.close();
 
         std::ifstream summaryfile;
-        std::string fname = longname+"_phys_live.txt";
+	std::string fname;
+	if(((MNStruct *)globalcontext)->sampler == 0){
+		fname = longname+"phys_live.points";
+	}
+	if(((MNStruct *)globalcontext)->sampler == 1){
+	        fname = longname+"_phys_live.txt";
+	}
         summaryfile.open(fname.c_str());
 
 
@@ -9902,7 +9950,35 @@ void  WriteMaxTemplateProf(std::string longname, int &ndim){
 }
 
 
+void SubIntStocProfLikeMNWrap(double *Cube, int &ndim, int &npars, double &lnew, void *context){
+
+
+
+        for(int p=0;p<ndim;p++){
+
+                Cube[p]=(((MNStruct *)globalcontext)->PriorsArray[p+ndim]-((MNStruct *)globalcontext)->PriorsArray[p])*Cube[p]+((MNStruct *)globalcontext)->PriorsArray[p];
+        }
+
+
+	double *DerivedParams = new double[npars];
+
+	double result = SubIntStocProfLike(ndim, Cube, npars, DerivedParams, context);
+
+
+	delete[] DerivedParams;
+
+	lnew = result;
+
+}
+
 double  SubIntStocProfLike(int &ndim, double *Cube, int &npars, double *DerivedParams, void *context){
+
+
+	struct timeval tval_before, tval_after, tval_resultone, tval_resulttwo;
+
+
+//	gettimeofday(&tval_before, NULL);
+
 
 	int debug = 0;
 
@@ -9935,6 +10011,10 @@ double  SubIntStocProfLike(int &ndim, double *Cube, int &npars, double *DerivedP
 /////////////////////////////////////////////////////////////////////////////////////////////
 
 
+	//for(int i = 0; i < 10; i ++){
+	//	double pval = i*0.1;
+	//	phase = pval*((MNStruct *)globalcontext)->ReferencePeriod/SECDAY;
+
 	for(int p=0;p< ((MNStruct *)globalcontext)->pulse->nobs; p++){
 		((MNStruct *)globalcontext)->pulse->obsn[p].sat = ((MNStruct *)globalcontext)->pulse->obsn[p].origsat-phase;
 	}
@@ -9945,9 +10025,16 @@ double  SubIntStocProfLike(int &ndim, double *Cube, int &npars, double *DerivedP
         }
 
 
-	fastformBatsAll(((MNStruct *)globalcontext)->pulse,((MNStruct *)globalcontext)->numberpulsars);       /* Form Barycentric arrival times */
+	fastformSubIntBatsAll(((MNStruct *)globalcontext)->pulse,((MNStruct *)globalcontext)->numberpulsars);       /* Form Barycentric arrival times */
 	formResiduals(((MNStruct *)globalcontext)->pulse,((MNStruct *)globalcontext)->numberpulsars,0);       /* Form residuals */
 
+	//for(int j = 0; j < ((MNStruct *)globalcontext)->pulse->nobs; j++){
+	//	printf("%i %g %i %.15g %.15g \n", i, pval, j, (double)((MNStruct *)globalcontext)->pulse->obsn[j].batCorr, (double)((MNStruct *)globalcontext)->pulse->obsn[j].residual	);
+	//}/
+
+
+	//}
+	//sleep(5);
 
 	if(debug == 1)printf("Formed Residuals \n");
 
@@ -10026,7 +10113,6 @@ double  SubIntStocProfLike(int &ndim, double *Cube, int &npars, double *DerivedP
     	}	  
 	  
 
-	//printf("End of White\n");
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////  
@@ -10092,8 +10178,57 @@ double  SubIntStocProfLike(int &ndim, double *Cube, int &npars, double *DerivedP
 	int maxoffpulse=1250;
 //        int minoffpulse=200;
 //        int maxoffpulse=800;
+
+
+
+	int GlobalNBins = (int)((MNStruct *)globalcontext)->ProfileInfo[0][1];
+
+
+	double **AllHermiteBasis =  new double*[GlobalNBins];
+	double **JitterBasis  =  new double*[GlobalNBins];
+	double **Hermitepoly =  new double*[GlobalNBins];
+
+	for(int i =0;i<GlobalNBins;i++){AllHermiteBasis[i]=new double[maxshapecoeff];}
+	for(int i =0;i<GlobalNBins;i++){Hermitepoly[i]=new double[numcoeff];}
+	for(int i =0;i<GlobalNBins;i++){JitterBasis[i]=new double[numcoeff];}
+
+
+	double **M = new double*[GlobalNBins];
+	double **NM = new double*[GlobalNBins];
+
+	int Msize = 2+numshapestoccoeff;
+	int Mcounter=0;
+	if(((MNStruct *)globalcontext)->numFitEQUAD > 0){
+		Msize++;
+	}
+
+
+	for(int i =0; i < GlobalNBins; i++){
+		Mcounter=0;
+		M[i] = new double[Msize];
+		NM[i] = new double[Msize];
+
+	}
+
+
+	double **MNM = new double*[Msize];
+	for(int i =0; i < Msize; i++){
+	    MNM[i] = new double[Msize];
+	}
+
+
+//		gettimeofday(&tval_after, NULL);
+
+//		timersub(&tval_after, &tval_before, &tval_resultone);
+
+
+//		gettimeofday(&tval_before, NULL);
 	
 	for(int t = 0; t < ((MNStruct *)globalcontext)->pulse->nobs; t++){
+
+	
+//		gettimeofday(&tval_before, NULL);
+
 		if(debug == 1)printf("In toa %i \n", t);
 		int nTOA = t;
 
@@ -10113,16 +10248,10 @@ double  SubIntStocProfLike(int &ndim, double *Cube, int &npars, double *DerivedP
 		long double ReferencePeriod = ((MNStruct *)globalcontext)->ReferencePeriod;
 
 		double *Betatimes = new double[Nbins];
-		double **AllHermiteBasis =  new double*[Nbins];
-		double **JitterBasis  =  new double*[Nbins];
-		double **Hermitepoly =  new double*[Nbins];
-
-		for(int i =0;i<Nbins;i++){AllHermiteBasis[i]=new double[maxshapecoeff];for(int j =0;j<maxshapecoeff;j++){AllHermiteBasis[i][j]=0;}}
-		for(int i =0;i<Nbins;i++){Hermitepoly[i]=new double[numcoeff];for(int j =0;j<numcoeff;j++){Hermitepoly[i][j]=0;}}
-		for(int i =0;i<Nbins;i++){JitterBasis[i]=new double[numcoeff];for(int j =0;j<numcoeff;j++){JitterBasis[i][j]=0;}}
-	
 	
 
+	        double *shapevec  = new double[Nbins];
+	        double *Jittervec = new double[Nbins];
 
 		double noisemean=0;
 		for(int j =minoffpulse; j < maxoffpulse; j++){
@@ -10136,7 +10265,7 @@ double  SubIntStocProfLike(int &ndim, double *Cube, int &npars, double *DerivedP
 		double dataflux = 0;
 		for(int j = 0; j < Nbins; j++){
 			if(j>=minoffpulse && j < maxoffpulse){
-				double res = (double)((MNStruct *)globalcontext)->ProfileData[nTOA][j][1] -noisemean;
+				double res = (double)((MNStruct *)globalcontext)->ProfileData[nTOA][j][1] - noisemean;
 				MLSigma += res*res; MLSigmaCount += 1;
 			}
 			else{
@@ -10154,7 +10283,6 @@ double  SubIntStocProfLike(int &ndim, double *Cube, int &npars, double *DerivedP
 
 		long double binpos = ModelBats[nTOA];
 
-
 		if(binpos < ProfileBats[nTOA][0])binpos+=FoldingPeriodDays;
 
 		long double minpos = binpos - FoldingPeriodDays/2;
@@ -10163,10 +10291,18 @@ double  SubIntStocProfLike(int &ndim, double *Cube, int &npars, double *DerivedP
 		if(maxpos> ProfileBats[nTOA][Nbins-1])maxpos =ProfileBats[nTOA][Nbins-1];
 
 
-	    
-		for(int j =0; j < Nbins; j++){
+
+		int InterpBin = 0;
+		double FirstInterpTimeBin = 0;
+		int  NumWholeBinInterpOffset = 0;
+
+		if(((MNStruct *)globalcontext)->InterpolateProfile == 1){
+
+		
 			long double timediff = 0;
-			long double bintime = ProfileBats[t][j];
+			long double bintime = ProfileBats[t][0];
+
+
 			if(bintime  >= minpos && bintime <= maxpos){
 			    timediff = bintime - binpos;
 			}
@@ -10179,83 +10315,144 @@ double  SubIntStocProfLike(int &ndim, double *Cube, int &npars, double *DerivedP
 
 			timediff=timediff*SECDAY;
 
-			Betatimes[j]=timediff/beta;
-			TNothpl(maxshapecoeff,Betatimes[j],AllHermiteBasis[j]);
+			double OneBin = FoldingPeriod/Nbins;
+			int NumBinsInTimeDiff = floor(timediff/OneBin + 0.5);
+			double WholeBinsInTimeDiff = NumBinsInTimeDiff*FoldingPeriod/Nbins;
+			double OneBinTimeDiff = -1*((double)timediff - WholeBinsInTimeDiff);
 
-			for(int k =0; k < maxshapecoeff; k++){
-				double Bconst=(1.0/sqrt(beta))/sqrt(pow(2.0,k)*sqrt(M_PI));
-				AllHermiteBasis[j][k]=AllHermiteBasis[j][k]*Bconst*exp(-0.5*Betatimes[j]*Betatimes[j]);
+			double PWrappedTimeDiff = (OneBinTimeDiff - floor(OneBinTimeDiff/OneBin)*OneBin);
 
-				if(k<numcoeff){ Hermitepoly[j][k] = AllHermiteBasis[j][k];}
-			
+			if(debug == 1)printf("Making InterpBin: %g %g %i %g %g %g\n", (double)timediff, OneBin, NumBinsInTimeDiff, WholeBinsInTimeDiff, OneBinTimeDiff, PWrappedTimeDiff);
+
+			InterpBin = floor(PWrappedTimeDiff/((MNStruct *)globalcontext)->InterpolatedTime+0.5);
+			if(InterpBin >= ((MNStruct *)globalcontext)->NumToInterpolate)InterpBin -= ((MNStruct *)globalcontext)->NumToInterpolate;
+
+			FirstInterpTimeBin = -1*(InterpBin-1)*((MNStruct *)globalcontext)->InterpolatedTime;
+
+			if(debug == 1)printf("Interp Time Diffs: %g %g %g %g \n", ((MNStruct *)globalcontext)->InterpolatedTime, InterpBin*((MNStruct *)globalcontext)->InterpolatedTime, PWrappedTimeDiff, InterpBin*((MNStruct *)globalcontext)->InterpolatedTime-PWrappedTimeDiff);
+
+			double FirstBinOffset = timediff-FirstInterpTimeBin;
+			double dNumWholeBinOffset = FirstBinOffset/(FoldingPeriod/Nbins);
+			int  NumWholeBinOffset = 0;
+
+			NumWholeBinInterpOffset = floor(dNumWholeBinOffset+0.5);
+	
+			if(debug == 1)printf("Interp bin is: %i , First Bin is %g, Offset is %i \n", InterpBin, FirstInterpTimeBin, NumWholeBinInterpOffset);
+
+
+		}
+	   
+		if(((MNStruct *)globalcontext)->InterpolateProfile == 0){
+
+ 
+			for(int j =0; j < Nbins; j++){
+
+
+				long double timediff = 0;
+				long double bintime = ProfileBats[t][j];
+					
+
+				if(bintime  >= minpos && bintime <= maxpos){
+				    timediff = bintime - binpos;
+				}
+				else if(bintime < minpos){
+				    timediff = FoldingPeriodDays+bintime - binpos;
+				}
+				else if(bintime > maxpos){
+				    timediff = bintime - FoldingPeriodDays - binpos;
+				}
+
+
+				timediff=timediff*SECDAY;
+
+
+				Betatimes[j]=timediff/beta;
+				TNothpl(maxshapecoeff,Betatimes[j],AllHermiteBasis[j]);
+
+				for(int k =0; k < maxshapecoeff; k++){
+					double Bconst=(1.0/sqrt(beta))/sqrt(pow(2.0,k)*sqrt(M_PI));
+					AllHermiteBasis[j][k]=AllHermiteBasis[j][k]*Bconst*exp(-0.5*Betatimes[j]*Betatimes[j]);
+
+					if(k<numcoeff){ Hermitepoly[j][k] = AllHermiteBasis[j][k];}
+
+
+			//		if(((MNStruct *)globalcontext)->InterpolateProfile == 1 && k == 0){	
+			//			printf("Interped: %i %.10g %.10g %.10g \n", j, (double)timediff,AllHermiteBasis[j][k], ((MNStruct *)globalcontext)->InterpolatedShapelets[InterpBin][Nj][k]); 
+			//		}
+				}
+
+				JitterBasis[j][0] = (1.0/sqrt(2.0))*(-1.0*Hermitepoly[j][1]);
+				for(int k =1; k < numcoeff; k++){
+					JitterBasis[j][k] = (1.0/sqrt(2.0))*(sqrt(double(k))*AllHermiteBasis[j][k-1] - sqrt(double(k+1))*AllHermiteBasis[j][k+1]);
+				}
+
 			}
 
-			JitterBasis[j][0] = (1.0/sqrt(2.0))*(-1.0*AllHermiteBasis[j][1]);
-			for(int k =1; k < numcoeff; k++){
-				JitterBasis[j][k] = (1.0/sqrt(2.0))*(sqrt(double(k))*AllHermiteBasis[j][k-1] - sqrt(double(k+1))*AllHermiteBasis[j][k+1]);
-			}	
+			dgemv(Hermitepoly,shapecoeff,shapevec,Nbins,numcoeff,'N');
+			dgemv(JitterBasis,shapecoeff,Jittervec,Nbins,numcoeff,'N');
+
+                        for(int j =0; j < Nbins; j++){
+
+				
+				M[j][0] = 1;
+				M[j][1] = shapevec[j];
+
+				Mcounter = 2;
+
+				if(((MNStruct *)globalcontext)->numFitEQUAD > 0){
+					M[j][Mcounter] = Jittervec[j]*dataflux/modelflux/beta;
+					Mcounter++;
+				}
+
+				for(int k = 0; k < numshapestoccoeff; k++){
+				    M[j][Mcounter+k] = AllHermiteBasis[j][k]*dataflux;
+				}
+
+			}
+		}
+
+		if(((MNStruct *)globalcontext)->InterpolateProfile == 1){
+
+			for(int j =0; j < Nbins; j++){
+
+
+				double NewIndex = (j + NumWholeBinInterpOffset);
+				int Nj = (int)(NewIndex - floor(NewIndex/Nbins)*Nbins);
+
+				M[j][0] = 1;
+				M[j][1] = ((MNStruct *)globalcontext)->InterpolatedMeanProfile[InterpBin][Nj];
+
+				Mcounter = 2;
+				
+				if(((MNStruct *)globalcontext)->numFitEQUAD > 0){
+					M[j][Mcounter] = ((MNStruct *)globalcontext)->InterpolatedJitterProfile[InterpBin][Nj]*dataflux/modelflux/beta;
+					Mcounter++;
+				}			
+
+				for(int k = 0; k < numshapestoccoeff; k++){
+				    M[j][Mcounter+k] = ((MNStruct *)globalcontext)->InterpolatedShapelets[InterpBin][Nj][k]*dataflux;
+				}
+
+				shapevec[j] = ((MNStruct *)globalcontext)->InterpolatedMeanProfile[InterpBin][Nj];
+
+
+			}
+
+
 	    }
 
-
-	    double *shapevec  = new double[Nbins];
-	    double *Jittervec = new double[Nbins];
-	
-	    double OverallProfileAmp = shapecoeff[0];
-	    
-	    shapecoeff[0] = 1;
-
-	    dgemv(Hermitepoly,shapecoeff,shapevec,Nbins,numcoeff,'N');
-    	    dgemv(JitterBasis,shapecoeff,Jittervec,Nbins,numcoeff,'N');
 	
 	    double *NDiffVec = new double[Nbins];
 
 	    double maxshape=0;
-
-
 	    for(int j =0; j < Nbins; j++){
-
-		    if(shapevec[j] > maxshape){ maxshape = shapevec[j];}
-
+ 	        if(shapevec[j] > maxshape){ maxshape = shapevec[j];}
 	    }
+
+
 	
 	///////////////////////////////////////////Marginalise over arbitrary offset and absolute amplitude////////////////////////////////////////////////////////////
 
-
-		double **M = new double*[Nbins];
-		double **NM = new double*[Nbins];
-
-		int Msize = 2+numshapestoccoeff;
-		int Mcounter=0;
-		if(((MNStruct *)globalcontext)->numFitEQUAD > 0){
-			Msize++;
-		}
-
-
-		for(int i =0; i < Nbins; i++){
-			Mcounter=0;
-			M[i] = new double[Msize];
-			NM[i] = new double[Msize];
-
-			M[i][0] = 1;
-			M[i][1] = shapevec[i];
-
-			Mcounter = 2;
-
-			if(((MNStruct *)globalcontext)->numFitEQUAD > 0){
-				M[i][Mcounter] = Jittervec[i];
-				Mcounter++;
-			}			
-
-			for(int j = 0; j < numshapestoccoeff; j++){
-			    M[i][Mcounter+j] = AllHermiteBasis[i][j];
-			}
-		}
-
-
-		double **MNM = new double*[Msize];
-		for(int i =0; i < Msize; i++){
-		    MNM[i] = new double[Msize];
-		}
 
 		      
 		Chisq = 0;
@@ -10283,15 +10480,6 @@ double  SubIntStocProfLike(int &ndim, double *Cube, int &npars, double *DerivedP
 
 			Chisq += datadiff*datadiff/(noise);
 	
-			if(((MNStruct *)globalcontext)->numFitEQUAD > 0){
-				M[i][2] = M[i][2]*dataflux/modelflux/beta;
-				Mcounter++;
-			}
-			
-		   	for(int j = 0; j < numshapestoccoeff; j++){
-				M[i][Mcounter+j] = M[i][Mcounter+j]*dataflux;
-
-		    	}
 
 
 			for(int j = 0; j < Msize; j++){
@@ -10300,7 +10488,14 @@ double  SubIntStocProfLike(int &ndim, double *Cube, int &npars, double *DerivedP
 
 
 		}
-		
+	
+	
+	//	gettimeofday(&tval_after, NULL);
+
+	//	timersub(&tval_after, &tval_before, &tval_resultone);
+
+
+	//	gettimeofday(&tval_before, NULL);
 			
 		dgemm(M, NM , MNM, Nbins, Msize,Nbins, Msize, 'T', 'N');
 
@@ -10345,37 +10540,42 @@ double  SubIntStocProfLike(int &ndim, double *Cube, int &npars, double *DerivedP
 
 		profilelike = -0.5*(detN + Chisq + logMargindet + StocProfDet + JitterDet - Marginlike);
 		lnew += profilelike;
-		//printf("Like: %i %.15g %.15g %.15g %.15g %.15g %.15g %.15g\n", nTOA,lnew, detN, Chisq, logMargindet, Marginlike, StocProfDet , JitterDet);
+		if(debug == 1)printf("Like: %i %.15g %.15g %.15g %.15g %.15g %.15g %.15g\n", nTOA,lnew, detN, Chisq, logMargindet, Marginlike, StocProfDet , JitterDet);
 
 		delete[] shapevec;
 		delete[] Jittervec;
 		delete[] NDiffVec;
 		delete[] dNM;
+		delete[] TempdNM;
 		delete[] Betatimes;
 
-		for (int j = 0; j < Nbins; j++){
-		    delete[] Hermitepoly[j];
-		    delete[] JitterBasis[j];
-		    delete[] AllHermiteBasis[j];
-		    delete[] M[j];
-		    delete[] NM[j];
-		}
-		delete[] Hermitepoly;
-		delete[] AllHermiteBasis;
-		delete[] JitterBasis;
-		delete[] M;
-		delete[] NM;
 
-		for (int j = 0; j < Msize; j++){
-		    delete[] MNM[j];
-		}
-		delete[] MNM;
 	
+//        	gettimeofday(&tval_after, NULL);
+
+  //      	timersub(&tval_after, &tval_before, &tval_resulttwo);
+    //    	printf("Time elapsed: %ld.%06ld %ld.%06ld\n", (long int)tval_resultone.tv_sec, (long int)tval_resultone.tv_usec, (long int)tval_resulttwo.tv_sec, (long int)tval_resulttwo.tv_usec);
 	
 	}
 	 
 	 
-	 
+	for (int j = 0; j < GlobalNBins; j++){
+	    delete[] Hermitepoly[j];
+	    delete[] JitterBasis[j];
+	    delete[] AllHermiteBasis[j];
+	    delete[] M[j];
+	    delete[] NM[j];
+	}
+	delete[] Hermitepoly;
+	delete[] AllHermiteBasis;
+	delete[] JitterBasis;
+	delete[] M;
+	delete[] NM;
+
+	for (int j = 0; j < Msize; j++){
+	    delete[] MNM[j];
+	}
+	delete[] MNM;
 	 
 
 	
@@ -10390,9 +10590,20 @@ double  SubIntStocProfLike(int &ndim, double *Cube, int &npars, double *DerivedP
 
 
 	lnew += uniformpriorterm;
-//	printf("End Like: %.10g \n", lnew);
+	if(debug == 1)printf("End Like: %.10g \n", lnew);
+	//printf("End Like: %.10g \n", lnew);
+	//}
 
+
+       	//gettimeofday(&tval_after, NULL);
+
+       	//timersub(&tval_after, &tval_before, &tval_resulttwo);
+       	//printf("Time elapsed: %ld.%06ld %ld.%06ld\n", (long int)tval_resultone.tv_sec, (long int)tval_resultone.tv_usec, (long int)tval_resulttwo.tv_sec, (long int)tval_resulttwo.tv_usec);
+	
 	return lnew;
+	//sleep(5);
+	//return bluff;
+	//sleep(5);
 
 }
 
@@ -10404,7 +10615,14 @@ void  WriteSubIntStocProfLike(std::string longname, int &ndim){
         int number_of_lines = 0;
 
         std::ifstream checkfile;
-        std::string checkname = longname+"_phys_live.txt";
+	std::string checkname;
+	if(((MNStruct *)globalcontext)->sampler == 0){
+	        checkname = longname+"phys_live.points";
+	}
+        if(((MNStruct *)globalcontext)->sampler == 1){
+                checkname = longname+"_phys_live.txt";
+        }
+	//printf("%i %s \n", ((MNStruct *)globalcontext)->sampler, checkname.c_str());
         checkfile.open(checkname.c_str());
         std::string line;
         while (getline(checkfile, line))
@@ -10413,7 +10631,14 @@ void  WriteSubIntStocProfLike(std::string longname, int &ndim){
         checkfile.close();
 
         std::ifstream summaryfile;
-        std::string fname = longname+"_phys_live.txt";
+	std::string fname;
+	if(((MNStruct *)globalcontext)->sampler == 0){
+		fname = longname+"phys_live.points";
+	}
+	if(((MNStruct *)globalcontext)->sampler == 1){
+	        fname = longname+"_phys_live.txt";
+	}
+
         summaryfile.open(fname.c_str());
 
 
@@ -10427,7 +10652,6 @@ void  WriteSubIntStocProfLike(std::string longname, int &ndim){
                 std::istringstream myStream( line );
                 std::istream_iterator< double > begin(myStream),eof;
                 std::vector<double> paramlist(begin,eof);
-
                 double like = paramlist[ndim];
 
                 if(like > maxlike){
@@ -10439,7 +10663,7 @@ void  WriteSubIntStocProfLike(std::string longname, int &ndim){
 
         }
         summaryfile.close();
-
+	printf("ML val: %.10g \n", maxlike);
 
 	int debug = 0;
 
@@ -10910,16 +11134,20 @@ void  WriteSubIntStocProfLike(std::string longname, int &ndim){
 		std::string dname = longname+ProfileName+"-Profile.txt";
 	
 		profilefile.open(dname.c_str());
+		double MLChisq = 0;
 		for(int i =0; i < Nbins; i++){
+			MLChisq += pow(((double)((MNStruct *)globalcontext)->ProfileData[nTOA][i][1] - shapevec[i])/profilenoise[i], 2);
 			profilefile << i << " " << std::setprecision(10) << (double)((MNStruct *)globalcontext)->ProfileData[nTOA][i][1] << " " << shapevec[i] << " " << profilenoise[i] << " " << finaloffset + finalamp*M[i][1] << " " << finalJitter*Jittervec[i] << " " << StocVec[i] << "\n";
 
 		}
 	    	profilefile.close();
 		delete[] profilenoise;
 		delete[] StocVec;
-
+		
 		profilelike = -0.5*(detN + Chisq + logMargindet + StocProfDet + JitterDet - Marginlike);
 		lnew += profilelike;
+
+		printf("Profile chisq and like: %g %g \n", MLChisq, profilelike);
 //		printf("Like: %i %.15g %.15g %.15g %.15g %.15g %.15g %.15g\n", nTOA,lnew, detN, Chisq, logMargindet, Marginlike, StocProfDet , JitterDet);
 
 		delete[] shapevec;
@@ -10967,6 +11195,138 @@ void  WriteSubIntStocProfLike(std::string longname, int &ndim){
 	lnew += uniformpriorterm;
 	printf("End Like: %.10g \n", lnew);
 
+
+}
+
+
+
+void PreComputeShapelets(double ***StoredShapelets, double **InterpolatedMeanProfile, double **InterpolatedJitterProfile, long double finalInterpTime, int numtointerpolate, double MeanBeta){
+
+
+	printf("In function %Lg %i %g \n", finalInterpTime, numtointerpolate, MeanBeta);
+
+/////////////////////////////////////////////////////////////////////////////////////////////  
+/////////////////////////Profile Params//////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////
+
+	int maxshapecoeff = 0;
+	int numcoeff=((MNStruct *)globalcontext)->numshapecoeff;
+	int numshapestoccoeff = ((MNStruct *)globalcontext)->numshapestoccoeff;
+
+
+	double shapecoeff[numcoeff];
+
+	for(int i =0; i < numcoeff; i++){
+		shapecoeff[i]=((MNStruct *)globalcontext)->MeanProfileShape[i];
+	}
+
+	double beta = MeanBeta*((MNStruct *)globalcontext)->ReferencePeriod;
+
+	if(numcoeff+1>=numshapestoccoeff+1){
+		maxshapecoeff=numcoeff+1;
+	}
+	if(numshapestoccoeff+1 > numcoeff+1){
+		maxshapecoeff=numshapestoccoeff+1;
+	}
+
+/////////////////////////////////////////////////////////////////////////////////////////////  
+/////////////////////////Profiles////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////
+
+	int Nbins = (int)((MNStruct *)globalcontext)->ProfileInfo[0][1];
+	long double ReferencePeriod = ((MNStruct *)globalcontext)->ReferencePeriod;
+	long double FoldingPeriodDays = ReferencePeriod/SECDAY;
+	double maxshapeamp = 0;
+
+	printf("Computing %i Interpolated Profiles \n", numtointerpolate);
+	for(int t = 0; t < numtointerpolate; t++){
+
+
+
+		double **JitterBasis  =  new double*[Nbins];
+		double **Hermitepoly =  new double*[Nbins];
+		double **AllHermiteBasis = new double*[Nbins];
+
+                for(int i =0;i<Nbins;i++){AllHermiteBasis[i]=new double[maxshapecoeff];for(int j =0;j<maxshapecoeff;j++){AllHermiteBasis[i][j]=0;}}
+		for(int i =0;i<Nbins;i++){Hermitepoly[i]=new double[numcoeff];for(int j =0;j<numcoeff;j++){Hermitepoly[i][j]=0;}}
+		for(int i =0;i<Nbins;i++){JitterBasis[i]=new double[numcoeff];for(int j =0;j<numcoeff;j++){JitterBasis[i][j]=0;}}
+
+		long double interpStep = finalInterpTime;
+		long double binpos = t*interpStep/SECDAY;
+
+//		printf("Interp step %i %.10Lg %.10Lg \n", t, ReferencePeriod/Nbins, binpos);
+		
+		long double minpos = binpos - FoldingPeriodDays/2;
+		if(minpos < 0 ) minpos= 0;
+		long double maxpos = binpos + FoldingPeriodDays/2;
+		if(maxpos > FoldingPeriodDays)maxpos = FoldingPeriodDays;
+	    
+		for(int j =0; j < Nbins; j++){
+			long double timediff = 0;
+			long double bintime = j*FoldingPeriodDays/Nbins;
+			if(bintime  >= minpos && bintime <= maxpos){
+			    timediff = bintime - binpos;
+			}
+			else if(bintime < minpos){
+			    timediff = FoldingPeriodDays+bintime - binpos;
+			}
+			else if(bintime > maxpos){
+			    timediff = bintime - FoldingPeriodDays - binpos;
+			}
+
+			timediff=timediff*SECDAY;
+			double Betatime = timediff/beta;
+			TNothpl(maxshapecoeff,Betatime,AllHermiteBasis[j]);
+
+			for(int k =0; k < maxshapecoeff; k++){
+				double Bconst=(1.0/sqrt(beta))/sqrt(pow(2.0,k)*sqrt(M_PI));
+				AllHermiteBasis[j][k] = AllHermiteBasis[j][k]*Bconst*exp(-0.5*Betatime*Betatime);
+				//if(t == 4847 && k == 0)printf("%.10Lg %.10Lg %g %i %i %g \n", timediff, binpos*SECDAY, Betatime, j, k, StoredShapelets[t][j][k]);
+
+				if(k<numcoeff){ Hermitepoly[j][k] = AllHermiteBasis[j][k];}
+			}
+
+
+			JitterBasis[j][0] = (1.0/sqrt(2.0))*(-1.0*AllHermiteBasis[j][1]);
+			for(int k =1; k < numcoeff; k++){
+				JitterBasis[j][k] = (1.0/sqrt(2.0))*(sqrt(double(k))*AllHermiteBasis[j][k-1] - sqrt(double(k+1))*AllHermiteBasis[j][k+1]);
+			}
+
+			for(int k = 0; k < numshapestoccoeff; k++){
+				StoredShapelets[t][j][k] = AllHermiteBasis[j][k];
+			}	
+	    	}
+
+		double *shapevec  = new double[Nbins];
+		double *Jittervec = new double[Nbins];
+
+
+		dgemv(Hermitepoly,shapecoeff,shapevec,Nbins,numcoeff,'N');
+		dgemv(JitterBasis,shapecoeff,Jittervec,Nbins,numcoeff,'N');
+
+		
+		for(int j =0; j < Nbins; j++){
+			InterpolatedMeanProfile[t][j] = shapevec[j];
+			InterpolatedJitterProfile[t][j] = Jittervec[j];
+			if(shapevec[j] > maxshapeamp){ maxshapeamp = shapevec[j]; }
+		}	
+
+
+		delete[] shapevec;
+		delete[] Jittervec;
+
+
+		for (int j = 0; j < Nbins; j++){
+		    delete[] AllHermiteBasis[j]; 
+		    delete[] Hermitepoly[j];
+		    delete[] JitterBasis[j];
+		}
+		delete[] AllHermiteBasis;
+		delete[] Hermitepoly;
+		delete[] JitterBasis;
+
+	}
+	printf("Finished Computing Interpolated Profiles, max amp is %g \n", maxshapeamp);
 
 }
 

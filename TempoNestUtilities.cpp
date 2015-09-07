@@ -69,7 +69,7 @@ void readtxtoutput(std::string longname, int ndim, double **paramarray){
         while (getline(checkfile, line))
                 ++number_of_lines;
 
-        printf("number of lines %i \n",number_of_lines);
+//        printf("number of lines %i \n",number_of_lines);
         checkfile.close();
 
 	std::ifstream summaryfile;
@@ -81,8 +81,8 @@ void readtxtoutput(std::string longname, int ndim, double **paramarray){
 		paramarray[i][1] = 0;
 	}
 
-
-	printf("Getting Means \n");
+	printf("Processing Posteriors \n");
+//	printf("Getting Means \n");
 	double maxlike = -1.0*pow(10.0,10);
 	double MAP = 0;
 	for(int i=0;i<number_of_lines;i++){
@@ -125,7 +125,7 @@ void readtxtoutput(std::string longname, int ndim, double **paramarray){
 
 	summaryfile.open(fname.c_str());
 
-	printf("Getting Errors \n");
+//	printf("Getting Errors \n");
 
         for(int i=0;i<number_of_lines;i++){
 
@@ -152,12 +152,18 @@ void readtxtoutput(std::string longname, int ndim, double **paramarray){
 
 
 
-void readphyslive(std::string longname, int ndim, double **paramarray){
+void readphyslive(std::string longname, int ndim, double **paramarray, int sampler){
 
         int number_of_lines = 0;
 
         std::ifstream checkfile;
-        std::string checkname = longname+"_phys_live.txt";
+        std::string checkname;
+	if(sampler == 0){
+                checkname = longname+"phys_live.points";
+        }
+        if(sampler == 1){
+                checkname = longname+"_phys_live.txt";
+        }
         checkfile.open(checkname.c_str());
         std::string line;
         while (getline(checkfile, line))
@@ -166,7 +172,15 @@ void readphyslive(std::string longname, int ndim, double **paramarray){
         checkfile.close();
 
 	std::ifstream summaryfile;
-	std::string fname = longname+"_phys_live.txt";
+	std::string fname;
+        if(sampler == 0){
+                fname = longname+"phys_live.points";
+        }
+        if(sampler == 1){
+                fname = longname+"_phys_live.txt";
+        }
+
+
 	summaryfile.open(fname.c_str());
 
 	double *TempCube = new double[ndim];
@@ -175,7 +189,7 @@ void readphyslive(std::string longname, int ndim, double **paramarray){
 	}
 
 
-	printf("Getting ML \n");
+//	printf("Getting ML \n");
 	double maxlike = -1.0*pow(10.0,10);
 	for(int i=0;i<number_of_lines;i++){
 
@@ -221,7 +235,7 @@ void readsummary(pulsar *psr, std::string longname, int ndim, void *context, lon
 
 
 	readtxtoutput(longname, ndim, paramarray);
-	readphyslive(longname, ndim, paramarray);
+	readphyslive(longname, ndim, paramarray, ((MNStruct *)context)->sampler);
 
 	int numlongparams=((MNStruct *)context)->numFitTiming+((MNStruct *)context)->numFitJumps;
 	long double *LDP = new long double[numlongparams];
@@ -357,7 +371,7 @@ void readsummary(pulsar *psr, std::string longname, int ndim, void *context, lon
 	
 	
 	
-	printf("finished output \n");
+//	printf("finished output \n");
 
 }
 
@@ -1268,7 +1282,7 @@ void getNGJitterMatrix(pulsar *pulse, double **JitterMatrix, int &NumEpochs){
 }
 
 
-void getCustomDMatrix(pulsar *pulse, int *MarginList, double **TNDM, int **TempoFitNums, int *TempoJumpNums, double **Dpriors, int incDM, int TimetoFit, int JumptoFit){
+void getCustomDMatrix(pulsar *pulse, int *MarginList, int **TempoFitNums, int *TempoJumpNums, double **Dpriors, int incDM, int TimetoFit, int JumptoFit){
 	
 	double pdParamDeriv[MAX_PARAMS], dMultiplication;
 
@@ -1309,13 +1323,13 @@ void getCustomDMatrix(pulsar *pulse, int *MarginList, double **TNDM, int **Tempo
 		}
 	
 	
-		for(int i=0; i < pulse->nobs; i++) {
-			FITfuncs(pulse[0].obsn[i].bat - pulse[0].param[param_pepoch].val[0], pdParamDeriv, numToMargin, pulse, i,0);
-			for(int j=0; j<numToMargin; j++) {
-				TNDM[i][j]=pdParamDeriv[j];
-					//printf("Dmatrix: %i %i %22.20e \n", i,j,pdParamDeriv[j]);
-			} 
-		} 
+//		for(int i=0; i < pulse->nobs; i++) {
+//			FITfuncs(pulse[0].obsn[i].bat - pulse[0].param[param_pepoch].val[0], pdParamDeriv, numToMargin, pulse, i,0);
+//			for(int j=0; j<numToMargin; j++) {
+//				TNDM[i][j]=pdParamDeriv[j];
+//					//printf("Dmatrix: %i %i %22.20e \n", i,j,pdParamDeriv[j]);
+//			} 
+//		} 
 
 		//Now set fit flags back to how they were
 	
@@ -1335,7 +1349,6 @@ void getCustomDMatrixLike(void *context, double **TNDM){
 
 
 	//Unset all fit flags for parameters we arn't marginalising over so they arn't in the design Matrix
-
 
 		int pcount=1;
 		int numToMargin=1;
@@ -1362,7 +1375,6 @@ void getCustomDMatrixLike(void *context, double **TNDM){
 			pcount++;
 		}
 	
-	
 		for(int i=0; i < ((MNStruct *)context)->pulse->nobs; i++) {
 			FITfuncs(((MNStruct *)context)->pulse->obsn[i].bat - ((MNStruct *)context)->pulse->param[param_pepoch].val[0], pdParamDeriv, numToMargin, ((MNStruct *)context)->pulse, i,0);
 			for(int j=0; j<numToMargin; j++) {
@@ -1370,7 +1382,6 @@ void getCustomDMatrixLike(void *context, double **TNDM){
 				TNDM[i][j]=pdParamDeriv[j];
 			} 
 		} 
-
 		//Now set fit flags back to how they were
 	
 

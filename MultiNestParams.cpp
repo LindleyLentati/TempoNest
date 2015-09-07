@@ -32,8 +32,11 @@
 */
 
 
-void setupMNparams(int &IS, int &modal, int &ceff, int &nlive, double &efr, int &sample, int &updInt, int &nClsPar, int &Nchords){
+void setupMNparams(int &sampler, int &IS, int &modal, int &ceff, int &nlive, double &efr, int &sample, int &updInt, int &nClsPar, int &Nchords){
 
+
+	//sampler flag chooses which sampler to use, 0 = MultiNest, 1 = PolyChord
+	sampler = 1;
 
 	//IS: flag to use importance sampling, will be supported by upcoming release of multinest, at which point it should be set to 1
 	IS=0;
@@ -81,6 +84,7 @@ void setupMNparams(int &IS, int &modal, int &ceff, int &nlive, double &efr, int 
                  strBuf = string("defaultparameters.conf");
                  ConfigFile parameters(strBuf);
 
+		parameters.readInto(sampler, "sampler", sampler);
 		parameters.readInto(IS, "IS", IS);
 		parameters.readInto(modal, "modal", modal);
 		parameters.readInto(ceff, "ceff", ceff);

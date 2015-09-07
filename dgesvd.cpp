@@ -1,11 +1,15 @@
 #include <math.h>
 #include <algorithm>
-#include "dgesvd.h"
+//#include "dgesvd.h"
+#include "mkl_lapacke.h"
+#include "mkl.h"
+
+#define min(a,b) ((a)>(b)?(b):(a))
 
 void dgesvd(double **A, int m, int n, double *S, double **U, double **VT)
 {
   char jobu, jobvt;
-  int lda, ldu, ldvt, lwork, info;
+  int lda, ldu, ldvt, lwork;
   double *a, *u, *vt, *work;
 
   int minmn, maxmn;
@@ -30,8 +34,10 @@ void dgesvd(double **A, int m, int n, double *S, double **U, double **VT)
 		     computed. */
 
   lda = m; // The leading dimension of the matrix a.
+#if 0
   a = dgesvd_ctof(A, lda, n); /* Convert the matrix A from double pointer
 			  C form to single pointer Fortran form. */
+#endif
 
   ldu = m;
 
@@ -45,6 +51,8 @@ void dgesvd(double **A, int m, int n, double *S, double **U, double **VT)
 	ldvt = n; // Right singular vector matrix
 	vt = new double[ldvt*n];
 
+	double superb[min(m,n)-1];
+/*
 	int LMAX=100000;
 	
 	work = new double[LMAX];
@@ -57,8 +65,15 @@ void dgesvd(double **A, int m, int n, double *S, double **U, double **VT)
 	
 	dgesvd_(&jobu, &jobvt, &m, &n, a, &lda, S, u,&ldu, vt, &ldvt, work, &lwork, &info);
 // 	printf("parm 11 out %i %i\n",ldu,ldvt);
-	dgesvd_ftoc(u, U, ldu, ldu);
-	dgesvd_ftoc(vt, VT, ldvt, n);
+*/
+	MKL_INT info;
+	//info = LAPACKE_dgesvd( LAPACK_ROW_MAJOR, jobu, jobvt, m, n, a, lda,
+        //                S, u, ldu, vt, ldvt, superb );
+	info = LAPACKE_dgesdd( LAPACK_ROW_MAJOR, 'S', m, n, a, lda,
+                        S, u, ldu, vt, ldvt);
+
+	//dgesvd_ftoc(u, U, ldu, ldu);
+	//dgesvd_ftoc(vt, VT, ldvt, n);
   
   delete a;
   delete u;
@@ -95,3 +110,4 @@ void dgesvd_ftoc(double *in, double **out, int rows, int cols)
 
   for (i=0; i<rows; i++) for (j=0; j<cols; j++) out[i][j] = in[i+j*rows];
 }
+

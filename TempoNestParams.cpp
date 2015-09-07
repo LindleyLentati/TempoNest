@@ -116,16 +116,24 @@ void setupparams(int &useGPUS,
 		int &numGPTAshapecoeff,
                 int &numGPTAstocshapecoeff,
 		char *GroupNoiseFlag,
-		int &FixProfile){
+		int &FixProfile,
+		int &FitTemplate,
+		int &InterpolateProfile,
+		double &InterpolatedTime){
 
-    //General parameters:
-    //Use GPUs 0=No, 1=Yes
-    useGPUS=0;
-    uselongdouble=0;
-    GPTA = 0;
+	//General parameters:
+	//Use GPUs 0=No, 1=Yes
+		
+	useGPUS=0;
+	uselongdouble=0;
+	GPTA = 0;
 	numGPTAshapecoeff=0;
 	numGPTAstocshapecoeff=0;
 	FixProfile = 0;	
+	FitTemplate = 0;
+	InterpolateProfile = 0;
+	InterpolatedTime = 1; //in nanoseconds
+
     //Root of the results files,relative to the directory in which TempoNest is run. This will be followed by the pulsar name, and then the individual output file extensions.
     strcpy( root, "results/Example1-");
 
@@ -328,6 +336,9 @@ void setupparams(int &useGPUS,
 	parameters.readInto(numGPTAshapecoeff, "numGPTAshapecoeff", numGPTAshapecoeff);
 	parameters.readInto(numGPTAstocshapecoeff, "numGPTAstocshapecoeff", numGPTAstocshapecoeff);
 	parameters.readInto(FixProfile, "FixProfile", FixProfile);
+	parameters.readInto(FitTemplate, "FitTemplate", FitTemplate);
+	parameters.readInto(InterpolateProfile, "InterpolateProfile", InterpolateProfile);
+	parameters.readInto(InterpolatedTime, "InterpolatedTime", InterpolatedTime);
 
         parameters.readInto(strBuf, "root", string("results/Example1"));
         strcpy(root, strBuf.data());
@@ -698,7 +709,7 @@ void GetGroupsToFit(int incGroupNoise, int **FitForGroup){
 
 
 
-void setShapePriors(double **ShapePriors, int numcoeff){
+void setShapePriors(double **ShapePriors, double *BetaPrior, int numcoeff){
 
 //This function overwrites the default values for the priors sent to multinest, and the long double priors used by tempo2, you need to be aware of what dimension is what if you use this function.
 
@@ -744,6 +755,30 @@ void setShapePriors(double **ShapePriors, int numcoeff){
 	}
 
 
+
+    // Use a configfile, if we can, to overwrite the defaults set in this file.
+    try {
+	string strBuf;
+	strBuf = string("defaultparameters.conf");
+	ConfigFile parameters(strBuf);
+
+	/* We can check whether a value is not set in the file by doing
+	 * if(! parameters.readInto(variable, "name", default)) {
+	 *   printf("WARNING");
+	 * }
+	 *
+	 * At the moment I was too lazy to print warning messages, and the
+	 * default value from this file is used in that case.
+	 *
+	 * Note: the timing model parameters are not done implemented yet
+	 */
+        parameters.readInto(BetaPrior[0], "BetaPrior[0]", BetaPrior[0]);
+        parameters.readInto(BetaPrior[1], "BetaPrior[1]", BetaPrior[1]);
+
+
+    } catch(ConfigFile::file_not_found oError) {
+	printf("WARNING: parameters file '%s' not found. Using defaults.\n", oError.filename.c_str());
+    } // try
 
 
 }
