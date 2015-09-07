@@ -4,6 +4,7 @@
 #include <algorithm>
 
 void TNqrsolve(double **aIn, double *bIn, double *xOut, int msize, double &det, int &info);
+void vector_TNqrsolve(double *aIn, double *bIn, double *xOut, int msize, double &det, int &info);
 void qrsolveInfo(double **A, double *B, int msize, int &info);
 double *qr_ctof(double **in, int rows, int cols);
 void qr_ftoc(double *in, double **out, int rows, int cols);

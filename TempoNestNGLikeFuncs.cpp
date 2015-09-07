@@ -27,7 +27,34 @@
 double MarginEQUAD(double d, double cg, double cg1, double *a);
 double evalNGPDF(double j, double *a);
 
-void othpl(int n,double x,double *pl);
+void othpl(int n,double x,double *pl){
+
+
+        double a=2.0;
+        double b=0.0;
+        double c=1.0;
+        double y0=1.0;
+        double y1=2.0*x;
+        pl[0]=1.0;
+        pl[1]=2.0*x;
+
+
+//	printf("I AM IN OTHPL %i \n", n);
+        for(int k=2;k<n;k++){
+
+                double c=2.0*(k-1.0);
+//		printf("%i %g\n", k, sqrt(double(k*1.0)));
+		y0=y0/sqrt(double(k*1.0));
+		y1=y1/sqrt(double(k*1.0));
+                double yn=(a*x+b)*y1-c*y0;
+		yn=yn;///sqrt(double(k));
+                pl[k]=yn;///sqrt(double(k));
+                y0=y1;
+                y1=yn;
+
+        }
+
+}
 
 void processPDF(void *context, std::string longname){
 

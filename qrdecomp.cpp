@@ -59,6 +59,54 @@ int trrfs(char uplo, char trans, char diag, int n, int nrhs, double *A, int lda,
 	return info;
 	}
 
+
+
+void vector_TNqrsolve(double *aIn, double *bIn, double *xOut, int msize, double &det, int &info){
+
+	double *a = new double[msize*msize];
+	for(int i =0 ; i < msize*msize; i++){	
+		a[i] = aIn[i];
+	}
+
+	double *Atemp = new double [msize*msize];
+
+	double *b = new double[msize];
+	for(int i =0 ; i < msize; i++){
+		b[i]=bIn[i];
+	}
+
+	double* tau = new double[msize];
+
+	int tempinfo=0;
+	tempinfo=geqrf(msize, msize, a, msize, tau);
+
+	if(tempinfo != 0)info=tempinfo;
+	for(int i =0 ; i < msize*msize; i++){
+                Atemp[i] = a[i];
+        }
+
+	det=0;
+	for(int i =0; i < msize; i++){
+		det += log(fabs(Atemp[i + i*msize]));
+	}
+
+	tempinfo=0;
+	tempinfo=ormqr('L', 'T', msize, 1, msize, a, msize, tau, b, msize);
+	if(tempinfo != 0)info=tempinfo;
+	tempinfo=0;
+	tempinfo=trtrs('U', 'N', 'N', msize, 1, a, msize, b, msize);
+	if(tempinfo != 0)info=tempinfo;
+	for(int i =0; i < msize; i++){
+		xOut[i] = b[i];
+	}
+	//tempinfo = trrfs('U', 'N', 'N', msize, 1, a, msize, bIn, msize, xOut, msize);
+
+	delete[] a;
+	delete[] tau;
+	delete[] b;
+	delete[] Atemp;
+}
+
 void TNqrsolve(double **aIn, double *bIn, double *xOut, int msize, double &det, int &info){
 
 	

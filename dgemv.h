@@ -3,6 +3,7 @@
 #include <algorithm>
 
 void dgemv(double **A, double *vecin,double *vecout,int rowa, int cola, char AT);
+void vector_dgemv(double *A, double *vecin,double *vecout,int rowa, int cola, char AT);
 
 double *dgemv_ctof(double **in, int rows, int cols);
 void dgemv_ftoc(double *in, double **out, int rows, int cols);

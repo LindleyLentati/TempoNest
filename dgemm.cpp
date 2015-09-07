@@ -2,6 +2,41 @@
 #include <algorithm>
 #include "dgemm.h"
 
+
+void vector_dgemm(double *A, double *B,double *C,int rowa, int cola, int rowb, int colb, char AT, char BT)
+{
+
+  int M,N,K;
+
+	double alpha=1;
+	double beta=0;
+
+
+	if(AT == 'N'){
+		M=rowa;
+		K=cola;
+	}
+	else if(AT == 'T'){
+		M=cola;
+		K=rowa;
+	}
+
+	if(BT == 'N'){
+		N=colb;
+	}
+	else if(BT == 'T'){
+		N=rowa;
+	}	
+/*
+(TRANSA,TRANSB,M,N,K,ALPHA,A,LDA,B,LDB,BETA,C,LDC)*/
+
+
+	
+	dgemm_(&AT, &BT, &M, &N, &K, &alpha, A, &rowa,B, &rowb, &beta, C, &M);
+
+
+}
+
 void dgemm(double **A, double **B,double **C,int rowa, int cola, int rowb, int colb, char AT, char BT)
 {
 

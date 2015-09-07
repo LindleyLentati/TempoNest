@@ -212,6 +212,7 @@ void getCustomDMatrix(pulsar *pulse, int *MarginList, int **TempoFitNums, int *T
 void makeStaticGMatrix(pulsar *pulse, int Gsize, double **GMatrix, double** staticGMatrix, double &tdet);
 void makeStaticDiagGMatrix(pulsar *pulse, int Gsize, double **GMatrix, double** UMatrix, double *SVec);
 void getCustomDMatrixLike(void *context, double **TNDM);
+void getCustomDVectorLike(void *context, double *TNDM);
 void getNGJitterMatrix(pulsar *pulse, double **JitterMatrix, int &NumEpochs);
 void getNGJitterMatrixEpochs(pulsar *pulse, int &NumEpochs);
 

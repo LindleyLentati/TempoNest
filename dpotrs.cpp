@@ -18,6 +18,19 @@ void dpotrs(double **A, double *B, int msize)
 
 }
 
+
+void vector_dpotrsInfo(double *A, double *B, int msize, int &info)
+{
+
+
+	char UPLO='L';
+	int NRHS=1;
+	
+	dpotrs_(&UPLO, &msize, &NRHS, A, &msize, B, &msize, &info);
+  
+
+}
+
 void dpotrsInfo(double **A, double *B, int msize, int &info)
 {
 

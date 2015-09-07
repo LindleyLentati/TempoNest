@@ -2,6 +2,23 @@
 #include <algorithm>
 #include "dgemv.h"
 
+
+void vector_dgemv(double *A, double *vecin,double *vecout,int rowa, int cola, char AT)
+{
+
+	int M,N,K;
+
+	double alpha=1;
+	double beta=0;
+	int incX=1;
+	int incY=1;
+
+	
+	dgemv_(&AT, &rowa, &cola, &alpha, A, &rowa, vecin, &incX, &beta, vecout, &incY);
+  
+}
+
+
 void dgemv(double **A, double *vecin,double *vecout,int rowa, int cola, char AT)
 {
 

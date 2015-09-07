@@ -1343,6 +1343,58 @@ void getCustomDMatrix(pulsar *pulse, int *MarginList, int **TempoFitNums, int *T
 }
 
 
+void getCustomDVectorLike(void *context, double *TNDM){
+	
+	double pdParamDeriv[MAX_PARAMS], dMultiplication;
+
+
+	//Unset all fit flags for parameters we arn't marginalising over so they arn't in the design Matrix
+
+		int pcount=1;
+		int numToMargin=1;
+		
+		for (int p=1;p<((MNStruct *)context)->numFitTiming;p++) {
+			if(((MNStruct *)context)->LDpriors[pcount][2]!=1){
+				((MNStruct *)context)->pulse->param[((MNStruct *)context)->TempoFitNums[p][0]].fitFlag[((MNStruct *)context)->TempoFitNums[p][1]] = 0;
+			}
+			else if(((MNStruct *)context)->LDpriors[pcount][2]==1){
+				((MNStruct *)context)->pulse->param[((MNStruct *)context)->TempoFitNums[p][0]].fitFlag[((MNStruct *)context)->TempoFitNums[p][1]] = 1;
+				numToMargin++;
+			}
+			pcount++;
+		}
+	
+		for(int i=0; i < ((MNStruct *)context)->numFitJumps; i++){
+			if(((MNStruct *)context)->LDpriors[pcount][2]!=1){
+				((MNStruct *)context)->pulse->fitJump[((MNStruct *)context)->TempoJumpNums[i]]=0;
+			}
+			else if(((MNStruct *)context)->LDpriors[pcount][2]==1){
+				((MNStruct *)context)->pulse->fitJump[((MNStruct *)context)->TempoJumpNums[i]]=1;
+				numToMargin++;
+			}
+			pcount++;
+		}
+	
+		for(int i=0; i < ((MNStruct *)context)->pulse->nobs; i++) {
+			FITfuncs(((MNStruct *)context)->pulse->obsn[i].bat - ((MNStruct *)context)->pulse->param[param_pepoch].val[0], pdParamDeriv, numToMargin, ((MNStruct *)context)->pulse, i,0);
+			for(int j=0; j<numToMargin; j++) {
+				//printf("CDML: %i %i %i %g\n", i,j,numToMargin,pdParamDeriv[j]);
+				TNDM[i + j*((MNStruct *)context)->pulse->nobs]=pdParamDeriv[j];
+			} 
+		} 
+		//Now set fit flags back to how they were
+	
+
+		for (int p=1;p<((MNStruct *)context)->numFitTiming;p++) {
+				((MNStruct *)context)->pulse->param[((MNStruct *)context)->TempoFitNums[p][0]].fitFlag[((MNStruct *)context)->TempoFitNums[p][1]] = 1;
+
+		}
+	
+		for(int i=0; i < ((MNStruct *)context)->numFitJumps; i++){
+			((MNStruct *)context)->pulse->fitJump[((MNStruct *)context)->TempoJumpNums[i]]=1;
+		}
+	
+}
 void getCustomDMatrixLike(void *context, double **TNDM){
 	
 	double pdParamDeriv[MAX_PARAMS], dMultiplication;

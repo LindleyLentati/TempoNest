@@ -2,6 +2,27 @@
 #include <algorithm>
 #include "dpotrf.h"
 #include <stdio.h>
+
+
+void vector_dpotrf(double *A, int msize, double &det)
+{
+
+	int info;
+	char UPLO='L';
+
+	
+	dpotrf_(&UPLO, &msize, A, &msize, &info);
+
+	det=0;
+	for(int i=0;i<msize;i++){
+		det+=log(A[i + i*msize]);
+	}
+
+	det=det*2;
+
+  	//printf("info: %i \n", info);
+
+}
 void dpotrf(double **A, int msize, double &det)
 {
 
@@ -51,6 +72,25 @@ void dpotrfU(double **A, int msize, double &det)
 }
 
 
+void vector_dpotrfInfo(double *A, int msize, double &det, int &info)
+{
+
+        char UPLO='L';
+
+
+        dpotrf_(&UPLO, &msize, A, &msize, &info);
+
+        det=0;
+        for(int i=0;i<msize;i++){
+		//printf("Det %i %g \n", i, A[i][i]);
+                det+=log(A[i + i*msize]);
+        }
+		//printf("in func info %i \n", info);
+        det=det*2;
+
+
+
+}
 void dpotrfInfo(double **A, int msize, double &det, int &info)
 {
 

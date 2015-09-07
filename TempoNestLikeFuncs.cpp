@@ -1106,8 +1106,8 @@ double  FastNewLRedMarginLogLike(int &ndim, double *Cube, int &npars, double *De
 ///////////////////////////////////////////////////////////////////////////////////////////// 
 
 
- 
-/*	static unsigned int oldcw;
+/* 
+	static unsigned int oldcw;
 	if(((MNStruct *)globalcontext)->uselongdouble > 0 ){
 		fpu_fix_start(&oldcw);
 	}
@@ -1122,7 +1122,8 @@ double  FastNewLRedMarginLogLike(int &ndim, double *Cube, int &npars, double *De
 		tdet -= log(Noise[o]);
 	}
 
-/*	dd_real ddtimelike=0.0;
+/*
+	dd_real ddtimelike=0.0;
 	if(((MNStruct *)globalcontext)->uselongdouble ==1){
 		for(int o=0; o<((MNStruct *)globalcontext)->pulse->nobs; o++){
 			dd_real res = (dd_real)Resvec[o];
@@ -1224,12 +1225,12 @@ double  FastNewLRedMarginLogLike(int &ndim, double *Cube, int &npars, double *De
 		
 	}
 
-
-/*        if(((MNStruct *)globalcontext)->uselongdouble > 0 ){
+/*
+        if(((MNStruct *)globalcontext)->uselongdouble > 0 ){
                 fpu_fix_end(&oldcw);
         }
-
 */
+
 
 	delete[] WorkCoeff;
 	delete[] NTd;
@@ -1680,53 +1681,78 @@ double  NewLRedMarginLogLike(int &ndim, double *Cube, int &npars, double *Derive
 		if(((MNStruct *)globalcontext)->LDpriors[i][2]==1)TimetoMargin++;
 	}
 
-	double **TNDM;
+	double *TNDM;
 
 	if(TimetoMargin != ((MNStruct *)globalcontext)->numFitTiming+((MNStruct *)globalcontext)->numFitJumps){
 
-
+/*
 		TNDM=new double*[((MNStruct *)globalcontext)->pulse->nobs]; 
 		for(int i=0;i<((MNStruct *)globalcontext)->pulse->nobs;i++){
 			TNDM[i]=new double[TimetoMargin];
 		}
 
+*/
 
-		getCustomDMatrixLike(globalcontext, TNDM);
 
-		double* S = new double[TimetoMargin];
+		//printf("allocating: %i \n", ((MNStruct *)globalcontext)->pulse->nobs*TimetoMargin);
+		TNDM=new double[((MNStruct *)globalcontext)->pulse->nobs*TimetoMargin];
+		//printf("getting d matrix %i \n", TimetoMargin);
+		getCustomDVectorLike(globalcontext, TNDM);
+		//printf("got d matrix \n");
+		
+//		getCustomDMatrixLike(globalcontext, TNDM);
+
+//		double* S = new double[TimetoMargin];
+
+/*
 		double** U = new double*[((MNStruct *)globalcontext)->pulse->nobs];
 		for(int k=0; k < ((MNStruct *)globalcontext)->pulse->nobs; k++){
 			U[k] = new double[((MNStruct *)globalcontext)->pulse->nobs];
-		}
-		double** VT = new double*[TimetoMargin]; 
-		for (int k=0; k<TimetoMargin; k++) VT[k] = new double[TimetoMargin];
 
-		dgesvd(TNDM,((MNStruct *)globalcontext)->pulse->nobs, TimetoMargin, S, U, VT);
-		delete[]S;	
 
-		for (int j = 0; j < TimetoMargin; j++){
-			delete[]VT[j];
 		}
+
+*/
+//		double** VT = new double*[TimetoMargin]; 
+//		for (int k=0; k<TimetoMargin; k++) VT[k] = new double[TimetoMargin];
+
+//		double* U = new double[((MNStruct *)globalcontext)->pulse->nobs*TimetoMargin];
+		//printf("doing svd \n");
+		vector_dgesvd(TNDM,((MNStruct *)globalcontext)->pulse->nobs, TimetoMargin);
+		//printf("done svd\n");
+//		dgesvd(TNDM,((MNStruct *)globalcontext)->pulse->nobs, TimetoMargin, S, U, VT);
+//		delete[]S;	
+
+//		for (int j = 0; j < TimetoMargin; j++){
+//			delete[]VT[j];
+//		}
 	
-		delete[]VT;
+//		delete[]VT;
 	
 		
-	
-
+/*
 		for(int j=0;j<((MNStruct *)globalcontext)->pulse->nobs;j++){
 			for(int k=0;k < TimetoMargin;k++){
-					TNDM[j][k]=U[j][k];
+					//TNDM[j][k]=U[j][k];
+					TNDM[j][k]=U[j*((MNStruct *)globalcontext)->pulse->nobs + k];
 			}
 		}
-
-		for (int j = 0; j < ((MNStruct *)globalcontext)->pulse->nobs; j++){
-			delete[]U[j];
-		}
-		delete[]U;
+*/
+//		for (int j = 0; j < ((MNStruct *)globalcontext)->pulse->nobs; j++){
+//			delete[]U[j];
+//		}
+//		delete[]U;
 		
 	}
 	else{	
-		TNDM = ((MNStruct *)globalcontext)->DMatrix;
+		TNDM=new double[((MNStruct *)globalcontext)->pulse->nobs*TimetoMargin];
+
+		for(int j=0;j<((MNStruct *)globalcontext)->pulse->nobs;j++){
+			for(int k=0;k < TimetoMargin;k++){
+					TNDM[j + k*((MNStruct *)globalcontext)->pulse->nobs]=((MNStruct *)globalcontext)->DMatrix[j][k];
+			}
+		}
+		//TNDM = ((MNStruct *)globalcontext)->DMatrix;
 	}
 
 
@@ -3013,13 +3039,15 @@ double  NewLRedMarginLogLike(int &ndim, double *Cube, int &npars, double *Derive
 /////////////////////////////////////////////////////////////////////////////////////////////  
 /////////////////////////Get Time domain likelihood//////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////  
-/*	static unsigned int oldcw;
+
+/*
+	static unsigned int oldcw;
 	if(((MNStruct *)globalcontext)->uselongdouble > 0 ){
 		fpu_fix_start(&oldcw);
 	//	printf("oldcw %i \n", oldcw);
 	}
-	
-*/
+*/	
+
 
 	double tdet=0;
 	double timelike=0;
@@ -3030,8 +3058,8 @@ double  NewLRedMarginLogLike(int &ndim, double *Cube, int &npars, double *Derive
 		tdet -= log(Noise[o]);
 	}
 
-
-/*	dd_real ddtimelike=0.0;
+/*
+	dd_real ddtimelike=0.0;
 	if(((MNStruct *)globalcontext)->uselongdouble ==1){
 		for(int o=0; o<((MNStruct *)globalcontext)->pulse->nobs; o++){
 			dd_real res = (dd_real)Resvec[o];
@@ -3063,6 +3091,8 @@ double  NewLRedMarginLogLike(int &ndim, double *Cube, int &npars, double *Derive
 //////////////////////////////////////////////////////////////////////////////////////////
 
 	int totalsize=TimetoMargin+totCoeff+totalredshapecoeff;
+
+/*
 	double **TotalMatrix=new double*[((MNStruct *)globalcontext)->pulse->nobs];
 	for(int i =0;i<((MNStruct *)globalcontext)->pulse->nobs;i++){
 		TotalMatrix[i]=new double[totalsize];
@@ -3074,7 +3104,7 @@ double  NewLRedMarginLogLike(int &ndim, double *Cube, int &npars, double *Derive
 	
 	for(int i =0;i<((MNStruct *)globalcontext)->pulse->nobs;i++){
 		for(int j =0;j<TimetoMargin; j++){
-			TotalMatrix[i][j]= TNDM[i][j];
+			TotalMatrix[i][j]= TNDM[i + j*((MNStruct *)globalcontext)->pulse->nobs];
 		}
 		
 		for(int j =0;j<totCoeff; j++){
@@ -3091,12 +3121,49 @@ double  NewLRedMarginLogLike(int &ndim, double *Cube, int &npars, double *Derive
                 delete[] FMatrix[j];
         }
         delete[] FMatrix;
-	if(TimetoMargin != ((MNStruct *)globalcontext)->numFitTiming+((MNStruct *)globalcontext)->numFitJumps){
-		for (int j = 0; j < ((MNStruct *)globalcontext)->pulse->nobs; j++){
-                	delete[] TNDM[j];
-        	}
+//	if(TimetoMargin != ((MNStruct *)globalcontext)->numFitTiming+((MNStruct *)globalcontext)->numFitJumps){
+//		for (int j = 0; j < ((MNStruct *)globalcontext)->pulse->nobs; j++){
+  //              	delete[] TNDM[j];
+    //    	}
         	delete[] TNDM;
+//	}
+
+
+*/
+
+	double *TotalMatrix=new double[((MNStruct *)globalcontext)->pulse->nobs*totalsize];
+	for(int i =0;i<((MNStruct *)globalcontext)->pulse->nobs;i++){
+		for(int j =0;j<totalsize; j++){
+			TotalMatrix[i + j*((MNStruct *)globalcontext)->pulse->nobs]=0;
+		}
 	}
+	
+	
+	for(int i =0;i<((MNStruct *)globalcontext)->pulse->nobs;i++){
+		for(int j =0;j<TimetoMargin; j++){
+			TotalMatrix[i + j*((MNStruct *)globalcontext)->pulse->nobs]= TNDM[i + j*((MNStruct *)globalcontext)->pulse->nobs];
+		}
+		
+		for(int j =0;j<totCoeff; j++){
+			TotalMatrix[i + (j+TimetoMargin)*((MNStruct *)globalcontext)->pulse->nobs]=FMatrix[i][j];
+		}
+
+		for(int j =0;j<totalredshapecoeff; j++){
+			TotalMatrix[i + (j+TimetoMargin+totCoeff)*((MNStruct *)globalcontext)->pulse->nobs]=RedShapeletMatrix[i][j];
+			//printf("Red shape: %i %i %g \n", i, j, RedShapeletMatrix[i][j]);
+		}
+	}
+
+        for (int j = 0; j < ((MNStruct *)globalcontext)->pulse->nobs; j++){
+                delete[] FMatrix[j];
+        }
+        delete[] FMatrix;
+//	if(TimetoMargin != ((MNStruct *)globalcontext)->numFitTiming+((MNStruct *)globalcontext)->numFitJumps){
+//		for (int j = 0; j < ((MNStruct *)globalcontext)->pulse->nobs; j++){
+  //              	delete[] TNDM[j];
+    //    	}
+        	delete[] TNDM;
+//	}
 
 
 //////////////////////////////////////////////////////////////////////////////////////////  
@@ -3104,7 +3171,8 @@ double  NewLRedMarginLogLike(int &ndim, double *Cube, int &npars, double *Derive
 //////////////////////////////////////////////////////////////////////////////////////////
 
 	double *NTd = new double[totalsize];
-	double **NT=new double*[((MNStruct *)globalcontext)->pulse->nobs];
+
+/*	double **NT=new double*[((MNStruct *)globalcontext)->pulse->nobs];
 	for(int i=0;i<((MNStruct *)globalcontext)->pulse->nobs;i++){
 		NT[i]=new double[totalsize];
 	}
@@ -3119,16 +3187,24 @@ double  NewLRedMarginLogLike(int &ndim, double *Cube, int &npars, double *Derive
 			NT[i][j]=TotalMatrix[i][j]*Noise[i];
 		}
 	}
-
+*/
 	
 
+	double *NT=new double[((MNStruct *)globalcontext)->pulse->nobs*totalsize];
+	double *TNT=new double[totalsize*totalsize];
+	
+	for(int i=0;i<((MNStruct *)globalcontext)->pulse->nobs;i++){
+		for(int j=0;j<totalsize;j++){
+			NT[i + j*((MNStruct *)globalcontext)->pulse->nobs]=TotalMatrix[i + j*((MNStruct *)globalcontext)->pulse->nobs]*Noise[i];
+		}
+	}
 
-	dgemm(TotalMatrix, NT , TNT, ((MNStruct *)globalcontext)->pulse->nobs, totalsize, ((MNStruct *)globalcontext)->pulse->nobs, totalsize, 'T', 'N');
+	vector_dgemm(TotalMatrix, NT , TNT, ((MNStruct *)globalcontext)->pulse->nobs, totalsize, ((MNStruct *)globalcontext)->pulse->nobs, totalsize, 'T', 'N');
 
-	dgemv(NT,Resvec,NTd,((MNStruct *)globalcontext)->pulse->nobs,totalsize,'T');
+	vector_dgemv(NT,Resvec,NTd,((MNStruct *)globalcontext)->pulse->nobs,totalsize,'T');
 
-
-/*        dd_real ddfreqlike = 0.0;
+/*
+        dd_real ddfreqlike = 0.0;
         dd_real ddsigmadet = 0.0;
 
         dd_real ddfreqlikeChol = 0.0;
@@ -3152,8 +3228,8 @@ double  NewLRedMarginLogLike(int &ndim, double *Cube, int &npars, double *Derive
 		dd_real alpha, beta;
 
 
-		for (int i=0; i<m; i++) for (int j=0; j<n; j++) A[i+j*m] = (dd_real) TotalMatrix[i][j];
-		for (int i=0; i<m; i++) for (int j=0; j<n; j++) B[i+j*m] = (dd_real) NT[i][j];
+		for (int i=0; i<m; i++) for (int j=0; j<n; j++) A[i+j*m] = (dd_real) TotalMatrix[i+j*m];
+		for (int i=0; i<m; i++) for (int j=0; j<n; j++) B[i+j*m] = (dd_real) NT[i+j*m];
 		for(int i =0; i < m; i++) ddRes[i] = (dd_real)Resvec[i];
 		for(int i =0; i < totCoeff; i++) ddPC[i] = (dd_real) (1.0/powercoeff[i]);
 
@@ -3282,8 +3358,8 @@ double  NewLRedMarginLogLike(int &ndim, double *Cube, int &npars, double *Derive
 		qd_real alpha, beta;
 
 
-		for (int i=0; i<m; i++) for (int j=0; j<n; j++) A[i+j*m] = (qd_real) TotalMatrix[i][j];
-		for (int i=0; i<m; i++) for (int j=0; j<n; j++) B[i+j*m] = (qd_real) NT[i][j];
+		for (int i=0; i<m; i++) for (int j=0; j<n; j++) A[i+j*m] = (qd_real) TotalMatrix[i+j*m];
+		for (int i=0; i<m; i++) for (int j=0; j<n; j++) B[i+j*m] = (qd_real) NT[i+j*m];
 		for(int i =0; i < m; i++) qdRes[i] = (qd_real) Resvec[i];
 		for(int i =0; i < totCoeff; i++) qdPC[i] = (qd_real) (1.0/powercoeff[i]);
 		alpha = 1.0;
@@ -3370,25 +3446,27 @@ double  NewLRedMarginLogLike(int &ndim, double *Cube, int &npars, double *Derive
 
 	}
 
+
 */
 	for(int j=0;j<totCoeff;j++){
-			TNT[TimetoMargin+j][TimetoMargin+j] += 1.0/powercoeff[j];
+			TNT[TimetoMargin+j + (TimetoMargin+j)*totalsize] += 1.0/powercoeff[j];
 	}
 	for(int j=0;j<totalredshapecoeff;j++){
-			freqdet=freqdet-log(pow(10.0, -12)*TNT[TimetoMargin+totCoeff+j][TimetoMargin+totCoeff+j]);
-			TNT[TimetoMargin+totCoeff+j][TimetoMargin+totCoeff+j] += pow(10.0, -12)*TNT[TimetoMargin+totCoeff+j][TimetoMargin+totCoeff+j];
+			freqdet=freqdet-log(pow(10.0, -12)*TNT[TimetoMargin+totCoeff+j + (TimetoMargin+totCoeff+j)*totalsize]);
+			TNT[TimetoMargin+totCoeff+j + (TimetoMargin+totCoeff+j)*totalsize] += pow(10.0, -12)*TNT[TimetoMargin+totCoeff+j + (TimetoMargin+totCoeff+j)*totalsize];
 			
 	}
 
 	double freqlike=0;
 	double *WorkCoeff = new double[totalsize];
 	double *WorkCoeff2 = new double[totalsize];
-	double **TNT2=new double*[totalsize];
+	double *TNT2=new double[totalsize*totalsize];
 	
 	for(int i =0; i < totalsize; i++){
-		TNT2[i] = new double[totalsize];
+//		TNT2[i] = new double[totalsize];
 		for(int j=0 ; j < totalsize; j++){
-			TNT2[i][j] = TNT[i][j];
+//			TNT2[i][j] = TNT[i][j];
+			TNT2[i + j*totalsize] = TNT[i + j*totalsize];			
 		}
 	}
 	for(int o1=0;o1<totalsize; o1++){
@@ -3400,12 +3478,13 @@ double  NewLRedMarginLogLike(int &ndim, double *Cube, int &npars, double *Derive
 	int globalinfo=0;
 	int info=0;
 	double jointdet = 0;	
-	dpotrfInfo(TNT, totalsize, jointdet, info);
+	vector_dpotrfInfo(TNT, totalsize, jointdet, info);
 	if(info != 0)globalinfo=1;
 
 	info=0;
-	dpotrsInfo(TNT, WorkCoeff, totalsize, info);
+	vector_dpotrsInfo(TNT, WorkCoeff, totalsize, info);
 
+	/*
 	if(((MNStruct *)globalcontext)->doGrades == 1){
 
 		for(int i=0;i<((MNStruct *)globalcontext)->pulse->nobs;i++){
@@ -3424,11 +3503,11 @@ double  NewLRedMarginLogLike(int &ndim, double *Cube, int &npars, double *Derive
 			}
 		}
 	}
-
+*/
         if(info != 0)globalinfo=1;
 	info=0;
 	double det2=0;
-	TNqrsolve(TNT2, NTd, WorkCoeff2, totalsize, det2, info);
+	vector_TNqrsolve(TNT2, NTd, WorkCoeff2, totalsize, det2, info);
  
 	double freqlike2 = 0;    
 	for(int j=0;j<totalsize;j++){
@@ -3449,9 +3528,8 @@ double  NewLRedMarginLogLike(int &ndim, double *Cube, int &npars, double *Derive
 		lnew=-pow(10.0,20);
 		
 	}
-
-/*	//printf("lnew double : %g", lnew);
-	if(((MNStruct *)globalcontext)->uselongdouble ==1){
+	//printf("lnew double : %g", lnew);
+/*	if(((MNStruct *)globalcontext)->uselongdouble ==1){
 
 		dd_real ddAllLike = -0.5*(tdet+ddsigmadet+freqdet+ddtimelike-ddfreqlike) + uniformpriorterm;
 		double ddlike = cast2double(ddAllLike);
@@ -3512,20 +3590,20 @@ double  NewLRedMarginLogLike(int &ndim, double *Cube, int &npars, double *Derive
 	delete[] Noise;
 	delete[] Resvec;
 	
-	for (int j = 0; j < ((MNStruct *)globalcontext)->pulse->nobs; j++){
-		delete[] TotalMatrix[j];
-		delete[] NT[j];
+//	for (int j = 0; j < ((MNStruct *)globalcontext)->pulse->nobs; j++){
+//		delete[] TotalMatrix[j];
+//		delete[] NT[j];
 		
 
-	}
+//	}
 	delete[] TotalMatrix;
 	delete[] NT;
 	
 
-	for (int j = 0; j < totalsize; j++){
-		delete[]TNT[j];
-		delete[] TNT2[j];
-	}
+//	for (int j = 0; j < totalsize; j++){
+//		delete[]TNT[j];
+//		delete[] TNT2[j];
+//	}
 	delete[]TNT;
 	delete[] TNT2;
 
@@ -5113,8 +5191,8 @@ double  LRedNumericalLogLike(int &ndim, double *Cube, int &npars, double *Derive
 	if(((MNStruct *)globalcontext)->uselongdouble > 0 ){
 		fpu_fix_start(&oldcw);
 	}
-*/	
-
+	
+*/
 
 	double tdet=0;
 	double timelike=0;
@@ -5123,8 +5201,6 @@ double  LRedNumericalLogLike(int &ndim, double *Cube, int &npars, double *Derive
 		timelike+=Resvec[o]*Resvec[o]*Noise[o];
 		tdet -= log(Noise[o]);
 	}
-
-
 /*	dd_real ddtimelike=0.0;
 	if(((MNStruct *)globalcontext)->uselongdouble ==1){
 		for(int o=0; o<((MNStruct *)globalcontext)->pulse->nobs; o++){
@@ -5176,8 +5252,8 @@ double  LRedNumericalLogLike(int &ndim, double *Cube, int &npars, double *Derive
 	}
 
 
-/*
-        if(((MNStruct *)globalcontext)->uselongdouble > 0 ){
+
+/*        if(((MNStruct *)globalcontext)->uselongdouble > 0 ){
                 fpu_fix_end(&oldcw);
         }
 
