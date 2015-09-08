@@ -80,10 +80,10 @@ extern "C" void copy_staticECorrmat_(double *EVec, int E, int N);
 void fastephemeris_routines(pulsar *psr,int npsr)
 {
 vectorPulsar(psr,npsr); /* 1. Form a vector pointing at the pulsar */
-//readEphemeris(psr,npsr,0);/* 2. Read the ephemeris */
+readEphemeris(psr,npsr,0);/* 2. Read the ephemeris */
 get_obsCoord(psr,npsr);   /* 3. Get Coordinate of observatory relative to Earth's centre */
-//tt2tb(psr,npsr); /* Observatory/time-dependent part of TT-TB */
-//readEphemeris(psr,npsr,0); /* Re-evaluate ephemeris with correct TB */
+tt2tb(psr,npsr); /* Observatory/time-dependent part of TT-TB */
+readEphemeris(psr,npsr,0); /* Re-evaluate ephemeris with correct TB */
 
 }
 
@@ -101,10 +101,12 @@ get_obsCoord(psr,npsr);   /* 3. Get Coordinate of observatory relative to Earth'
 void fastformBatsAll(pulsar *psr,int npsr)
 {
     //clock_corrections(psr,npsr); /* Clock corrections ... */
-    fastephemeris_routines(psr,npsr); /* Ephemeris routines ... */
-  	extra_delays(psr,npsr); /* Other time delays ... */
-	formBats(psr,npsr); /* Form Barycentric arrival times */
-	secularMotion(psr,npsr);
+//    fastephemeris_routines(psr,npsr); /* Ephemeris routines ... */
+//  	extra_delays(psr,npsr); /* Other time delays ... */
+//	formBats(psr,npsr); /* Form Barycentric arrival times */
+//	secularMotion(psr,npsr);
+	updateBatsAll(psr, npsr);
+
 
 }
 
