@@ -119,7 +119,7 @@ void setupparams(int &useGPUS,
 		int &FitTemplate,
 		int &InterpolateProfile,
 		double &InterpolatedTime,
-		int &StoreFMatrices,
+		int &StoreTMatrix,
 		int &incHighFreqStoc,
 		double *HighFreqStocPrior){
 
@@ -135,7 +135,7 @@ void setupparams(int &useGPUS,
 	FitTemplate = 0;
 	InterpolateProfile = 0;
 	InterpolatedTime = 1; //in nanoseconds
-	StoreFMatrices = 0; // Recompute FMatrices when computing new bats - default is dont just precompute and use those
+	StoreTMatrix = 0; // Recompute TMatrices when computing new bats - default is dont just precompute and use those
 
 
     //Root of the results files,relative to the directory in which TempoNest is run. This will be followed by the pulsar name, and then the individual output file extensions.
@@ -349,7 +349,7 @@ void setupparams(int &useGPUS,
 	parameters.readInto(FitTemplate, "FitTemplate", FitTemplate);
 	parameters.readInto(InterpolateProfile, "InterpolateProfile", InterpolateProfile);
 	parameters.readInto(InterpolatedTime, "InterpolatedTime", InterpolatedTime);
-        parameters.readInto(StoreFMatrices, "StoreFMatrices",StoreFMatrices );
+        parameters.readInto(StoreTMatrix, "StoreTMatrix",StoreTMatrix );
 
 
         parameters.readInto(strBuf, "root", string("results/Example1"));

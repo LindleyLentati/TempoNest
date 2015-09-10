@@ -1106,13 +1106,13 @@ double  FastNewLRedMarginLogLike(int &ndim, double *Cube, int &npars, double *De
 ///////////////////////////////////////////////////////////////////////////////////////////// 
 
 
- 
-/*	static unsigned int oldcw;
+/* 
+	static unsigned int oldcw;
 	if(((MNStruct *)globalcontext)->uselongdouble > 0 ){
 		fpu_fix_start(&oldcw);
 	}
-*/	
-
+	
+*/
 
 	double tdet=0;
 	double timelike=0;
@@ -1229,8 +1229,8 @@ double  FastNewLRedMarginLogLike(int &ndim, double *Cube, int &npars, double *De
         if(((MNStruct *)globalcontext)->uselongdouble > 0 ){
                 fpu_fix_end(&oldcw);
         }
-*/
 
+*/
 
 	delete[] WorkCoeff;
 	delete[] NTd;
@@ -1675,15 +1675,14 @@ double  NewLRedMarginLogLike(int &ndim, double *Cube, int &npars, double *Derive
 ///////////////////////////Initialise TotalMatrix////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////// 
 
-
 	int totalsize = ((MNStruct *)globalcontext)->totalsize;
 	
-	double *TotalMatrix=new double[((MNStruct *)globalcontext)->pulse->nobs*totalsize];
-	for(int i =0;i<((MNStruct *)globalcontext)->pulse->nobs;i++){
-		for(int j =0;j<totalsize; j++){
-			TotalMatrix[i + j*((MNStruct *)globalcontext)->pulse->nobs]=0;
-		}
-	}
+	double *TotalMatrix=((MNStruct *)globalcontext)->StoredTMatrix;//new double[((MNStruct *)globalcontext)->pulse->nobs*totalsize];
+//	for(int i =0;i<((MNStruct *)globalcontext)->pulse->nobs;i++){
+//		for(int j =0;j<totalsize; j++){
+//			TotalMatrix[i + j*((MNStruct *)globalcontext)->pulse->nobs]=0;
+//		}
+//	}
 
 		
 /////////////////////////////////////////////////////////////////////////////////////////////  
@@ -1758,17 +1757,17 @@ double  NewLRedMarginLogLike(int &ndim, double *Cube, int &npars, double *Derive
 //		delete[]U;
 		
 	}
-	else{	
+//	else{	
 //		TNDM=new double[((MNStruct *)globalcontext)->pulse->nobs*TimetoMargin];
 
-		for(int j=0;j<((MNStruct *)globalcontext)->pulse->nobs;j++){
-			for(int k=0;k < TimetoMargin;k++){
-					TotalMatrix[j + k*((MNStruct *)globalcontext)->pulse->nobs]=((MNStruct *)globalcontext)->DMatrix[j][k];
-					//printf("%i %i %g \n", j, k, ((MNStruct *)globalcontext)->DMatrix[j][k]);
-			}
-		}
-		//TNDM = ((MNStruct *)globalcontext)->DMatrix;
-	}
+//		for(int j=0;j<((MNStruct *)globalcontext)->pulse->nobs;j++){
+//			for(int k=0;k < TimetoMargin;k++){
+//					TotalMatrix[j + k*((MNStruct *)globalcontext)->pulse->nobs]=((MNStruct *)globalcontext)->DMatrix[j][k];
+//					//printf("%i %i %g \n", j, k, ((MNStruct *)globalcontext)->DMatrix[j][k]);
+//			}
+//		}
+//		//TNDM = ((MNStruct *)globalcontext)->DMatrix;
+//	}
 
 
 
@@ -1934,21 +1933,24 @@ double  NewLRedMarginLogLike(int &ndim, double *Cube, int &npars, double *Derive
 	}
 
 
+	if(((MNStruct *)globalcontext)->storeFMatrices == 0){
 
 
-        for(int i=0;i<FitRedCoeff/2;i++){
-                for(int k=0;k<((MNStruct *)globalcontext)->pulse->nobs;k++){
-                        double time=(double)((MNStruct *)globalcontext)->pulse->obsn[k].bat;
-//                        FMatrix[k][i]=cos(2*M_PI*freqs[i]*time);
-//			FMatrix[k][i+FitRedCoeff/2]=sin(2*M_PI*freqs[i]*time);
+		for(int i=0;i<FitRedCoeff/2;i++){
+			for(int k=0;k<((MNStruct *)globalcontext)->pulse->nobs;k++){
+				double time=(double)((MNStruct *)globalcontext)->pulse->obsn[k].bat;
+	//                        FMatrix[k][i]=cos(2*M_PI*freqs[i]*time);
+	//			FMatrix[k][i+FitRedCoeff/2]=sin(2*M_PI*freqs[i]*time);
+
+	//			printf("Store check %i %i %g %g \n", k, i, TotalMatrix[k + (i+TimetoMargin+startpos)*((MNStruct *)globalcontext)->pulse->nobs], cos(2*M_PI*freqs[i]*time));
+				TotalMatrix[k + (i+TimetoMargin+startpos)*((MNStruct *)globalcontext)->pulse->nobs]=cos(2*M_PI*freqs[i]*time);
+				TotalMatrix[k + (i+FitRedCoeff/2+TimetoMargin+startpos)*((MNStruct *)globalcontext)->pulse->nobs] = sin(2*M_PI*freqs[i]*time);
 
 
-			TotalMatrix[k + (i+TimetoMargin+startpos)*((MNStruct *)globalcontext)->pulse->nobs]=cos(2*M_PI*freqs[i]*time);
-			TotalMatrix[k + (i+FitRedCoeff/2+TimetoMargin+startpos)*((MNStruct *)globalcontext)->pulse->nobs] = sin(2*M_PI*freqs[i]*time);
-
-
-                }
-        }
+			}
+		}
+		sleep(5);
+	}
 
 	if(((MNStruct *)globalcontext)->incRED==2){
 
@@ -2234,14 +2236,15 @@ double  NewLRedMarginLogLike(int &ndim, double *Cube, int &npars, double *Derive
 			freqs[startpos+i]=((MNStruct *)globalcontext)->sampleFreq[startpos/2 - ((MNStruct *)globalcontext)->incFloatRed+i]/maxtspan;
 			freqs[startpos+i+FitDMCoeff/2]=freqs[startpos+i];
 
+			if(((MNStruct *)globalcontext)->storeFMatrices == 0){
+				for(int k=0;k<((MNStruct *)globalcontext)->pulse->nobs;k++){
+					double time=(double)((MNStruct *)globalcontext)->pulse->obsn[k].bat;
 
-                	for(int k=0;k<((MNStruct *)globalcontext)->pulse->nobs;k++){
-                        	double time=(double)((MNStruct *)globalcontext)->pulse->obsn[k].bat;
+					TotalMatrix[k + (i+TimetoMargin+startpos)*((MNStruct *)globalcontext)->pulse->nobs]=cos(2*M_PI*freqs[startpos+i]*time)*DMVec[k];
+					TotalMatrix[k + (i+FitDMCoeff/2+TimetoMargin+startpos)*((MNStruct *)globalcontext)->pulse->nobs] = sin(2*M_PI*freqs[startpos+i]*time)*DMVec[k];
 
-				TotalMatrix[k + (i+TimetoMargin+startpos)*((MNStruct *)globalcontext)->pulse->nobs]=cos(2*M_PI*freqs[startpos+i]*time)*DMVec[k];
-				TotalMatrix[k + (i+FitDMCoeff/2+TimetoMargin+startpos)*((MNStruct *)globalcontext)->pulse->nobs] = sin(2*M_PI*freqs[startpos+i]*time)*DMVec[k];
-
-        	        }
+				}
+			}
 		}
 	} 
 
@@ -2577,24 +2580,24 @@ double  NewLRedMarginLogLike(int &ndim, double *Cube, int &npars, double *Derive
 			for (int i=0; i<FitBandCoeff/2; i++){
 				freqdet=freqdet+2*log(powercoeff[startpos+i]);
 			}
+			if(((MNStruct *)globalcontext)->storeFMatrices == 0){
+				for(int i=0;i<FitBandCoeff/2;i++){
+					for(int k=0;k<((MNStruct *)globalcontext)->pulse->nobs;k++){
+						if(((MNStruct *)globalcontext)->pulse->obsn[k].freq > startfreq && ((MNStruct *)globalcontext)->pulse->obsn[k].freq < stopfreq){
+							double time=(double)((MNStruct *)globalcontext)->pulse->obsn[k].bat;
+							TotalMatrix[k + (i+TimetoMargin+startpos)*((MNStruct *)globalcontext)->pulse->nobs]=cos(2*M_PI*freqs[startpos+i]*time);
+							TotalMatrix[k + (i+TimetoMargin+startpos+FitBandCoeff/2)*((MNStruct *)globalcontext)->pulse->nobs]=sin(2*M_PI*freqs[startpos+i]*time);
+						}
+						else{	
+							TotalMatrix[k + (i+TimetoMargin+startpos)*((MNStruct *)globalcontext)->pulse->nobs]=0;
+							TotalMatrix[k + (i+TimetoMargin+startpos+FitBandCoeff/2)*((MNStruct *)globalcontext)->pulse->nobs]=0;
 
-			for(int i=0;i<FitBandCoeff/2;i++){
-				for(int k=0;k<((MNStruct *)globalcontext)->pulse->nobs;k++){
-					if(((MNStruct *)globalcontext)->pulse->obsn[k].freq > startfreq && ((MNStruct *)globalcontext)->pulse->obsn[k].freq < stopfreq){
-						double time=(double)((MNStruct *)globalcontext)->pulse->obsn[k].bat;
-						TotalMatrix[k + (i+TimetoMargin+startpos)*((MNStruct *)globalcontext)->pulse->nobs]=cos(2*M_PI*freqs[startpos+i]*time);
-                                                TotalMatrix[k + (i+TimetoMargin+startpos+FitBandCoeff/2)*((MNStruct *)globalcontext)->pulse->nobs]=sin(2*M_PI*freqs[startpos+i]*time);
+						}
+
+
 					}
-					else{	
-                                                TotalMatrix[k + (i+TimetoMargin+startpos)*((MNStruct *)globalcontext)->pulse->nobs]=0;
-                                                TotalMatrix[k + (i+TimetoMargin+startpos+FitBandCoeff/2)*((MNStruct *)globalcontext)->pulse->nobs]=0;
-
-					}
-
-
 				}
 			}
-
 
 			startpos += FitBandCoeff;
 		}
@@ -3015,11 +3018,12 @@ double  NewLRedMarginLogLike(int &ndim, double *Cube, int &npars, double *Derive
 			freqdet = freqdet + log(ECORRPrior[i]);
 		}
 
-		for(int k=0;k<((MNStruct *)globalcontext)->pulse->nobs;k++){
-			for(int i=0; i < ((MNStruct *)globalcontext)->numNGJitterEpochs; i++){
-//				FMatrix[k][startpos+i] = ((MNStruct *)globalcontext)->NGJitterMatrix[k][i];
-			}
-		}
+//		for(int k=0;k<((MNStruct *)globalcontext)->pulse->nobs;k++){
+//			for(int i=0; i < ((MNStruct *)globalcontext)->numNGJitterEpochs; i++){
+//				TotalMatrix[k + (i+TimetoMargin+startpos)*((MNStruct *)globalcontext)->pulse->nobs]= ((MNStruct *)globalcontext)->NGJitterMatrix[k][i];
+////				FMatrix[k][startpos+i] = ((MNStruct *)globalcontext)->NGJitterMatrix[k][i];
+//			}
+//		}
 
 	}
 
@@ -3031,7 +3035,8 @@ double  NewLRedMarginLogLike(int &ndim, double *Cube, int &npars, double *Derive
 /////////////////////////////////////////////////////////////////////////////////////////////  
 /////////////////////////Get Time domain likelihood//////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////  
-/*	static unsigned int oldcw;
+/*
+	static unsigned int oldcw;
 	if(((MNStruct *)globalcontext)->uselongdouble > 0 ){
 		fpu_fix_start(&oldcw);
 	//	printf("oldcw %i \n", oldcw);
@@ -3587,7 +3592,7 @@ double  NewLRedMarginLogLike(int &ndim, double *Cube, int &npars, double *Derive
 		
 
 //	}
-	delete[] TotalMatrix;
+//	delete[] TotalMatrix;
 	delete[] NT;
 	
 

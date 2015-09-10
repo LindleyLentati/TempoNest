@@ -119,7 +119,7 @@ typedef struct {
 	int FitSolarWind;
 	int FitWhiteSolarWind;
 	int storeFMatrices;
-	double **StoredFMatrix;
+	double *StoredTMatrix;
 	/*GPTA stuff*/
 
 	int numshapecoeff;
@@ -224,7 +224,7 @@ void getCustomDMatrixLike(void *context, double **TNDM);
 void getCustomDVectorLike(void *context, double *TNDM, int nobs, int TimeToMargin, int TotalSize);
 void getNGJitterMatrix(pulsar *pulse, double **JitterMatrix, int &NumEpochs);
 void getNGJitterMatrixEpochs(pulsar *pulse, int &NumEpochs);
-void StoreFMatrix(double **FMatrix, void *context);
+void StoreTMatrix(double *TMatrix, void *context);
 void getArraySizeInfo(void *context);
 
 void readsummary(pulsar *psr, std::string longname, int ndim, void *context, long double *Tempo2Fit, int incRED, int ndims, int MarginTime, int MarginJumps, int doLinear);
@@ -318,7 +318,7 @@ void setupparams(int &useGPUS,
 		int &FitTemplate,
 		int &InterpolateProfile,
 		double &InterpolatedTime,
-		int &StoreFMatrices, 
+		int &StoreTMatrix, 
 		int &incHighFreqStoc,
 		double *HighFreqStocPrior);
 

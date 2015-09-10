@@ -2649,35 +2649,36 @@ extern "C" int graphicalInterface(int argc, char **argv,
 
 	getArraySizeInfo(context);
 
-	int staticTimetoMargin=0;
-	double **staticTNDM;
-	for(int i =0; i < ((MNStruct *)context)->numFitTiming+((MNStruct *)context)->numFitJumps; i++){
-		if(((MNStruct *)context)->LDpriors[i][2]==1)staticTimetoMargin++;
+//	int staticTimetoMargin=0;
+//	double **staticTNDM;
+//	for(int i =0; i < ((MNStruct *)context)->numFitTiming+((MNStruct *)context)->numFitJumps; i++){
+//		if(((MNStruct *)context)->LDpriors[i][2]==1)staticTimetoMargin++;
+//	}
+//	if(staticTimetoMargin == ((MNStruct *)context)->numFitTiming+((MNStruct *)context)->numFitJumps){
+		printf("Pre-Computing Matrices\n");
+		
+		
+	for(int p=1;p<((MNStruct *)context)->numFitTiming;p++){
+		
+		((MNStruct *)context)->pulse->param[((MNStruct *)context)->TempoFitNums[p][0]].val[((MNStruct *)context)->TempoFitNums[p][1]] = ((MNStruct *)context)->Dpriors[p][0]*(((MNStruct *)context)->LDpriors[p][1]) + (((MNStruct *)context)->LDpriors[p][0]);
+
 	}
-	if(staticTimetoMargin == ((MNStruct *)context)->numFitTiming+((MNStruct *)context)->numFitJumps){
-		printf("Marginalising over all Timing model parameters, pre-computing Matrices\n");
-		
-		
-		for(int p=1;p<((MNStruct *)context)->numFitTiming;p++){
-			
-			((MNStruct *)context)->pulse->param[((MNStruct *)context)->TempoFitNums[p][0]].val[((MNStruct *)context)->TempoFitNums[p][1]] = ((MNStruct *)context)->Dpriors[p][0]*(((MNStruct *)context)->LDpriors[p][1]) + (((MNStruct *)context)->LDpriors[p][0]);
+	
+	formBatsAll(((MNStruct *)context)->pulse,((MNStruct *)context)->numberpulsars);      
+	formResiduals(((MNStruct *)context)->pulse,((MNStruct *)context)->numberpulsars,1);      
 
-		}
+	double *TotalMatrix = new double[((MNStruct *)context)->pulse->nobs*((MNStruct *)context)->totalsize]();	
 	
-		formBatsAll(((MNStruct *)context)->pulse,((MNStruct *)context)->numberpulsars);      
-		formResiduals(((MNStruct *)context)->pulse,((MNStruct *)context)->numberpulsars,1);      
-	
-	
-		staticTNDM=new double*[((MNStruct *)context)->pulse->nobs];
-		for(int i=0;i<((MNStruct *)context)->pulse->nobs;i++){
-			staticTNDM[i]=new double[staticTimetoMargin];
-		}
-
-		getCustomDMatrixLike(context, staticTNDM);
+//		staticTNDM=new double*[((MNStruct *)context)->pulse->nobs];
+//		for(int i=0;i<((MNStruct *)context)->pulse->nobs;i++){
+//			staticTNDM[i]=new double[staticTimetoMargin];
+//		}
+//
+//		getCustomDMatrixLike(context, staticTNDM);
 
 	
-
-
+	StoreTMatrix(TotalMatrix, context);
+/*
 		
 #ifdef HAVE_CULA	
 		if(useGPUS==1){
@@ -2768,6 +2769,11 @@ extern "C" int graphicalInterface(int argc, char **argv,
 #endif
 
 	}
+
+
+*/
+
+	((MNStruct *)context)->StoredTMatrix = TotalMatrix;
 
 	//printf("Here\n");
 //////////////////////////////////////////////////////////////////////////////////////////  

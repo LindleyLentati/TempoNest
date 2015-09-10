@@ -1169,42 +1169,39 @@ void makeStaticDiagGMatrix(pulsar *pulse, int Gsize, double **GMatrix, double** 
 }
 
 
-void StoreFMatrix(double **FMatrix, void *context){
+void StoreTMatrix(double *TotalMatrix, void *context){
+
+	int totalsize = ((MNStruct *)context)->totalsize;
+
+	for(int i = 0; i < ((MNStruct *)context)->pulse->nobs*totalsize; i++){
+		TotalMatrix[i] = 0;
+	}
+		
+/////////////////////////////////////////////////////////////////////////////////////////////  
+/////////////////////////Form the Design Matrix////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////  
+
+	int TimetoMargin=((MNStruct *)context)->TimetoMargin;
+
+	getCustomDVectorLike(context, TotalMatrix, ((MNStruct *)context)->pulse->nobs, TimetoMargin, totalsize);
+	vector_dgesvd(TotalMatrix,((MNStruct *)context)->pulse->nobs, TimetoMargin);
+		
 
 
-	double start,end;
-	int go=0;
-	for (int i=0;i<((MNStruct *)context)->pulse->nobs;i++)
-	  {
-	    if (((MNStruct *)context)->pulse->obsn[i].deleted==0)
-	      {
-		if (go==0)
-		  {
-		    go = 1;
-		    start = (double)((MNStruct *)context)->pulse->obsn[i].bat;
-		    end  = start;
-		  }
-		else
-		  {
-		    if (start > (double)((MNStruct *)context)->pulse->obsn[i].bat)
-		      start = (double)((MNStruct *)context)->pulse->obsn[i].bat;
-		    if (end < (double)((MNStruct *)context)->pulse->obsn[i].bat)
-		      end = (double)((MNStruct *)context)->pulse->obsn[i].bat;
-		  }
-	      }
-	  }
 
-	double maxtspan=1*(end-start);
-	double averageTSamp=2*maxtspan/((MNStruct *)context)->pulse->nobs;
+//////////////////////////////////////////////////////////////////////////////////////////  
+/////////////////////////////////Set up Coefficients///////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////  
+	double maxtspan=((MNStruct *)context)->Tspan;
 
 
 	int FitRedCoeff=2*(((MNStruct *)context)->numFitRedCoeff);
 	int FitDMCoeff=2*(((MNStruct *)context)->numFitDMCoeff);
+	int FitBandCoeff=2*(((MNStruct *)context)->numFitBandNoiseCoeff);
+	int FitGroupNoiseCoeff = 2*((MNStruct *)context)->numFitGroupNoiseCoeff;
 
+	int totCoeff=((MNStruct *)context)->totCoeff;
 
-	int totCoeff=0;
-	if(((MNStruct *)context)->incRED != 0 || ((MNStruct *)context)->incGWB == 1)totCoeff+=FitRedCoeff;
-	if(((MNStruct *)context)->incDM != 0)totCoeff+=FitDMCoeff;
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////  
@@ -1213,77 +1210,141 @@ void StoreFMatrix(double **FMatrix, void *context){
 
 
 	double *freqs = new double[totCoeff];
-
 	double *DMVec=new double[((MNStruct *)context)->pulse->nobs];
+
 	double DMKappa = 2.410*std::pow(10.0,-16);
 	int startpos=0;
 
 	if(((MNStruct *)context)->incRED > 0 || ((MNStruct *)context)->incGWB == 1){
-
-
-
 		for (int i=0; i<FitRedCoeff/2 - ((MNStruct *)context)->incFloatRed ; i++){
 			
 			freqs[startpos+i]=(double)((MNStruct *)context)->sampleFreq[i]/maxtspan;
 			freqs[startpos+i+FitRedCoeff/2]=freqs[startpos+i];
 
 		}
-
+	
 
 		for(int i=0;i<FitRedCoeff/2;i++){
 			for(int k=0;k<((MNStruct *)context)->pulse->nobs;k++){
 				double time=(double)((MNStruct *)context)->pulse->obsn[k].bat;
-				FMatrix[k][i]=cos(2*M_PI*freqs[i]*time);
-				FMatrix[k][i+FitRedCoeff/2]=sin(2*M_PI*freqs[i]*time);
+				TotalMatrix[k + (i+TimetoMargin+startpos)*((MNStruct *)context)->pulse->nobs]=cos(2*M_PI*freqs[i]*time);
+				TotalMatrix[k + (i+FitRedCoeff/2+TimetoMargin+startpos)*((MNStruct *)context)->pulse->nobs] = sin(2*M_PI*freqs[i]*time);
+
+
 			}
 		}
-
+			
+			    
 		startpos += FitRedCoeff;
 
 	}
 
 /////////////////////////////////////////////////////////////////////////////////////////////  
 /////////////////////////DM Variations////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////// 
+
+
+	if(((MNStruct *)context)->incDM > 0){
+
+                for(int o=0;o<((MNStruct *)context)->pulse->nobs; o++){
+                        DMVec[o]=1.0/(DMKappa*std::pow((double)((MNStruct *)context)->pulse->obsn[o].freqSSB,2));
+                }
+
+        	for(int i=0;i<FitDMCoeff/2;i++){
+
+			freqs[startpos+i]=((MNStruct *)context)->sampleFreq[startpos/2 - ((MNStruct *)context)->incFloatRed+i]/maxtspan;
+			freqs[startpos+i+FitDMCoeff/2]=freqs[startpos+i];
+
+
+                	for(int k=0;k<((MNStruct *)context)->pulse->nobs;k++){
+                        	double time=(double)((MNStruct *)context)->pulse->obsn[k].bat;
+
+				TotalMatrix[k + (i+TimetoMargin+startpos)*((MNStruct *)context)->pulse->nobs]=cos(2*M_PI*freqs[startpos+i]*time)*DMVec[k];
+				TotalMatrix[k + (i+FitDMCoeff/2+TimetoMargin+startpos)*((MNStruct *)context)->pulse->nobs] = sin(2*M_PI*freqs[startpos+i]*time)*DMVec[k];
+
+        	        }
+		}
+
+		startpos += FitDMCoeff;
+	} 
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////  
+/////////////////////////Band DM/////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////  
 
 
-       if(((MNStruct *)context)->incDM > 0){
+        if(((MNStruct *)context)->incBandNoise > 0){
 
+                if(((MNStruct *)context)->incDM == 0){
+                        for(int o=0;o<((MNStruct *)context)->pulse->nobs; o++){
+                                DMVec[o]=1.0/(DMKappa*std::pow((double)((MNStruct *)context)->pulse->obsn[o].freqSSB,2));
+                        }
+                }
+
+		for(int b = 0; b < ((MNStruct *)context)->incBandNoise; b++){
+
+			double startfreq = ((MNStruct *)context)->FitForBand[b][0];
+			double stopfreq = ((MNStruct *)context)->FitForBand[b][1];
+			double BandScale = ((MNStruct *)context)->FitForBand[b][2];
+			int BandPriorType = ((MNStruct *)context)->FitForBand[b][3];
+
+
+			double Tspan = maxtspan;
+			double f1yr = 1.0/3.16e7;
+
+			for (int i=0; i<FitBandCoeff/2; i++){
+
+				freqs[startpos+i]=((double)(i+1))/maxtspan;
+				freqs[startpos+i+FitBandCoeff/2]=freqs[startpos+i];
+				
+			}
 			
-		
 
-		for (int i=0; i<FitDMCoeff/2; i++){
+			for(int i=0;i<FitBandCoeff/2;i++){
+				for(int k=0;k<((MNStruct *)context)->pulse->nobs;k++){
+					if(((MNStruct *)context)->pulse->obsn[k].freq > startfreq && ((MNStruct *)context)->pulse->obsn[k].freq < stopfreq){
+						double time=(double)((MNStruct *)context)->pulse->obsn[k].bat;
+						TotalMatrix[k + (i+TimetoMargin+startpos)*((MNStruct *)context)->pulse->nobs]=cos(2*M_PI*freqs[startpos+i]*time);
+                                                TotalMatrix[k + (i+TimetoMargin+startpos+FitBandCoeff/2)*((MNStruct *)context)->pulse->nobs]=sin(2*M_PI*freqs[startpos+i]*time);
+					}
+					else{	
+                                                TotalMatrix[k + (i+TimetoMargin+startpos)*((MNStruct *)context)->pulse->nobs]=0;
+                                                TotalMatrix[k + (i+TimetoMargin+startpos+FitBandCoeff/2)*((MNStruct *)context)->pulse->nobs]=0;
 
-			freqs[startpos+i]=(double)((MNStruct *)context)->sampleFreq[startpos/2 - ((MNStruct *)context)->incFloatRed +i]/maxtspan;
-			freqs[startpos+i+FitDMCoeff/2]=freqs[startpos+i];
+					}
+
+
+				}
+			}
+
+
+			startpos += FitBandCoeff;
 		}
-	
-		
 
-		for(int o=0;o<((MNStruct *)context)->pulse->nobs; o++){
-			DMVec[o]=1.0/(DMKappa*std::pow((double)((MNStruct *)context)->pulse->obsn[o].freqSSB,2));
-		}
+    	}
 
-		for(int i=0;i<FitDMCoeff/2;i++){
-			for(int k=0;k<((MNStruct *)context)->pulse->nobs;k++){
-				double time=(double)((MNStruct *)context)->pulse->obsn[k].bat;
-				FMatrix[k][startpos+i]=cos(2*M_PI*freqs[startpos+i]*time)*DMVec[k];
+
+/////////////////////////////////////////////////////////////////////////////////////////////  
+/////////////////////////Add ECORR Coeffs////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////
+
+	if(((MNStruct *)context)->incNGJitter >0){
+		for(int k=0;k<((MNStruct *)context)->pulse->nobs;k++){
+			for(int i=0; i < ((MNStruct *)context)->numNGJitterEpochs; i++){
+				TotalMatrix[k + (i+TimetoMargin+startpos)*((MNStruct *)context)->pulse->nobs]= ((MNStruct *)context)->NGJitterMatrix[k][i];
 			}
 		}
+	}
 
-		for(int i=0;i<FitDMCoeff/2;i++){
-			for(int k=0;k<((MNStruct *)context)->pulse->nobs;k++){
-				double time=(double)((MNStruct *)context)->pulse->obsn[k].bat;
-				FMatrix[k][startpos+i+FitDMCoeff/2]=sin(2*M_PI*freqs[startpos+i]*time)*DMVec[k];
-			}
-		}
 
-		startpos+=FitDMCoeff;
 
-    }
+
 
 	delete[] DMVec;
 	delete[] freqs;
+	
+
 	
 }
 
