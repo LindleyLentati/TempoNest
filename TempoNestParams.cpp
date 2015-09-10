@@ -92,11 +92,10 @@ void setupparams(int &useGPUS,
 		int &incDMScatterShapeEvent,
 		int &numDMScatterShapeCoeff,
 		double *DMScatterShapeCoeffPrior,
-		int &incDMScatter,
-		int &numDMScatterCoeff,
-		double *DMScatterAmpPrior,
-		double *DMScatterAlphaPrior,
-		double *DMScatterFreqPrior,
+		int &incBandNoise,
+		int &numBandNoiseCoeff,
+		double *BandNoiseAmpPrior,
+		double *BandNoiseAlphaPrior,
 		int &incNGJitter,
 		int &incGlitch,
 		int &incGlitchTerms,
@@ -119,7 +118,10 @@ void setupparams(int &useGPUS,
 		int &FixProfile,
 		int &FitTemplate,
 		int &InterpolateProfile,
-		double &InterpolatedTime){
+		double &InterpolatedTime,
+		int &StoreFMatrices,
+		int &incHighFreqStoc,
+		double *HighFreqStocPrior){
 
 	//General parameters:
 	//Use GPUs 0=No, 1=Yes
@@ -133,6 +135,8 @@ void setupparams(int &useGPUS,
 	FitTemplate = 0;
 	InterpolateProfile = 0;
 	InterpolatedTime = 1; //in nanoseconds
+	StoreFMatrices = 0; // Recompute FMatrices when computing new bats - default is dont just precompute and use those
+
 
     //Root of the results files,relative to the directory in which TempoNest is run. This will be followed by the pulsar name, and then the individual output file extensions.
     strcpy( root, "results/Example1-");
@@ -294,14 +298,12 @@ void setupparams(int &useGPUS,
 	DMScatterShapeCoeffPrior[1] = 0.01;
 
 
-	incDMScatter = 0;
-	numDMScatterCoeff = 10;
-	DMScatterAmpPrior[0] = -20;
-	DMScatterAmpPrior[1] = -8;
-	DMScatterAlphaPrior[0] = 0;
-	DMScatterAlphaPrior[1] = 7;
-	DMScatterFreqPrior[0] = 3;
-	DMScatterFreqPrior[1] = 5;
+	incBandNoise = 0;
+	numBandNoiseCoeff = 10;
+	BandNoiseAmpPrior[0] = -20;
+	BandNoiseAmpPrior[1] = -8;
+	BandNoiseAlphaPrior[0] = 0;
+	BandNoiseAlphaPrior[1] = 7;
 
 
 	strcpy( GroupNoiseFlag, "-sys");
@@ -311,6 +313,14 @@ void setupparams(int &useGPUS,
 	GroupNoiseAmpPrior[1] = -8;
 	GroupNoiseAlphaPrior[0] = 0;
 	GroupNoiseAlphaPrior[1] = 7;
+
+
+
+	//GPTA Params
+	
+	incHighFreqStoc = 0;
+	HighFreqStocPrior[0] = -10;
+	HighFreqStocPrior[1] = 1;
 
 
 
@@ -339,6 +349,8 @@ void setupparams(int &useGPUS,
 	parameters.readInto(FitTemplate, "FitTemplate", FitTemplate);
 	parameters.readInto(InterpolateProfile, "InterpolateProfile", InterpolateProfile);
 	parameters.readInto(InterpolatedTime, "InterpolatedTime", InterpolatedTime);
+        parameters.readInto(StoreFMatrices, "StoreFMatrices",StoreFMatrices );
+
 
         parameters.readInto(strBuf, "root", string("results/Example1"));
         strcpy(root, strBuf.data());
@@ -451,14 +463,12 @@ void setupparams(int &useGPUS,
 	parameters.readInto(DMScatterShapeCoeffPrior[1], "DMScatterShapeCoeffPrior[1]", DMScatterShapeCoeffPrior[1]);
 
 
-	parameters.readInto(incDMScatter, "incDMScatter", incDMScatter);
-	parameters.readInto(numDMScatterCoeff, "numDMScatterCoeff", numDMScatterCoeff);
-	parameters.readInto(DMScatterAmpPrior[0], "DMScatterAmpPrior[0]", DMScatterAmpPrior[0]);
-	parameters.readInto(DMScatterAmpPrior[1], "DMScatterAmpPrior[1]", DMScatterAmpPrior[1]);
-	parameters.readInto(DMScatterAlphaPrior[0], "DMScatterAlphaPrior[0]", DMScatterAlphaPrior[0]);
-	parameters.readInto(DMScatterAlphaPrior[1], "DMScatterAlphaPrior[1]", DMScatterAlphaPrior[1]);
-	parameters.readInto(DMScatterFreqPrior[0], "DMScatterFreqPrior[0]", DMScatterFreqPrior[0]);
-	parameters.readInto(DMScatterFreqPrior[1], "DMScatterFreqPrior[1]", DMScatterFreqPrior[1]);
+	parameters.readInto(incBandNoise, "incBandNoise", incBandNoise);
+	parameters.readInto(numBandNoiseCoeff, "numBandNoiseCoeff", numBandNoiseCoeff);
+	parameters.readInto(BandNoiseAmpPrior[0], "BandNoiseAmpPrior[0]", BandNoiseAmpPrior[0]);
+	parameters.readInto(BandNoiseAmpPrior[1], "BandNoiseAmpPrior[1]", BandNoiseAmpPrior[1]);
+	parameters.readInto(BandNoiseAlphaPrior[0], "BandNoiseAlphaPrior[0]", BandNoiseAlphaPrior[0]);
+	parameters.readInto(BandNoiseAlphaPrior[1], "BandNoiseAlphaPrior[1]", BandNoiseAlphaPrior[1]);
 
 
 	parameters.readInto(strBuf, "GroupNoiseFlag", string("-sys"));
@@ -469,6 +479,10 @@ void setupparams(int &useGPUS,
 	parameters.readInto(GroupNoiseAmpPrior[1], "GroupNoiseAmpPrior[1]", GroupNoiseAmpPrior[1]);
 	parameters.readInto(GroupNoiseAlphaPrior[0], "GroupNoiseAlphaPrior[0]", GroupNoiseAlphaPrior[0]);
 	parameters.readInto(GroupNoiseAlphaPrior[1], "GroupNoiseAlphaPrior[1]", GroupNoiseAlphaPrior[1]);
+
+        parameters.readInto(incHighFreqStoc, "incHighFreqStoc",incHighFreqStoc);
+        parameters.readInto(HighFreqStocPrior[0], "HighFreqStocPrior[0]", HighFreqStocPrior[0]);
+        parameters.readInto(HighFreqStocPrior[1], "HighFreqStocPrior[1]", HighFreqStocPrior[1]);
 
 	
 	
@@ -657,7 +671,7 @@ void setFrequencies(double *SampleFreq, int numRedfreqs, int numDMfreqs, int num
 
 
 
-void GetGroupsToFit(int incGroupNoise, int **FitForGroup){
+void GetGroupsToFit(int incGroupNoise, int **FitForGroup, int incBandNoise, int **FitForBand){
 
 //This function reads in the groups that will be fit as Group Noise terms
 
@@ -704,6 +718,44 @@ void GetGroupsToFit(int incGroupNoise, int **FitForGroup){
 	    } // try
 
 	}
+
+
+	for(int i =0;i<incBandNoise; i++){	
+
+
+		// Use a configfile, if we can, to overwrite the defaults set in this file.
+		try {
+			string strBuf;
+			strBuf = string("defaultparameters.conf");
+			ConfigFile parameters(strBuf);
+
+			/* We can check whether a value is not set in the file by doing
+			* if(! parameters.readInto(variable, "name", default)) {
+			*   printf("WARNING");
+			* }
+			*
+			* At the moment I was too lazy to print warning messages, and the
+			* default value from this file is used in that case.
+			*
+			* Note: the timing model parameters are not done implemented yet
+			*/
+			char buffer [50];
+			int n;
+			n=sprintf (buffer, "FitForBand[%i][0]", i);
+			parameters.readInto(FitForBand[i][0], buffer, FitForBand[i][0]);
+                        n=sprintf (buffer, "FitForBand[%i][1]", i);
+                        parameters.readInto(FitForBand[i][1], buffer, FitForBand[i][1]);
+                        n=sprintf (buffer, "FitForBand[%i][2]", i);
+                        parameters.readInto(FitForBand[i][2], buffer, FitForBand[i][2]);
+                        n=sprintf (buffer, "FitForBand[%i][3]", i);
+                        parameters.readInto(FitForBand[i][3], buffer, FitForBand[i][3]);
+
+		} 
+		catch(ConfigFile::file_not_found oError) {
+			printf("WARNING: parameters file '%s' not found. Using defaults.\n", oError.filename.c_str());
+	    } // try
+
+	}
 }
 
 
@@ -711,14 +763,6 @@ void GetGroupsToFit(int incGroupNoise, int **FitForGroup){
 
 void setShapePriors(double **ShapePriors, double *BetaPrior, int numcoeff){
 
-//This function overwrites the default values for the priors sent to multinest, and the long double priors used by tempo2, you need to be aware of what dimension is what if you use this function.
-
-//THe order of the parameters is always the same:
-//Timing Model parameters (linear or non linear)
-//Jumps
-//EFAC(s)
-//EQUAD
-//Red Noise Parameters (Amplitude then Alpha for incRed=1, coefficients 1..n for incRed=2)
 
 	for(int i =0;i<numcoeff; i++){	
 	//	printf("TP %i \n", i);

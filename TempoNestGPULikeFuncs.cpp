@@ -14,7 +14,7 @@ void *GPUglobalcontext;
 
 
 extern "C" void LRedGPUWrapper_(double *Freqs, double *resvec, double *BATvec, double *DMVec, double *Noise,  double **FNF, double *NFd, int N, int RF, int DMF, int F, int incRED, int incDM);
-extern "C" void NewLRedMarginGPUWrapper_(void *context, double *TNDMVec, double *Freqs, double *ObsFreqs, double *powercoeff, double *resvec, double *BATvec, double *DMVec, double *Noise, int *SysFlags, int N, int RF,int DMF, int DMScatterCoeff, int GroupNoiseCoeff,  int D, int F, int T, int incRED, int incDM, int incDMScatter, int incGroupNoise, int numFitTiming, int numFitJumps, double *likevals, int incNGJitter, int numNGJitterEpochs);
+extern "C" void NewLRedMarginGPUWrapper_(void *context, double *TNDMVec, double *Freqs, double *ObsFreqs, double *powercoeff, double *resvec, double *BATvec, double *DMVec, double *Noise, int *SysFlags, int N, int RF,int DMF, int DMScatterCoeff, int GroupNoiseCoeff,  int D, int F, int T, int incRED, int incDM, int incBandNoise, int incGroupNoise, int numFitTiming, int numFitJumps, double *likevals, int incNGJitter, int numNGJitterEpochs);
 
 void assignGPUcontext(void *context){
         GPUglobalcontext=context;
@@ -855,7 +855,7 @@ double NewLRedMarginGPULogLike(int &ndim, double *Cube, int &npars, double *Deri
 
 	int FitRedCoeff=2*(((MNStruct *)GPUglobalcontext)->numFitRedCoeff);
 	int FitDMCoeff=2*(((MNStruct *)GPUglobalcontext)->numFitDMCoeff);
-	int FitDMScatterCoeff=2*(((MNStruct *)GPUglobalcontext)->numFitDMScatterCoeff);
+	int FitBandNoiseCoeff=2*(((MNStruct *)GPUglobalcontext)->numFitBandNoiseCoeff);
 	int FitGroupNoiseCoeff = 2*((MNStruct *)GPUglobalcontext)->numFitGroupNoiseCoeff;
 
 	if(((MNStruct *)GPUglobalcontext)->incFloatDM != 0)FitDMCoeff+=2*((MNStruct *)GPUglobalcontext)->incFloatDM;
@@ -866,8 +866,7 @@ double NewLRedMarginGPULogLike(int &ndim, double *Cube, int &npars, double *Deri
         if(((MNStruct *)GPUglobalcontext)->incRED != 0)totCoeff+=FitRedCoeff;
         if(((MNStruct *)GPUglobalcontext)->incDM != 0)totCoeff+=FitDMCoeff;
 
-	if(((MNStruct *)GPUglobalcontext)->incDMScatter == 1 || ((MNStruct *)GPUglobalcontext)->incDMScatter == 2  || ((MNStruct *)GPUglobalcontext)->incDMScatter == 3)totCoeff+=FitDMScatterCoeff;
-	if(((MNStruct *)GPUglobalcontext)->incDMScatter == 4 ||((MNStruct *)GPUglobalcontext)->incDMScatter == 5 )totCoeff+=3*FitDMScatterCoeff;
+	if(((MNStruct *)GPUglobalcontext)->incBandNoise > 0)totCoeff += ((MNStruct *)GPUglobalcontext)->incBandNoise*FitBandNoiseCoeff;
 
 
 	 if(((MNStruct *)GPUglobalcontext)->incGroupNoise > 0)totCoeff+= ((MNStruct *)GPUglobalcontext)->incGroupNoise*FitGroupNoiseCoeff;
@@ -1075,9 +1074,12 @@ double NewLRedMarginGPULogLike(int &ndim, double *Cube, int &npars, double *Deri
 				freqs[startpos+i]=((MNStruct *)GPUglobalcontext)->sampleFreq[startpos/2 - ((MNStruct *)GPUglobalcontext)->incFloatRed+i]/maxtspan;
 				freqs[startpos+i+FitDMCoeff/2]=freqs[startpos+i];
 	
-				powercoeff[startpos+i]=pow(10.0,pc)/(maxtspan*24*60*60);
+				powercoeff[startpos+i]=pow(10.0,2*pc);
 				powercoeff[startpos+i+FitDMCoeff/2]=powercoeff[startpos+i];
 				freqdet=freqdet+2*log(powercoeff[startpos+i]);
+				
+				if(((MNStruct *)GPUglobalcontext)->DMPriorType ==1) { uniformpriorterm += log(powercoeff[startpos+i])/2.0; }
+				
 				pcount++;
 			}
            	 
@@ -1226,246 +1228,55 @@ double NewLRedMarginGPULogLike(int &ndim, double *Cube, int &npars, double *Deri
 
 
 
-        if(((MNStruct *)GPUglobalcontext)->incDMScatter == 1 || ((MNStruct *)GPUglobalcontext)->incDMScatter == 2  || ((MNStruct *)GPUglobalcontext)->incDMScatter == 3 ){
+        if(((MNStruct *)GPUglobalcontext)->incBandNoise > 0){
 
-		double DMamp=Cube[pcount];
-		pcount++;
-		double DMindex=Cube[pcount];
-		pcount++;
-		
-		double Tspan = maxtspan;
-		double f1yr = 1.0/3.16e7;
-		
+		for(int b = 0; b < ((MNStruct *)GPUglobalcontext)->incBandNoise; b++){
 
-		DMamp=pow(10.0, DMamp);
-		if(((MNStruct *)GPUglobalcontext)->DMPriorType ==1) { uniformpriorterm += log(DMamp); }
-		for (int i=0; i<FitDMScatterCoeff/2; i++){
 
-			freqs[startpos+i]=((double)(i+1.0))/maxtspan;
-			freqs[startpos+i+FitDMScatterCoeff/2]=freqs[startpos+i];
+ 			double startfreq = ((MNStruct *)GPUglobalcontext)->FitForBand[b][0];
+                        double stopfreq = ((MNStruct *)GPUglobalcontext)->FitForBand[b][1];
+                        double BandScale = ((MNStruct *)GPUglobalcontext)->FitForBand[b][2];
+                        int BandPriorType = ((MNStruct *)GPUglobalcontext)->FitForBand[b][3];
+
+
+                        double Bandamp=Cube[pcount];
+                        pcount++;
+                        double Bandindex=Cube[pcount];
+                        pcount++;
+
+                        double Tspan = maxtspan;
+                        double f1yr = 1.0/3.16e7;
+
+                        Bandamp=pow(10.0, Bandamp);
+                        if(BandPriorType == 1) { uniformpriorterm += log(Bandamp); }
+
 			
-			double rho = (DMamp*DMamp/12.0/(M_PI*M_PI))*pow(f1yr,(-3)) * pow(freqs[startpos+i]*365.25,(-DMindex))/(maxtspan*24*60*60);	
-			powercoeff[startpos+i]+=rho;
-			powercoeff[startpos+i+FitDMScatterCoeff/2]+=rho;
-		}
-		
-		
+
+			Bandamp=pow(10.0, Bandamp);
+			for (int i=0; i<FitBandNoiseCoeff/2; i++){
+
+				freqs[startpos+i]=((double)(i+1.0))/maxtspan;
+				freqs[startpos+i+FitBandNoiseCoeff/2]=freqs[startpos+i];
+				
+				double rho = (Bandamp*Bandamp/12.0/(M_PI*M_PI))*pow(f1yr,(-3)) * pow(freqs[startpos+i]*365.25,(-Bandindex))/(maxtspan*24*60*60);	
+				powercoeff[startpos+i]+=rho;
+				powercoeff[startpos+i+FitBandNoiseCoeff/2]+=rho;
+			}
 			
-		for (int i=0; i<FitDMScatterCoeff/2; i++){
-			freqdet=freqdet+2*log(powercoeff[startpos+i]);
-		}
-
-		 for(int o=0;o<((MNStruct *)GPUglobalcontext)->pulse->nobs; o++){
-                        ObsFreqs[o]=((MNStruct *)GPUglobalcontext)->pulse->obsn[o].freq;
-                }
-
-
-
-		startpos=startpos+FitDMScatterCoeff;
-
-    }
-
-
-
-
-        if(((MNStruct *)GPUglobalcontext)->incDMScatter == 4 ){
-
-		double Amp1=Cube[pcount];
-		pcount++;
-		double index1=Cube[pcount];
-		pcount++;
-
-		double Amp2=Cube[pcount];
-		pcount++;
-		double index2=Cube[pcount];
-		pcount++;
-
-		double Amp3=Cube[pcount];
-		pcount++;
-		double index3=Cube[pcount];
-		pcount++;
-		
-		double Tspan = maxtspan;
-		double f1yr = 1.0/3.16e7;
-		
-
-		Amp1=pow(10.0, Amp1);
-		Amp2=pow(10.0, Amp2);
-		Amp3=pow(10.0, Amp3);
-		 
-
-		if(((MNStruct *)GPUglobalcontext)->DMPriorType ==1) { uniformpriorterm += log(Amp1) + log(Amp2) + log(Amp3); }
-
-		 //uniformpriorterm += log(Amp2);
-		 
-		//index2=index1;
-		//index3=index1;
-		//Amp2=Amp1;
-		//Amp3=Amp1;
-
-		/////////////////////////Amp1/////////////////////////////////////////////////////////////////////////////////////////////
-
-		for (int i=0; i<FitDMScatterCoeff/2; i++){
-
-			freqs[startpos+i]=((double)(i+1.0))/maxtspan;
-			freqs[startpos+i+FitDMScatterCoeff/2]=freqs[startpos+i];
-		
-//			double rho = (Amp1*Amp1)*pow(f1yr,(-3)) * pow(freqs[startpos+i]*365.25,(-index1))/(maxtspan*24*60*60);
-			double rho = (Amp1*Amp1/12.0/(M_PI*M_PI))*pow(f1yr,(-3)) * pow(freqs[startpos+i]*365.25,(-index1))/(maxtspan*24*60*60);	
-			powercoeff[startpos+i]+=rho;
-			powercoeff[startpos+i+FitDMScatterCoeff/2]+=rho;
-		}
-		
-		
 			
-		for (int i=0; i<FitDMScatterCoeff/2; i++){
-			freqdet=freqdet+2*log(powercoeff[startpos+i]);
+				
+			for (int i=0; i<FitBandNoiseCoeff/2; i++){
+				freqdet=freqdet+2*log(powercoeff[startpos+i]);
+			}
+
+			 for(int o=0;o<((MNStruct *)GPUglobalcontext)->pulse->nobs; o++){
+				ObsFreqs[o]=((MNStruct *)GPUglobalcontext)->pulse->obsn[o].freq;
+			}
+
+
+
+			startpos=startpos+FitBandNoiseCoeff;
 		}
-
-		startpos=startpos+FitDMScatterCoeff;
-
-		/////////////////////////Amp2/////////////////////////////////////////////////////////////////////////////////////////////
-
-		for (int i=0; i<FitDMScatterCoeff/2; i++){
-
-			freqs[startpos+i]=((double)(i+1.0))/maxtspan;
-			freqs[startpos+i+FitDMScatterCoeff/2]=freqs[startpos+i];
-			
-			//double rho = (Amp2*Amp2)*pow(f1yr,(-3)) * pow(freqs[startpos+i]*365.25,(-index2))/(maxtspan*24*60*60);
-			double rho = (Amp2*Amp2/12.0/(M_PI*M_PI))*pow(f1yr,(-3)) * pow(freqs[startpos+i]*365.25,(-index2))/(maxtspan*24*60*60);	
-			powercoeff[startpos+i]+=rho;
-			powercoeff[startpos+i+FitDMScatterCoeff/2]+=rho;
-		}
-		
-		
-			
-		for (int i=0; i<FitDMScatterCoeff/2; i++){
-			freqdet=freqdet+2*log(powercoeff[startpos+i]);
-		}
-
-		startpos=startpos+FitDMScatterCoeff;
-
-		/////////////////////////Amp3/////////////////////////////////////////////////////////////////////////////////////////////
-
-		for (int i=0; i<FitDMScatterCoeff/2; i++){
-
-			freqs[startpos+i]=((double)(i+1.0))/maxtspan;
-			freqs[startpos+i+FitDMScatterCoeff/2]=freqs[startpos+i];
-			
-//			double rho = (Amp3*Amp3)*pow(f1yr,(-3)) * pow(freqs[startpos+i]*365.25,(-index3))/(maxtspan*24*60*60);
-			double rho = (Amp3*Amp3/12.0/(M_PI*M_PI))*pow(f1yr,(-3)) * pow(freqs[startpos+i]*365.25,(-index3))/(maxtspan*24*60*60);	
-			powercoeff[startpos+i]+=rho;
-			powercoeff[startpos+i+FitDMScatterCoeff/2]+=rho;
-		}
-		
-		
-			
-		for (int i=0; i<FitDMScatterCoeff/2; i++){
-			freqdet=freqdet+2*log(powercoeff[startpos+i]);
-		}
- 
-		startpos=startpos+FitDMScatterCoeff;
-
-
-
-		 for(int o=0;o<((MNStruct *)GPUglobalcontext)->pulse->nobs; o++){
-                        ObsFreqs[o]=((MNStruct *)GPUglobalcontext)->pulse->obsn[o].freq;
-                }
-
-
-
-
-    }
-
-
-        if(((MNStruct *)GPUglobalcontext)->incDMScatter == 5 ){
-
-		double Amp1=Cube[pcount];
-		pcount++;
-		double index1=Cube[pcount];
-		pcount++;
-
-		
-		double Tspan = maxtspan;
-		double f1yr = 1.0/3.16e7;
-		
-
-		Amp1=pow(10.0, Amp1);
-
-
-		if(((MNStruct *)GPUglobalcontext)->DMPriorType ==1) { uniformpriorterm += log(Amp1); }
-
-
-
-		/////////////////////////Amp1/////////////////////////////////////////////////////////////////////////////////////////////
-
-		for (int i=0; i<FitDMScatterCoeff/2; i++){
-
-			freqs[startpos+i]=((double)(i+1.0))/maxtspan;
-			freqs[startpos+i+FitDMScatterCoeff/2]=freqs[startpos+i];
-			
-			double rho = (Amp1*Amp1)*pow(f1yr,(-3)) * pow(freqs[startpos+i]*365.25,(-index1))/(maxtspan*24*60*60);	
-			powercoeff[startpos+i]+=rho;
-			powercoeff[startpos+i+FitDMScatterCoeff/2]+=rho;
-		}
-		
-		
-			
-		for (int i=0; i<FitDMScatterCoeff/2; i++){
-			freqdet=freqdet+2*log(powercoeff[startpos+i]);
-		}
-
-		startpos=startpos+FitDMScatterCoeff;
-
-		/////////////////////////Amp2/////////////////////////////////////////////////////////////////////////////////////////////
-
-		for (int i=0; i<FitDMScatterCoeff/2; i++){
-
-			freqs[startpos+i]=((double)(i+1.0))/maxtspan;
-			freqs[startpos+i+FitDMScatterCoeff/2]=freqs[startpos+i];
-			
-			double rho = (Amp1*Amp1)*pow(f1yr,(-3)) * pow(freqs[startpos+i]*365.25,(-index1))/(maxtspan*24*60*60);	
-			powercoeff[startpos+i]+=rho;
-			powercoeff[startpos+i+FitDMScatterCoeff/2]+=rho;
-		}
-		
-		
-			
-		for (int i=0; i<FitDMScatterCoeff/2; i++){
-			freqdet=freqdet+2*log(powercoeff[startpos+i]);
-		}
-
-		startpos=startpos+FitDMScatterCoeff;
-
-		/////////////////////////Amp3/////////////////////////////////////////////////////////////////////////////////////////////
-
-		for (int i=0; i<FitDMScatterCoeff/2; i++){
-
-			freqs[startpos+i]=((double)(i+1.0))/maxtspan;
-			freqs[startpos+i+FitDMScatterCoeff/2]=freqs[startpos+i];
-			
-			double rho = (Amp1*Amp1)*pow(f1yr,(-3)) * pow(freqs[startpos+i]*365.25,(-index1))/(maxtspan*24*60*60);	
-			powercoeff[startpos+i]+=rho;
-			powercoeff[startpos+i+FitDMScatterCoeff/2]+=rho;
-		}
-		
-		
-			
-		for (int i=0; i<FitDMScatterCoeff/2; i++){
-			freqdet=freqdet+2*log(powercoeff[startpos+i]);
-		}
-
-		startpos=startpos+FitDMScatterCoeff;
-
-
-
-		 for(int o=0;o<((MNStruct *)GPUglobalcontext)->pulse->nobs; o++){
-                        ObsFreqs[o]=((MNStruct *)GPUglobalcontext)->pulse->obsn[o].freq;
-                }
-
-
-
-
     }
 
 
@@ -1605,7 +1416,7 @@ double NewLRedMarginGPULogLike(int &ndim, double *Cube, int &npars, double *Deri
 	double *likevals=new double[2];
 	int totalsize=TimetoMargin+totCoeff;
 
-	NewLRedMarginGPUWrapper_(GPUglobalcontext, TNDMVec, freqs, ObsFreqs, powercoeff, Resvec, BATvec, DMVec, Noise, GroupNoiseGroups,  ((MNStruct *)GPUglobalcontext)->pulse->nobs, FitRedCoeff,FitDMCoeff, FitDMScatterCoeff, FitGroupNoiseCoeff, TimetoMargin, totCoeff, totalsize, ((MNStruct *)GPUglobalcontext)->incRED,((MNStruct *)GPUglobalcontext)->incDM, ((MNStruct *)GPUglobalcontext)->incDMScatter, ((MNStruct *)GPUglobalcontext)->incGroupNoise, ((MNStruct *)GPUglobalcontext)->numFitTiming, ((MNStruct *)GPUglobalcontext)->numFitJumps, likevals, ((MNStruct *)GPUglobalcontext)->incNGJitter, ((MNStruct *)GPUglobalcontext)->numNGJitterEpochs);
+	NewLRedMarginGPUWrapper_(GPUglobalcontext, TNDMVec, freqs, ObsFreqs, powercoeff, Resvec, BATvec, DMVec, Noise, GroupNoiseGroups,  ((MNStruct *)GPUglobalcontext)->pulse->nobs, FitRedCoeff,FitDMCoeff, FitBandNoiseCoeff, FitGroupNoiseCoeff, TimetoMargin, totCoeff, totalsize, ((MNStruct *)GPUglobalcontext)->incRED,((MNStruct *)GPUglobalcontext)->incDM, ((MNStruct *)GPUglobalcontext)->incBandNoise, ((MNStruct *)GPUglobalcontext)->incGroupNoise, ((MNStruct *)GPUglobalcontext)->numFitTiming, ((MNStruct *)GPUglobalcontext)->numFitJumps, likevals, ((MNStruct *)GPUglobalcontext)->incNGJitter, ((MNStruct *)GPUglobalcontext)->numNGJitterEpochs);
     
     
 //////////////////////////////////////////////////////////////////////////////////////////  

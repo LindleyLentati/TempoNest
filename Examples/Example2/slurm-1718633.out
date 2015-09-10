@@ -1,0 +1,1975 @@
+Changed directory to /home/ltl21/PulsarCode/Git/TempoNest/Examples/Example2.
+
+JobID: 1718633
+======
+Time: Tue Sep  8 10:18:27 BST 2015
+Running on master node: tesla115
+Current directory: /home/ltl21/PulsarCode/Git/TempoNest/Examples/Example2
+
+Nodes allocated:
+================
+tesla115 tesla116 tesla117 tesla118
+
+numtasks=8, numnodes=4, mpi_tasks_per_node=2 (OMP_NUM_THREADS=1)
+
+Executing command:
+==================
+mpirun -ppn 2 -np 8 gpu_run_task.sh /home/ltl21/PulsarCode/T2Runtime/bin/tempo2 -gr temponest -f J0030+0451.par J0030+0451.tim 
+
+ibwarn: [33049] _do_madrpc: recv failed: Interrupted system call
+ibwarn: [33049] mad_rpc: _do_madrpc failed; dport (Lid 754)
+slurmstepd: classportinfo query: No error
+This program comes with ABSOLUTELY NO WARRANTY.
+This is free software, and you are welcome to redistribute it
+under conditions of GPL license.
+
+Looking for /home/ltl21/PulsarCode/T2Runtime/plugins//temponest_linux-gnu_plug.t2
+This program comes with ABSOLUTELY NO WARRANTY.
+This is free software, and you are welcome to redistribute it
+under conditions of GPL license.
+
+The start date/time is: Tue Sep  8 10:18:28 2015
+WARNING [TIM1]: Please place MODE flags in the parameter file 
+Global TNEQ 0 
+Fitting for 0 group noise terms, and for 0 groups, 0 Times 
+WARNING [TROP2]: Assume standard atmospheric pressure (no data) for site axi at MJD 53000.0
+WARNING [TROP1]: Assume zero zenith wet delay (no data) for site axi  at MJD 53000.0
+WARNING: duplicated warnings have been suppressed.
+making freqs 0 1
+making freqs 1 2
+making freqs 2 3
+making freqs 3 4
+making freqs 4 5
+making freqs 5 6
+Num T2 its 2 
+[doFit.C:93] Deprecated call to doFit() -> better to use doFitAll()
+This program comes with ABSOLUTELY NO WARRANTY.
+This is free software, and you are welcome to redistribute it
+under conditions of GPL license.
+
+Looking for /home/ltl21/PulsarCode/T2Runtime/plugins//temponest_linux-gnu_plug.t2
+This program comes with ABSOLUTELY NO WARRANTY.
+This is free software, and you are welcome to redistribute it
+under conditions of GPL license.
+
+The start date/time is: Tue Sep  8 10:18:28 2015
+WARNING [TIM1]: Please place MODE flags in the parameter file 
+Global TNEQ 0 
+Fitting for 0 group noise terms, and for 0 groups, 0 Times 
+WARNING [TROP2]: Assume standard atmospheric pressure (no data) for site axi at MJD 53000.0
+WARNING [TROP1]: Assume zero zenith wet delay (no data) for site axi  at MJD 53000.0
+WARNING: duplicated warnings have been suppressed.
+making freqs 0 1
+making freqs 1 2
+making freqs 2 3
+making freqs 3 4
+making freqs 4 5
+making freqs 5 6
+Num T2 its 2 
+[doFit.C:93] Deprecated call to doFit() -> better to use doFitAll()
+This program comes with ABSOLUTELY NO WARRANTY.
+This is free software, and you are welcome to redistribute it
+under conditions of GPL license.
+
+Looking for /home/ltl21/PulsarCode/T2Runtime/plugins//temponest_linux-gnu_plug.t2
+This program comes with ABSOLUTELY NO WARRANTY.
+This is free software, and you are welcome to redistribute it
+under conditions of GPL license.
+
+The start date/time is: Tue Sep  8 10:18:28 2015
+WARNING [TIM1]: Please place MODE flags in the parameter file 
+Global TNEQ 0 
+Fitting for 0 group noise terms, and for 0 groups, 0 Times 
+WARNING [TROP2]: Assume standard atmospheric pressure (no data) for site axi at MJD 53000.0
+WARNING [TROP1]: Assume zero zenith wet delay (no data) for site axi  at MJD 53000.0
+WARNING: duplicated warnings have been suppressed.
+making freqs 0 1
+making freqs 1 2
+making freqs 2 3
+making freqs 3 4
+making freqs 4 5
+making freqs 5 6
+Num T2 its 2 
+[doFit.C:93] Deprecated call to doFit() -> better to use doFitAll()
+This program comes with ABSOLUTELY NO WARRANTY.
+This is free software, and you are welcome to redistribute it
+under conditions of GPL license.
+
+Looking for /home/ltl21/PulsarCode/T2Runtime/plugins//temponest_linux-gnu_plug.t2
+This program comes with ABSOLUTELY NO WARRANTY.
+This is free software, and you are welcome to redistribute it
+under conditions of GPL license.
+
+The start date/time is: Tue Sep  8 10:18:28 2015
+WARNING [TIM1]: Please place MODE flags in the parameter file 
+Global TNEQ 0 
+Fitting for 0 group noise terms, and for 0 groups, 0 Times 
+WARNING [TROP2]: Assume standard atmospheric pressure (no data) for site axi at MJD 53000.0
+WARNING [TROP1]: Assume zero zenith wet delay (no data) for site axi  at MJD 53000.0
+WARNING: duplicated warnings have been suppressed.
+making freqs 0 1
+making freqs 1 2
+making freqs 2 3
+making freqs 3 4
+making freqs 4 5
+making freqs 5 6
+Num T2 its 2 
+[doFit.C:93] Deprecated call to doFit() -> better to use doFitAll()
+This program comes with ABSOLUTELY NO WARRANTY.
+This is free software, and you are welcome to redistribute it
+under conditions of GPL license.
+
+Looking for /home/ltl21/PulsarCode/T2Runtime/plugins//temponest_linux-gnu_plug.t2
+This program comes with ABSOLUTELY NO WARRANTY.
+This is free software, and you are welcome to redistribute it
+under conditions of GPL license.
+
+The start date/time is: Tue Sep  8 10:18:28 2015
+WARNING [TIM1]: Please place MODE flags in the parameter file 
+Global TNEQ 0 
+Fitting for 0 group noise terms, and for 0 groups, 0 Times 
+WARNING [TROP2]: Assume standard atmospheric pressure (no data) for site axi at MJD 53000.0
+WARNING [TROP1]: Assume zero zenith wet delay (no data) for site axi  at MJD 53000.0
+WARNING: duplicated warnings have been suppressed.
+making freqs 0 1
+making freqs 1 2
+making freqs 2 3
+making freqs 3 4
+making freqs 4 5
+making freqs 5 6
+Num T2 its 2 
+[doFit.C:93] Deprecated call to doFit() -> better to use doFitAll()
+This program comes with ABSOLUTELY NO WARRANTY.
+This is free software, and you are welcome to redistribute it
+under conditions of GPL license.
+
+Looking for /home/ltl21/PulsarCode/T2Runtime/plugins//temponest_linux-gnu_plug.t2
+This program comes with ABSOLUTELY NO WARRANTY.
+This is free software, and you are welcome to redistribute it
+under conditions of GPL license.
+
+The start date/time is: Tue Sep  8 10:18:28 2015
+WARNING [TIM1]: Please place MODE flags in the parameter file 
+Global TNEQ 0 
+Fitting for 0 group noise terms, and for 0 groups, 0 Times 
+WARNING [TROP2]: Assume standard atmospheric pressure (no data) for site axi at MJD 53000.0
+WARNING [TROP1]: Assume zero zenith wet delay (no data) for site axi  at MJD 53000.0
+WARNING: duplicated warnings have been suppressed.
+making freqs 0 1
+making freqs 1 2
+making freqs 2 3
+making freqs 3 4
+making freqs 4 5
+making freqs 5 6
+Num T2 its 2 
+[doFit.C:93] Deprecated call to doFit() -> better to use doFitAll()
+This program comes with ABSOLUTELY NO WARRANTY.
+This is free software, and you are welcome to redistribute it
+under conditions of GPL license.
+
+Looking for /home/ltl21/PulsarCode/T2Runtime/plugins//temponest_linux-gnu_plug.t2
+This program comes with ABSOLUTELY NO WARRANTY.
+This is free software, and you are welcome to redistribute it
+under conditions of GPL license.
+
+The start date/time is: Tue Sep  8 10:18:28 2015
+WARNING [TIM1]: Please place MODE flags in the parameter file 
+Global TNEQ 0 
+Fitting for 0 group noise terms, and for 0 groups, 0 Times 
+WARNING [TROP2]: Assume standard atmospheric pressure (no data) for site axi at MJD 53000.0
+WARNING [TROP1]: Assume zero zenith wet delay (no data) for site axi  at MJD 53000.0
+WARNING: duplicated warnings have been suppressed.
+making freqs 0 1
+making freqs 1 2
+making freqs 2 3
+making freqs 3 4
+making freqs 4 5
+making freqs 5 6
+Num T2 its 2 
+[doFit.C:93] Deprecated call to doFit() -> better to use doFitAll()
+This program comes with ABSOLUTELY NO WARRANTY.
+This is free software, and you are welcome to redistribute it
+under conditions of GPL license.
+
+Looking for /home/ltl21/PulsarCode/T2Runtime/plugins//temponest_linux-gnu_plug.t2
+This program comes with ABSOLUTELY NO WARRANTY.
+This is free software, and you are welcome to redistribute it
+under conditions of GPL license.
+
+The start date/time is: Tue Sep  8 10:18:28 2015
+WARNING [TIM1]: Please place MODE flags in the parameter file 
+Global TNEQ 0 
+Fitting for 0 group noise terms, and for 0 groups, 0 Times 
+WARNING [TROP2]: Assume standard atmospheric pressure (no data) for site axi at MJD 53000.0
+WARNING [TROP1]: Assume zero zenith wet delay (no data) for site axi  at MJD 53000.0
+WARNING: duplicated warnings have been suppressed.
+making freqs 0 1
+making freqs 1 2
+making freqs 2 3
+making freqs 3 4
+making freqs 4 5
+making freqs 5 6
+Num T2 its 2 
+[doFit.C:93] Deprecated call to doFit() -> better to use doFitAll()
+Complete return
+
+
+Results for PSR J0030+0451
+
+
+RMS pre-fit residual = 1.041 (us), RMS post-fit residual = 1.041 (us)
+Fit Chisq = 1.408e+04	Chisqr/nfree = 14081.25/122 = 115.42	pre/post = 1.00002
+Number of fit parameters: 8
+Number of points in fit = 130
+** NOTE: All parameter uncertainties multiplied by sqrt(red. chisq)
+Offset: -5.85966e-11 3.27435e-07 offset_e*sqrt(n) = 3.73333e-06 n = 130
+
+
+PARAMETER       Pre-fit                   Post-fit                  Uncertainty   Difference   Fit
+---------------------------------------------------------------------------------------------------
+RAJ (rad)       0.132894457099784         0.132894457102272         8.9521e-09    2.4885e-12    Y
+RAJ (hms)       00:30:27.4299630           00:30:27.4299630         0.0001231     3.4219e-08   
+DECJ (rad)      0.0848411933106807        0.0848411933251172        2.0736e-08    1.4437e-11    Y
+DECJ (dms)      +04:51:39.75230           +04:51:39.75230           0.0042772     2.9777e-06   
+F0 (s^-1)       205.530696088273          205.530696088273          1.798e-12     0             Y
+F1 (s^-2)       -4.30603883991342e-16     -4.30603885331753e-16     2.2397e-20    -1.3404e-24   Y
+PEPOCH (MJD)    53000                     53000                     0             0             N
+POSEPOCH (MJD)  53000                     53000                     0             0             N
+DMEPOCH (MJD)   53000                     53000                     0             0             N
+PMRA (mas/yr)   -4.05413525836408         -4.05438895368363         0.6453        -0.0002537    Y
+PMDEC (mas/yr)  -5.03376865001804         -5.03330593702049         1.5043        0.00046271    Y
+PX (mas)        4.02291243326134          4.02290738497255          0.22193       -5.0483e-06   Y
+START (MJD)     0                         52999.9990000007          0             53000         N
+FINISH (MJD)    0                         54806.0009999921          0             54806         N
+TZRMJD          0                         53909.9999999879          0             53910         N
+TZRFRQ (MHz)    0                         1440                      0             1440          N
+TZRSITE         AXIS                     
+TRES            0                         1.04074227502069          0             1.0407        N
+EPHVER          TEMPO2                    TEMPO2                    0             0             N
+---------------------------------------------------------------------------------------------------
+** WARNING: All parameter uncertainties multiplied by sqrt(red. chisq)
+
+Derived parameters:
+
+P0 (s)      = 0.00486545328280556       4.2562e-17   
+P1          = 1.01935288857115e-20      5.302e-25    
+tau_c (Myr) = 7567.7
+bs (G)      = 2.2536e+08
+
+Total proper motion = 6.4631 +/- 1.2395 mas/yr
+Total time span = 1806.000 days = 4.945 years
+
+Tempo2 usage
+Units:                 TCB (tempo2)
+Time ephemeris:        IF99 (tempo2)
+Troposphere corr.?     Yes (tempo2)
+Dilate freq?           Yes (tempo2)
+Electron density (1AU) 4
+Solar system ephem     DE414
+Time scale             TT(TAI)
+Binary model           NONE
+**** UNITS was not set in the parameter file: using TCB (tempo2) **** 
+[doFit.C:93] Deprecated call to doFit() -> better to use doFitAll()
+Complete return
+
+
+Results for PSR J0030+0451
+
+
+RMS pre-fit residual = 1.041 (us), RMS post-fit residual = 1.041 (us)
+Fit Chisq = 1.408e+04	Chisqr/nfree = 14081.25/122 = 115.42	pre/post = 1.00002
+Number of fit parameters: 8
+Number of points in fit = 130
+** NOTE: All parameter uncertainties multiplied by sqrt(red. chisq)
+Offset: -5.85966e-11 3.27435e-07 offset_e*sqrt(n) = 3.73333e-06 n = 130
+
+
+PARAMETER       Pre-fit                   Post-fit                  Uncertainty   Difference   Fit
+---------------------------------------------------------------------------------------------------
+RAJ (rad)       0.132894457099784         0.132894457102272         8.9521e-09    2.4885e-12    Y
+RAJ (hms)       00:30:27.4299630           00:30:27.4299630         0.0001231     3.4219e-08   
+DECJ (rad)      0.0848411933106807        0.0848411933251172        2.0736e-08    1.4437e-11    Y
+DECJ (dms)      +04:51:39.75230           +04:51:39.75230           0.0042772     2.9777e-06   
+F0 (s^-1)       205.530696088273          205.530696088273          1.798e-12     0             Y
+F1 (s^-2)       -4.30603883991342e-16     -4.30603885331753e-16     2.2397e-20    -1.3404e-24   Y
+PEPOCH (MJD)    53000                     53000                     0             0             N
+POSEPOCH (MJD)  53000                     53000                     0             0             N
+DMEPOCH (MJD)   53000                     53000                     0             0             N
+PMRA (mas/yr)   -4.05413525836408         -4.05438895368363         0.6453        -0.0002537    Y
+PMDEC (mas/yr)  -5.03376865001804         -5.03330593702049         1.5043        0.00046271    Y
+PX (mas)        4.02291243326134          4.02290738497255          0.22193       -5.0483e-06   Y
+START (MJD)     0                         52999.9990000007          0             53000         N
+FINISH (MJD)    0                         54806.0009999921          0             54806         N
+TZRMJD          0                         53909.9999999879          0             53910         N
+TZRFRQ (MHz)    0                         1440                      0             1440          N
+TZRSITE         AXIS                     
+TRES            0                         1.04074227502069          0             1.0407        N
+EPHVER          TEMPO2                    TEMPO2                    0             0             N
+---------------------------------------------------------------------------------------------------
+** WARNING: All parameter uncertainties multiplied by sqrt(red. chisq)
+
+Derived parameters:
+
+P0 (s)      = 0.00486545328280556       4.2562e-17   
+P1          = 1.01935288857115e-20      5.302e-25    
+tau_c (Myr) = 7567.7
+bs (G)      = 2.2536e+08
+
+Total proper motion = 6.4631 +/- 1.2395 mas/yr
+Total time span = 1806.000 days = 4.945 years
+
+Tempo2 usage
+Units:                 TCB (tempo2)
+Time ephemeris:        IF99 (tempo2)
+Troposphere corr.?     Yes (tempo2)
+Dilate freq?           Yes (tempo2)
+Electron density (1AU) 4
+Solar system ephem     DE414
+Time scale             TT(TAI)
+Binary model           NONE
+**** UNITS was not set in the parameter file: using TCB (tempo2) **** 
+[doFit.C:93] Deprecated call to doFit() -> better to use doFitAll()
+Complete return
+
+
+Results for PSR J0030+0451
+
+
+RMS pre-fit residual = 1.041 (us), RMS post-fit residual = 1.041 (us)
+Fit Chisq = 1.408e+04	Chisqr/nfree = 14081.25/122 = 115.42	pre/post = 1.00002
+Number of fit parameters: 8
+Number of points in fit = 130
+** NOTE: All parameter uncertainties multiplied by sqrt(red. chisq)
+Offset: -5.85966e-11 3.27435e-07 offset_e*sqrt(n) = 3.73333e-06 n = 130
+
+
+PARAMETER       Pre-fit                   Post-fit                  Uncertainty   Difference   Fit
+---------------------------------------------------------------------------------------------------
+RAJ (rad)       0.132894457099784         0.132894457102272         8.9521e-09    2.4885e-12    Y
+RAJ (hms)       00:30:27.4299630           00:30:27.4299630         0.0001231     3.4219e-08   
+DECJ (rad)      0.0848411933106807        0.0848411933251172        2.0736e-08    1.4437e-11    Y
+DECJ (dms)      +04:51:39.75230           +04:51:39.75230           0.0042772     2.9777e-06   
+F0 (s^-1)       205.530696088273          205.530696088273          1.798e-12     0             Y
+F1 (s^-2)       -4.30603883991342e-16     -4.30603885331753e-16     2.2397e-20    -1.3404e-24   Y
+PEPOCH (MJD)    53000                     53000                     0             0             N
+POSEPOCH (MJD)  53000                     53000                     0             0             N
+DMEPOCH (MJD)   53000                     53000                     0             0             N
+PMRA (mas/yr)   -4.05413525836408         -4.05438895368363         0.6453        -0.0002537    Y
+PMDEC (mas/yr)  -5.03376865001804         -5.03330593702049         1.5043        0.00046271    Y
+PX (mas)        4.02291243326134          4.02290738497255          0.22193       -5.0483e-06   Y
+START (MJD)     0                         52999.9990000007          0             53000         N
+FINISH (MJD)    0                         54806.0009999921          0             54806         N
+TZRMJD          0                         53909.9999999879          0             53910         N
+TZRFRQ (MHz)    0                         1440                      0             1440          N
+TZRSITE         AXIS                     
+TRES            0                         1.04074227502069          0             1.0407        N
+EPHVER          TEMPO2                    TEMPO2                    0             0             N
+---------------------------------------------------------------------------------------------------
+** WARNING: All parameter uncertainties multiplied by sqrt(red. chisq)
+
+Derived parameters:
+
+P0 (s)      = 0.00486545328280556       4.2562e-17   
+P1          = 1.01935288857115e-20      5.302e-25    
+tau_c (Myr) = 7567.7
+bs (G)      = 2.2536e+08
+
+Total proper motion = 6.4631 +/- 1.2395 mas/yr
+Total time span = 1806.000 days = 4.945 years
+
+Tempo2 usage
+Units:                 TCB (tempo2)
+Time ephemeris:        IF99 (tempo2)
+Troposphere corr.?     Yes (tempo2)
+Dilate freq?           Yes (tempo2)
+Electron density (1AU) 4
+Solar system ephem     DE414
+Time scale             TT(TAI)
+Binary model           NONE
+**** UNITS was not set in the parameter file: using TCB (tempo2) **** 
+[doFit.C:93] Deprecated call to doFit() -> better to use doFitAll()
+Complete return
+
+
+Results for PSR J0030+0451
+
+
+RMS pre-fit residual = 1.041 (us), RMS post-fit residual = 1.041 (us)
+Fit Chisq = 1.408e+04	Chisqr/nfree = 14081.25/122 = 115.42	pre/post = 1.00002
+Number of fit parameters: 8
+Number of points in fit = 130
+** NOTE: All parameter uncertainties multiplied by sqrt(red. chisq)
+Offset: -5.85966e-11 3.27435e-07 offset_e*sqrt(n) = 3.73333e-06 n = 130
+
+
+PARAMETER       Pre-fit                   Post-fit                  Uncertainty   Difference   Fit
+---------------------------------------------------------------------------------------------------
+RAJ (rad)       0.132894457099784         0.132894457102272         8.9521e-09    2.4885e-12    Y
+RAJ (hms)       00:30:27.4299630           00:30:27.4299630         0.0001231     3.4219e-08   
+DECJ (rad)      0.0848411933106807        0.0848411933251172        2.0736e-08    1.4437e-11    Y
+DECJ (dms)      +04:51:39.75230           +04:51:39.75230           0.0042772     2.9777e-06   
+F0 (s^-1)       205.530696088273          205.530696088273          1.798e-12     0             Y
+F1 (s^-2)       -4.30603883991342e-16     -4.30603885331753e-16     2.2397e-20    -1.3404e-24   Y
+PEPOCH (MJD)    53000                     53000                     0             0             N
+POSEPOCH (MJD)  53000                     53000                     0             0             N
+DMEPOCH (MJD)   53000                     53000                     0             0             N
+PMRA (mas/yr)   -4.05413525836408         -4.05438895368363         0.6453        -0.0002537    Y
+PMDEC (mas/yr)  -5.03376865001804         -5.03330593702049         1.5043        0.00046271    Y
+PX (mas)        4.02291243326134          4.02290738497255          0.22193       -5.0483e-06   Y
+START (MJD)     0                         52999.9990000007          0             53000         N
+FINISH (MJD)    0                         54806.0009999921          0             54806         N
+TZRMJD          0                         53909.9999999879          0             53910         N
+TZRFRQ (MHz)    0                         1440                      0             1440          N
+TZRSITE         AXIS                     
+TRES            0                         1.04074227502069          0             1.0407        N
+EPHVER          TEMPO2                    TEMPO2                    0             0             N
+---------------------------------------------------------------------------------------------------
+** WARNING: All parameter uncertainties multiplied by sqrt(red. chisq)
+
+Derived parameters:
+
+P0 (s)      = 0.00486545328280556       4.2562e-17   
+P1          = 1.01935288857115e-20      5.302e-25    
+tau_c (Myr) = 7567.7
+bs (G)      = 2.2536e+08
+
+Total proper motion = 6.4631 +/- 1.2395 mas/yr
+Total time span = 1806.000 days = 4.945 years
+
+Tempo2 usage
+Units:                 TCB (tempo2)
+Time ephemeris:        IF99 (tempo2)
+Troposphere corr.?     Yes (tempo2)
+Dilate freq?           Yes (tempo2)
+Electron density (1AU) 4
+Solar system ephem     DE414
+Time scale             TT(TAI)
+Binary model           NONE
+**** UNITS was not set in the parameter file: using TCB (tempo2) **** 
+[doFit.C:93] Deprecated call to doFit() -> better to use doFitAll()
+Complete return
+
+
+Results for PSR J0030+0451
+
+
+RMS pre-fit residual = 1.041 (us), RMS post-fit residual = 1.041 (us)
+Fit Chisq = 1.408e+04	Chisqr/nfree = 14081.25/122 = 115.42	pre/post = 1.00002
+Number of fit parameters: 8
+Number of points in fit = 130
+** NOTE: All parameter uncertainties multiplied by sqrt(red. chisq)
+Offset: -5.85966e-11 3.27435e-07 offset_e*sqrt(n) = 3.73333e-06 n = 130
+
+
+PARAMETER       Pre-fit                   Post-fit                  Uncertainty   Difference   Fit
+---------------------------------------------------------------------------------------------------
+RAJ (rad)       0.132894457099784         0.132894457102272         8.9521e-09    2.4885e-12    Y
+RAJ (hms)       00:30:27.4299630           00:30:27.4299630         0.0001231     3.4219e-08   
+DECJ (rad)      0.0848411933106807        0.0848411933251172        2.0736e-08    1.4437e-11    Y
+DECJ (dms)      +04:51:39.75230           +04:51:39.75230           0.0042772     2.9777e-06   
+F0 (s^-1)       205.530696088273          205.530696088273          1.798e-12     0             Y
+F1 (s^-2)       -4.30603883991342e-16     -4.30603885331753e-16     2.2397e-20    -1.3404e-24   Y
+PEPOCH (MJD)    53000                     53000                     0             0             N
+POSEPOCH (MJD)  53000                     53000                     0             0             N
+DMEPOCH (MJD)   53000                     53000                     0             0             N
+PMRA (mas/yr)   -4.05413525836408         -4.05438895368363         0.6453        -0.0002537    Y
+PMDEC (mas/yr)  -5.03376865001804         -5.03330593702049         1.5043        0.00046271    Y
+PX (mas)        4.02291243326134          4.02290738497255          0.22193       -5.0483e-06   Y
+START (MJD)     0                         52999.9990000007          0             53000         N
+FINISH (MJD)    0                         54806.0009999921          0             54806         N
+TZRMJD          0                         53909.9999999879          0             53910         N
+TZRFRQ (MHz)    0                         1440                      0             1440          N
+TZRSITE         AXIS                     
+TRES            0                         1.04074227502069          0             1.0407        N
+EPHVER          TEMPO2                    TEMPO2                    0             0             N
+---------------------------------------------------------------------------------------------------
+** WARNING: All parameter uncertainties multiplied by sqrt(red. chisq)
+
+Derived parameters:
+
+P0 (s)      = 0.00486545328280556       4.2562e-17   
+P1          = 1.01935288857115e-20      5.302e-25    
+tau_c (Myr) = 7567.7
+bs (G)      = 2.2536e+08
+
+Total proper motion = 6.4631 +/- 1.2395 mas/yr
+Total time span = 1806.000 days = 4.945 years
+
+Tempo2 usage
+Units:                 TCB (tempo2)
+Time ephemeris:        IF99 (tempo2)
+Troposphere corr.?     Yes (tempo2)
+Dilate freq?           Yes (tempo2)
+Electron density (1AU) 4
+Solar system ephem     DE414
+Time scale             TT(TAI)
+Binary model           NONE
+**** UNITS was not set in the parameter file: using TCB (tempo2) **** 
+[doFit.C:93] Deprecated call to doFit() -> better to use doFitAll()
+Complete return
+
+
+Results for PSR J0030+0451
+
+
+RMS pre-fit residual = 1.041 (us), RMS post-fit residual = 1.041 (us)
+Fit Chisq = 1.408e+04	Chisqr/nfree = 14081.25/122 = 115.42	pre/post = 1.00002
+Number of fit parameters: 8
+Number of points in fit = 130
+** NOTE: All parameter uncertainties multiplied by sqrt(red. chisq)
+Offset: -5.85966e-11 3.27435e-07 offset_e*sqrt(n) = 3.73333e-06 n = 130
+
+
+PARAMETER       Pre-fit                   Post-fit                  Uncertainty   Difference   Fit
+---------------------------------------------------------------------------------------------------
+RAJ (rad)       0.132894457099784         0.132894457102272         8.9521e-09    2.4885e-12    Y
+RAJ (hms)       00:30:27.4299630           00:30:27.4299630         0.0001231     3.4219e-08   
+DECJ (rad)      0.0848411933106807        0.0848411933251172        2.0736e-08    1.4437e-11    Y
+DECJ (dms)      +04:51:39.75230           +04:51:39.75230           0.0042772     2.9777e-06   
+F0 (s^-1)       205.530696088273          205.530696088273          1.798e-12     0             Y
+F1 (s^-2)       -4.30603883991342e-16     -4.30603885331753e-16     2.2397e-20    -1.3404e-24   Y
+PEPOCH (MJD)    53000                     53000                     0             0             N
+POSEPOCH (MJD)  53000                     53000                     0             0             N
+DMEPOCH (MJD)   53000                     53000                     0             0             N
+PMRA (mas/yr)   -4.05413525836408         -4.05438895368363         0.6453        -0.0002537    Y
+PMDEC (mas/yr)  -5.03376865001804         -5.03330593702049         1.5043        0.00046271    Y
+PX (mas)        4.02291243326134          4.02290738497255          0.22193       -5.0483e-06   Y
+START (MJD)     0                         52999.9990000007          0             53000         N
+FINISH (MJD)    0                         54806.0009999921          0             54806         N
+TZRMJD          0                         53909.9999999879          0             53910         N
+TZRFRQ (MHz)    0                         1440                      0             1440          N
+TZRSITE         AXIS                     
+TRES            0                         1.04074227502069          0             1.0407        N
+EPHVER          TEMPO2                    TEMPO2                    0             0             N
+---------------------------------------------------------------------------------------------------
+** WARNING: All parameter uncertainties multiplied by sqrt(red. chisq)
+
+Derived parameters:
+
+P0 (s)      = 0.00486545328280556       4.2562e-17   
+P1          = 1.01935288857115e-20      5.302e-25    
+tau_c (Myr) = 7567.7
+bs (G)      = 2.2536e+08
+
+Total proper motion = 6.4631 +/- 1.2395 mas/yr
+Total time span = 1806.000 days = 4.945 years
+
+Tempo2 usage
+Units:                 TCB (tempo2)
+Time ephemeris:        IF99 (tempo2)
+Troposphere corr.?     Yes (tempo2)
+Dilate freq?           Yes (tempo2)
+Electron density (1AU) 4
+Solar system ephem     DE414
+Time scale             TT(TAI)
+Binary model           NONE
+**** UNITS was not set in the parameter file: using TCB (tempo2) **** 
+[doFit.C:93] Deprecated call to doFit() -> better to use doFitAll()
+Complete return
+
+
+Results for PSR J0030+0451
+
+
+RMS pre-fit residual = 1.041 (us), RMS post-fit residual = 1.041 (us)
+Fit Chisq = 1.408e+04	Chisqr/nfree = 14081.25/122 = 115.42	pre/post = 1.00002
+Number of fit parameters: 8
+Number of points in fit = 130
+** NOTE: All parameter uncertainties multiplied by sqrt(red. chisq)
+Offset: -5.85966e-11 3.27435e-07 offset_e*sqrt(n) = 3.73333e-06 n = 130
+
+
+PARAMETER       Pre-fit                   Post-fit                  Uncertainty   Difference   Fit
+---------------------------------------------------------------------------------------------------
+RAJ (rad)       0.132894457099784         0.132894457102272         8.9521e-09    2.4885e-12    Y
+RAJ (hms)       00:30:27.4299630           00:30:27.4299630         0.0001231     3.4219e-08   
+DECJ (rad)      0.0848411933106807        0.0848411933251172        2.0736e-08    1.4437e-11    Y
+DECJ (dms)      +04:51:39.75230           +04:51:39.75230           0.0042772     2.9777e-06   
+F0 (s^-1)       205.530696088273          205.530696088273          1.798e-12     0             Y
+F1 (s^-2)       -4.30603883991342e-16     -4.30603885331753e-16     2.2397e-20    -1.3404e-24   Y
+PEPOCH (MJD)    53000                     53000                     0             0             N
+POSEPOCH (MJD)  53000                     53000                     0             0             N
+DMEPOCH (MJD)   53000                     53000                     0             0             N
+PMRA (mas/yr)   -4.05413525836408         -4.05438895368363         0.6453        -0.0002537    Y
+PMDEC (mas/yr)  -5.03376865001804         -5.03330593702049         1.5043        0.00046271    Y
+PX (mas)        4.02291243326134          4.02290738497255          0.22193       -5.0483e-06   Y
+START (MJD)     0                         52999.9990000007          0             53000         N
+FINISH (MJD)    0                         54806.0009999921          0             54806         N
+TZRMJD          0                         53909.9999999879          0             53910         N
+TZRFRQ (MHz)    0                         1440                      0             1440          N
+TZRSITE         AXIS                     
+TRES            0                         1.04074227502069          0             1.0407        N
+EPHVER          TEMPO2                    TEMPO2                    0             0             N
+---------------------------------------------------------------------------------------------------
+** WARNING: All parameter uncertainties multiplied by sqrt(red. chisq)
+
+Derived parameters:
+
+P0 (s)      = 0.00486545328280556       4.2562e-17   
+P1          = 1.01935288857115e-20      5.302e-25    
+tau_c (Myr) = 7567.7
+bs (G)      = 2.2536e+08
+
+Total proper motion = 6.4631 +/- 1.2395 mas/yr
+Total time span = 1806.000 days = 4.945 years
+
+Tempo2 usage
+Units:                 TCB (tempo2)
+Time ephemeris:        IF99 (tempo2)
+Troposphere corr.?     Yes (tempo2)
+Dilate freq?           Yes (tempo2)
+Electron density (1AU) 4
+Solar system ephem     DE414
+Time scale             TT(TAI)
+Binary model           NONE
+**** UNITS was not set in the parameter file: using TCB (tempo2) **** 
+[doFit.C:93] Deprecated call to doFit() -> better to use doFitAll()
+Complete return
+
+
+Results for PSR J0030+0451
+
+
+RMS pre-fit residual = 1.041 (us), RMS post-fit residual = 1.041 (us)
+Fit Chisq = 1.408e+04	Chisqr/nfree = 14080.88/122 = 115.417	pre/post = 0.999985
+Number of fit parameters: 8
+Number of points in fit = 130
+** NOTE: All parameter uncertainties multiplied by sqrt(red. chisq)
+Offset: 3.07212e-11 3.2743e-07 offset_e*sqrt(n) = 3.73328e-06 n = 130
+
+
+PARAMETER       Pre-fit                   Post-fit                  Uncertainty   Difference   Fit
+---------------------------------------------------------------------------------------------------
+RAJ (rad)       0.132894457102272         0.132894457103691         8.952e-09     1.4186e-12    Y
+RAJ (hms)        00:30:27.4299630          00:30:27.4299631         0.0001231     1.9507e-08   
+DECJ (rad)      0.0848411933251172        0.0848411933216011        2.0736e-08    -3.5161e-12   Y
+DECJ (dms)      +04:51:39.75230           +04:51:39.75230           0.0042771     -7.2526e-07  
+F0 (s^-1)       205.530696088273          205.530696088273          1.7979e-12    0             Y
+F1 (s^-2)       -4.30603885331753e-16     -4.30603887691095e-16     2.2397e-20    -2.3593e-24   Y
+PEPOCH (MJD)    53000                     53000                     0             0             N
+POSEPOCH (MJD)  53000                     53000                     0             0             N
+DMEPOCH (MJD)   53000                     53000                     0             0             N
+PMRA (mas/yr)   -4.05438895368363         -4.05445936505675         0.64529       -7.0411e-05   Y
+PMDEC (mas/yr)  -5.03330593702049         -5.0331228685027          1.5043        0.00018307    Y
+PX (mas)        4.02290738497255          4.0229053610752           0.22192       -2.0239e-06   Y
+START (MJD)     52999.9990000007          52999.9990000007          0             0             N
+FINISH (MJD)    54806.0009999921          54806.0009999921          0             0             N
+TZRMJD          53909.9999999879          53909.9999999879          0             0             N
+TZRFRQ (MHz)    1440                      1440                      0             0             N
+TZRSITE         AXIS                     
+TRES            1.04074227502069          1.04075798232122          0             1.5707e-05    N
+EPHVER          TEMPO2                    TEMPO2                    0             0             N
+---------------------------------------------------------------------------------------------------
+** WARNING: All parameter uncertainties multiplied by sqrt(red. chisq)
+
+Derived parameters:
+
+P0 (s)      = 0.00486545328280556       4.2562e-17   
+P1          = 1.01935289415634e-20      5.3019e-25   
+tau_c (Myr) = 7567.7
+bs (G)      = 2.2536e+08
+
+Total proper motion = 6.463 +/- 1.2395 mas/yr
+Total time span = 1806.000 days = 4.945 years
+
+Tempo2 usage
+Units:                 TCB (tempo2)
+Time ephemeris:        IF99 (tempo2)
+Troposphere corr.?     Yes (tempo2)
+Dilate freq?           Yes (tempo2)
+Electron density (1AU) 4
+Solar system ephem     DE414
+Time scale             TT(TAI)
+Binary model           NONE
+**** UNITS was not set in the parameter file: using TCB (tempo2) **** 
+Graphical Interface: TempoNest
+Author:              L. Lentati
+Version:             1.0
+----------------------------------------------------------------
+This program comes with ABSOLUTELY NO WARRANTY.
+This is free software, and you are welcome to redistribute it
+under conditions of GPL license.
+
+----------------------------------------------------------------
+
+
+
+
+*****************************************************
+Starting TempoNest
+*****************************************************
+
+
+
+Details of the fit:
+file root set to results/PL-7C-M-DD-4-J0030+0451- 
+Including Red Noise: Power Law Model to 6 Coefficients 
+fitting for: Arbitrary Phase 
+fitting for: RAJ 
+fitting for: DECJ 
+fitting for: F0 
+fitting for: F1 
+fitting for: PMRA 
+fitting for: PMDEC 
+fitting for: PX 
+Found 0 jumps to fit 
+total Timing Model params to fit:  8 
+marginalising over timing param: 0 
+marginalising over timing param: 1 
+margiComplete return
+
+
+Results for PSR J0030+0451
+
+
+RMS pre-fit residual = 1.041 (us), RMS post-fit residual = 1.041 (us)
+Fit Chisq = 1.408e+04	Chisqr/nfree = 14081.25/122 = 115.42	pre/post = 1.00002
+Number of fit parameters: 8
+Number of points in fit = 130
+** NOTE: All parameter uncertainties multiplied by sqrt(red. chisq)
+Offset: -5.85966e-11 3.27435e-07 offset_e*sqrt(n) = 3.73333e-06 n = 130
+
+
+PARAMETER       Pre-fit                   Post-fit                  Uncertainty   Difference   Fit
+---------------------------------------------------------------------------------------------------
+RAJ (rad)       0.132894457099784         0.132894457102272         8.9521e-09    2.4885e-12    Y
+RAJ (hms)       00:30:27.4299630           00:30:27.4299630         0.0001231     3.4219e-08   
+DECJ (rad)      0.0848411933106807        0.0848411933251172        2.0736e-08    1.4437e-11    Y
+DECJ (dms)      +04:51:39.75230           +04:51:39.75230           0.0042772     2.9777e-06   
+F0 (s^-1)       205.530696088273          205.530696088273          1.798e-12     0             Y
+F1 (s^-2)       -4.30603883991342e-16     -4.30603885331753e-16     2.2397e-20    -1.3404e-24   Y
+PEPOCH (MJD)    53000                     53000                     0             0             N
+POSEPOCH (MJD)  53000                     53000                     0             0             N
+DMEPOCH (MJD)   53000                     53000                     0             0             N
+PMRA (mas/yr)   -4.05413525836408         -4.05438895368363         0.6453        -0.0002537    Y
+PMDEC (mas/yr)  -5.03376865001804         -5.03330593702049         1.5043        0.00046271    Y
+PX (mas)        4.02291243326134          4.02290738497255          0.22193       -5.0483e-06   Y
+START (MJD)     0                         52999.9990000007          0             53000         N
+FINISH (MJD)    0                         54806.0009999921          0             54806         N
+TZRMJD          0                         53909.9999999879          0             53910         N
+TZRFRQ (MHz)    0                         1440                      0             1440          N
+TZRSITE         AXIS                     
+TRES            0                         1.04074227502069          0             1.0407        N
+EPHVER          TEMPO2                    TEMPO2                    0             0             N
+---------------------------------------------------------------------------------------------------
+** WARNING: All parameter uncertainties multiplied by sqrt(red. chisq)
+
+Derived parameters:
+
+P0 (s)      = 0.00486545328280556       4.2562e-17   
+P1          = 1.01935288857115e-20      5.302e-25    
+tau_c (Myr) = 7567.7
+bs (G)      = 2.2536e+08
+
+Total proper motion = 6.4631 +/- 1.2395 mas/yr
+Total time span = 1806.000 days = 4.945 years
+
+Tempo2 usage
+Units:                 TCB (tempo2)
+Time ephemeris:        IF99 (tempo2)
+Troposphere corr.?     Yes (tempo2)
+Dilate freq?           Yes (tempo2)
+Electron density (1AU) 4
+Solar system ephem     DE414
+Time scale             TT(TAI)
+Binary model           NONE
+**** UNITS was not set in the parameter file: using TCB (tempo2) **** 
+[doFit.C:93] Deprecated call to doFit() -> better to use doFitAll()
+Complete return
+
+
+Results for PSR J0030+0451
+
+
+RMS pre-fit residual = 1.041 (us), RMS post-fit residual = 1.041 (us)
+Fit Chisq = 1.408e+04	Chisqr/nfree = 14080.88/122 = 115.417	pre/post = 0.999985
+Number of fit parameters: 8
+Number of points in fit = 130
+** NOTE: All parameter uncertainties multiplied by sqrt(red. chisq)
+Offset: 3.07212e-11 3.2743e-07 offset_e*sqrt(n) = 3.73328e-06 n = 130
+
+
+PARAMETER       Pre-fit                   Post-fit                  Uncertainty   Difference   Fit
+---------------------------------------------------------------------------------------------------
+RAJ (rad)       0.132894457102272         0.132894457103691         8.952e-09     1.4186e-12    Y
+RAJ (hms)        00:30:27.4299630          00:30:27.4299631         0.0001231     1.9507e-08   
+DECJ (rad)      0.0848411933251172        0.0848411933216011        2.0736e-08    -3.5161e-12   Y
+DECJ (dms)      +04:51:39.75230           +04:51:39.75230           0.0042771     -7.2526e-07  
+F0 (s^-1)       205.530696088273          205.530696088273          1.7979e-12    0             Y
+F1 (s^-2)       -4.30603885331753e-16     -4.30603887691095e-16     2.2397e-20    -2.3593e-24   Y
+PEPOCH (MJD)    53000                     53000                     0             0             N
+POSEPOCH (MJD)  53000                     53000                     0             0             N
+DMEPOCH (MJD)   53000                     53000                     0             0             N
+PMRA (mas/yr)   -4.05438895368363         -4.05445936505675         0.64529       -7.0411e-05   Y
+PMDEC (mas/yr)  -5.03330593702049         -5.0331228685027          1.5043        0.00018307    Y
+PX (mas)        4.02290738497255          4.0229053610752           0.22192       -2.0239e-06   Y
+START (MJD)     52999.9990000007          52999.9990000007          0             0             N
+FINISH (MJD)    54806.0009999921          54806.0009999921          0             0             N
+TZRMJD          53909.9999999879          53909.9999999879          0             0             N
+TZRFRQ (MHz)    1440                      1440                      0             0             N
+TZRSITE         AXIS                     
+TRES            1.04074227502069          1.04075798232122          0             1.5707e-05    N
+EPHVER          TEMPO2                    TEMPO2                    0             0             N
+---------------------------------------------------------------------------------------------------
+** WARNING: All parameter uncertainties multiplied by sqrt(red. chisq)
+
+Derived parameters:
+
+P0 (s)      = 0.00486545328280556       4.2562e-17   
+P1          = 1.01935289415634e-20      5.3019e-25   
+tau_c (Myr) = 7567.7
+bs (G)      = 2.2536e+08
+
+Total proper motion = 6.463 +/- 1.2395 mas/yr
+Total time span = 1806.000 days = 4.945 years
+
+Tempo2 usage
+Units:                 TCB (tempo2)
+Time ephemeris:        IF99 (tempo2)
+Troposphere corr.?     Yes (tempo2)
+Dilate freq?           Yes (tempo2)
+Electron density (1AU) 4
+Solar system ephem     DE414
+Time scale             TT(TAI)
+Binary model           NONE
+**** UNITS was not set in the parameter file: using TCB (tempo2) **** 
+Graphical Interface: TempoNest
+Author:              L. Lentati
+Version:             1.0
+----------------------------------------------------------------
+This program comes with ABSOLUTELY NO WARRANTY.
+This is free software, and you are welcome to redistribute it
+under conditions of GPL license.
+
+----------------------------------------------------------------
+
+
+
+
+*****************************************************
+Starting TempoNest
+*****************************************************
+
+
+
+Details of the fit:
+file root set to results/PL-7C-M-DD-4-J0030+0451- 
+Including Red Noise: Power Law Model to 6 Coefficients 
+fitting for: Arbitrary Phase 
+fitting for: RAJ 
+fitting for: DECJ 
+fitting for: F0 
+fitting for: F1 
+fitting for: PMRA 
+fitting for: PMDEC 
+fitting for: PX 
+Found 0 jumps to fit 
+total Timing Model params to fit:  8 
+marginalising over timing param: 0 
+marginalising over timing param: 1 
+margiComplete return
+
+
+Results for PSR J0030+0451
+
+
+RMS pre-fit residual = 1.041 (us), RMS post-fit residual = 1.041 (us)
+Fit Chisq = 1.408e+04	Chisqr/nfree = 14080.88/122 = 115.417	pre/post = 0.999985
+Number of fit parameters: 8
+Number of points in fit = 130
+** NOTE: All parameter uncertainties multiplied by sqrt(red. chisq)
+Offset: 3.07212e-11 3.2743e-07 offset_e*sqrt(n) = 3.73328e-06 n = 130
+
+
+PARAMETER       Pre-fit                   Post-fit                  Uncertainty   Difference   Fit
+---------------------------------------------------------------------------------------------------
+RAJ (rad)       0.132894457102272         0.132894457103691         8.952e-09     1.4186e-12    Y
+RAJ (hms)        00:30:27.4299630          00:30:27.4299631         0.0001231     1.9507e-08   
+DECJ (rad)      0.0848411933251172        0.0848411933216011        2.0736e-08    -3.5161e-12   Y
+DECJ (dms)      +04:51:39.75230           +04:51:39.75230           0.0042771     -7.2526e-07  
+F0 (s^-1)       205.530696088273          205.530696088273          1.7979e-12    0             Y
+F1 (s^-2)       -4.30603885331753e-16     -4.30603887691095e-16     2.2397e-20    -2.3593e-24   Y
+PEPOCH (MJD)    53000                     53000                     0             0             N
+POSEPOCH (MJD)  53000                     53000                     0             0             N
+DMEPOCH (MJD)   53000                     53000                     0             0             N
+PMRA (mas/yr)   -4.05438895368363         -4.05445936505675         0.64529       -7.0411e-05   Y
+PMDEC (mas/yr)  -5.03330593702049         -5.0331228685027          1.5043        0.00018307    Y
+PX (mas)        4.02290738497255          4.0229053610752           0.22192       -2.0239e-06   Y
+START (MJD)     52999.9990000007          52999.9990000007          0             0             N
+FINISH (MJD)    54806.0009999921          54806.0009999921          0             0             N
+TZRMJD          53909.9999999879          53909.9999999879          0             0             N
+TZRFRQ (MHz)    1440                      1440                      0             0             N
+TZRSITE         AXIS                     
+TRES            1.04074227502069          1.04075798232122          0             1.5707e-05    N
+EPHVER          TEMPO2                    TEMPO2                    0             0             N
+---------------------------------------------------------------------------------------------------
+** WARNING: All parameter uncertainties multiplied by sqrt(red. chisq)
+
+Derived parameters:
+
+P0 (s)      = 0.00486545328280556       4.2562e-17   
+P1          = 1.01935289415634e-20      5.3019e-25   
+tau_c (Myr) = 7567.7
+bs (G)      = 2.2536e+08
+
+Total proper motion = 6.463 +/- 1.2395 mas/yr
+Total time span = 1806.000 days = 4.945 years
+
+Tempo2 usage
+Units:                 TCB (tempo2)
+Time ephemeris:        IF99 (tempo2)
+Troposphere corr.?     Yes (tempo2)
+Dilate freq?           Yes (tempo2)
+Electron density (1AU) 4
+Solar system ephem     DE414
+Time scale             TT(TAI)
+Binary model           NONE
+**** UNITS was not set in the parameter file: using TCB (tempo2) **** 
+Graphical Interface: TempoNest
+Author:              L. Lentati
+Version:             1.0
+----------------------------------------------------------------
+This program comes with ABSOLUTELY NO WARRANTY.
+This is free software, and you are welcome to redistribute it
+under conditions of GPL license.
+
+----------------------------------------------------------------
+
+
+
+
+*****************************************************
+Starting TempoNest
+*****************************************************
+
+
+
+Details of the fit:
+file root set to results/PL-7C-M-DD-4-J0030+0451- 
+Including Red Noise: Power Law Model to 6 Coefficients 
+fitting for: Arbitrary Phase 
+fitting for: RAJ 
+fitting for: DECJ 
+fitting for: F0 
+fitting for: F1 
+fitting for: PMRA 
+fitting for: PMDEC 
+fitting for: PX 
+Found 0 jumps to fit 
+total Timing Model params to fit:  8 
+marginalising over timing param: 0 
+marginalising over timing param: 1 
+margiComplete return
+
+
+Results for PSR J0030+0451
+
+
+RMS pre-fit residual = 1.041 (us), RMS post-fit residual = 1.041 (us)
+Fit Chisq = 1.408e+04	Chisqr/nfree = 14080.88/122 = 115.417	pre/post = 0.999985
+Number of fit parameters: 8
+Number of points in fit = 130
+** NOTE: All parameter uncertainties multiplied by sqrt(red. chisq)
+Offset: 3.07212e-11 3.2743e-07 offset_e*sqrt(n) = 3.73328e-06 n = 130
+
+
+PARAMETER       Pre-fit                   Post-fit                  Uncertainty   Difference   Fit
+---------------------------------------------------------------------------------------------------
+RAJ (rad)       0.132894457102272         0.132894457103691         8.952e-09     1.4186e-12    Y
+RAJ (hms)        00:30:27.4299630          00:30:27.4299631         0.0001231     1.9507e-08   
+DECJ (rad)      0.0848411933251172        0.0848411933216011        2.0736e-08    -3.5161e-12   Y
+DECJ (dms)      +04:51:39.75230           +04:51:39.75230           0.0042771     -7.2526e-07  
+F0 (s^-1)       205.530696088273          205.530696088273          1.7979e-12    0             Y
+F1 (s^-2)       -4.30603885331753e-16     -4.30603887691095e-16     2.2397e-20    -2.3593e-24   Y
+PEPOCH (MJD)    53000                     53000                     0             0             N
+POSEPOCH (MJD)  53000                     53000                     0             0             N
+DMEPOCH (MJD)   53000                     53000                     0             0             N
+PMRA (mas/yr)   -4.05438895368363         -4.05445936505675         0.64529       -7.0411e-05   Y
+PMDEC (mas/yr)  -5.03330593702049         -5.0331228685027          1.5043        0.00018307    Y
+PX (mas)        4.02290738497255          4.0229053610752           0.22192       -2.0239e-06   Y
+START (MJD)     52999.9990000007          52999.9990000007          0             0             N
+FINISH (MJD)    54806.0009999921          54806.0009999921          0             0             N
+TZRMJD          53909.9999999879          53909.9999999879          0             0             N
+TZRFRQ (MHz)    1440                      1440                      0             0             N
+TZRSITE         AXIS                     
+TRES            1.04074227502069          1.04075798232122          0             1.5707e-05    N
+EPHVER          TEMPO2                    TEMPO2                    0             0             N
+---------------------------------------------------------------------------------------------------
+** WARNING: All parameter uncertainties multiplied by sqrt(red. chisq)
+
+Derived parameters:
+
+P0 (s)      = 0.00486545328280556       4.2562e-17   
+P1          = 1.01935289415634e-20      5.3019e-25   
+tau_c (Myr) = 7567.7
+bs (G)      = 2.2536e+08
+
+Total proper motion = 6.463 +/- 1.2395 mas/yr
+Total time span = 1806.000 days = 4.945 years
+
+Tempo2 usage
+Units:                 TCB (tempo2)
+Time ephemeris:        IF99 (tempo2)
+Troposphere corr.?     Yes (tempo2)
+Dilate freq?           Yes (tempo2)
+Electron density (1AU) 4
+Solar system ephem     DE414
+Time scale             TT(TAI)
+Binary model           NONE
+**** UNITS was not set in the parameter file: using TCB (tempo2) **** 
+Graphical Interface: TempoNest
+Author:              L. Lentati
+Version:             1.0
+----------------------------------------------------------------
+This program comes with ABSOLUTELY NO WARRANTY.
+This is free software, and you are welcome to redistribute it
+under conditions of GPL license.
+
+----------------------------------------------------------------
+
+
+
+
+*****************************************************
+Starting TempoNest
+*****************************************************
+
+
+
+Details of the fit:
+file root set to results/PL-7C-M-DD-4-J0030+0451- 
+Including Red Noise: Power Law Model to 6 Coefficients 
+fitting for: Arbitrary Phase 
+fitting for: RAJ 
+fitting for: DECJ 
+fitting for: F0 
+fitting for: F1 
+fitting for: PMRA 
+fitting for: PMDEC 
+fitting for: PX 
+Found 0 jumps to fit 
+total Timing Model params to fit:  8 
+marginalising over timing param: 0 
+marginalising over timing param: 1 
+margiComplete return
+
+
+Results for PSR J0030+0451
+
+
+RMS pre-fit residual = 1.041 (us), RMS post-fit residual = 1.041 (us)
+Fit Chisq = 1.408e+04	Chisqr/nfree = 14080.88/122 = 115.417	pre/post = 0.999985
+Number of fit parameters: 8
+Number of points in fit = 130
+** NOTE: All parameter uncertainties multiplied by sqrt(red. chisq)
+Offset: 3.07212e-11 3.2743e-07 offset_e*sqrt(n) = 3.73328e-06 n = 130
+
+
+PARAMETER       Pre-fit                   Post-fit                  Uncertainty   Difference   Fit
+---------------------------------------------------------------------------------------------------
+RAJ (rad)       0.132894457102272         0.132894457103691         8.952e-09     1.4186e-12    Y
+RAJ (hms)        00:30:27.4299630          00:30:27.4299631         0.0001231     1.9507e-08   
+DECJ (rad)      0.0848411933251172        0.0848411933216011        2.0736e-08    -3.5161e-12   Y
+DECJ (dms)      +04:51:39.75230           +04:51:39.75230           0.0042771     -7.2526e-07  
+F0 (s^-1)       205.530696088273          205.530696088273          1.7979e-12    0             Y
+F1 (s^-2)       -4.30603885331753e-16     -4.30603887691095e-16     2.2397e-20    -2.3593e-24   Y
+PEPOCH (MJD)    53000                     53000                     0             0             N
+POSEPOCH (MJD)  53000                     53000                     0             0             N
+DMEPOCH (MJD)   53000                     53000                     0             0             N
+PMRA (mas/yr)   -4.05438895368363         -4.05445936505675         0.64529       -7.0411e-05   Y
+PMDEC (mas/yr)  -5.03330593702049         -5.0331228685027          1.5043        0.00018307    Y
+PX (mas)        4.02290738497255          4.0229053610752           0.22192       -2.0239e-06   Y
+START (MJD)     52999.9990000007          52999.9990000007          0             0             N
+FINISH (MJD)    54806.0009999921          54806.0009999921          0             0             N
+TZRMJD          53909.9999999879          53909.9999999879          0             0             N
+TZRFRQ (MHz)    1440                      1440                      0             0             N
+TZRSITE         AXIS                     
+TRES            1.04074227502069          1.04075798232122          0             1.5707e-05    N
+EPHVER          TEMPO2                    TEMPO2                    0             0             N
+---------------------------------------------------------------------------------------------------
+** WARNING: All parameter uncertainties multiplied by sqrt(red. chisq)
+
+Derived parameters:
+
+P0 (s)      = 0.00486545328280556       4.2562e-17   
+P1          = 1.01935289415634e-20      5.3019e-25   
+tau_c (Myr) = 7567.7
+bs (G)      = 2.2536e+08
+
+Total proper motion = 6.463 +/- 1.2395 mas/yr
+Total time span = 1806.000 days = 4.945 years
+
+Tempo2 usage
+Units:                 TCB (tempo2)
+Time ephemeris:        IF99 (tempo2)
+Troposphere corr.?     Yes (tempo2)
+Dilate freq?           Yes (tempo2)
+Electron density (1AU) 4
+Solar system ephem     DE414
+Time scale             TT(TAI)
+Binary model           NONE
+**** UNITS was not set in the parameter file: using TCB (tempo2) **** 
+Graphical Interface: TempoNest
+Author:              L. Lentati
+Version:             1.0
+----------------------------------------------------------------
+This program comes with ABSOLUTELY NO WARRANTY.
+This is free software, and you are welcome to redistribute it
+under conditions of GPL license.
+
+----------------------------------------------------------------
+
+
+
+
+*****************************************************
+Starting TempoNest
+*****************************************************
+
+
+
+Details of the fit:
+file root set to results/PL-7C-M-DD-4-J0030+0451- 
+Including Red Noise: Power Law Model to 6 Coefficients 
+fitting for: Arbitrary Phase 
+fitting for: RAJ 
+fitting for: DECJ 
+fitting for: F0 
+fitting for: F1 
+fitting for: PMRA 
+fitting for: PMDEC 
+fitting for: PX 
+Found 0 jumps to fit 
+total Timing Model params to fit:  8 
+marginalising over timing param: 0 
+marginalising over timing param: 1 
+margiComplete return
+
+
+Results for PSR J0030+0451
+
+
+RMS pre-fit residual = 1.041 (us), RMS post-fit residual = 1.041 (us)
+Fit Chisq = 1.408e+04	Chisqr/nfree = 14080.88/122 = 115.417	pre/post = 0.999985
+Number of fit parameters: 8
+Number of points in fit = 130
+** NOTE: All parameter uncertainties multiplied by sqrt(red. chisq)
+Offset: 3.07212e-11 3.2743e-07 offset_e*sqrt(n) = 3.73328e-06 n = 130
+
+
+PARAMETER       Pre-fit                   Post-fit                  Uncertainty   Difference   Fit
+---------------------------------------------------------------------------------------------------
+RAJ (rad)       0.132894457102272         0.132894457103691         8.952e-09     1.4186e-12    Y
+RAJ (hms)        00:30:27.4299630          00:30:27.4299631         0.0001231     1.9507e-08   
+DECJ (rad)      0.0848411933251172        0.0848411933216011        2.0736e-08    -3.5161e-12   Y
+DECJ (dms)      +04:51:39.75230           +04:51:39.75230           0.0042771     -7.2526e-07  
+F0 (s^-1)       205.530696088273          205.530696088273          1.7979e-12    0             Y
+F1 (s^-2)       -4.30603885331753e-16     -4.30603887691095e-16     2.2397e-20    -2.3593e-24   Y
+PEPOCH (MJD)    53000                     53000                     0             0             N
+POSEPOCH (MJD)  53000                     53000                     0             0             N
+DMEPOCH (MJD)   53000                     53000                     0             0             N
+PMRA (mas/yr)   -4.05438895368363         -4.05445936505675         0.64529       -7.0411e-05   Y
+PMDEC (mas/yr)  -5.03330593702049         -5.0331228685027          1.5043        0.00018307    Y
+PX (mas)        4.02290738497255          4.0229053610752           0.22192       -2.0239e-06   Y
+START (MJD)     52999.9990000007          52999.9990000007          0             0             N
+FINISH (MJD)    54806.0009999921          54806.0009999921          0             0             N
+TZRMJD          53909.9999999879          53909.9999999879          0             0             N
+TZRFRQ (MHz)    1440                      1440                      0             0             N
+TZRSITE         AXIS                     
+TRES            1.04074227502069          1.04075798232122          0             1.5707e-05    N
+EPHVER          TEMPO2                    TEMPO2                    0             0             N
+---------------------------------------------------------------------------------------------------
+** WARNING: All parameter uncertainties multiplied by sqrt(red. chisq)
+
+Derived parameters:
+
+P0 (s)      = 0.00486545328280556       4.2562e-17   
+P1          = 1.01935289415634e-20      5.3019e-25   
+tau_c (Myr) = 7567.7
+bs (G)      = 2.2536e+08
+
+Total proper motion = 6.463 +/- 1.2395 mas/yr
+Total time span = 1806.000 days = 4.945 years
+
+Tempo2 usage
+Units:                 TCB (tempo2)
+Time ephemeris:        IF99 (tempo2)
+Troposphere corr.?     Yes (tempo2)
+Dilate freq?           Yes (tempo2)
+Electron density (1AU) 4
+Solar system ephem     DE414
+Time scale             TT(TAI)
+Binary model           NONE
+**** UNITS was not set in the parameter file: using TCB (tempo2) **** 
+Graphical Interface: TempoNest
+Author:              L. Lentati
+Version:             1.0
+----------------------------------------------------------------
+This program comes with ABSOLUTELY NO WARRANTY.
+This is free software, and you are welcome to redistribute it
+under conditions of GPL license.
+
+----------------------------------------------------------------
+
+
+
+
+*****************************************************
+Starting TempoNest
+*****************************************************
+
+
+
+Details of the fit:
+file root set to results/PL-7C-M-DD-4-J0030+0451- 
+Including Red Noise: Power Law Model to 6 Coefficients 
+fitting for: Arbitrary Phase 
+fitting for: RAJ 
+fitting for: DECJ 
+fitting for: F0 
+fitting for: F1 
+fitting for: PMRA 
+fitting for: PMDEC 
+fitting for: PX 
+Found 0 jumps to fit 
+total Timing Model params to fit:  8 
+marginalising over timing param: 0 
+marginalising over timing param: 1 
+margiComplete return
+
+
+Results for PSR J0030+0451
+
+
+RMS pre-fit residual = 1.041 (us), RMS post-fit residual = 1.041 (us)
+Fit Chisq = 1.408e+04	Chisqr/nfree = 14080.88/122 = 115.417	pre/post = 0.999985
+Number of fit parameters: 8
+Number of points in fit = 130
+** NOTE: All parameter uncertainties multiplied by sqrt(red. chisq)
+Offset: 3.07212e-11 3.2743e-07 offset_e*sqrt(n) = 3.73328e-06 n = 130
+
+
+PARAMETER       Pre-fit                   Post-fit                  Uncertainty   Difference   Fit
+---------------------------------------------------------------------------------------------------
+RAJ (rad)       0.132894457102272         0.132894457103691         8.952e-09     1.4186e-12    Y
+RAJ (hms)        00:30:27.4299630          00:30:27.4299631         0.0001231     1.9507e-08   
+DECJ (rad)      0.0848411933251172        0.0848411933216011        2.0736e-08    -3.5161e-12   Y
+DECJ (dms)      +04:51:39.75230           +04:51:39.75230           0.0042771     -7.2526e-07  
+F0 (s^-1)       205.530696088273          205.530696088273          1.7979e-12    0             Y
+F1 (s^-2)       -4.30603885331753e-16     -4.30603887691095e-16     2.2397e-20    -2.3593e-24   Y
+PEPOCH (MJD)    53000                     53000                     0             0             N
+POSEPOCH (MJD)  53000                     53000                     0             0             N
+DMEPOCH (MJD)   53000                     53000                     0             0             N
+PMRA (mas/yr)   -4.05438895368363         -4.05445936505675         0.64529       -7.0411e-05   Y
+PMDEC (mas/yr)  -5.03330593702049         -5.0331228685027          1.5043        0.00018307    Y
+PX (mas)        4.02290738497255          4.0229053610752           0.22192       -2.0239e-06   Y
+START (MJD)     52999.9990000007          52999.9990000007          0             0             N
+FINISH (MJD)    54806.0009999921          54806.0009999921          0             0             N
+TZRMJD          53909.9999999879          53909.9999999879          0             0             N
+TZRFRQ (MHz)    1440                      1440                      0             0             N
+TZRSITE         AXIS                     
+TRES            1.04074227502069          1.04075798232122          0             1.5707e-05    N
+EPHVER          TEMPO2                    TEMPO2                    0             0             N
+---------------------------------------------------------------------------------------------------
+** WARNING: All parameter uncertainties multiplied by sqrt(red. chisq)
+
+Derived parameters:
+
+P0 (s)      = 0.00486545328280556       4.2562e-17   
+P1          = 1.01935289415634e-20      5.3019e-25   
+tau_c (Myr) = 7567.7
+bs (G)      = 2.2536e+08
+
+Total proper motion = 6.463 +/- 1.2395 mas/yr
+Total time span = 1806.000 days = 4.945 years
+
+Tempo2 usage
+Units:                 TCB (tempo2)
+Time ephemeris:        IF99 (tempo2)
+Troposphere corr.?     Yes (tempo2)
+Dilate freq?           Yes (tempo2)
+Electron density (1AU) 4
+Solar system ephem     DE414
+Time scale             TT(TAI)
+Binary model           NONE
+**** UNITS was not set in the parameter file: using TCB (tempo2) **** 
+Graphical Interface: TempoNest
+Author:              L. Lentati
+Version:             1.0
+----------------------------------------------------------------
+This program comes with ABSOLUTELY NO WARRANTY.
+This is free software, and you are welcome to redistribute it
+under conditions of GPL license.
+
+----------------------------------------------------------------
+
+
+
+
+*****************************************************
+Starting TempoNest
+*****************************************************
+
+
+
+Details of the fit:
+file root set to results/PL-7C-M-DD-4-J0030+0451- 
+Including Red Noise: Power Law Model to 6 Coefficients 
+fitting for: Arbitrary Phase 
+fitting for: RAJ 
+fitting for: DECJ 
+fitting for: F0 
+fitting for: F1 
+fitting for: PMRA 
+fitting for: PMDEC 
+fitting for: PX 
+Found 0 jumps to fit 
+total Timing Model params to fit:  8 
+marginalising over timing param: 0 
+marginalising over timing param: 1 
+margiComplete return
+
+
+Results for PSR J0030+0451
+
+
+RMS pre-fit residual = 1.041 (us), RMS post-fit residual = 1.041 (us)
+Fit Chisq = 1.408e+04	Chisqr/nfree = 14080.88/122 = 115.417	pre/post = 0.999985
+Number of fit parameters: 8
+Number of points in fit = 130
+** NOTE: All parameter uncertainties multiplied by sqrt(red. chisq)
+Offset: 3.07212e-11 3.2743e-07 offset_e*sqrt(n) = 3.73328e-06 n = 130
+
+
+PARAMETER       Pre-fit                   Post-fit                  Uncertainty   Difference   Fit
+---------------------------------------------------------------------------------------------------
+RAJ (rad)       0.132894457102272         0.132894457103691         8.952e-09     1.4186e-12    Y
+RAJ (hms)        00:30:27.4299630          00:30:27.4299631         0.0001231     1.9507e-08   
+DECJ (rad)      0.0848411933251172        0.0848411933216011        2.0736e-08    -3.5161e-12   Y
+DECJ (dms)      +04:51:39.75230           +04:51:39.75230           0.0042771     -7.2526e-07  
+F0 (s^-1)       205.530696088273          205.530696088273          1.7979e-12    0             Y
+F1 (s^-2)       -4.30603885331753e-16     -4.30603887691095e-16     2.2397e-20    -2.3593e-24   Y
+PEPOCH (MJD)    53000                     53000                     0             0             N
+POSEPOCH (MJD)  53000                     53000                     0             0             N
+DMEPOCH (MJD)   53000                     53000                     0             0             N
+PMRA (mas/yr)   -4.05438895368363         -4.05445936505675         0.64529       -7.0411e-05   Y
+PMDEC (mas/yr)  -5.03330593702049         -5.0331228685027          1.5043        0.00018307    Y
+PX (mas)        4.02290738497255          4.0229053610752           0.22192       -2.0239e-06   Y
+START (MJD)     52999.9990000007          52999.9990000007          0             0             N
+FINISH (MJD)    54806.0009999921          54806.0009999921          0             0             N
+TZRMJD          53909.9999999879          53909.9999999879          0             0             N
+TZRFRQ (MHz)    1440                      1440                      0             0             N
+TZRSITE         AXIS                     
+TRES            1.04074227502069          1.04075798232122          0             1.5707e-05    N
+EPHVER          TEMPO2                    TEMPO2                    0             0             N
+---------------------------------------------------------------------------------------------------
+** WARNING: All parameter uncertainties multiplied by sqrt(red. chisq)
+
+Derived parameters:
+
+P0 (s)      = 0.00486545328280556       4.2562e-17   
+P1          = 1.01935289415634e-20      5.3019e-25   
+tau_c (Myr) = 7567.7
+bs (G)      = 2.2536e+08
+
+Total proper motion = 6.463 +/- 1.2395 mas/yr
+Total time span = 1806.000 days = 4.945 years
+
+Tempo2 usage
+Units:                 TCB (tempo2)
+Time ephemeris:        IF99 (tempo2)
+Troposphere corr.?     Yes (tempo2)
+Dilate freq?           Yes (tempo2)
+Electron density (1AU) 4
+Solar system ephem     DE414
+Time scale             TT(TAI)
+Binary model           NONE
+**** UNITS was not set in the parameter file: using TCB (tempo2) **** 
+Graphical Interface: TempoNest
+Author:              L. Lentati
+Version:             1.0
+----------------------------------------------------------------
+This program comes with ABSOLUTELY NO WARRANTY.
+This is free software, and you are welcome to redistribute it
+under conditions of GPL license.
+
+----------------------------------------------------------------
+
+
+
+
+*****************************************************
+Starting TempoNest
+*****************************************************
+
+
+
+Details of the fit:
+file root set to results/PL-7C-M-DD-4-J0030+0451- 
+Including Red Noise: Power Law Model to 6 Coefficients 
+fitting for: Arbitrary Phase 
+fitting for: RAJ 
+fitting for: DECJ 
+fitting for: F0 
+fitting for: F1 
+fitting for: PMRA 
+fitting for: PMDEC 
+fitting for: PX 
+Found 0 jumps to fit 
+total Timing Model params to fit:  8 
+marginalising over timing param: 0 
+marginalising over timing param: 1 
+marginalising over timing param: 2 
+marginalising over timing param: 3 
+marginalising over timing param: 4 
+marginalising over timing param: 5 
+marginalising over timing param: 6 
+marginalising over timing param: 7 
+
+Priors:
+Prior on Red Noise Log Amplitude : -20 -> -8
+Prior on Red Noise Slope : 0 -> 7
+
+
+Marginalising over all Timing model parameters, pre-computing Matrices
+nalising over timing param: 2 
+marginalising over timing param: 3 
+marginalising over timing param: 4 
+marginalising over timing param: 5 
+marginalising over timing param: 6 
+marginalising over timing param: 7 
+
+Priors:
+Prior on Red Noise Log Amplitude : -20 -> -8
+Prior on Red Noise Slope : 0 -> 7
+
+
+Marginalising over all Timing model parameters, pre-computing Matrices
+nalising over timing param: 2 
+marginalising over timing param: 3 
+marginalising over timing param: 4 
+marginalising over timing param: 5 
+marginalising over timing param: 6 
+marginalising over timing param: 7 
+
+Priors:
+Prior on Red Noise Log Amplitude : -20 -> -8
+Prior on Red Noise Slope : 0 -> 7
+
+
+Marginalising over all Timing model parameters, pre-computing Matrices
+nalising over timing param: 2 
+marginalising over timing param: 3 
+marginalising over timing param: 4 
+marginalising over timing param: 5 
+marginalising over timing param: 6 
+marginalising over timing param: 7 
+
+Priors:
+Prior on Red Noise Log Amplitude : -20 -> -8
+Prior on Red Noise Slope : 0 -> 7
+
+
+Marginalising over all Timing model parameters, pre-computing Matrices
+nalising over timing param: 2 
+marginalising over timing param: 3 
+marginalising over timing param: 4 
+marginalising over timing param: 5 
+marginalising over timing param: 6 
+marginalising over timing param: 7 
+
+Priors:
+Prior on Red Noise Log Amplitude : -20 -> -8
+Prior on Red Noise Slope : 0 -> 7
+
+
+Marginalising over all Timing model parameters, pre-computing Matrices
+nalising over timing param: 2 
+marginalising over timing param: 3 
+marginalising over timing param: 4 
+marginalising over timing param: 5 
+marginalising over timing param: 6 
+marginalising over timing param: 7 
+
+Priors:
+Prior on Red Noise Log Amplitude : -20 -> -8
+Prior on Red Noise Slope : 0 -> 7
+
+
+Marginalising over all Timing model parameters, pre-computing Matrices
+nalising over timing param: 2 
+marginalising over timing param: 3 
+marginalising over timing param: 4 
+marginalising over timing param: 5 
+marginalising over timing param: 6 
+marginalising over timing param: 7 
+
+Priors:
+Prior on Red Noise Log Amplitude : -20 -> -8
+Prior on Red Noise Slope : 0 -> 7
+
+
+Marginalising over all Timing model parameters, pre-computing Matrices
+nalising over timing param: 2 
+marginalising over timing param: 3 
+marginalising over timing param: 4 
+marginalising over timing param: 5 
+marginalising over timing param: 6 
+marginalising over timing param: 7 
+
+Priors:
+Prior on Red Noise Log Amplitude : -20 -> -8
+Prior on Red Noise Slope : 0 -> 7
+
+
+Marginalising over all Timing model parameters, pre-computing Matrices
+ my rank           6
+ my rank           1
+ my rank           2
+ my rank           4
+ my rank           7
+ my rank           0
+ my rank           3
+ my rank           5
+ MultiNest Warning: no resume file found, starting from scratch
+ *****************************************************
+ MultiNest v3.6
+ Copyright Farhan Feroz & Mike Hobson
+ Release Mar 2014
+
+ no. of live points =  200
+ dimensionality =    2
+ *****************************************************
+ Starting MultiNest
+ generating live points
+ live points generated, starting sampling
+Acceptance Rate:                        0.992063
+Replacements:                                250
+Total Samples:                               252
+Nested Sampling ln(Z):              -5075.529558
+Importance Nested Sampling ln(Z):    1875.663609 +/-  0.404029
+Acceptance Rate:                        0.914634
+Replacements:                                300
+Total Samples:                               328
+Nested Sampling ln(Z):              -3784.818272
+Importance Nested Sampling ln(Z):    1875.678239 +/-  0.347771
+Acceptance Rate:                        0.804598
+Replacements:                                350
+Total Samples:                               435
+Nested Sampling ln(Z):               1696.940007
+Importance Nested Sampling ln(Z):    1875.415179 +/-  0.338705
+Acceptance Rate:                        0.698080
+Replacements:                                400
+Total Samples:                               573
+Nested Sampling ln(Z):               1783.712945
+Importance Nested Sampling ln(Z):    1875.271612 +/-  0.304733
+Acceptance Rate:                        0.621547
+Replacements:                                450
+Total Samples:                               724
+Nested Sampling ln(Z):               1814.115141
+Importance Nested Sampling ln(Z):    1875.491721 +/-  0.258876
+Acceptance Rate:                        0.537634
+Replacements:                                500
+Total Samples:                               930
+Nested Sampling ln(Z):               1830.630524
+Importance Nested Sampling ln(Z):    1875.443733 +/-  0.232774
+Acceptance Rate:                        0.523810
+Replacements:                                550
+Total Samples:                              1050
+Nested Sampling ln(Z):               1843.815823
+Importance Nested Sampling ln(Z):    1875.540119 +/-  0.197204
+Acceptance Rate:                        0.524476
+Replacements:                                600
+Total Samples:                              1144
+Nested Sampling ln(Z):               1853.812103
+Importance Nested Sampling ln(Z):    1875.593676 +/-  0.177599
+Acceptance Rate:                        0.515464
+Replacements:                                650
+Total Samples:                              1261
+Nested Sampling ln(Z):               1860.219920
+Importance Nested Sampling ln(Z):    1875.440567 +/-  0.162989
+Acceptance Rate:                        0.504686
+Replacements:                                700
+Total Samples:                              1387
+Nested Sampling ln(Z):               1864.747973
+Importance Nested Sampling ln(Z):    1875.384804 +/-  0.145713
+Acceptance Rate:                        0.501002
+Replacements:                                750
+Total Samples:                              1497
+Nested Sampling ln(Z):               1868.527635
+Importance Nested Sampling ln(Z):    1875.417131 +/-  0.123809
+Acceptance Rate:                        0.501882
+Replacements:                                800
+Total Samples:                              1594
+Nested Sampling ln(Z):               1870.493419
+Importance Nested Sampling ln(Z):    1875.348784 +/-  0.110895
+Acceptance Rate:                        0.500294
+Replacements:                                850
+Total Samples:                              1699
+Nested Sampling ln(Z):               1871.712524
+Importance Nested Sampling ln(Z):    1875.397410 +/-  0.096513
+Acceptance Rate:                        0.495050
+Replacements:                                900
+Total Samples:                              1818
+Nested Sampling ln(Z):               1872.513844
+Importance Nested Sampling ln(Z):    1875.435390 +/-  0.084815
+Acceptance Rate:                        0.485437
+Replacements:                                950
+Total Samples:                              1957
+Nested Sampling ln(Z):               1873.083598
+Importance Nested Sampling ln(Z):    1875.415215 +/-  0.075022
+Acceptance Rate:                        0.477327
+Replacements:                               1000
+Total Samples:                              2095
+Nested Sampling ln(Z):               1873.545815
+Importance Nested Sampling ln(Z):    1875.443506 +/-  0.065961
+Acceptance Rate:                        0.470430
+Replacements:                               1050
+Total Samples:                              2232
+Nested Sampling ln(Z):               1873.916518
+Importance Nested Sampling ln(Z):    1875.458308 +/-  0.057642
+Acceptance Rate:                        0.462963
+Replacements:                               1100
+Total Samples:                              2376
+Nested Sampling ln(Z):               1874.222969
+Importance Nested Sampling ln(Z):    1875.473289 +/-  0.050417
+Acceptance Rate:                        0.455987
+Replacements:                               1150
+Total Samples:                              2522
+Nested Sampling ln(Z):               1874.465212
+Importance Nested Sampling ln(Z):    1875.492487 +/-  0.043837
+Acceptance Rate:                        0.455754
+Replacements:                               1200
+Total Samples:                              2633
+Nested Sampling ln(Z):               1874.659504
+Importance Nested Sampling ln(Z):    1875.513803 +/-  0.038905
+Acceptance Rate:                        0.452735
+Replacements:                               1250
+Total Samples:                              2761
+Nested Sampling ln(Z):               1874.818921
+Importance Nested Sampling ln(Z):    1875.532033 +/-  0.033747
+Acceptance Rate:                        0.444444
+Replacements:                               1300
+Total Samples:                              2925
+Nested Sampling ln(Z):               1874.945812
+Importance Nested Sampling ln(Z):    1875.527960 +/-  0.028504
+Acceptance Rate:                        0.436565
+Replacements:                               1342
+Total Samples:                              3074
+Nested Sampling ln(Z):               1875.030593
+Importance Nested Sampling ln(Z):    1875.521072 +/-  0.024624
+ ln(ev)=   1875.3860429232609      +/-  0.13454208248046276     
+ Total Likelihood Evaluations:         3074
+ Sampling finished. Exiting MultiNest
+Processing Posteriors 
+Processing Posteriors 
+Processing Posteriors 
+Processing Posteriors 
+Processing Posteriors 
+Processing Posteriors 
+Processing Posteriors 
+Processing Posteriors 
+
+
+TempoNest Results for PSR J0030+0451
+
+
+Evidence = 0	
+
+PARAMETER          Tempo2-Fit              TempoNest-Fit          Uncertainty   Difference   Fit
+---------------------------------------------------------------------------------------------------
+RAJ (rad)       0.132894457103691         0.132894457102272         0             -1.4186e-12   M
+RAJ (hms)        00:30:27.4299630          00:30:27.4299630342      0             -1.9507e-08  
+DECJ (rad)      0.0848411933216011        0.0848411933251172        0             3.5161e-12    M
+DECJ (dms)      +04:51:39.75230           +04:51:39.7523029778      0             7.2526e-07   
+F0 (s^-1)       205.530696088273          205.530696088273          0             0             M
+F1 (s^-2)       -4.30603887691095e-16     -4.30603885331753e-16     0             2.3593e-24    M
+PMRA (mas/yr)   -4.05445936505675         -4.05438895368363         0             7.0411e-05    M
+PMDEC (mas/yr)  -5.0331228685027          -5.03330593702049         0             -0.00018307   M
+PX (mas)        4.0229053610752           4.02290738497255          0             2.0239e-06    M
+---------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------
+Stochastic Parameters:
+Power Law Red Noise Model:
+Log Amplitude: -12.8673 +/- 0.231631
+Spectral Index: 2.94471 +/- 1.25029
+------------------------------------------------------------------------------
+
+Derived parameters:
+
+P0 (s)      = 0.00486545328280556       0            
+P1          = 1.01935288857115e-20      0            
+tau_c (Myr) = 7567.7
+bs (G)      = 2.2536e+08
+
+Total proper motion = 6.4631 +/- 0 mas/yr
+Total time span = 1806.000 days = 4.945 years
+writing par file results/PL-7C-M-DD-4-J0030+0451-.par. 
+The stop date/time was: Tue Sep  8 10:18:37 2015
+Total Wall clock run time: 9 
+
+
+TempoNest Results for PSR J0030+0451
+
+
+Evidence = 0	
+
+PARAMETER          Tempo2-Fit              TempoNest-Fit          Uncertainty   Difference   Fit
+---------------------------------------------------------------------------------------------------
+RAJ (rad)       0.132894457103691         0.132894457102272         0             -1.4186e-12   M
+RAJ (hms)        00:30:27.4299630          00:30:27.4299630342      0             -1.9507e-08  
+DECJ (rad)      0.0848411933216011        0.0848411933251172        0             3.5161e-12    M
+DECJ (dms)      +04:51:39.75230           +04:51:39.7523029778      0             7.2526e-07   
+F0 (s^-1)       205.530696088273          205.530696088273          0             0             M
+F1 (s^-2)       -4.30603887691095e-16     -4.30603885331753e-16     0             2.3593e-24    M
+PMRA (mas/yr)   -4.05445936505675         -4.05438895368363         0             7.0411e-05    M
+PMDEC (mas/yr)  -5.0331228685027          -5.03330593702049         0             -0.00018307   M
+PX (mas)        4.0229053610752           4.02290738497255          0             2.0239e-06    M
+---------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------
+Stochastic Parameters:
+Power Law Red Noise Model:
+Log Amplitude: -12.8673 +/- 0.231631
+Spectral Index: 2.94471 +/- 1.25029
+------------------------------------------------------------------------------
+
+Derived parameters:
+
+P0 (s)      = 0.00486545328280556       0            
+P1          = 1.01935288857115e-20      0            
+tau_c (Myr) = 7567.7
+bs (G)      = 2.2536e+08
+
+Total proper motion = 6.4631 +/- 0 mas/yr
+Total time span = 1806.000 days = 4.945 years
+writing par file results/PL-7C-M-DD-4-J0030+0451-.par. 
+The stop date/time was: Tue Sep  8 10:18:37 2015
+Total Wall clock run time: 9 
+
+
+TempoNest Results for PSR J0030+0451
+
+
+Evidence = 0	
+
+PARAMETER          Tempo2-Fit              TempoNest-Fit          Uncertainty   Difference   Fit
+---------------------------------------------------------------------------------------------------
+RAJ (rad)       0.132894457103691         0.132894457102272         0             -1.4186e-12   M
+RAJ (hms)        00:30:27.4299630          00:30:27.4299630342      0             -1.9507e-08  
+DECJ (rad)      0.0848411933216011        0.0848411933251172        0             3.5161e-12    M
+DECJ (dms)      +04:51:39.75230           +04:51:39.7523029778      0             7.2526e-07   
+F0 (s^-1)       205.530696088273          205.530696088273          0             0             M
+F1 (s^-2)       -4.30603887691095e-16     -4.30603885331753e-16     0             2.3593e-24    M
+PMRA (mas/yr)   -4.05445936505675         -4.05438895368363         0             7.0411e-05    M
+PMDEC (mas/yr)  -5.0331228685027          -5.03330593702049         0             -0.00018307   M
+PX (mas)        4.0229053610752           4.02290738497255          0             2.0239e-06    M
+---------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------
+Stochastic Parameters:
+Power Law Red Noise Model:
+Log Amplitude: -12.8673 +/- 0.231631
+Spectral Index: 2.94471 +/- 1.25029
+------------------------------------------------------------------------------
+
+Derived parameters:
+
+P0 (s)      = 0.00486545328280556       0            
+P1          = 1.01935288857115e-20      0            
+tau_c (Myr) = 7567.7
+bs (G)      = 2.2536e+08
+
+Total proper motion = 6.4631 +/- 0 mas/yr
+Total time span = 1806.000 days = 4.945 years
+writing par file results/PL-7C-M-DD-4-J0030+0451-.par. 
+
+
+TempoNest Results for PSR J0030+0451
+
+
+Evidence = 0	
+
+PARAMETER          Tempo2-Fit              TempoNest-Fit          Uncertainty   Difference   Fit
+---------------------------------------------------------------------------------------------------
+RAJ (rad)       0.132894457103691         0.132894457102272         0             -1.4186e-12   M
+RAJ (hms)        00:30:27.4299630          00:30:27.4299630342      0             -1.9507e-08  
+DECJ (rad)      0.0848411933216011        0.0848411933251172        0             3.5161e-12    M
+DECJ (dms)      +04:51:39.75230           +04:51:39.7523029778      0             7.2526e-07   
+F0 (s^-1)       205.530696088273          205.530696088273          0             0             M
+F1 (s^-2)       -4.30603887691095e-16     -4.30603885331753e-16     0             2.3593e-24    M
+PMRA (mas/yr)   -4.05445936505675         -4.05438895368363         0             7.0411e-05    M
+PMDEC (mas/yr)  -5.0331228685027          -5.03330593702049         0             -0.00018307   M
+PX (mas)        4.0229053610752           The stop date/time was: Tue Sep  8 10:18:37 2015
+4.02290738497255          0             Total Wall clock run time: 9 
+2.0239e-06    M
+---------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------
+Stochastic Parameters:
+Power Law Red Noise Model:
+Log Amplitude: -12.8673 +/- 0.231631
+Spectral Index: 2.94471 +/- 1.25029
+------------------------------------------------------------------------------
+
+Derived parameters:
+
+P0 (s)      = 0.00486545328280556       0            
+P1          = 1.01935288857115e-20      0            
+tau_c (Myr) = 7567.7
+bs (G)      = 2.2536e+08
+
+Total proper motion = 6.4631 +/- 0 mas/yr
+Total time span = 1806.000 days = 4.945 years
+writing par file results/PL-7C-M-DD-4-J0030+0451-.par. 
+The stop date/time was: Tue Sep  8 10:18:37 2015
+Total Wall clock run time: 9 
+
+
+TempoNest Results for PSR J0030+0451
+
+
+Evidence = 0	
+
+PARAMETER          Tempo2-Fit              TempoNest-Fit          Uncertainty   Difference   Fit
+---------------------------------------------------------------------------------------------------
+RAJ (rad)       0.132894457103691         0.132894457102272         0             -1.4186e-12   M
+RAJ (hms)        00:30:27.4299630          00:30:27.4299630342      0             -1.9507e-08  
+DECJ (rad)      0.0848411933216011        0.0848411933251172        0             3.5161e-12    M
+DECJ (dms)      +04:51:39.75230           +04:51:39.7523029778      0             7.2526e-07   
+F0 (s^-1)       205.530696088273          205.530696088273          0             0             M
+F1 (s^-2)       -4.30603887691095e-16     -4.30603885331753e-16     0             2.3593e-24    M
+PMRA (mas/yr)   -4.05445936505675         -4.05438895368363         0             7.0411e-05    M
+PMDEC (mas/yr)  -5.0331228685027          -5.03330593702049         0             -0.00018307   M
+PX (mas)        4.0229053610752           4.02290738497255          0             2.0239e-06    M
+---------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------
+Stochastic Parameters:
+Power Law Red Noise Model:
+Log Amplitude: -12.8673 +/- 0.231631
+Spectral Index: 2.94471 +/- 1.25029
+------------------------------------------------------------------------------
+
+Derived parameters:
+
+P0 (s)      = 0.00486545328280556       0            
+P1          = 1.01935288857115e-20      0            
+tau_c (Myr) = 7567.7
+bs (G)      = 2.2536e+08
+
+Total proper motion = 6.4631 +/- 0 mas/yr
+Total time span = 1806.000 days = 4.945 years
+writing par file results/PL-7C-M-DD-4-J0030+0451-.par. 
+The stop date/time was: Tue Sep  8 10:18:37 2015
+Total Wall clock run time: 9 
+
+
+TempoNest Results for PSR J0030+0451
+
+
+Evidence = 0	
+
+PARAMETER          Tempo2-Fit              TempoNest-Fit          Uncertainty   Difference   Fit
+---------------------------------------------------------------------------------------------------
+RAJ (rad)       0.132894457103691         0.132894457102272         0             -1.4186e-12   M
+RAJ (hms)        00:30:27.4299630          00:30:27.4299630342      0             -1.9507e-08  
+DECJ (rad)      0.0848411933216011        0.0848411933251172        0             3.5161e-12    M
+DECJ (dms)      +04:51:39.75230           +04:51:39.7523029778      0             7.2526e-07   
+F0 (s^-1)       205.530696088273          205.530696088273          0             0             M
+F1 (s^-2)       -4.30603887691095e-16     -4.30603885331753e-16     0             2.3593e-24    M
+PMRA (mas/yr)   -4.05445936505675         -4.05438895368363         0             7.0411e-05    M
+PMDEC (mas/yr)  -5.0331228685027          -5.03330593702049         0             -0.00018307   M
+PX (mas)        4.0229053610752           4.02290738497255          0             2.0239e-06    M
+---------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------
+Stochastic Parameters:
+Power Law Red Noise Model:
+Log Amplitude: -12.8673 +/- 0.231631
+Spectral Index: 2.94471 +/- 1.25029
+------------------------------------------------------------------------------
+
+Derived parameters:
+
+P0 (s)      = 0.00486545328280556       0            
+P1          = 1.01935288857115e-20      0            
+tau_c (Myr) = 7567.7
+bs (G)      = 2.2536e+08
+
+Total proper motion = 6.4631 +/- 0 mas/yr
+Total time span = 1806.000 days = 4.945 years
+writing par file results/PL-7C-M-DD-4-J0030+0451-.par. 
+The stop date/time was: Tue Sep  8 10:18:37 2015
+Total Wall clock run time: 9 
+
+
+TempoNest Results for PSR J0030+0451
+
+
+Evidence = 0	
+
+PARAMETER          Tempo2-Fit              TempoNest-Fit          Uncertainty   Difference   Fit
+---------------------------------------------------------------------------------------------------
+RAJ (rad)       0.132894457103691         0.132894457102272         0             -1.4186e-12   M
+RAJ (hms)        00:30:27.4299630          00:30:27.4299630342      0             -1.9507e-08  
+DECJ (rad)      0.0848411933216011        0.0848411933251172        0             3.5161e-12    M
+DECJ (dms)      +04:51:39.75230           +04:51:39.7523029778      0             7.2526e-07   
+F0 (s^-1)       205.530696088273          205.530696088273          0             0             M
+F1 (s^-2)       -4.30603887691095e-16     -4.30603885331753e-16     0             2.3593e-24    M
+PMRA (mas/yr)   -4.05445936505675         -4.05438895368363         0             7.0411e-05    M
+PMDEC (mas/yr)  -5.0331228685027          -5.03330593702049         0             -0.00018307   M
+PX (mas)        4.0229053610752           4.02290738497255          0             2.0239e-06    M
+---------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------
+Stochastic Parameters:
+Power Law Red Noise Model:
+Log Amplitude: -12.8673 +/- 0.231631
+Spectral Index: 2.94471 +/- 1.25029
+------------------------------------------------------------------------------
+
+Derived parameters:
+
+P0 (s)      = 0.00486545328280556       0            
+P1          = 1.01935288857115e-20      0            
+tau_c (Myr) = 7567.7
+bs (G)      = 2.2536e+08
+
+Total proper motion = 6.4631 +/- 0 mas/yr
+Total time span = 1806.000 days = 4.945 years
+writing par file results/PL-7C-M-DD-4-J0030+0451-.par. 
+The stop date/time was: Tue Sep  8 10:18:37 2015
+Total Wall clock run time: 9 
+
+
+TempoNest Results for PSR J0030+0451
+
+
+Evidence = 0	
+
+PARAMETER          Tempo2-Fit              TempoNest-Fit          Uncertainty   Difference   Fit
+---------------------------------------------------------------------------------------------------
+RAJ (rad)       0.132894457103691         0.132894457102272         0             -1.4186e-12   M
+RAJ (hms)        00:30:27.4299630          00:30:27.4299630342      0             -1.9507e-08  
+DECJ (rad)      0.0848411933216011        0.0848411933251172        0             3.5161e-12    M
+DECJ (dms)      +04:51:39.75230           +04:51:39.7523029778      0             7.2526e-07   
+F0 (s^-1)       205.530696088273          205.530696088273          0             0             M
+F1 (s^-2)       -4.30603887691095e-16     -4.30603885331753e-16     0             2.3593e-24    M
+PMRA (mas/yr)   -4.05445936505675         -4.05438895368363         0             7.0411e-05    M
+PMDEC (mas/yr)  -5.0331228685027          -5.03330593702049         0             -0.00018307   M
+PX (mas)        4.0229053610752           4.02290738497255          0             2.0239e-06    M
+---------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------
+Stochastic Parameters:
+Power Law Red Noise Model:
+Log Amplitude: -12.8673 +/- 0.231631
+Spectral Index: 2.94471 +/- 1.25029
+------------------------------------------------------------------------------
+
+Derived parameters:
+
+P0 (s)      = 0.00486545328280556       0            
+P1          = 1.01935288857115e-20      0            
+tau_c (Myr) = 7567.7
+bs (G)      = 2.2536e+08
+
+Total proper motion = 6.4631 +/- 0 mas/yr
+Total time span = 1806.000 days = 4.945 years
+writing par file results/PL-7C-M-DD-4-J0030+0451-.par. 
+The stop date/time was: Tue Sep  8 10:18:37 2015
+Total Wall clock run time: 9 

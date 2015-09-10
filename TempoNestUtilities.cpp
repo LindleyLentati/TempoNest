@@ -213,10 +213,10 @@ void readphyslive(std::string longname, int ndim, double **paramarray, int sampl
 	}
 	summaryfile.close();
 
-	void *tempcontext;
-	double *DerivedParams=new double[1];
-	int np = 1;
-	double like = NewLRedMarginLogLike(ndim, TempCube, np, DerivedParams, tempcontext);
+	//void *tempcontext;
+	//double *DerivedParams=new double[1];
+	//int np = 1;
+	//double like = NewLRedMarginLogLike(ndim, TempCube, np, DerivedParams, tempcontext);
 
 }
 
@@ -364,7 +364,7 @@ void readsummary(pulsar *psr, std::string longname, int ndim, void *context, lon
 	} 
 	
 	designfile.close();
-	
+	printf("text output\n");	
 	double Evidence=0;
 	TNtextOutput(((MNStruct *)context)->pulse, 1, 0, Tempo2Fit,  context,incRED,ndims,paramlist, Evidence, doTimeMargin, doJumpMargin, doLinear, longname, paramarray);
 
@@ -372,670 +372,6 @@ void readsummary(pulsar *psr, std::string longname, int ndim, void *context, lon
 	
 	
 //	printf("finished output \n");
-
-}
-
-
-void getmaxlikeDM(pulsar *pulse,std::string longname, int ndim, void *context, double **paramsarray){
-
-	formBatsAll(pulse,((MNStruct *)context)->numberpulsars);       /* Form Barycentric arrival times */
-	formResiduals(pulse,((MNStruct *)context)->numberpulsars,1);       /* Form residuals */
-//	printf("Jump1: %g \n",pulse[0].jumpVal[((MNStruct *)context)->TempoJumpNums[0]]);
-
-
-/////////////////////////////////////////////////////////////////////////////////////////////  
-/////////////////////////Form the Design Matrix////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////////////////  
-
-	
-	int TimetoFit=((MNStruct *)context)->numFitTiming;
-	int JumpstoFit=((MNStruct *)context)->numFitJumps;
-	int TimetoMargin=TimetoFit+JumpstoFit;
-	int numtofit= TimetoFit+JumpstoFit;
-	
-	printf("num params, %i %i \n", TimetoFit, JumpstoFit);
-
-	double **TNDM=new double*[((MNStruct *)context)->pulse->nobs];
-	for(int i=0;i<((MNStruct *)context)->pulse->nobs;i++){
-		TNDM[i]=new double[TimetoMargin];
-	}
-	
-
-
-	//getDMatrix(((MNStruct *)context)->pulse, TimetoFit, JumpstoFit, numtofit, ((MNStruct *)context)->TempoFitNums,((MNStruct *)context)->TempoJumpNums, ((MNStruct *)context)->Dpriors,1, 2, TNDM);
-	getCustomDMatrixLike(context, TNDM);
-	
-	
-	std::ofstream designfile;
-	std::string dname = longname+"DesignMatrix.txt";
-
-	designfile.open(dname.c_str());
-
-	designfile << ((MNStruct *)context)->pulse->nobs;
-	designfile << " ";
-	designfile << numtofit;
-	designfile << "\n";
-	designfile << ((MNStruct *)context)->pulse->param[param_raj].val[0];
-	designfile << " ";
-	designfile << ((MNStruct *)context)->pulse->param[param_decj].val[0];
-	designfile << "\n";		
-	for(int i=0; i < ((MNStruct *)context)->pulse->nobs; i++) {
-
-		for(int j=0; j<numtofit; j++) {
-			std::stringstream ss;
-			ss.precision(std::numeric_limits<double>::digits10);//override the default
-			ss << TNDM[i][j];
-			designfile << ss.str();
-			designfile << " ";
-		//	if(j==6)printf("%i %g \n", i, TNDM[i][j]);
-		} 
-		designfile << "\n";
-
-	} 
-
-	designfile.close();
-
-
-	double* S = new double[TimetoMargin];
-	double** U = new double*[((MNStruct *)context)->pulse->nobs];
-	for(int k=0; k < ((MNStruct *)context)->pulse->nobs; k++){
-		U[k] = new double[((MNStruct *)context)->pulse->nobs];
-	}
-	double** VT = new double*[TimetoMargin]; 
-	for (int k=0; k<TimetoMargin; k++) VT[k] = new double[TimetoMargin];
-
-	dgesvd(TNDM,((MNStruct *)context)->pulse->nobs, TimetoMargin, S, U, VT);
-
-	double **V=new double*[numtofit];
-
-	for(int i=0;i<numtofit;i++){
-		V[i]=new double[numtofit];
-	}
-
-
-	for(int j=0;j < numtofit;j++){
-		for(int k=0;k < numtofit;k++){
-			V[j][k]=VT[k][j];
-		}
-	}
-		
-	
-
-	for(int j=0;j<((MNStruct *)context)->pulse->nobs;j++){
-		for(int k=0;k < TimetoMargin;k++){
-				TNDM[j][k]=U[j][k];
-		}
-	}
-
-
-/////////////////////////////////////////////////////////////////////////////////////////////  
-/////////////////////////Get White Noise vector//////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////  
-
-	double **EFAC;
-	double *EQUAD;
-
-	int pcount=0;
-	if(((MNStruct *)context)->numFitEFAC == 0){
-		EFAC=new double*[((MNStruct *)context)->EPolTerms];
-		for(int n=1; n <=((MNStruct *)context)->EPolTerms; n++){
-			EFAC[n-1]=new double[((MNStruct *)context)->systemcount];
-			if(n==1){
-				for(int o=0;o<((MNStruct *)context)->systemcount; o++){
-					EFAC[n-1][o]=1;
-				}
-			}
-			else{
-                for(int o=0;o<((MNStruct *)context)->systemcount; o++){
-                   EFAC[n-1][o]=0;
-                }
-			}
-		}
-	}
-	else if(((MNStruct *)context)->numFitEFAC == 1){
-		EFAC=new double*[((MNStruct *)context)->EPolTerms];
-		for(int n=1; n <=((MNStruct *)context)->EPolTerms; n++){
-			
-			EFAC[n-1]=new double[((MNStruct *)context)->systemcount];
-			if(n==1){
-				for(int o=0;o<((MNStruct *)context)->systemcount; o++){
-					
-					EFAC[n-1][o]=pow(10.0,paramsarray[pcount][2]);
-				}
-				pcount++;
-			}
-			else{
-                                for(int o=0;o<((MNStruct *)context)->systemcount; o++){
-
-                                        EFAC[n-1][o]=pow(10.0,paramsarray[pcount][2]);
-                                }
-                                pcount++;
-                        }
-		}
-		
-	}
-	else if(((MNStruct *)context)->numFitEFAC > 1){
-		EFAC=new double*[((MNStruct *)context)->EPolTerms];
-		for(int n=1; n <=((MNStruct *)context)->EPolTerms; n++){
-			EFAC[n-1]=new double[((MNStruct *)context)->systemcount];
-			if(n==1){
-				for(int p=0;p< ((MNStruct *)context)->systemcount; p++){
-					EFAC[n-1][p]=pow(10.0,paramsarray[pcount][2]);
-					pcount++;
-				}
-			}
-			else{
-                                for(int p=0;p< ((MNStruct *)context)->systemcount; p++){
-                                        EFAC[n-1][p]=pow(10.0,paramsarray[pcount][2]);
-                                        pcount++;
-                                }
-                        }
-		}
-	}	
-
-		
-
-	if(((MNStruct *)context)->numFitEQUAD == 0){
-		EQUAD=new double[((MNStruct *)context)->systemcount];
-		for(int o=0;o<((MNStruct *)context)->systemcount; o++){
-			EQUAD[o]=0;
-		}
-	}
-	else if(((MNStruct *)context)->numFitEQUAD == 1){
-		EQUAD=new double[((MNStruct *)context)->systemcount];
-                for(int o=0;o<((MNStruct *)context)->systemcount; o++){
-			EQUAD[o]=pow(10.0,2*paramsarray[pcount][2]);
-		}
-		pcount++;
-	}
-	else if(((MNStruct *)context)->numFitEQUAD > 1){
-        EQUAD=new double[((MNStruct *)context)->systemcount];
-        for(int o=0;o<((MNStruct *)context)->systemcount; o++){
-            EQUAD[o]=pow(10.0,2*paramsarray[pcount][2]);
-	    pcount++;
-        }
-    }
-    
-
-    	double *SQUAD;
-	if(((MNStruct *)context)->incShannonJitter == 0){
-		SQUAD=new double[((MNStruct *)context)->systemcount];
-		for(int o=0;o<((MNStruct *)context)->systemcount; o++){
-			SQUAD[o]=0;
-		}
-	}
-	else if(((MNStruct *)context)->incShannonJitter == 1){
-		SQUAD=new double[((MNStruct *)context)->systemcount];
-                for(int o=0;o<((MNStruct *)context)->systemcount; o++){
-			SQUAD[o]=pow(10.0,2*paramsarray[pcount][2]);
-		}
-		pcount++;
-	}
-	else if(((MNStruct *)context)->incShannonJitter > 1){
-        SQUAD=new double[((MNStruct *)context)->systemcount];
-        for(int o=0;o<((MNStruct *)context)->systemcount; o++){
-            SQUAD[o]=pow(10.0,2*paramsarray[pcount][2]);
-	    pcount++;
-        }
-    }
-    
-
-	double *Noise;	
-	Noise=new double[((MNStruct *)context)->pulse->nobs];
-
-	if(((MNStruct *)context)->whitemodel == 0){
-	
-		for(int o=0;o<((MNStruct *)context)->pulse->nobs; o++){
-			double EFACterm=0;
-			double noiseval=0;
-			double ShannonJitterTerm=0;
-			
-			
-			if(((MNStruct *)context)->useOriginalErrors==0){
-				noiseval=((MNStruct *)context)->pulse->obsn[o].toaErr;
-			}
-			else if(((MNStruct *)context)->useOriginalErrors==1){
-				noiseval=((MNStruct *)context)->pulse->obsn[o].origErr;
-			}
-
-
-			for(int n=1; n <=((MNStruct *)context)->EPolTerms; n++){
-				EFACterm=EFACterm + pow((noiseval*pow(10.0,-6))/pow(pow(10.0,-7),n-1),n)*EFAC[n-1][((MNStruct *)context)->sysFlags[o]];
-			}	
-			if(((MNStruct *)context)->incShannonJitter >0){		
-		 	ShannonJitterTerm=SQUAD[((MNStruct *)context)->sysFlags[o]]*((MNStruct *)context)->TobsInfo[o]/1000.0;
-			}
-			Noise[o]= 1.0/(pow(EFACterm,2) + EQUAD[((MNStruct *)context)->sysFlags[o]]+ShannonJitterTerm);
-
-		}
-		
-	}
-	else if(((MNStruct *)context)->whitemodel == 1){
-	
-		for(int o=0;o<((MNStruct *)context)->pulse->nobs; o++){
-
-			Noise[o]=1.0/(EFAC[0][((MNStruct *)context)->sysFlags[o]]*EFAC[0][((MNStruct *)context)->sysFlags[o]]*(pow(((((MNStruct *)context)->pulse->obsn[o].toaErr)*pow(10.0,-6)),2) + EQUAD[((MNStruct *)context)->sysFlags[o]]));
-		}
-		
-	}
-	
-
-/////////////////////////////////////////////////////////////////////////////////////////////  
-/////////////////////////Get F Matrix////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////  
-
-	int RedAmpParam=0;
-	int RedSpecParam=0;
-	int DMAmpParam=0;
-	int DMSpecParam=0;
-
-	double RedAmp=0;
-	double RedIndex=0;
-
-	double DMAmp=0;
-	double DMIndex=0;
-
-	if(((MNStruct *)context)->incRED==3){
-		RedAmpParam=((MNStruct *)context)->numFitEFAC + ((MNStruct *)context)->numFitEQUAD + ((MNStruct *)context)->incShannonJitter;
-		RedSpecParam=RedAmpParam+1;
-
-		RedAmp=paramsarray[RedAmpParam][2];
-		RedIndex=paramsarray[RedSpecParam][2];
-
-		if(((MNStruct *)context)->incDM==3){
-			DMAmpParam=RedSpecParam+1;
-			DMSpecParam=DMAmpParam+1;
-
-			DMAmp=paramsarray[DMAmpParam][2];
-			DMIndex=paramsarray[DMSpecParam][2];
-		}
-	}
-	else{
-		if(((MNStruct *)context)->incDM==3){
-			DMAmpParam=((MNStruct *)context)->numFitEFAC + ((MNStruct *)context)->numFitEQUAD + ((MNStruct *)context)->incShannonJitter;
-			DMSpecParam=DMAmpParam+1;
-
-			DMAmp=paramsarray[DMAmpParam][2];
-			DMIndex=paramsarray[DMSpecParam][2];
-		}
-	}
-
-
-
-
-
-	printf("params %i %i %i %i\n", RedAmpParam, RedSpecParam, DMAmpParam, DMSpecParam);
-	printf("params %g %g %g %g\n", RedAmp, RedIndex, DMAmp, DMIndex);
-
-	int FitRedCoeff=2*(((MNStruct *)context)->numFitRedCoeff);
-	int FitDMCoeff=2*(((MNStruct *)context)->numFitDMCoeff);
-
-   	int totCoeff=0;
-    	if(((MNStruct *)context)->incRED != 0)totCoeff+=FitRedCoeff;
-    	if(((MNStruct *)context)->incDM != 0)totCoeff+=FitDMCoeff;
-
-	double **FMatrix=new double*[((MNStruct *)context)->pulse->nobs];
-	for(int i=0;i<((MNStruct *)context)->pulse->nobs;i++){
-		FMatrix[i]=new double[totCoeff];
-	}
-
-
-	double start,end;
-	int go=0;
-	for (int i=0;i<((MNStruct *)context)->pulse->nobs;i++)
-	  {
-	    if (((MNStruct *)context)->pulse->obsn[i].deleted==0)
-	      {
-		if (go==0)
-		  {
-		    go = 1;
-		    start = (double)((MNStruct *)context)->pulse->obsn[i].bat;
-		    end  = start;
-		  }
-		else
-		  {
-		    if (start > (double)((MNStruct *)context)->pulse->obsn[i].bat)
-		      start = (double)((MNStruct *)context)->pulse->obsn[i].bat;
-		    if (end < (double)((MNStruct *)context)->pulse->obsn[i].bat)
-		      end = (double)((MNStruct *)context)->pulse->obsn[i].bat;
-		  }
-	      }
-	  }
-
-	double maxtspan=1*(end-start);
-
-
-	double *freqs = new double[totCoeff];
-
-	double *DMVec=new double[((MNStruct *)context)->pulse->nobs];
-	double DMKappa = 2.410*pow(10.0,-16);
-	int startpos=0;
-	double freqdet=0;
-
-	double *powercoeff=new double[totCoeff];
-	for(int o=0;o<totCoeff; o++){
-		powercoeff[o]=0;
-	}
-
-	double Tspan = maxtspan;
-	double f1yr = 1.0/3.16e7;
-
-	if(((MNStruct *)context)->incRED==3){
-
-		RedAmp=pow(10.0, RedAmp);
-
-		for (int i=0; i<FitRedCoeff/2; i++){
-
-			freqs[startpos+i]=(double)((MNStruct *)context)->sampleFreq[i]/maxtspan;
-			freqs[startpos+i+FitRedCoeff/2]=freqs[startpos+i];
-		
-			double rho = (RedAmp*RedAmp/12.0/(M_PI*M_PI))*pow(f1yr,(-3)) * pow(freqs[i]*365.25,(-RedIndex))/(maxtspan*24*60*60);
-			powercoeff[i]+= rho;
-			powercoeff[i+FitRedCoeff/2]+= rho;
-		}
-
-
-		for(int i=0;i<FitRedCoeff/2;i++){
-			for(int k=0;k<((MNStruct *)context)->pulse->nobs;k++){
-				double time=(double)((MNStruct *)context)->pulse->obsn[k].bat;
-				FMatrix[k][i]=cos(2*M_PI*freqs[i]*time);
-
-			}
-		}
-
-		for(int i=0;i<FitRedCoeff/2;i++){
-			for(int k=0;k<((MNStruct *)context)->pulse->nobs;k++){
-				double time=(double)((MNStruct *)context)->pulse->obsn[k].bat;
-				FMatrix[k][i+FitRedCoeff/2]=sin(2*M_PI*freqs[i]*time);
-			}
-		}
-
-
-		startpos=FitRedCoeff;
-	}
-
-
-	if(((MNStruct *)context)->incDM==3){
-		DMAmp=pow(10.0, DMAmp);
-
-		for (int i=0; i<FitDMCoeff/2; i++){
-
-			freqs[startpos+i]=(double)((MNStruct *)context)->sampleFreq[startpos/2 - ((MNStruct *)context)->incFloatRed +i]/maxtspan;
-			freqs[startpos+i+FitDMCoeff/2]=freqs[startpos+i];
-		
-			double rho = (DMAmp*DMAmp)*pow(f1yr,(-3)) * pow(freqs[startpos+i]*365.25,(-DMIndex))/(maxtspan*24*60*60);	
-			powercoeff[startpos+i]+=rho;
-			powercoeff[startpos+i+FitDMCoeff/2]+=rho;
-		}
-	
-
-
-		for(int o=0;o<((MNStruct *)context)->pulse->nobs; o++){
-			DMVec[o]=1.0/(DMKappa*pow((double)((MNStruct *)context)->pulse->obsn[o].freqSSB,2));
-		}
-
-		for(int i=0;i<FitDMCoeff/2;i++){
-			for(int k=0;k<((MNStruct *)context)->pulse->nobs;k++){
-				double time=(double)((MNStruct *)context)->pulse->obsn[k].bat;
-				FMatrix[k][startpos+i]=cos(2*M_PI*freqs[startpos+i]*time)*DMVec[k];
-			}
-		}
-
-		for(int i=0;i<FitDMCoeff/2;i++){
-			for(int k=0;k<((MNStruct *)context)->pulse->nobs;k++){
-				double time=(double)((MNStruct *)context)->pulse->obsn[k].bat;
-				FMatrix[k][startpos+i+FitDMCoeff/2]=sin(2*M_PI*freqs[startpos+i]*time)*DMVec[k];
-			}
-		}
-	}
-
-	double **PPFM=new double*[totCoeff];
-	for(int i=0;i<totCoeff;i++){
-		PPFM[i]=new double[totCoeff];
-		for(int j=0;j<totCoeff;j++){
-			PPFM[i][j]=0;
-		}
-	}
-
-
-	for(int c1=0; c1<totCoeff; c1++){
-
-		PPFM[c1][c1]=1.0/powercoeff[c1];
-	}
-
-
-/////////////////////////////////////////////////////////////////////////////////////////////  
-/////////////////////////Get T Matrix////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////  
-
-
-	int totalsize=numtofit+totCoeff;
-	double **TotalMatrix=new double*[((MNStruct *)context)->pulse->nobs];
-	for(int i =0;i<((MNStruct *)context)->pulse->nobs;i++){
-		TotalMatrix[i]=new double[totalsize];
-		for(int j =0;j<totalsize; j++){
-			TotalMatrix[i][j]=0;
-		}
-	}
-	
-
-	for(int i =0;i<((MNStruct *)context)->pulse->nobs;i++){
-		for(int j =0;j<numtofit; j++){
-			TotalMatrix[i][j]=TNDM[i][j];
-		}
-		
-		for(int j =0;j<totCoeff; j++){
-			TotalMatrix[i][j+numtofit]=FMatrix[i][j];
-		}
-	}
-
-
-// 	printf("made NMatrix\n");
-	
-	double **NG = new double*[((MNStruct *)context)->pulse->nobs]; for (int k=0; k<((MNStruct *)context)->pulse->nobs; k++) NG[k] = new double[totalsize];
-	double **GNG = new double*[totalsize]; for (int k=0; k<totalsize; k++) GNG[k] = new double[totalsize];
-
-
-
-	for(int i=0;i<((MNStruct *)context)->pulse->nobs;i++){
-		for(int j=0;j<totalsize; j++){
-
-			NG[i][j]=TotalMatrix[i][j]*Noise[i];
-
-		}
-	}
-
-
-	dgemm(TotalMatrix, NG,GNG,((MNStruct *)context)->pulse->nobs, totalsize,((MNStruct *)context)->pulse->nobs, totalsize, 'T','N');
-
-
-	for(int j =0;j<totCoeff; j++){
-		GNG[numtofit+j][numtofit+j]+=PPFM[j][j];
-	}
-
-
-	double tdet=0;
-	dpotrf(GNG, totalsize, tdet);
-	dpotri(GNG,totalsize);
-
-
-	double *Resvec=new double[((MNStruct *)context)->pulse->nobs];
-	for(int o=0;o<((MNStruct *)context)->pulse->nobs; o++){
-		Resvec[o]=(double)pulse->obsn[o].residual;
-	}
-
-
-	double *dG=new double[totalsize];
-	dgemv(NG,Resvec,dG,((MNStruct *)context)->pulse->nobs,totalsize,'T');
-
-	double *maxcoeff=new double[totalsize];
-	dgemv(GNG,dG,maxcoeff,totalsize,totalsize,'N');
-
-	double *Errorvec=new double[totalsize];
-
-	for(int i =0; i < totalsize; i++){
-		Errorvec[i]=pow(GNG[i][i], 0.5);
-	}
-
-        double *Scoeff=new double[numtofit];
-        double *Serr=new double[numtofit];
-        for(int i =0; i < numtofit; i++){
-                Scoeff[i]=maxcoeff[i]/S[i];
-                Serr[i]=Errorvec[i]/S[i];
-        }
-
-        double *TempoCoeff = new double[numtofit];
-        double *TempoErr =  new double[numtofit];
-        dgemv(V,Scoeff,TempoCoeff,numtofit,numtofit, 'N');
-        dgemv(V,Serr,TempoErr,numtofit,numtofit, 'N');
-
-        for(int i=0;i<numtofit; i++){
-                double errsum=0;
-          for(int j=0;j<numtofit; j++){
-                                errsum += pow(V[i][j]*Serr[j],2);
-                }
-          TempoErr[i]=pow(errsum,0.5);
-        }
-        //updateParameters(((MNStruct *)context)->pulse,0,TempoCoeff,TempoErr);
-	 for(int p=0;p<((MNStruct *)context)->numFitTiming;p++){
-                        //printf("%i %.25Lg \n", p, ((MNStruct *)context)->pulse->param[((MNStruct *)context)->TempoFitNums[p][0]].val[((MNStruct *)context)->TempoFitNums[p][1]]);
-                }
-                for(int p=0;p<((MNStruct *)context)->numFitJumps;p++){
-                        //printf("%i %g \n", p,((MNStruct *)context)->pulse->jumpVal[((MNStruct *)context)->TempoJumpNums[p]]);
-                }
-
-
-
-
- 	char name[1000];
-
-        std::ofstream Finalfile;
-        std::string Finalfilename = longname+"Final.dat";
-        Finalfile.open(Finalfilename.c_str());
-
-
-        for(int i=0;i<((MNStruct *)context)->pulse->nobs;i++){
-                double dsum=0;
-                for(int j=0;j<totalsize; j++){
-                        dsum=dsum+TotalMatrix[i][j]*maxcoeff[j];
-                }
-		Finalfile << std::fixed  << std::setprecision(8)  << (double)((MNStruct *)context)->pulse->obsn[i].bat << " ";
-        	Finalfile << std::scientific << Resvec[i] << " " << dsum <<  " " << pow(1.0/Noise[i],0.5) << " ";
-		Finalfile << std::fixed  << std::setprecision(1)  <<(double)((MNStruct *)context)->pulse->obsn[i].freqSSB << " ";
-		Finalfile << ((MNStruct *)context)->sysFlags[i]  << "\n";
-
-
-        }
-	Finalfile.close();
-
-        std::ofstream Resfile;
-        std::string Resfilename = longname+"Res.dat";
-        Resfile.open(Resfilename.c_str());
-        Resfile << ((MNStruct *)context)->pulse->name << "\n";
-        Resfile << "obsid    Freq (MHz)   SAT    Res (s)    Error (s)\n";
-
-        for(int i=0;i<((MNStruct *)context)->pulse->nobs;i++){
-                double dsum=0;
-                for(int j=0;j<numtofit; j++){
-                        dsum=dsum+TotalMatrix[i][j]*maxcoeff[j];
-                }
-                sscanf(((MNStruct *)context)->pulse->obsn[i].fname,"%s",name);
-                Resfile <<  name << " ";
-                Resfile << std::fixed  << std::setprecision(8)  << (double)((MNStruct *)context)->pulse->obsn[i].freq << " " << (double)((MNStruct *)context)->pulse->obsn[i].sat << " ";
-                Resfile << std::scientific << Resvec[i]-dsum <<  " " << pow(1.0/Noise[i],0.5) << "\n";
-        }
-
-        Resfile.close();
-
-
-
-	if(((MNStruct *)context)->incDM==3){
-		std::ofstream DMfile;
-		std::string DMfilename = longname+"DM.dat";
-		DMfile.open(DMfilename.c_str());
-		DMfile << ((MNStruct *)context)->pulse->name << "\n";
-		DMfile << "obsid    Freq (MHz)   SAT    DMRes (s)    Error (s)  DMVal    Error\n";
-
-
-		for(int i=0;i<((MNStruct *)context)->pulse->nobs;i++){
-			double dsum=0;
-			double scaledsum=0;
-			double errsum=0;
-			double scaleerrsum=0;
-			for(int j=0;j<FitDMCoeff; j++){
-				dsum=dsum+TotalMatrix[i][j+numtofit+FitRedCoeff]*maxcoeff[j+numtofit+FitRedCoeff];
-				scaledsum=scaledsum+TotalMatrix[i][j+numtofit+FitRedCoeff]*maxcoeff[j+numtofit+FitRedCoeff]/DMVec[i];
-				errsum=errsum+pow(Errorvec[j+numtofit+FitRedCoeff]*TotalMatrix[i][j+numtofit+FitRedCoeff],2);
-				scaleerrsum=scaleerrsum+pow(Errorvec[j+numtofit+FitRedCoeff]*TotalMatrix[i][j+numtofit+FitRedCoeff]/DMVec[i],2);
-			}
-		
-			double freq=(double)((MNStruct *)context)->pulse->obsn[i].freqSSB;
-			long double yrs = (((MNStruct *)context)->pulse->obsn[i].sat - ((MNStruct *)context)->pulse->param[param_dmepoch].val[0])/365.25;
-	 	        long double arg = 1.0;
-			double dmDot=0;
-			double dmDotErr=0;
-		        for (int d=1;d<9;d++){	
-		  		arg *= yrs;
-		  		if (((MNStruct *)context)->pulse->param[param_dm].paramSet[d]==1){
-		    			dmDot+=(double)(((MNStruct *)context)->pulse->param[param_dm].val[d]*arg);
-					dmDotErr+=pow((double)(((MNStruct *)context)->pulse->param[param_dm].err[d]*arg),2);
-				}
-			}
-			dsum=dsum+dmDot*DMVec[i];
-			scaledsum=scaledsum+dmDot;
-			errsum=errsum+dmDotErr*pow(DMVec[i],2);
-			scaleerrsum=scaleerrsum+dmDotErr;
-			double restsum=0;
-			for(int j=0;j<numtofit+FitRedCoeff; j++){
-				restsum=restsum+TotalMatrix[i][j]*maxcoeff[j];
-			}
-			sscanf(((MNStruct *)context)->pulse->obsn[i].fname,"%s",name);
-			DMfile <<  name << " ";
-			DMfile << std::fixed  << std::setprecision(8)  << (double)((MNStruct *)context)->pulse->obsn[i].freq << " " << (double)((MNStruct *)context)->pulse->obsn[i].sat << " "; 
-			DMfile << std::scientific << dsum <<  " " << pow(errsum,0.5) << " " << scaledsum << " " << pow(scaleerrsum,0.5) << "\n";
-		}
-
-		DMfile.close();
-
-	}
-
-	if(((MNStruct *)context)->incRED==3){
-
-		std::ofstream Redfile;
-		std::string Redfilename = longname+"Red.dat";
-		Redfile.open(Redfilename.c_str());
-		Redfile << ((MNStruct *)context)->pulse->name << "\n";
-		Redfile << "obsid    Freq (MHz)   SAT    RedRes (s)    Error (s) \n";
-
-		for(int i=0;i<((MNStruct *)context)->pulse->nobs;i++){
-		        double dsum=0;
-		        double errsum=0;
-		        for(int j=0;j<FitRedCoeff; j++){
-		                dsum=dsum+TotalMatrix[i][j+numtofit]*maxcoeff[j+numtofit];
-		                errsum=errsum+pow(Errorvec[j+numtofit]*TotalMatrix[i][j+numtofit],2);
-		        }
-		        sscanf(((MNStruct *)context)->pulse->obsn[i].fname,"%s",name);
-		        Redfile <<  name << " ";
-		        Redfile << std::fixed  << std::setprecision(8)  << (double)((MNStruct *)context)->pulse->obsn[i].freq << " " << (double)((MNStruct *)context)->pulse->obsn[i].sat << " ";
-		        Redfile << std::scientific << dsum <<  " " << pow(errsum,0.5) << "\n";
-		}
-
-		Redfile.close();
-	}
-
-
-	delete[]S;	
-
-	for (int j = 0; j < TimetoMargin; j++){
-		delete[]VT[j];
-	}
-	
-	delete[]VT;
-
-	for (int j = 0; j < ((MNStruct *)context)->pulse->nobs; j++){
-		delete[]U[j];
-	}
-	delete[]U;
 
 }
 
@@ -1343,7 +679,7 @@ void getCustomDMatrix(pulsar *pulse, int *MarginList, int **TempoFitNums, int *T
 }
 
 
-void getCustomDVectorLike(void *context, double *TNDM){
+void getCustomDVectorLike(void *context, double *TNDM, int Nobs, int TimeToMargin, int TotalSize){
 	
 	double pdParamDeriv[MAX_PARAMS], dMultiplication;
 
@@ -1393,6 +729,8 @@ void getCustomDVectorLike(void *context, double *TNDM){
 		for(int i=0; i < ((MNStruct *)context)->numFitJumps; i++){
 			((MNStruct *)context)->pulse->fitJump[((MNStruct *)context)->TempoJumpNums[i]]=1;
 		}
+
+		//printf("compare: %i %i \n", numToMargin, TimeToMargin);
 	
 }
 void getCustomDMatrixLike(void *context, double **TNDM){
@@ -1831,5 +1169,201 @@ void makeStaticDiagGMatrix(pulsar *pulse, int Gsize, double **GMatrix, double** 
 }
 
 
+void StoreFMatrix(double **FMatrix, void *context){
 
 
+	double start,end;
+	int go=0;
+	for (int i=0;i<((MNStruct *)context)->pulse->nobs;i++)
+	  {
+	    if (((MNStruct *)context)->pulse->obsn[i].deleted==0)
+	      {
+		if (go==0)
+		  {
+		    go = 1;
+		    start = (double)((MNStruct *)context)->pulse->obsn[i].bat;
+		    end  = start;
+		  }
+		else
+		  {
+		    if (start > (double)((MNStruct *)context)->pulse->obsn[i].bat)
+		      start = (double)((MNStruct *)context)->pulse->obsn[i].bat;
+		    if (end < (double)((MNStruct *)context)->pulse->obsn[i].bat)
+		      end = (double)((MNStruct *)context)->pulse->obsn[i].bat;
+		  }
+	      }
+	  }
+
+	double maxtspan=1*(end-start);
+	double averageTSamp=2*maxtspan/((MNStruct *)context)->pulse->nobs;
+
+
+	int FitRedCoeff=2*(((MNStruct *)context)->numFitRedCoeff);
+	int FitDMCoeff=2*(((MNStruct *)context)->numFitDMCoeff);
+
+
+	int totCoeff=0;
+	if(((MNStruct *)context)->incRED != 0 || ((MNStruct *)context)->incGWB == 1)totCoeff+=FitRedCoeff;
+	if(((MNStruct *)context)->incDM != 0)totCoeff+=FitDMCoeff;
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////  
+/////////////////////////Red Noise///////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////
+
+
+	double *freqs = new double[totCoeff];
+
+	double *DMVec=new double[((MNStruct *)context)->pulse->nobs];
+	double DMKappa = 2.410*std::pow(10.0,-16);
+	int startpos=0;
+
+	if(((MNStruct *)context)->incRED > 0 || ((MNStruct *)context)->incGWB == 1){
+
+
+
+		for (int i=0; i<FitRedCoeff/2 - ((MNStruct *)context)->incFloatRed ; i++){
+			
+			freqs[startpos+i]=(double)((MNStruct *)context)->sampleFreq[i]/maxtspan;
+			freqs[startpos+i+FitRedCoeff/2]=freqs[startpos+i];
+
+		}
+
+
+		for(int i=0;i<FitRedCoeff/2;i++){
+			for(int k=0;k<((MNStruct *)context)->pulse->nobs;k++){
+				double time=(double)((MNStruct *)context)->pulse->obsn[k].bat;
+				FMatrix[k][i]=cos(2*M_PI*freqs[i]*time);
+				FMatrix[k][i+FitRedCoeff/2]=sin(2*M_PI*freqs[i]*time);
+			}
+		}
+
+		startpos += FitRedCoeff;
+
+	}
+
+/////////////////////////////////////////////////////////////////////////////////////////////  
+/////////////////////////DM Variations////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////  
+
+
+       if(((MNStruct *)context)->incDM > 0){
+
+			
+		
+
+		for (int i=0; i<FitDMCoeff/2; i++){
+
+			freqs[startpos+i]=(double)((MNStruct *)context)->sampleFreq[startpos/2 - ((MNStruct *)context)->incFloatRed +i]/maxtspan;
+			freqs[startpos+i+FitDMCoeff/2]=freqs[startpos+i];
+		}
+	
+		
+
+		for(int o=0;o<((MNStruct *)context)->pulse->nobs; o++){
+			DMVec[o]=1.0/(DMKappa*std::pow((double)((MNStruct *)context)->pulse->obsn[o].freqSSB,2));
+		}
+
+		for(int i=0;i<FitDMCoeff/2;i++){
+			for(int k=0;k<((MNStruct *)context)->pulse->nobs;k++){
+				double time=(double)((MNStruct *)context)->pulse->obsn[k].bat;
+				FMatrix[k][startpos+i]=cos(2*M_PI*freqs[startpos+i]*time)*DMVec[k];
+			}
+		}
+
+		for(int i=0;i<FitDMCoeff/2;i++){
+			for(int k=0;k<((MNStruct *)context)->pulse->nobs;k++){
+				double time=(double)((MNStruct *)context)->pulse->obsn[k].bat;
+				FMatrix[k][startpos+i+FitDMCoeff/2]=sin(2*M_PI*freqs[startpos+i]*time)*DMVec[k];
+			}
+		}
+
+		startpos+=FitDMCoeff;
+
+    }
+
+	delete[] DMVec;
+	delete[] freqs;
+	
+}
+
+
+void getArraySizeInfo(void *context){
+
+
+	int TimetoMargin=0;
+	for(int i =0; i < ((MNStruct *)context)->numFitTiming+((MNStruct *)context)->numFitJumps; i++){
+		if(((MNStruct *)context)->LDpriors[i][2]==1)TimetoMargin++;
+	}
+
+
+//////////////////////////////////////////////////////////////////////////////////////////  
+/////////////////////////////////Set up Coefficients///////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////  
+
+
+
+	double start,end;
+	int go=0;
+	for (int i=0;i<((MNStruct *)context)->pulse->nobs;i++)
+	  {
+	    if (((MNStruct *)context)->pulse->obsn[i].deleted==0)
+	      {
+		if (go==0)
+		  {
+		    go = 1;
+		    start = (double)((MNStruct *)context)->pulse->obsn[i].bat;
+		    end  = start;
+		  }
+		else
+		  {
+		    if (start > (double)((MNStruct *)context)->pulse->obsn[i].bat)
+		      start = (double)((MNStruct *)context)->pulse->obsn[i].bat;
+		    if (end < (double)((MNStruct *)context)->pulse->obsn[i].bat)
+		      end = (double)((MNStruct *)context)->pulse->obsn[i].bat;
+		  }
+	      }
+	  }
+
+	double maxtspan=1*(end-start);
+
+
+	int FitRedCoeff=2*(((MNStruct *)context)->numFitRedCoeff);
+	int FitDMCoeff=2*(((MNStruct *)context)->numFitDMCoeff);
+	int FitBandNoiseCoeff=2*(((MNStruct *)context)->numFitBandNoiseCoeff);
+	int FitGroupNoiseCoeff = 2*((MNStruct *)context)->numFitGroupNoiseCoeff;
+
+
+	int totCoeff=0;
+	if(((MNStruct *)context)->incRED != 0 || ((MNStruct *)context)->incGWB == 1)totCoeff+=FitRedCoeff;
+	if(((MNStruct *)context)->incDM != 0)totCoeff+=FitDMCoeff;
+
+	if(((MNStruct *)context)->incBandNoise > 0)totCoeff+= ((MNStruct *)context)->incBandNoise*FitBandNoiseCoeff;
+
+	if(((MNStruct *)context)->incNGJitter >0)totCoeff+=((MNStruct *)context)->numNGJitterEpochs;
+
+	if(((MNStruct *)context)->incGroupNoise > 0)totCoeff += ((MNStruct *)context)->incGroupNoise*FitGroupNoiseCoeff;
+
+
+	int MarginRedShapelets = ((MNStruct *)context)->MarginRedShapeCoeff;
+	int totalredshapecoeff = 0;
+
+
+	if(((MNStruct *)context)->incRedShapeEvent != 0){
+		if(MarginRedShapelets == 1){
+			totalredshapecoeff = ((MNStruct *)context)->numRedShapeCoeff*((MNStruct *)context)->incRedShapeEvent;
+		}
+	}
+
+	int totalsize=TimetoMargin+totCoeff+totalredshapecoeff;
+
+        ((MNStruct *)context)->Tspan = maxtspan;
+        ((MNStruct *)context)->TimetoMargin = TimetoMargin;
+        ((MNStruct *)context)->totCoeff= totCoeff;
+        ((MNStruct *)context)->totRedShapeCoeff = totalredshapecoeff;
+        ((MNStruct *)context)->totalsize = totalsize;
+
+
+//	printf("TimetoMargin %i, totCoeff %i, totalredshapecoeff %i, totalsize %i \n", TimetoMargin, totCoeff, totalredshapecoeff, totalsize);
+
+}

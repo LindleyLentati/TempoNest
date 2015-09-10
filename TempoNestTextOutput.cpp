@@ -1438,69 +1438,23 @@ void TNtextOutput(pulsar *psr, int npsr, int newpar, long double *Tempo2Fit, voi
 		}
         }
 
-	if(((MNStruct *)context)->incDMScatter == 1 ){
+	for(int g =0; g < ((MNStruct *)context)->incGroupNoise; g++){	
 
                 double Amp = paramarray[whitefitcount][2];
-                tablefile <<  "Log$_{10}$[Band DM Amp] \\dotfill & "<< paramarray[whitefitcount][0] <<" $\\pm$ "<< paramarray[whitefitcount][1] <<"  \\\\ \n";
+                tablefile <<  "Log$_{10}$[Band Noise Amp] \\dotfill & "<< paramarray[whitefitcount][0] <<" $\\pm$ "<< paramarray[whitefitcount][1] <<"  \\\\ \n";
                 whitefitcount++;
                 double Spec = paramarray[whitefitcount][2];
-                tablefile <<  "Band DM Index \\dotfill & "<< paramarray[whitefitcount][0] <<" $\\pm$ "<< paramarray[whitefitcount][1] <<"  \\\\ \n";
+                tablefile <<  "Band Noise Index \\dotfill & "<< paramarray[whitefitcount][0] <<" $\\pm$ "<< paramarray[whitefitcount][1] <<"  \\\\ \n";
                 whitefitcount++;
-                int NC = (((MNStruct *)context)->numFitDMScatterCoeff);
+                int NC = (((MNStruct *)context)->numFitBandNoiseCoeff);
 
-                fprintf(fout2, "TNBandNoise %g %g %g %g %i\n", 0.0, 1000.0, Amp, Spec, NC);
-	}
-
-        if(((MNStruct *)context)->incDMScatter ==4 ){
-
-                double Amp = paramarray[whitefitcount][2];
-                tablefile <<  "Log$_{10}$[Band DM Amp] \\dotfill & "<< paramarray[whitefitcount][0] <<" $\\pm$ "<< paramarray[whitefitcount][1] <<"  \\\\ \n";
-                whitefitcount++;
-                double Spec = paramarray[whitefitcount][2];
-                tablefile <<  "Band DM Index \\dotfill & "<< paramarray[whitefitcount][0] <<" $\\pm$ "<< paramarray[whitefitcount][1] <<"  \\\\ \n";
-                whitefitcount++;
-                int NC = (((MNStruct *)context)->numFitDMScatterCoeff);
-
-                fprintf(fout2, "TNBandNoise %g %g %g %g %i\n", 0.0, 1000.0, Amp, Spec, NC);
-
-                Amp = paramarray[whitefitcount][2];
-                tablefile <<  "Log$_{10}$[Band DM Amp] \\dotfill & "<< paramarray[whitefitcount][0] <<" $\\pm$ "<< paramarray[whitefitcount][1] <<"  \\\\ \n";
-                whitefitcount++;
-                Spec = paramarray[whitefitcount][2];
-                tablefile <<  "Band DM Index \\dotfill & "<< paramarray[whitefitcount][0] <<" $\\pm$ "<< paramarray[whitefitcount][1] <<"  \\\\ \n";
-                whitefitcount++;
-
-                fprintf(fout2, "TNBandNoise %g %g %g %g %i\n", 1000.0, 2000.0, Amp, Spec, NC);
-
-
-                Amp = paramarray[whitefitcount][2];
-                tablefile <<  "Log$_{10}$[Band DM Amp] \\dotfill & "<< paramarray[whitefitcount][0] <<" $\\pm$ "<< paramarray[whitefitcount][1] <<"  \\\\ \n";
-                whitefitcount++;
-                Spec = paramarray[whitefitcount][2];
-                tablefile <<  "Band DM Index \\dotfill & "<< paramarray[whitefitcount][0] <<" $\\pm$ "<< paramarray[whitefitcount][1] <<"  \\\\ \n";
-                whitefitcount++;
-
-                fprintf(fout2, "TNBandNoise %g %g %g %g %i\n", 2000.0, 10000.0, Amp, Spec, NC);
-
-
-
-        }
-
-
-	if(((MNStruct *)context)->incDMScatter ==5 ){
-
-		double Amp = paramarray[whitefitcount][2];
-		tablefile <<  "Log$_{10}$[Band DM Amp] \\dotfill & "<< paramarray[whitefitcount][0] <<" $\\pm$ "<< paramarray[whitefitcount][1] <<"  \\\\ \n";
-                whitefitcount++;
-		double Spec = paramarray[whitefitcount][2];
-		tablefile <<  "Band DM Index \\dotfill & "<< paramarray[whitefitcount][0] <<" $\\pm$ "<< paramarray[whitefitcount][1] <<"  \\\\ \n";
-                whitefitcount++;
-		int NC = (((MNStruct *)context)->numFitDMScatterCoeff);
+		int startfreq = ((MNStruct *)context)->FitForBand[g][0];
+		int stopfreq = ((MNStruct *)context)->FitForBand[g][1];
 		
-		fprintf(fout2, "TNBandDM %g %g %i\n", Amp, Spec, NC);
 
-
+                fprintf(fout2, "TNBandNoise %i %i %g %g %i\n", startfreq, stopfreq, Amp, Spec, NC);
 	}
+
 
 	for(int g =0; g < ((MNStruct *)context)->incGroupNoise; g++){
 

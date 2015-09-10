@@ -30,6 +30,11 @@
 
 typedef struct {
 	pulsar *pulse;
+	double Tspan;
+	int TimetoMargin;
+	int totRedShapeCoeff;
+	int totalsize;
+	
 	long double **LDpriors;
 	double **Dpriors;
 	double **DMatrix;
@@ -93,8 +98,6 @@ typedef struct {
 	int EFACPriorType;
 	int useOriginalErrors;
 	int incShannonJitter;
-	int incDMScatter;
-	int numFitDMScatterCoeff;
 	int incNGJitter;
 	int numNGJitterEpochs;
 	double **NGJitterMatrix;
@@ -108,10 +111,15 @@ typedef struct {
 	int numFitGroupNoiseCoeff;
 	int **FitForGroup;
 	int numGroupstoFit;
+	int incBandNoise;
+	int numFitBandNoiseCoeff;
+	double **FitForBand;
 	int printResiduals;
 	int *GroupNoiseFlags;
 	int FitSolarWind;
 	int FitWhiteSolarWind;
+	int storeFMatrices;
+	double **StoredFMatrix;
 	/*GPTA stuff*/
 
 	int numshapecoeff;
@@ -132,6 +140,7 @@ typedef struct {
 	double *Factorials;
 	double *Binomial;
 	double MaxShapeAmp;
+	int incHighFreqStoc;
 	/*Grade Stuff: Need to track Grades and store previous likelihood things for hierarchial evaluation*/
 
 	int sampler;
@@ -176,7 +185,7 @@ double AllTOAMarginStocProfLike(int &ndim, double *Cube, int &npars, double *Der
 double TemplateProfLike(int &ndim, double *Cube, int &npars, double *DerivedParams, void *context);
 void  WriteMaxTemplateProf(std::string longname, int &ndim);
 void  WriteSubIntStocProfLike(std::string longname, int &ndim);
-void PreComputeShapelets(double ***StoredShapelet, double **InterpolatedMeanProfile, double **InterpolatedJitterProfile, long double finalInterpTime, int numtointerpolate, double MeanBeta);
+void PreComputeShapelets(double ***StoredShapelet, double **InterpolatedMeanProfile, double **InterpolatedJitterProfile, long double finalInterpTime, int numtointerpolate, double MeanBeta, double &MaxShapeAmp);
 
 void TemplateProfLikeMNWrap(double *Cube, int &ndim, int &npars, double &lnew, void *context);
 double SubIntStocProfLike(int &ndim, double *Cube, int &npars, double *DerivedParams, void *context);
@@ -185,7 +194,7 @@ void SubIntStocProfLikeMNWrap(double *Cube, int &ndim, int &npars, double &lnew,
 double  WhiteLogLike(int &ndim, double *Cube, int &npars, double *DerivedParams, void *context);
 double NewLRedMarginLogLike(int &ndim, double *Cube, int &npars, double *DerivedParams, void *context);
 void LRedLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *context);
-double LRedNumericalLogLike(int &ndim, double *Cube, int &npars, double *DerivedParams, void *context);
+//double LRedNumericalLogLike(int &ndim, double *Cube, int &npars, double *DerivedParams, void *context);
 
 void LRedLikeMNWrap(double *Cube, int &ndim, int &npars, double &lnew, void *context);
 
@@ -212,9 +221,11 @@ void getCustomDMatrix(pulsar *pulse, int *MarginList, int **TempoFitNums, int *T
 void makeStaticGMatrix(pulsar *pulse, int Gsize, double **GMatrix, double** staticGMatrix, double &tdet);
 void makeStaticDiagGMatrix(pulsar *pulse, int Gsize, double **GMatrix, double** UMatrix, double *SVec);
 void getCustomDMatrixLike(void *context, double **TNDM);
-void getCustomDVectorLike(void *context, double *TNDM);
+void getCustomDVectorLike(void *context, double *TNDM, int nobs, int TimeToMargin, int TotalSize);
 void getNGJitterMatrix(pulsar *pulse, double **JitterMatrix, int &NumEpochs);
 void getNGJitterMatrixEpochs(pulsar *pulse, int &NumEpochs);
+void StoreFMatrix(double **FMatrix, void *context);
+void getArraySizeInfo(void *context);
 
 void readsummary(pulsar *psr, std::string longname, int ndim, void *context, long double *Tempo2Fit, int incRED, int ndims, int MarginTime, int MarginJumps, int doLinear);
 
@@ -280,11 +291,10 @@ void setupparams(int &useGPUS,
 		int &incDMScatterShapeEvent,
 		int &numDMScatterShapeCoeff,
 		double *DMScatterShapeCoeffPrior,
-		int &incDMScatter,
-		int &numDMScatterCoeff,
-		double *DMScatterAmpPrior,
-		double *DMScatterAlphaPrior,
-		double *DMScatterFreqPrior,
+		int &incBandNoise,
+		int &numBandNoiseCoeff,
+		double *BandNoiseAmpPrior,
+		double *BandNoiseAlphaPrior,
 		int &incNGJitter,
 		int &incGlitch,
                 int &incGlitchTerms,
@@ -307,9 +317,12 @@ void setupparams(int &useGPUS,
 		int &FixProfile,
 		int &FitTemplate,
 		int &InterpolateProfile,
-		double &InterpolatedTime);
+		double &InterpolatedTime,
+		int &StoreFMatrices, 
+		int &incHighFreqStoc,
+		double *HighFreqStocPrior);
 
 void setTNPriors(double **Dpriors, long double **TempoPriors, int TPsize, int DPsize);
 void setFrequencies(double *SampleFreq, int numRedfreqs, int numDMfreqs, int numRedLogFreqs, int numDMLogFreqs, double RedLowFreq, double DMLowFreq, double RedMidFreq, double DMMidFreq);
-void GetGroupsToFit(int incGroupNoise, int **FitForGroup);
+void GetGroupsToFit(int incGroupNoise, int **FitForGroup, int incBandNoise, int **FitForBand);
 void setShapePriors(double **ShapePriors, double *BetaPrior, int numcoeff);
