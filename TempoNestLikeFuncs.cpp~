@@ -52,7 +52,6 @@
 #include <iomanip>
 #include <sstream>
 #include <iterator>
-#include <cstring>
 
 void *globalcontext;
 

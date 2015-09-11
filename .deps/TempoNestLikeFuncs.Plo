@@ -121,7 +121,9 @@ TempoNestLikeFuncs.lo: TempoNestLikeFuncs.cpp /usr/include/sys/time.h \
  /usr/local/Cluster-Apps/gcc/4.8.1/include/c++/4.8.1/bits/sstream.tcc \
  /usr/local/Cluster-Apps/gcc/4.8.1/include/c++/4.8.1/iomanip \
  /usr/local/Cluster-Apps/gcc/4.8.1/include/c++/4.8.1/iterator \
- /usr/local/Cluster-Apps/gcc/4.8.1/include/c++/4.8.1/bits/stream_iterator.h
+ /usr/local/Cluster-Apps/gcc/4.8.1/include/c++/4.8.1/bits/stream_iterator.h \
+ /usr/local/Cluster-Apps/gcc/4.8.1/include/c++/4.8.1/cstring \
+ /usr/include/string.h
 
 /usr/include/sys/time.h:
 
@@ -440,3 +442,7 @@ T2toolkit.h:
 /usr/local/Cluster-Apps/gcc/4.8.1/include/c++/4.8.1/iterator:
 
 /usr/local/Cluster-Apps/gcc/4.8.1/include/c++/4.8.1/bits/stream_iterator.h:
+
+/usr/local/Cluster-Apps/gcc/4.8.1/include/c++/4.8.1/cstring:
+
+/usr/include/string.h:
