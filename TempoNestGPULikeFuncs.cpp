@@ -1296,9 +1296,7 @@ double NewLRedMarginGPULogLike(int &ndim, double *Cube, int &npars, double *Deri
                         Bandamp=pow(10.0, Bandamp);
                         if(BandPriorType == 1) { uniformpriorterm += log(Bandamp); }
 
-			
-
-			Bandamp=pow(10.0, Bandamp);
+	
 			for (int i=0; i<FitBandNoiseCoeff/2; i++){
 
 				freqs[startpos+i]=((double)(i+1.0))/maxtspan;
