@@ -787,7 +787,7 @@ void getCustomDMatrixLike(void *context, double **TNDM){
 }
 
 
-
+/*
 
 void getDMatrix(pulsar *pulse, int TimetoFit, int JumptoFit, int numToMargin, int **TempoFitNums, int *TempoJumpNums, double **Dpriors, int doJumpMargin, int doTimeMargin, double **TNDM){
 	
@@ -1047,12 +1047,12 @@ void makeGDesign(pulsar *pulse, int &Gsize, int numtofit, double** staticGMatrix
 
 
 	Gsize=Osum-Gsum;
-/*	for(int i=0;i<pulse->nobs;i++){
+	for(int i=0;i<pulse->nobs;i++){
 		for(int j=0;j<Gsize;j++){
 			printf("%i %i %g \n ",i,j,staticGMatrix[i][j]);
 		}
 	}
-	printf("%i %i \n",pulse->nobs,Gsize)*/;
+	printf("%i %i \n",pulse->nobs,Gsize);
 
 // 	printf("Done SVD ALL");
 }
@@ -1167,7 +1167,7 @@ void makeStaticDiagGMatrix(pulsar *pulse, int Gsize, double **GMatrix, double** 
 	delete[] GT;
 	
 }
-
+*/
 
 void StoreTMatrix(double *TotalMatrix, void *context){
 
@@ -1324,17 +1324,81 @@ void StoreTMatrix(double *TotalMatrix, void *context){
 
     	}
 
+/////////////////////////////////////////////////////////////////////////////////////////////  
+/////////////////////////Add Group Noise/////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////
+
+        if(((MNStruct *)context)->incGroupNoise > 0){
+
+		for(int g = 0; g < ((MNStruct *)context)->incGroupNoise; g++){
+
+			startpos=startpos+FitGroupNoiseCoeff;
+		}
+
+    }
 
 /////////////////////////////////////////////////////////////////////////////////////////////  
 /////////////////////////Add ECORR Coeffs////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////
 
-	if(((MNStruct *)context)->incNGJitter >0){
-		for(int k=0;k<((MNStruct *)context)->pulse->nobs;k++){
-			for(int i=0; i < ((MNStruct *)context)->numNGJitterEpochs; i++){
-				TotalMatrix[k + (i+TimetoMargin+startpos)*((MNStruct *)context)->pulse->nobs]= ((MNStruct *)context)->NGJitterMatrix[k][i];
+	if(((MNStruct *)context)->incNGJitter > 0){
+
+		//printf("Calling\n");
+		double **NGJitterMatrix;
+		int NumNGEpochs = ((MNStruct *)context)->numNGJitterEpochs;
+		//getNGJitterMatrixEpochs(psr, NumNGEpochs);
+
+		NGJitterMatrix = new double*[((MNStruct *)context)->pulse->nobs];
+		for(int i =0; i < ((MNStruct *)context)->pulse->nobs; i++){
+			NGJitterMatrix[i] = new double[NumNGEpochs];
+			for(int j =0; j < NumNGEpochs;  j++){
+				NGJitterMatrix[i][j] = 0;
 			}
 		}
+		int *NGJitterSysFlags = new int[((MNStruct *)context)->pulse->nobs];
+		
+
+		for (int i=0;i<((MNStruct *)context)->pulse->nobs;i++){
+			for (int j=0;j<((MNStruct *)context)->pulse->obsn[i].nFlags;j++){
+				for (int k=0;k<((MNStruct *)context)->pulse->nTNECORR;k++){
+					if (strcmp(((MNStruct *)context)->pulse->obsn[i].flagID[j], ((MNStruct *)context)->pulse->TNECORRFlagID[k])==0){
+						if (strcmp(((MNStruct *)context)->pulse->obsn[i].flagVal[j],((MNStruct *)context)->pulse->TNECORRFlagVal[k])==0){
+							NGJitterSysFlags[i] = k;
+							//printf("NGFLag? %i %i %s \n", i, k, psr->TNECORRFlagVal[k]);
+						}
+					}
+				}
+			}
+		}
+
+
+		getNGJitterMatrix(((MNStruct *)context)->pulse, NGJitterMatrix, NumNGEpochs);
+
+		int *NGJitterEpochFlags = new int[NumNGEpochs];
+
+		for(int i =0; i < NumNGEpochs; i++){
+			for(int j=0; j < ((MNStruct *)context)->pulse->nobs; j++){
+				if(NGJitterMatrix[j][i] != 0) {
+					NGJitterEpochFlags[i]=NGJitterSysFlags[j];
+				}
+			}
+		}
+
+		((MNStruct *)context)->NGJitterSysFlags=NGJitterEpochFlags;
+
+		for(int k=0;k<((MNStruct *)context)->pulse->nobs;k++){
+			for(int i=0; i < ((MNStruct *)context)->numNGJitterEpochs; i++){
+				TotalMatrix[k + (i+TimetoMargin+startpos)*((MNStruct *)context)->pulse->nobs] = NGJitterMatrix[k][i];
+			}
+		}
+
+		delete[] NGJitterSysFlags;
+		for(int j =0; j < ((MNStruct *)context)->pulse->nobs;  j++){
+			delete[] NGJitterMatrix[j];
+		}
+		delete[]NGJitterMatrix;
+
+
 	}
 
 
@@ -1343,6 +1407,7 @@ void StoreTMatrix(double *TotalMatrix, void *context){
 
 	delete[] DMVec;
 	delete[] freqs;
+	
 	
 
 	
@@ -1394,15 +1459,17 @@ void getArraySizeInfo(void *context){
 	int FitBandNoiseCoeff=2*(((MNStruct *)context)->numFitBandNoiseCoeff);
 	int FitGroupNoiseCoeff = 2*((MNStruct *)context)->numFitGroupNoiseCoeff;
 
+	int NumNGEpochs = 0;
+	if(((MNStruct *)context)->incNGJitter > 0){
+		getNGJitterMatrixEpochs(((MNStruct *)context)->pulse, NumNGEpochs);
+	}
+	((MNStruct *)context)->numNGJitterEpochs = NumNGEpochs;
 
 	int totCoeff=0;
 	if(((MNStruct *)context)->incRED != 0 || ((MNStruct *)context)->incGWB == 1)totCoeff+=FitRedCoeff;
 	if(((MNStruct *)context)->incDM != 0)totCoeff+=FitDMCoeff;
-
 	if(((MNStruct *)context)->incBandNoise > 0)totCoeff+= ((MNStruct *)context)->incBandNoise*FitBandNoiseCoeff;
-
 	if(((MNStruct *)context)->incNGJitter >0)totCoeff+=((MNStruct *)context)->numNGJitterEpochs;
-
 	if(((MNStruct *)context)->incGroupNoise > 0)totCoeff += ((MNStruct *)context)->incGroupNoise*FitGroupNoiseCoeff;
 
 

@@ -13,8 +13,8 @@ double *TNFactorialList = new double[21];
 void *GPUglobalcontext;
 
 
-extern "C" void LRedGPUWrapper_(double *Freqs, double *resvec, double *BATvec, double *DMVec, double *Noise,  double **FNF, double *NFd, int N, int RF, int DMF, int F, int incRED, int incDM);
-extern "C" void NewLRedMarginGPUWrapper_(void *context, double *TNDMVec, double *Freqs, double *ObsFreqs, double *powercoeff, double *resvec, double *BATvec, double *DMVec, double *Noise, int *SysFlags, int N, int RF,int DMF, int DMScatterCoeff, int GroupNoiseCoeff,  int D, int F, int T, int incRED, int incDM, int incBandNoise, int incGroupNoise, int numFitTiming, int numFitJumps, double *likevals, int incNGJitter, int numNGJitterEpochs);
+//extern "C" void LRedGPUWrapper_(double *Freqs, double *resvec, double *BATvec, double *DMVec, double *Noise,  double **FNF, double *NFd, int N, int RF, int DMF, int F, int incRED, int incDM);
+extern "C" void NewLRedMarginGPUWrapper_(void *context, double *TNDMVec, double *Freqs, double *ObsFreqs, double *powercoeff, double *resvec, double *BATvec, double *DMVec, double *Noise, int *SysFlags, int N, int RF,int DMF, int DMScatterCoeff, int GroupNoiseCoeff,  int D, int F, int T, int incRED, int incDM, int incBandNoise, int incGroupNoise, int numFitTiming, int numFitJumps, double *likevals, int incNGJitter, int numNGJitterEpochs, int *BandInfo, int ReplaceTMatrix);
 
 void assignGPUcontext(void *context){
         GPUglobalcontext=context;
@@ -57,7 +57,7 @@ void GPUothpl(int n,double x,double *pl){
 
 }
 
-
+/*
 void LRedGPULogLike(double *Cube, int &ndim, int &npars, double &lnew, void *context)
 {
 	//printf("hereNM");
@@ -103,8 +103,8 @@ void LRedGPULogLike(double *Cube, int &ndim, int &npars, double &lnew, void *con
 		}
 		
 		
-		fastformBatsAll(((MNStruct *)GPUglobalcontext)->pulse,((MNStruct *)GPUglobalcontext)->numberpulsars);       /* Form Barycentric arrival times */
-		formResiduals(((MNStruct *)GPUglobalcontext)->pulse,((MNStruct *)GPUglobalcontext)->numberpulsars,1);       /* Form residuals */
+		fastformBatsAll(((MNStruct *)GPUglobalcontext)->pulse,((MNStruct *)GPUglobalcontext)->numberpulsars);       
+		formResiduals(((MNStruct *)GPUglobalcontext)->pulse,((MNStruct *)GPUglobalcontext)->numberpulsars,1);       
 		
 		for(int o=0;o<((MNStruct *)GPUglobalcontext)->pulse->nobs; o++){
 			Resvec[o]=(double)((MNStruct *)GPUglobalcontext)->pulse->obsn[o].residual+phase;
@@ -582,6 +582,29 @@ void LRedGPULogLike(double *Cube, int &ndim, int &npars, double &lnew, void *con
 
 }
 
+*/
+
+void LRedGPULikeMNWrap(double *Cube, int &ndim, int &npars, double &lnew, void *context){
+
+
+
+        for(int p=0;p<ndim;p++){
+
+                Cube[p]=(((MNStruct *)GPUglobalcontext)->PriorsArray[p+ndim]-((MNStruct *)GPUglobalcontext)->PriorsArray[p])*Cube[p]+((MNStruct *)GPUglobalcontext)->PriorsArray[p];
+        }
+
+
+	
+	double *DerivedParams = new double[npars];
+
+	double result = NewLRedMarginGPULogLike(ndim, Cube, npars, DerivedParams, context);
+
+
+	delete[] DerivedParams;
+
+	lnew = result;
+
+}
 
 
 double NewLRedMarginGPULogLike(int &ndim, double *Cube, int &npars, double *DerivedParams, void *context){
@@ -603,10 +626,13 @@ double NewLRedMarginGPULogLike(int &ndim, double *Cube, int &npars, double *Deri
 	pcount=0;
 
 
-        int TimetoMargin=0;
-        for(int i =0; i < ((MNStruct *)GPUglobalcontext)->numFitTiming+((MNStruct *)GPUglobalcontext)->numFitJumps; i++){
-                if(((MNStruct *)GPUglobalcontext)->LDpriors[i][2]==1)TimetoMargin++;
-        }
+	
+/////////////////////////////////////////////////////////////////////////////////////////////  
+/////////////////////////Set Timing model Params/////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////  
+
+
+	int TimetoMargin=((MNStruct *)GPUglobalcontext)->TimetoMargin;
 
 	for(int p=0;p< ((MNStruct *)GPUglobalcontext)->numFitTiming + ((MNStruct *)GPUglobalcontext)->numFitJumps; p++){
 		if(((MNStruct *)GPUglobalcontext)->Dpriors[p][1] != ((MNStruct *)GPUglobalcontext)->Dpriors[p][0]){
@@ -631,6 +657,13 @@ double NewLRedMarginGPULogLike(int &ndim, double *Cube, int &npars, double *Deri
 		((MNStruct *)GPUglobalcontext)->pulse->jumpVal[((MNStruct *)GPUglobalcontext)->TempoJumpNums[p]]= LDparams[pcount];
 		pcount++;
 	}
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////  
+/////////////////////////Get Timing Residuals////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////// 
+
+
 	if(TimetoMargin != ((MNStruct *)GPUglobalcontext)->numFitTiming+((MNStruct *)GPUglobalcontext)->numFitJumps){	
 		fastformBatsAll(((MNStruct *)GPUglobalcontext)->pulse,((MNStruct *)GPUglobalcontext)->numberpulsars);       /* Form Barycentric arrival times */
 		formResiduals(((MNStruct *)GPUglobalcontext)->pulse,((MNStruct *)GPUglobalcontext)->numberpulsars,1);       /* Form residuals */
@@ -644,6 +677,11 @@ double NewLRedMarginGPULogLike(int &ndim, double *Cube, int &npars, double *Deri
 	
 	
 	pcount=fitcount;
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////  
+/////////////////////////Subtract Steps//////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////// 
 
 	if(((MNStruct *)GPUglobalcontext)->incStep > 0){
 		for(int i = 0; i < ((MNStruct *)GPUglobalcontext)->incStep; i++){
@@ -799,6 +837,16 @@ double NewLRedMarginGPULogLike(int &ndim, double *Cube, int &npars, double *Deri
 
 		delete[] ECorrCoeffs;
 	} 
+
+
+
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////  
+/////////////////////////Set Noise Vector////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////// 
+
+
 	double *Noise;	
 	double *BATvec;
 	Noise=new double[((MNStruct *)GPUglobalcontext)->pulse->nobs];
@@ -858,22 +906,18 @@ double NewLRedMarginGPULogLike(int &ndim, double *Cube, int &npars, double *Deri
 	int FitBandNoiseCoeff=2*(((MNStruct *)GPUglobalcontext)->numFitBandNoiseCoeff);
 	int FitGroupNoiseCoeff = 2*((MNStruct *)GPUglobalcontext)->numFitGroupNoiseCoeff;
 
-	if(((MNStruct *)GPUglobalcontext)->incFloatDM != 0)FitDMCoeff+=2*((MNStruct *)GPUglobalcontext)->incFloatDM;
-	if(((MNStruct *)GPUglobalcontext)->incFloatRed != 0)FitRedCoeff+=2*((MNStruct *)GPUglobalcontext)->incFloatRed;
 
 
-        int totCoeff=0;
-        if(((MNStruct *)GPUglobalcontext)->incRED != 0)totCoeff+=FitRedCoeff;
+	int totCoeff=((MNStruct *)GPUglobalcontext)->totCoeff;
+	int totalsize = ((MNStruct *)GPUglobalcontext)->totalsize;
+        
+/*
+	if(((MNStruct *)GPUglobalcontext)->incRED != 0)totCoeff+=FitRedCoeff;
         if(((MNStruct *)GPUglobalcontext)->incDM != 0)totCoeff+=FitDMCoeff;
-
 	if(((MNStruct *)GPUglobalcontext)->incBandNoise > 0)totCoeff += ((MNStruct *)GPUglobalcontext)->incBandNoise*FitBandNoiseCoeff;
-
-
-	 if(((MNStruct *)GPUglobalcontext)->incGroupNoise > 0)totCoeff+= ((MNStruct *)GPUglobalcontext)->incGroupNoise*FitGroupNoiseCoeff;
-
-
+	if(((MNStruct *)GPUglobalcontext)->incGroupNoise > 0)totCoeff+= ((MNStruct *)GPUglobalcontext)->incGroupNoise*FitGroupNoiseCoeff;
 	if(((MNStruct *)GPUglobalcontext)->incNGJitter >0)totCoeff+=((MNStruct *)GPUglobalcontext)->numNGJitterEpochs;
-
+*/
 
 	double *powercoeff=new double[totCoeff];
 	for(int o=0;o<totCoeff; o++){
@@ -882,6 +926,8 @@ double NewLRedMarginGPULogLike(int &ndim, double *Cube, int &npars, double *Deri
 
 	double priorterm=0;
 	bool uniformprior=0;
+
+/*
 	double start,end;
 	int go=0;
 	for (int i=0;i<((MNStruct *)GPUglobalcontext)->pulse->nobs;i++)
@@ -903,12 +949,9 @@ double NewLRedMarginGPULogLike(int &ndim, double *Cube, int &npars, double *Deri
 		  }
 	      }
 	  }
-
-	double maxtspan=1*(end-start);
-
-
+*/
+	double maxtspan=((MNStruct *)GPUglobalcontext)->Tspan;//1*(end-start);
 	double *freqs = new double[totCoeff];
-
 	double *DMVec=new double[((MNStruct *)GPUglobalcontext)->pulse->nobs];
 	double *ObsFreqs = new double[((MNStruct *)GPUglobalcontext)->pulse->nobs];
 	int *GroupNoiseGroups = new int[((MNStruct *)GPUglobalcontext)->pulse->nobs];
@@ -1227,7 +1270,7 @@ double NewLRedMarginGPULogLike(int &ndim, double *Cube, int &npars, double *Deri
 /////////////////////////////////////////////////////////////////////////////////////////////
 
 
-
+	int *BandInfo = new int[3*((MNStruct *)GPUglobalcontext)->incBandNoise];
         if(((MNStruct *)GPUglobalcontext)->incBandNoise > 0){
 
 		for(int b = 0; b < ((MNStruct *)GPUglobalcontext)->incBandNoise; b++){
@@ -1238,6 +1281,9 @@ double NewLRedMarginGPULogLike(int &ndim, double *Cube, int &npars, double *Deri
                         double BandScale = ((MNStruct *)GPUglobalcontext)->FitForBand[b][2];
                         int BandPriorType = ((MNStruct *)GPUglobalcontext)->FitForBand[b][3];
 
+			BandInfo[b*3 + 0] = startfreq;
+			BandInfo[b*3 + 1] = stopfreq;
+			BandInfo[b*3 + 2] = BandScale;
 
                         double Bandamp=Cube[pcount];
                         pcount++;
@@ -1386,22 +1432,23 @@ double NewLRedMarginGPULogLike(int &ndim, double *Cube, int &npars, double *Deri
 
     
 	
-	double **TNDM=new double*[((MNStruct *)GPUglobalcontext)->pulse->nobs];
-	for(int i=0;i<((MNStruct *)GPUglobalcontext)->pulse->nobs;i++){
-		TNDM[i]=new double[TimetoMargin];
-	}
-	double *TNDMVec=new double[((MNStruct *)GPUglobalcontext)->pulse->nobs*TimetoMargin];
+//	double **TNDM=new double*[((MNStruct *)GPUglobalcontext)->pulse->nobs];
+//	for(int i=0;i<((MNStruct *)GPUglobalcontext)->pulse->nobs;i++){
+//		TNDM[i]=new double[TimetoMargin];
+//	}
+	double *TNDMVec;
 	
 	if(TimetoMargin != ((MNStruct *)GPUglobalcontext)->numFitTiming+((MNStruct *)GPUglobalcontext)->numFitJumps){
 	
-		getCustomDMatrixLike(GPUglobalcontext, TNDM);
-	
-		for(int g=0;g<TimetoMargin; g++){
-			for(int o=0;o<((MNStruct *)GPUglobalcontext)->pulse->nobs; o++){
-
-				TNDMVec[g*((MNStruct *)GPUglobalcontext)->pulse->nobs + o]=TNDM[o][g];
-			}
-		}
+		//getCustomDMatrixLike(GPUglobalcontext, TNDM);
+		TNDMVec=new double[((MNStruct *)GPUglobalcontext)->pulse->nobs*TimetoMargin];
+		getCustomDVectorLike(GPUglobalcontext, TNDMVec, ((MNStruct *)GPUglobalcontext)->pulse->nobs, TimetoMargin, totalsize);
+		//for(int g=0;g<TimetoMargin; g++){
+		//	for(int o=0;o<((MNStruct *)GPUglobalcontext)->pulse->nobs; o++){
+///
+		//		TNDMVec[g*((MNStruct *)GPUglobalcontext)->pulse->nobs + o]=TNDM[o][g];
+			//}
+		//}
 	}
 	
 
@@ -1414,9 +1461,9 @@ double NewLRedMarginGPULogLike(int &ndim, double *Cube, int &npars, double *Deri
     
     
 	double *likevals=new double[2];
-	int totalsize=TimetoMargin+totCoeff;
+//	int totalsize=TimetoMargin+totCoeff;
 
-	NewLRedMarginGPUWrapper_(GPUglobalcontext, TNDMVec, freqs, ObsFreqs, powercoeff, Resvec, BATvec, DMVec, Noise, GroupNoiseGroups,  ((MNStruct *)GPUglobalcontext)->pulse->nobs, FitRedCoeff,FitDMCoeff, FitBandNoiseCoeff, FitGroupNoiseCoeff, TimetoMargin, totCoeff, totalsize, ((MNStruct *)GPUglobalcontext)->incRED,((MNStruct *)GPUglobalcontext)->incDM, ((MNStruct *)GPUglobalcontext)->incBandNoise, ((MNStruct *)GPUglobalcontext)->incGroupNoise, ((MNStruct *)GPUglobalcontext)->numFitTiming, ((MNStruct *)GPUglobalcontext)->numFitJumps, likevals, ((MNStruct *)GPUglobalcontext)->incNGJitter, ((MNStruct *)GPUglobalcontext)->numNGJitterEpochs);
+	NewLRedMarginGPUWrapper_(GPUglobalcontext, TNDMVec, freqs, ObsFreqs, powercoeff, Resvec, BATvec, DMVec, Noise, GroupNoiseGroups,  ((MNStruct *)GPUglobalcontext)->pulse->nobs, FitRedCoeff,FitDMCoeff, FitBandNoiseCoeff, FitGroupNoiseCoeff, TimetoMargin, totCoeff, totalsize, ((MNStruct *)GPUglobalcontext)->incRED,((MNStruct *)GPUglobalcontext)->incDM, ((MNStruct *)GPUglobalcontext)->incBandNoise, ((MNStruct *)GPUglobalcontext)->incGroupNoise, ((MNStruct *)GPUglobalcontext)->numFitTiming, ((MNStruct *)GPUglobalcontext)->numFitJumps, likevals, ((MNStruct *)GPUglobalcontext)->incNGJitter, ((MNStruct *)GPUglobalcontext)->numNGJitterEpochs, BandInfo, ((MNStruct *)GPUglobalcontext)->storeFMatrices);
     
     
 //////////////////////////////////////////////////////////////////////////////////////////  
@@ -1448,11 +1495,14 @@ double NewLRedMarginGPULogLike(int &ndim, double *Cube, int &npars, double *Deri
 	delete[] Resvec;
 	delete[] BATvec;
 	delete[] likevals;
-	for (int j = 0; j < ((MNStruct *)GPUglobalcontext)->pulse->nobs; j++){
-		delete[]TNDM[j];
+	delete[] BandInfo;
+	//for (int j = 0; j < ((MNStruct *)GPUglobalcontext)->pulse->nobs; j++){
+	//	delete[]TNDM[j];
+	//}
+	//delete[]TNDM;
+	if(TimetoMargin != ((MNStruct *)GPUglobalcontext)->numFitTiming+((MNStruct *)GPUglobalcontext)->numFitJumps){
+		delete[]TNDMVec;
 	}
-	delete[]TNDM;
-	delete[]TNDMVec;
 
 	if(((MNStruct *)GPUglobalcontext)->incNGJitter >0){
 		delete[] ECORRPrior;

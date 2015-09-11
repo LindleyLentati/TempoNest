@@ -113,7 +113,7 @@ typedef struct {
 	int numGroupstoFit;
 	int incBandNoise;
 	int numFitBandNoiseCoeff;
-	double **FitForBand;
+	int **FitForBand;
 	int printResiduals;
 	int *GroupNoiseFlags;
 	int FitSolarWind;
@@ -197,7 +197,7 @@ void LRedLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *contex
 //double LRedNumericalLogLike(int &ndim, double *Cube, int &npars, double *DerivedParams, void *context);
 
 void LRedLikeMNWrap(double *Cube, int &ndim, int &npars, double &lnew, void *context);
-
+void LRedGPULikeMNWrap(double *Cube, int &ndim, int &npars, double &lnew, void *context);
 //non-Gaussian noise likelihoods
 void subtractMLsolution(void *context);
 void processPDF(void *context, std::string longname);
@@ -206,20 +206,20 @@ void TempoNestNGLikeFunc(double *Cube, int &ndim, int &npars, double &lnew, void
 
 
 //GPU non linear timing model likelihood functions
-void WhiteMarginGPULogLike(double *Cube, int &ndim, int &npars, double &lnew, void *context);
-void LRedGPULogLike(double *Cube, int &ndim, int &npars, double &lnew, void *context);
+//void WhiteMarginGPULogLike(double *Cube, int &ndim, int &npars, double &lnew, void *context);
+//void LRedGPULogLike(double *Cube, int &ndim, int &npars, double &lnew, void *context);
 double NewLRedMarginGPULogLike(int &ndim, double *Cube, int &npars, double *DerivedParams, void *globalcontext);
 
 
 
 
 //Functions to calculate the design matrices or 'G' marginalisation matrices
-void makeGDesign(pulsar *pulse, int &Gsize, int numtofit, double** staticGMatrix, double **oneDesign);
-void getDMatrix(pulsar *pulse, int TimeToFit, int JumptoFit, int numToMargin, int **TempoFitNums, int *TempoJumpNums, double **Dpriors, int doJumpMargin, int doTimeMargin, double **TNDM);
-void getMarginDMatrix(pulsar *pulse, int TimetoFit, int JumptoFit, int numToMargin, int **TempoFitNums, int *TempoJumpNums, double **Dpriors, int doJumpMargin, int doTimeMargin, double **TNDM, int linearFit);
+//void makeGDesign(pulsar *pulse, int &Gsize, int numtofit, double** staticGMatrix, double **oneDesign);
+//void getDMatrix(pulsar *pulse, int TimeToFit, int JumptoFit, int numToMargin, int **TempoFitNums, int *TempoJumpNums, double **Dpriors, int doJumpMargin, int doTimeMargin, double **TNDM);
+//void getMarginDMatrix(pulsar *pulse, int TimetoFit, int JumptoFit, int numToMargin, int **TempoFitNums, int *TempoJumpNums, double **Dpriors, int doJumpMargin, int doTimeMargin, double **TNDM, int linearFit);
 void getCustomDMatrix(pulsar *pulse, int *MarginList, int **TempoFitNums, int *TempoJumpNums, double **Dpriors, int incDM, int TimetoFit, int JumptoFit);
-void makeStaticGMatrix(pulsar *pulse, int Gsize, double **GMatrix, double** staticGMatrix, double &tdet);
-void makeStaticDiagGMatrix(pulsar *pulse, int Gsize, double **GMatrix, double** UMatrix, double *SVec);
+//void makeStaticGMatrix(pulsar *pulse, int Gsize, double **GMatrix, double** staticGMatrix, double &tdet);
+//void makeStaticDiagGMatrix(pulsar *pulse, int Gsize, double **GMatrix, double** UMatrix, double *SVec);
 void getCustomDMatrixLike(void *context, double **TNDM);
 void getCustomDVectorLike(void *context, double *TNDM, int nobs, int TimeToMargin, int TotalSize);
 void getNGJitterMatrix(pulsar *pulse, double **JitterMatrix, int &NumEpochs);

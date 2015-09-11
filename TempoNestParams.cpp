@@ -135,7 +135,7 @@ void setupparams(int &useGPUS,
 	FitTemplate = 0;
 	InterpolateProfile = 0;
 	InterpolatedTime = 1; //in nanoseconds
-	StoreTMatrix = 0; // Recompute TMatrices when computing new bats - default is dont just precompute and use those
+	StoreTMatrix = 1; // Recompute TMatrices when computing new bats - default is just precompute and use those
 
 
     //Root of the results files,relative to the directory in which TempoNest is run. This will be followed by the pulsar name, and then the individual output file extensions.

@@ -10,12 +10,12 @@
 
 #define BLOCK_SIZE 16
 
-double *GlobalGmat_d;
-double *GlobalStaticGmat_d;
-double *GlobalStaticUGmat_d;
-float *GlobalGmatFloat_d;
-double *GlobalStaticDmat_d;
-double *GlobalEMatrix_d;
+//double *GlobalGmat_d;
+//double *GlobalStaticGmat_d;
+//double *GlobalStaticUGmat_d;
+//float *GlobalGmatFloat_d;
+//double *GlobalStaticDmat_d;
+double *GlobalTotalMatrix_d;
 
 // Matrices are stored in row-major order:
 // M(row, col) = *(M.elements + row * M.width + col)
@@ -163,7 +163,7 @@ __global__ void copyvec(double *Vec1, double *Vec2, int N)
    		
 }
 
-
+/*
 __global__ void Makecov(double *A_d, double *BATvec, double *NoiseVec, double *SpecParm, int Aheight, int Awidth) {
 
 	// Each thread computes one element of C
@@ -266,7 +266,7 @@ __global__ void MakeDMcov(double *A_d, double *BATvec, double *NoiseVec, double 
 
 }
 
-
+*/
 __global__ void MatMulKernel(int Arow,int Acol,int Brow, int Bcol,double *A,double *B,double *C)
 {
 
@@ -307,7 +307,7 @@ __global__ void SimpleDiagMatMulKernel(int N,int T,double *Noise_d,double *TMatr
 }
 
 
-
+/*
 extern "C" void WhiteMarginGPUWrapper_(void *context, double *TNDMVec, double *resvec, double *Noise, int N, int D, int NTime, int NJumps, double *likevals){
 
 
@@ -504,180 +504,73 @@ extern "C" void WhiteMarginGPUWrapper_(void *context, double *TNDMVec, double *r
 	delete(tempval);
 
 }
-
+*/
 
 
 // simple kernel function that calculates the FMatrix
-__global__ void make_fmatrix(double *FMatrix_d,double *Freqs_d, double *ObsFreqs_d, double *BATvec_d, double *DMVec_d, int *SysGroups_d, int N,int RF, int DMF, int DMScatterCoeff, int GroupNoiseCoeff,  int incRED, int incDM, int incDMScatter, int incGroupNoise)
+__global__ void make_fmatrix(double *TMatrix_d,double *Freqs_d, double *ObsFreqs_d, double *BATvec_d, double *DMVec_d, int *SysGroups_d, int *BandFreqs, int N,int RF, int DMF, int BandNoiseCoeff, int GroupNoiseCoeff,  int incRED, int incDM, int incBandNoise, int incGroupNoise, int ReplaceTMatrix, int TimetoMargin, int numTime, int numJumps, double *DMatrix_d)
 {
 
 	int Bidx = blockIdx.x;
+
+
+	if(TimetoMargin != numJumps + numTime){
+		for(int i=0;i<TimetoMargin;i++){
+			TMatrix_d[i*N + Bidx]=DMatrix_d[i*N + Bidx];
+		}
+	}
+
 	int startpos=0;
 	if(incRED !=0){
-		for(int i=0;i<RF/2;i++){
-		//	if(Bidx==0)printf("FM: %i %g %g \n",i,Freqs_d[i], BATvec_d[Bidx]);	
-			FMatrix_d[i*N + Bidx]=cos(2*M_PI*Freqs_d[i]*BATvec_d[Bidx]);
-			FMatrix_d[(i+RF/2)*N + Bidx]=sin(2*M_PI*Freqs_d[i]*BATvec_d[Bidx]);
+		if(ReplaceTMatrix==0){
+			for(int i=0;i<RF/2;i++){
+				TMatrix_d[(TimetoMargin+i)*N + Bidx]=cos(2*M_PI*Freqs_d[i]*BATvec_d[Bidx]);
+				TMatrix_d[(TimetoMargin+i+RF/2)*N + Bidx]=sin(2*M_PI*Freqs_d[i]*BATvec_d[Bidx]);
+			}
 		}
 		startpos=RF;
 	}
 
 	
       if(incDM !=0){
-                for(int i=0;i<DMF/2;i++){
-			//if(Bidx==0)printf("D: %i %i %g %g \n", Bidx,i,1.0/Freqs_d[i], DMVec_d[Bidx]);
-                        FMatrix_d[(startpos+i)*N + Bidx]=cos(2*M_PI*Freqs_d[startpos+i]*BATvec_d[Bidx])*DMVec_d[Bidx];
-                        FMatrix_d[(startpos+i+DMF/2)*N + Bidx]=sin(2*M_PI*Freqs_d[startpos+i]*BATvec_d[Bidx])*DMVec_d[Bidx];
-                }
+		if(ReplaceTMatrix==0){
+		        for(int i=0;i<DMF/2;i++){
+				//if(Bidx==0)printf("D: %i %i %g %g \n", Bidx,i,1.0/Freqs_d[i], DMVec_d[Bidx]);
+		                TMatrix_d[(TimetoMargin+startpos+i)*N + Bidx]=cos(2*M_PI*Freqs_d[startpos+i]*BATvec_d[Bidx])*DMVec_d[Bidx];
+		                TMatrix_d[(TimetoMargin+startpos+i+DMF/2)*N + Bidx]=sin(2*M_PI*Freqs_d[startpos+i]*BATvec_d[Bidx])*DMVec_d[Bidx];
+		        }
+		}
 		startpos=startpos+DMF;
        }
 
-	if(incDMScatter != 0){
+	if(incBandNoise > 0){
 
-		if(incDMScatter == 1 || incDMScatter == 2 || incDMScatter == 3){	
+		
+		for(int b = 0; b < incBandNoise; b++){	
 
-			double startfreq = 0;
-			double stopfreq = 0;
+			if(ReplaceTMatrix==0){
+				int startfreq = BandFreqs[b*3+0];
+				int stopfreq = BandFreqs[b*3+1];
+				int BandScale = BandFreqs[b*3+2];
 
-			if(incDMScatter == 1){		
-				startfreq = 0;
-				stopfreq=1000;
+
+				for(int i=0;i<BandNoiseCoeff/2;i++){
+					if(ObsFreqs_d[Bidx] > startfreq && ObsFreqs_d[Bidx] < stopfreq){
+						TMatrix_d[(TimetoMargin+startpos+i)*N + Bidx]=cos(2*M_PI*Freqs_d[startpos+i]*BATvec_d[Bidx]);
+						TMatrix_d[(TimetoMargin+startpos+i+BandNoiseCoeff/2)*N + Bidx]=sin(2*M_PI*Freqs_d[startpos+i]*BATvec_d[Bidx]);
+					}
+					else{
+			
+						TMatrix_d[(TimetoMargin+startpos+i)*N + Bidx]=0;
+						TMatrix_d[(TimetoMargin+startpos+i+BandNoiseCoeff/2)*N + Bidx]=0;
+		
+					}
+				}
 			}
-			else  if(incDMScatter == 2){
-		                startfreq = 1000;
-		                stopfreq=1800;
-			}
-		        else if(incDMScatter == 3){
-		                startfreq = 1800;
-		                stopfreq=10000;
-		        }
-
-		        for(int i=0;i<DMScatterCoeff/2;i++){
-				if(ObsFreqs_d[Bidx] > startfreq && ObsFreqs_d[Bidx] < stopfreq){
-					FMatrix_d[(startpos+i)*N + Bidx]=cos(2*M_PI*Freqs_d[startpos+i]*BATvec_d[Bidx]);
-					FMatrix_d[(startpos+i+DMScatterCoeff/2)*N + Bidx]=sin(2*M_PI*Freqs_d[startpos+i]*BATvec_d[Bidx]);
-				}
-				else{
-			
-					FMatrix_d[(startpos+i)*N + Bidx]=0;
-					FMatrix_d[(startpos+i+DMScatterCoeff/2)*N + Bidx]=0;
-		
-				}
-		        }
-
-			startpos=startpos+DMScatterCoeff;
+			startpos=startpos+BandNoiseCoeff;
 
 		}
 
-		if(incDMScatter == 4){
-
-			double startfreq = 0;
-			double stopfreq= 1000;
-		        for(int i=0;i<DMScatterCoeff/2;i++){
-				if(ObsFreqs_d[Bidx] > startfreq && ObsFreqs_d[Bidx] < stopfreq){
-					FMatrix_d[(startpos+i)*N + Bidx]=cos(2*M_PI*Freqs_d[startpos+i]*BATvec_d[Bidx]);//*DMVec_d[Bidx];
-					FMatrix_d[(startpos+i+DMScatterCoeff/2)*N + Bidx]=sin(2*M_PI*Freqs_d[startpos+i]*BATvec_d[Bidx]);//*DMVec_d[Bidx];
-				}
-				else{
-			
-					FMatrix_d[(startpos+i)*N + Bidx]=0;
-					FMatrix_d[(startpos+i+DMScatterCoeff/2)*N + Bidx]=0;
-		
-				}
-		        }
-
-			startpos=startpos+DMScatterCoeff;
-
-			startfreq = 1000;
-			stopfreq= 2000;
-		        for(int i=0;i<DMScatterCoeff/2;i++){
-				if(ObsFreqs_d[Bidx] > startfreq && ObsFreqs_d[Bidx] < stopfreq){
-					FMatrix_d[(startpos+i)*N + Bidx]=cos(2*M_PI*Freqs_d[startpos+i]*BATvec_d[Bidx]);//*DMVec_d[Bidx];
-					FMatrix_d[(startpos+i+DMScatterCoeff/2)*N + Bidx]=sin(2*M_PI*Freqs_d[startpos+i]*BATvec_d[Bidx]);//*DMVec_d[Bidx];
-				}
-				else{
-			
-					FMatrix_d[(startpos+i)*N + Bidx]=0;
-					FMatrix_d[(startpos+i+DMScatterCoeff/2)*N + Bidx]=0;
-		
-				}
-		        }
-
-			startpos=startpos+DMScatterCoeff;
-
-			startfreq = 2000;
-			stopfreq=10000;
-		        for(int i=0;i<DMScatterCoeff/2;i++){
-				if(ObsFreqs_d[Bidx] > startfreq && ObsFreqs_d[Bidx] < stopfreq){
-					FMatrix_d[(startpos+i)*N + Bidx]=cos(2*M_PI*Freqs_d[startpos+i]*BATvec_d[Bidx]);//*DMVec_d[Bidx];
-					FMatrix_d[(startpos+i+DMScatterCoeff/2)*N + Bidx]=sin(2*M_PI*Freqs_d[startpos+i]*BATvec_d[Bidx]);//*DMVec_d[Bidx];
-				}
-				else{
-			
-					FMatrix_d[(startpos+i)*N + Bidx]=0;
-					FMatrix_d[(startpos+i+DMScatterCoeff/2)*N + Bidx]=0;
-		
-				}
-		        }
-
-			startpos=startpos+DMScatterCoeff;
-
-		}
-
-		if(incDMScatter == 5){
-
-			double startfreq = 0;
-			double stopfreq=1000;
-		        for(int i=0;i<DMScatterCoeff/2;i++){
-				if(ObsFreqs_d[Bidx] > startfreq && ObsFreqs_d[Bidx] < stopfreq){
-					FMatrix_d[(startpos+i)*N + Bidx]=cos(2*M_PI*Freqs_d[startpos+i]*BATvec_d[Bidx])*DMVec_d[Bidx];
-					FMatrix_d[(startpos+i+DMScatterCoeff/2)*N + Bidx]=sin(2*M_PI*Freqs_d[startpos+i]*BATvec_d[Bidx])*DMVec_d[Bidx];
-				}
-				else{
-			
-					FMatrix_d[(startpos+i)*N + Bidx]=0;
-					FMatrix_d[(startpos+i+DMScatterCoeff/2)*N + Bidx]=0;
-		
-				}
-		        }
-
-			startpos=startpos+DMScatterCoeff;
-
-			startfreq = 1000;
-			stopfreq=1800;
-		        for(int i=0;i<DMScatterCoeff/2;i++){
-				if(ObsFreqs_d[Bidx] > startfreq && ObsFreqs_d[Bidx] < stopfreq){
-					FMatrix_d[(startpos+i)*N + Bidx]=cos(2*M_PI*Freqs_d[startpos+i]*BATvec_d[Bidx])*DMVec_d[Bidx];
-					FMatrix_d[(startpos+i+DMScatterCoeff/2)*N + Bidx]=sin(2*M_PI*Freqs_d[startpos+i]*BATvec_d[Bidx])*DMVec_d[Bidx];
-				}
-				else{
-			
-					FMatrix_d[(startpos+i)*N + Bidx]=0;
-					FMatrix_d[(startpos+i+DMScatterCoeff/2)*N + Bidx]=0;
-		
-				}
-		        }
-
-			startpos=startpos+DMScatterCoeff;
-
-			startfreq = 1800;
-			stopfreq=10000;
-		        for(int i=0;i<DMScatterCoeff/2;i++){
-				if(ObsFreqs_d[Bidx] > startfreq && ObsFreqs_d[Bidx] < stopfreq){
-					FMatrix_d[(startpos+i)*N + Bidx]=cos(2*M_PI*Freqs_d[startpos+i]*BATvec_d[Bidx])*DMVec_d[Bidx];
-					FMatrix_d[(startpos+i+DMScatterCoeff/2)*N + Bidx]=sin(2*M_PI*Freqs_d[startpos+i]*BATvec_d[Bidx])*DMVec_d[Bidx];
-				}
-				else{
-			
-					FMatrix_d[(startpos+i)*N + Bidx]=0;
-					FMatrix_d[(startpos+i+DMScatterCoeff/2)*N + Bidx]=0;
-		
-				}
-		        }
-
-			startpos=startpos+DMScatterCoeff;
-
-		}
 
        }
 
@@ -688,13 +581,13 @@ __global__ void make_fmatrix(double *FMatrix_d,double *Freqs_d, double *ObsFreqs
 			for(int i=0;i<GroupNoiseCoeff/2;i++){
 				//printf("GPU Groups %i %i \n", Bidx, SysGroups_d[Bidx]);
 				if(SysGroups_d[Bidx] == g+1){
-					FMatrix_d[(startpos+i)*N + Bidx]=cos(2*M_PI*Freqs_d[startpos+i]*BATvec_d[Bidx]);
-					FMatrix_d[(startpos+i+GroupNoiseCoeff/2)*N + Bidx]=sin(2*M_PI*Freqs_d[startpos+i]*BATvec_d[Bidx]);
+					TMatrix_d[(TimetoMargin+startpos+i)*N + Bidx]=cos(2*M_PI*Freqs_d[startpos+i]*BATvec_d[Bidx]);
+					TMatrix_d[(TimetoMargin+startpos+i+GroupNoiseCoeff/2)*N + Bidx]=sin(2*M_PI*Freqs_d[startpos+i]*BATvec_d[Bidx]);
 				}
 				else{
 		
-					FMatrix_d[(startpos+i)*N + Bidx]=0;
-					FMatrix_d[(startpos+i+GroupNoiseCoeff/2)*N + Bidx]=0;
+					TMatrix_d[(TimetoMargin+startpos+i)*N + Bidx]=0;
+					TMatrix_d[(TimetoMargin+startpos+i+GroupNoiseCoeff/2)*N + Bidx]=0;
 	
 				}
 			}
@@ -707,7 +600,7 @@ __global__ void make_fmatrix(double *FMatrix_d,double *Freqs_d, double *ObsFreqs
 
 	}
 }
-
+/*
 
 
 // simple kernel function that calculates the FMatrix
@@ -721,8 +614,8 @@ __global__ void add_EcorrToFMatrix(double *FMatrix_d, double *EMatrix_d, int Nob
 
 
 }
-
-
+*/
+/*
 
 // simple kernel function that calculates the FMatrix
 __global__ void make_DMfmatrix(double *FMatrix_d,double *Freqs_d, double *BATvec_d, double *DMVec_d, int N,int F)
@@ -758,9 +651,9 @@ __global__ void fastmake_fmatrix(double *FMatrix_d,double *Freqs_d, double *BATv
 	FMatrix_d[row*Awidth + col + Awidth/2]=sin(2*M_PI*Freqs_d[col]*BATvec_d[row]);
 
 }
+*/
 
-
-
+/*
 
 extern "C" void LRedGPUWrapper_(double *Freqs, double *resvec, double *BATvec, double *DMVec, double *Noise, double **FNF, double *NFd, int N, int RF,int DMF, int F, int incRED, int incDM){
 
@@ -860,8 +753,8 @@ extern "C" void LRedGPUWrapper_(double *Freqs, double *resvec, double *BATvec, d
 	free(FNFvec);
 		
 }
-
-
+*/
+/*
 // simple kernel function that calculates the TMatrix
 __global__ void make_Tmatrix(double *TMatrix_d, double *DMatrix_d, double *FMatrix_d, int N, int T, int D, int F)
 {
@@ -870,7 +763,7 @@ __global__ void make_Tmatrix(double *TMatrix_d, double *DMatrix_d, double *FMatr
  //   int row = blockIdx.y * blockDim.y + threadIdx.y;
   //  int col = blockIdx.x * blockDim.x + threadIdx.x;
      __syncthreads();
-     /*
+     
  //	int Bidx = blockIdx.x;
     int Bidx = blockIdx.y * blockDim.y + threadIdx.y;
     int i = blockIdx.x * blockDim.x + threadIdx.x;
@@ -884,7 +777,7 @@ __global__ void make_Tmatrix(double *TMatrix_d, double *DMatrix_d, double *FMatr
 			TMatrix_d[i*N + Bidx]=FMatrix_d[(i-D)*N + Bidx];
 		}
 //	}
-	*/
+	
 	
 	
 	 	int Bidx = blockIdx.x;
@@ -902,7 +795,7 @@ __global__ void make_Tmatrix(double *TMatrix_d, double *DMatrix_d, double *FMatr
 
 }
 
-
+*/
 // simple kernel function that adds powercoeff to TNT
 __global__ void addCoeffsKernel(int T, int D,int F,double *TNT_d, double *powercoeffs_d)
 {
@@ -918,7 +811,7 @@ __global__ void addCoeffsKernel(int T, int D,int F,double *TNT_d, double *powerc
 }
 
 
-extern "C" void NewLRedMarginGPUWrapper_(void *context, double *TNDMVec, double *Freqs, double *ObsFreqs, double *powercoeff, double *resvec, double *BATvec, double *DMVec, double *Noise, int *SysGroups, int N, int RF,int DMF, int DMScatterCoeff, int GroupNoiseCoeff, int D, int F, int T, int incRED, int incDM, int incDMScatter, int incGroupNoise, int NTime, int NJumps, double *likevals, int incNGJitter, int numNGJitterEpochs){
+extern "C" void NewLRedMarginGPUWrapper_(void *context, double *TNDMVec, double *Freqs, double *ObsFreqs, double *powercoeff, double *resvec, double *BATvec, double *DMVec, double *Noise, int *SysGroups, int N, int RF,int DMF, int BandNoiseCoeff, int GroupNoiseCoeff, int D, int F, int T, int incRED, int incDM, int incBandNoise, int incGroupNoise, int NTime, int NJumps, double *likevals, int incNGJitter, int numNGJitterEpochs, int *BandInfo, int ReplaceTMatrix){
 
 
 	//printf("entered 1\n");
@@ -930,10 +823,11 @@ extern "C" void NewLRedMarginGPUWrapper_(void *context, double *TNDMVec, double 
 	double *Noise_d;
 	double *DMVec_d;
 	int *SysGroups_d;
+	int *BandInfo_d;
 	
-	double *FMatrix_d;
+//	double *FMatrix_d;
 	double *DMatrix_d;
-	double *TMatrix_d;
+//	double *TMatrix_d;
 	double *NT_d;	
 	double *TNT_d;
 	double *NTd_d;
@@ -959,13 +853,17 @@ extern "C" void NewLRedMarginGPUWrapper_(void *context, double *TNDMVec, double 
 	checkCudaError(err);
 	err = cudaMalloc( (void **)&SysGroups_d, sizeof(int)*N );
 	checkCudaError(err);
+	err = cudaMalloc( (void **)&BandInfo_d, sizeof(int)*3*incBandNoise);
+	checkCudaError(err);
 
-	err = cudaMalloc( (void **)&FMatrix_d, sizeof(double)*N*F );
-	checkCudaError(err);
-	err = cudaMalloc( (void **)&DMatrix_d, sizeof(double)*N*D );
-	checkCudaError(err);
-	err = cudaMalloc( (void **)&TMatrix_d, sizeof(double)*N*T );
-	checkCudaError(err);
+
+//	err = cudaMalloc( (void **)&FMatrix_d, sizeof(double)*N*F );
+//	checkCudaError(err);
+
+//	err = cudaMalloc( (void **)&TMatrix_d, sizeof(double)*N*T );
+//	checkCudaError(err);
+
+
 	err = cudaMalloc( (void **)&NT_d, sizeof(double)*N*T );
 	checkCudaError(err);
 	err = cudaMalloc( (void **)&TNT_d, sizeof(double)*T*T );
@@ -990,7 +888,8 @@ extern "C" void NewLRedMarginGPUWrapper_(void *context, double *TNDMVec, double 
 	checkCudaError(err);
 	err = cudaMemcpy( SysGroups_d, SysGroups, sizeof(int)*N, cudaMemcpyHostToDevice );
 	checkCudaError(err);
- 	 
+ 	err = cudaMemcpy( BandInfo_d, BandInfo, sizeof(int)*3*incBandNoise, cudaMemcpyHostToDevice );
+	checkCudaError(err);	 
 
 	dim3 dimBlock(BLOCK_SIZE, BLOCK_SIZE);
 	dim3 dimGrid;
@@ -1001,7 +900,9 @@ extern "C" void NewLRedMarginGPUWrapper_(void *context, double *TNDMVec, double 
 
 	//printf("entered 2\n");
 	if(D != NTime+NJumps){
-	
+
+		err = cudaMalloc( (void **)&DMatrix_d, sizeof(double)*N*D );
+		checkCudaError(err);
 		err = cudaMemcpy( DMatrix_d, TNDMVec, sizeof(double)*D*N, cudaMemcpyHostToDevice );
 		checkCudaError(err);
 	
@@ -1033,7 +934,7 @@ extern "C" void NewLRedMarginGPUWrapper_(void *context, double *TNDMVec, double 
 ////////////////////////////////////////////////////////////////////////////////////////// 	
 	
 	//printf("entered 3\n");
-	make_fmatrix<<< N, 1 >>>(FMatrix_d,Freqs_d,ObsFreqs_d, BATvec_d,DMVec_d,SysGroups_d, N,RF,DMF, DMScatterCoeff, GroupNoiseCoeff, incRED, incDM, incDMScatter, incGroupNoise);
+	make_fmatrix<<< N, 1 >>>(GlobalTotalMatrix_d,Freqs_d,ObsFreqs_d, BATvec_d,DMVec_d,SysGroups_d, BandInfo_d, N,RF,DMF, BandNoiseCoeff, GroupNoiseCoeff, incRED, incDM, incBandNoise, incGroupNoise, 				ReplaceTMatrix, D, NTime,NJumps,DMatrix_d);
  	 
 	cudaDeviceSynchronize();
 
@@ -1042,13 +943,11 @@ extern "C" void NewLRedMarginGPUWrapper_(void *context, double *TNDMVec, double 
 ///////////////////////////////////////////////////////////////////////////////////////////  
 /////////////////////////Add ECORR Matrix/////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////// 	
-
+/*
 
 	if(incNGJitter > 0){
 
-		int NGCoeffStartPoint = RF+DMF+incGroupNoise*GroupNoiseCoeff;
-		if(incDMScatter == 1 || incDMScatter == 2 || incDMScatter == 3)NGCoeffStartPoint += DMScatterCoeff;
-		if(incDMScatter == 4 || incDMScatter == 5)NGCoeffStartPoint += 3*DMScatterCoeff;
+		int NGCoeffStartPoint = RF+DMF+incGroupNoise*GroupNoiseCoeff+incBandNoise*BandNoiseCoeff;
 
 		add_EcorrToFMatrix<<< N, 1 >>>(FMatrix_d, GlobalEMatrix_d, N, NGCoeffStartPoint, numNGJitterEpochs);
 	 	 
@@ -1056,8 +955,8 @@ extern "C" void NewLRedMarginGPUWrapper_(void *context, double *TNDMVec, double 
 
 	}
 
-
-
+*/
+/*
 
 ///////////////////////////////////////////////////////////////////////////////////////////  
 /////////////////////////Form the T Matrix/////////////////////////////////////////////////
@@ -1077,7 +976,7 @@ extern "C" void NewLRedMarginGPUWrapper_(void *context, double *TNDMVec, double 
 	}
 
 	cudaDeviceSynchronize();
-
+*/
 ///////////////////////////////////////////////////////////////////////////////////////////  
 /////////////////////////Do the Algebra///////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////// 	
@@ -1089,7 +988,7 @@ extern "C" void NewLRedMarginGPUWrapper_(void *context, double *TNDMVec, double 
 	dimGrid.x=(T + dimBlock.x - 1)/dimBlock.x;
 	dimGrid.y = (N + dimBlock.y - 1)/dimBlock.y;	
 
-	MatMulKernel<<<dimGrid, dimBlock>>>(N,N,N, T,Noise_d,TMatrix_d,NT_d);
+	MatMulKernel<<<dimGrid, dimBlock>>>(N,N,N, T,Noise_d,GlobalTotalMatrix_d,NT_d);
 	//SimpleDiagMatMulKernel<<<1,1>>>(N, T, Noise_d, TMatrix_d, NT_d);
 	cudaDeviceSynchronize();
 
@@ -1097,7 +996,7 @@ extern "C" void NewLRedMarginGPUWrapper_(void *context, double *TNDMVec, double 
 	double beta=0.0; 
 	
 
-	status =  culaDeviceDgemm('T', 'N', T, T, N, alpha, TMatrix_d, N, NT_d, N, beta, TNT_d, T);
+	status =  culaDeviceDgemm('T', 'N', T, T, N, alpha, GlobalTotalMatrix_d, N, NT_d, N, beta, TNT_d, T);
 	checkStatus(status);
 
 	cudaDeviceSynchronize();
@@ -1152,12 +1051,13 @@ extern "C" void NewLRedMarginGPUWrapper_(void *context, double *TNDMVec, double 
 		cudaFree(DMVec_d);
 		cudaFree(SysGroups_d);
 
-		cudaFree(FMatrix_d);
-		cudaFree(DMatrix_d);
-		cudaFree(TMatrix_d);
+//		cudaFree(FMatrix_d);
+		if(D != NTime+NJumps){cudaFree(DMatrix_d);}
+//		cudaFree(TMatrix_d);
 		cudaFree(NT_d);
 		cudaFree(TNT_d);
 		cudaFree(NTd_d);
+		cudaFree(BandInfo_d);
 		
 		cudaFree(dettemp_d);
 		delete(tempval);
@@ -1200,12 +1100,13 @@ extern "C" void NewLRedMarginGPUWrapper_(void *context, double *TNDMVec, double 
 	cudaFree(DMVec_d);	
 	cudaFree(SysGroups_d);
 
-	cudaFree(FMatrix_d);
-	cudaFree(DMatrix_d);
-	cudaFree(TMatrix_d);
+//	cudaFree(FMatrix_d);
+	if(D != NTime+NJumps){cudaFree(DMatrix_d);}
+//	cudaFree(TMatrix_d);
 	cudaFree(NT_d);
 	cudaFree(TNT_d);
 	cudaFree(NTd_d);
+	cudaFree(BandInfo_d);
 	
 	cudaFree(WorkVec_d);
 	cudaFree(dettemp_d);
@@ -1218,9 +1119,22 @@ extern "C" void NewLRedMarginGPUWrapper_(void *context, double *TNDMVec, double 
  	 
 
 
+extern "C" void copy_staticTmat_(double *T, int totalsize, int Nobs){
+
+    cudaError_t err;
+
+ 	 err = cudaMalloc( (void **)&GlobalTotalMatrix_d, sizeof(double)*totalsize*Nobs );
+	 checkCudaError(err);
+
+     // copy vectors from CPU to GPU
+ 	 err = cudaMemcpy( GlobalTotalMatrix_d, T, sizeof(double)*totalsize*Nobs, cudaMemcpyHostToDevice );
+ 	 checkCudaError(err);
+
+   return;
+}
 
 
-
+/*
 
  	 
 
@@ -1347,5 +1261,5 @@ extern "C" void copy_staticECorrmat_(double *E, int EcorrSize, int Nobs){
    return;
 }
 
-
+*/
 

@@ -1111,8 +1111,8 @@ double  FastNewLRedMarginLogLike(int &ndim, double *Cube, int &npars, double *De
 	if(((MNStruct *)globalcontext)->uselongdouble > 0 ){
 		fpu_fix_start(&oldcw);
 	}
-	
-*/
+*/	
+
 
 	double tdet=0;
 	double timelike=0;
@@ -1121,7 +1121,6 @@ double  FastNewLRedMarginLogLike(int &ndim, double *Cube, int &npars, double *De
 		timelike+=Resvec[o]*Resvec[o]*Noise[o];
 		tdet -= log(Noise[o]);
 	}
-
 /*
 	dd_real ddtimelike=0.0;
 	if(((MNStruct *)globalcontext)->uselongdouble ==1){
@@ -1145,8 +1144,8 @@ double  FastNewLRedMarginLogLike(int &ndim, double *Cube, int &npars, double *De
                         qdtimelike+=chicomp;
                 }
         }
-
 */
+
 	printf("Fast time like %g %g %i\n", timelike, tdet, ((MNStruct *)globalcontext)->totCoeff);
 
 //////////////////////////////////////////////////////////////////////////////////////////  
@@ -1229,8 +1228,8 @@ double  FastNewLRedMarginLogLike(int &ndim, double *Cube, int &npars, double *De
         if(((MNStruct *)globalcontext)->uselongdouble > 0 ){
                 fpu_fix_end(&oldcw);
         }
-
 */
+
 
 	delete[] WorkCoeff;
 	delete[] NTd;
@@ -1285,6 +1284,7 @@ double  NewLRedMarginLogLike(int &ndim, double *Cube, int &npars, double *Derive
 	int pcount=0;
 	
 	int numfit=((MNStruct *)globalcontext)->numFitTiming + ((MNStruct *)globalcontext)->numFitJumps;
+	int TimetoMargin=((MNStruct *)globalcontext)->TimetoMargin;
 	long double LDparams[numfit];
 	double Fitparams[numfit];
 	double *Resvec=new double[((MNStruct *)globalcontext)->pulse->nobs];
@@ -1375,7 +1375,8 @@ double  NewLRedMarginLogLike(int &ndim, double *Cube, int &npars, double *Derive
 		pcount++;
 	}
 
-	if(((MNStruct *)globalcontext)->numFitTiming + ((MNStruct *)globalcontext)->numFitJumps > 0){	
+
+	if(TimetoMargin != numfit){
 		fastformBatsAll(((MNStruct *)globalcontext)->pulse,((MNStruct *)globalcontext)->numberpulsars);       /* Form Barycentric arrival times */
 		formResiduals(((MNStruct *)globalcontext)->pulse,((MNStruct *)globalcontext)->numberpulsars,1);       /* Form residuals */
 	}
@@ -1689,7 +1690,7 @@ double  NewLRedMarginLogLike(int &ndim, double *Cube, int &npars, double *Derive
 /////////////////////////Form the Design Matrix////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////  
 
-	int TimetoMargin=((MNStruct *)globalcontext)->TimetoMargin;
+
 //	for(int i =0; i < ((MNStruct *)globalcontext)->numFitTiming+((MNStruct *)globalcontext)->numFitJumps; i++){
 //		if(((MNStruct *)globalcontext)->LDpriors[i][2]==1)TimetoMargin++;
 //	}
@@ -3035,8 +3036,7 @@ double  NewLRedMarginLogLike(int &ndim, double *Cube, int &npars, double *Derive
 /////////////////////////////////////////////////////////////////////////////////////////////  
 /////////////////////////Get Time domain likelihood//////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////  
-/*
-	static unsigned int oldcw;
+/*	static unsigned int oldcw;
 	if(((MNStruct *)globalcontext)->uselongdouble > 0 ){
 		fpu_fix_start(&oldcw);
 	//	printf("oldcw %i \n", oldcw);
@@ -3052,8 +3052,8 @@ double  NewLRedMarginLogLike(int &ndim, double *Cube, int &npars, double *Derive
 		timelike+=Resvec[o]*Resvec[o]*Noise[o];
 		tdet -= log(Noise[o]);
 	}
-/*
-	dd_real ddtimelike=0.0;
+
+/*	dd_real ddtimelike=0.0;
 	if(((MNStruct *)globalcontext)->uselongdouble ==1){
 		for(int o=0; o<((MNStruct *)globalcontext)->pulse->nobs; o++){
 			dd_real res = (dd_real)Resvec[o];
@@ -3439,11 +3439,13 @@ double  NewLRedMarginLogLike(int &ndim, double *Cube, int &npars, double *Derive
                 delete[]CholC;
 
 	}
-
 */
 
+
 	for(int j=0;j<totCoeff;j++){
+			//printf("add coeffs %i %g %g \n", j, TNT[TimetoMargin+j + (TimetoMargin+j)*totalsize],powercoeff[j]);
 			TNT[TimetoMargin+j + (TimetoMargin+j)*totalsize] += 1.0/powercoeff[j];
+			
 	}
 	for(int j=0;j<totalredshapecoeff;j++){
 			freqdet=freqdet-log(pow(10.0, -12)*TNT[TimetoMargin+totCoeff+j + (TimetoMargin+totCoeff+j)*totalsize]);
@@ -3522,7 +3524,6 @@ double  NewLRedMarginLogLike(int &ndim, double *Cube, int &npars, double *Derive
 		lnew=-pow(10.0,20);
 		
 	}
-
 /*
 	//printf("lnew double : %g", lnew);
 	if(((MNStruct *)globalcontext)->uselongdouble ==1){
