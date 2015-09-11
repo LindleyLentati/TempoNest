@@ -3185,7 +3185,6 @@ double  NewLRedMarginLogLike(int &ndim, double *Cube, int &npars, double *Derive
 */
 	
 
-	double *NT=new double[((MNStruct *)globalcontext)->pulse->nobs*totalsize];
 	double *TNT=new double[totalsize*totalsize];
 
 /*	
@@ -3195,17 +3194,44 @@ double  NewLRedMarginLogLike(int &ndim, double *Cube, int &npars, double *Derive
 		}
 	}
 */
-	std::memcpy(NT, TotalMatrix, ((MNStruct *)globalcontext)->pulse->nobs*totalsize*sizeof(double));
+
+	int savememory = 0;
+	double *NT;	
+	if(savememory == 0){
+		NT=new double[((MNStruct *)globalcontext)->pulse->nobs*totalsize];
+		std::memcpy(NT, TotalMatrix, ((MNStruct *)globalcontext)->pulse->nobs*totalsize*sizeof(double));
 	
-	for(int i=0;i<((MNStruct *)globalcontext)->pulse->nobs;i++){
-		for(int j=0;j<totalsize;j++){
-			NT[i + j*((MNStruct *)globalcontext)->pulse->nobs] *= Noise[i];
+		for(int i=0;i<((MNStruct *)globalcontext)->pulse->nobs;i++){
+			for(int j=0;j<totalsize;j++){
+				NT[i + j*((MNStruct *)globalcontext)->pulse->nobs] *= Noise[i];
+			}
 		}
+
+		vector_dgemm(TotalMatrix, NT , TNT, ((MNStruct *)globalcontext)->pulse->nobs, totalsize, ((MNStruct *)globalcontext)->pulse->nobs, totalsize, 'T', 'N');
+
+		vector_dgemv(NT,Resvec,NTd,((MNStruct *)globalcontext)->pulse->nobs,totalsize,'T');
 	}
+	if(savememory == 1){
 
-	vector_dgemm(TotalMatrix, NT , TNT, ((MNStruct *)globalcontext)->pulse->nobs, totalsize, ((MNStruct *)globalcontext)->pulse->nobs, totalsize, 'T', 'N');
+		for(int i=0;i<((MNStruct *)globalcontext)->pulse->nobs;i++){
+			for(int j=0;j<totalsize;j++){
+				TotalMatrix[i + j*((MNStruct *)globalcontext)->pulse->nobs] *= sqrt(Noise[i]);
+			}
+			Resvec[i] *= Noise[i];
+		}
 
-	vector_dgemv(NT,Resvec,NTd,((MNStruct *)globalcontext)->pulse->nobs,totalsize,'T');
+		vector_dgemm(TotalMatrix, TotalMatrix , TNT, ((MNStruct *)globalcontext)->pulse->nobs, totalsize, ((MNStruct *)globalcontext)->pulse->nobs, totalsize, 'T', 'N');
+
+		for(int i=0;i<((MNStruct *)globalcontext)->pulse->nobs;i++){
+			for(int j=0;j<totalsize;j++){
+				TotalMatrix[i + j*((MNStruct *)globalcontext)->pulse->nobs] /= sqrt(Noise[i]);
+			}
+		}
+
+
+		vector_dgemv(TotalMatrix,Resvec,NTd,((MNStruct *)globalcontext)->pulse->nobs,totalsize,'T');
+
+	}
 
 /*
         dd_real ddfreqlike = 0.0;
@@ -3450,8 +3476,9 @@ double  NewLRedMarginLogLike(int &ndim, double *Cube, int &npars, double *Derive
 
 	}
 */
-
-	delete[] NT;
+	if(savememory == 0){
+		delete[] NT;
+	}
 
 	for(int j=0;j<totCoeff;j++){
 			//printf("add coeffs %i %g %g \n", j, TNT[TimetoMargin+j + (TimetoMargin+j)*totalsize],powercoeff[j]);
