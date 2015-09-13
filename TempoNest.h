@@ -191,9 +191,9 @@ void TemplateProfLikeMNWrap(double *Cube, int &ndim, int &npars, double &lnew, v
 double SubIntStocProfLike(int &ndim, double *Cube, int &npars, double *DerivedParams, void *context);
 void SubIntStocProfLikeMNWrap(double *Cube, int &ndim, int &npars, double &lnew, void *context);
 //non linear timing model likelihood functions
-double  WhiteLogLike(int &ndim, double *Cube, int &npars, double *DerivedParams, void *context);
+//double  WhiteLogLike(int &ndim, double *Cube, int &npars, double *DerivedParams, void *context);
 double NewLRedMarginLogLike(int &ndim, double *Cube, int &npars, double *DerivedParams, void *context);
-void LRedLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *context);
+//void LRedLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *context);
 //double LRedNumericalLogLike(int &ndim, double *Cube, int &npars, double *DerivedParams, void *context);
 
 void LRedLikeMNWrap(double *Cube, int &ndim, int &npars, double &lnew, void *context);

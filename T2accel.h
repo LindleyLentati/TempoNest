@@ -4,7 +4,9 @@ extern char useT2accel;
 
 #ifdef HAVE_LAPACK
 #define ACCEL_UINV
-void accel_uinv(double* _m, int n);
+#define ACCEL_LSQ
+int accel_uinv(double* _m, int n);
+double accel_lsq_qr(double** dm, double* data, double* oparm, int ndata, int nparam, double** Ocvm);
 #endif
 
 #ifdef HAVE_BLAS

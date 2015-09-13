@@ -64,8 +64,17 @@
 /* Define to 1 if you have the <memory.h> header file. */
 #undef HAVE_MEMORY_H
 
+/* Define to 1 if you have the MLAPACK library */
+#undef HAVE_MLAPACK
+
 /* Define to 1 if you have the MULTINEST library */
 #undef HAVE_MULTINEST
+
+/* Define to 1 if you have the PSRCHIVE library */
+#undef HAVE_PSRCHIVE
+
+/* Define to 1 if you have the QDINSTALL library */
+#undef HAVE_QDINSTALL
 
 /* Define if you have the shl_load function. */
 #undef HAVE_SHL_LOAD

@@ -1,20 +1,17 @@
-TempoNestUtilities.lo: TempoNestUtilities.cpp tempo2.h \
- /usr/include/stdio.h /usr/include/features.h /usr/include/sys/cdefs.h \
+TempoNestUtilities.lo: TempoNestUtilities.cpp \
+ /home/ltl21/PulsarCode/T2Runtime/include/tempo2.h \
+ /home/ltl21/PulsarCode/T2Runtime/include/TKlongdouble.h \
+ /usr/include/math.h /usr/include/features.h /usr/include/sys/cdefs.h \
  /usr/include/bits/wordsize.h /usr/include/gnu/stubs.h \
- /usr/include/gnu/stubs-64.h \
- /usr/local/Cluster-Apps/gcc/4.8.1/lib/gcc/x86_64-unknown-linux-gnu/4.8.1/include/stddef.h \
- /usr/include/bits/types.h /usr/include/bits/typesizes.h \
- /usr/include/libio.h /usr/include/_G_config.h /usr/include/wchar.h \
- /usr/local/Cluster-Apps/gcc/4.8.1/lib/gcc/x86_64-unknown-linux-gnu/4.8.1/include/stdarg.h \
- /usr/include/bits/stdio_lim.h /usr/include/bits/sys_errlist.h \
- /usr/include/bits/stdio.h /usr/include/time.h /usr/include/bits/time.h \
- /usr/include/xlocale.h TKlog.h \
- /usr/local/Cluster-Apps/gcc/4.8.1/include/c++/4.8.1/cstdio \
+ /usr/include/gnu/stubs-64.h /usr/include/bits/huge_val.h \
+ /usr/include/bits/huge_valf.h /usr/include/bits/huge_vall.h \
+ /usr/include/bits/inf.h /usr/include/bits/nan.h \
+ /usr/include/bits/mathdef.h /usr/include/bits/mathcalls.h \
+ /usr/include/bits/mathinline.h \
+ /usr/local/Cluster-Apps/gcc/4.8.1/include/c++/4.8.1/string \
  /usr/local/Cluster-Apps/gcc/4.8.1/include/c++/4.8.1/x86_64-unknown-linux-gnu/bits/c++config.h \
  /usr/local/Cluster-Apps/gcc/4.8.1/include/c++/4.8.1/x86_64-unknown-linux-gnu/bits/os_defines.h \
  /usr/local/Cluster-Apps/gcc/4.8.1/include/c++/4.8.1/x86_64-unknown-linux-gnu/bits/cpu_defines.h \
- /usr/local/Cluster-Apps/gcc/4.8.1/include/c++/4.8.1/ctime \
- /usr/local/Cluster-Apps/gcc/4.8.1/include/c++/4.8.1/string \
  /usr/local/Cluster-Apps/gcc/4.8.1/include/c++/4.8.1/bits/stringfwd.h \
  /usr/local/Cluster-Apps/gcc/4.8.1/include/c++/4.8.1/bits/memoryfwd.h \
  /usr/local/Cluster-Apps/gcc/4.8.1/include/c++/4.8.1/bits/char_traits.h \
@@ -33,7 +30,11 @@ TempoNestUtilities.lo: TempoNestUtilities.cpp tempo2.h \
  /usr/local/Cluster-Apps/gcc/4.8.1/include/c++/4.8.1/bits/stl_iterator.h \
  /usr/local/Cluster-Apps/gcc/4.8.1/include/c++/4.8.1/bits/postypes.h \
  /usr/local/Cluster-Apps/gcc/4.8.1/include/c++/4.8.1/cwchar \
+ /usr/include/wchar.h /usr/include/stdio.h \
+ /usr/local/Cluster-Apps/gcc/4.8.1/lib/gcc/x86_64-unknown-linux-gnu/4.8.1/include/stdarg.h \
  /usr/include/bits/wchar.h \
+ /usr/local/Cluster-Apps/gcc/4.8.1/lib/gcc/x86_64-unknown-linux-gnu/4.8.1/include/stddef.h \
+ /usr/include/xlocale.h \
  /usr/local/Cluster-Apps/gcc/4.8.1/include/c++/4.8.1/bits/allocator.h \
  /usr/local/Cluster-Apps/gcc/4.8.1/include/c++/4.8.1/x86_64-unknown-linux-gnu/bits/c++allocator.h \
  /usr/local/Cluster-Apps/gcc/4.8.1/include/c++/4.8.1/ext/new_allocator.h \
@@ -46,8 +47,9 @@ TempoNestUtilities.lo: TempoNestUtilities.cpp tempo2.h \
  /usr/include/locale.h /usr/include/bits/locale.h \
  /usr/local/Cluster-Apps/gcc/4.8.1/include/c++/4.8.1/iosfwd \
  /usr/local/Cluster-Apps/gcc/4.8.1/include/c++/4.8.1/cctype \
- /usr/include/ctype.h /usr/include/endian.h /usr/include/bits/endian.h \
- /usr/include/bits/byteswap.h \
+ /usr/include/ctype.h /usr/include/bits/types.h \
+ /usr/include/bits/typesizes.h /usr/include/endian.h \
+ /usr/include/bits/endian.h /usr/include/bits/byteswap.h \
  /usr/local/Cluster-Apps/gcc/4.8.1/include/c++/4.8.1/bits/ostream_insert.h \
  /usr/local/Cluster-Apps/gcc/4.8.1/include/c++/4.8.1/bits/cxxabi_forced.h \
  /usr/local/Cluster-Apps/gcc/4.8.1/include/c++/4.8.1/bits/stl_function.h \
@@ -57,23 +59,25 @@ TempoNestUtilities.lo: TempoNestUtilities.cpp tempo2.h \
  /usr/local/Cluster-Apps/gcc/4.8.1/include/c++/4.8.1/ext/atomicity.h \
  /usr/local/Cluster-Apps/gcc/4.8.1/include/c++/4.8.1/x86_64-unknown-linux-gnu/bits/gthr.h \
  /usr/local/Cluster-Apps/gcc/4.8.1/include/c++/4.8.1/x86_64-unknown-linux-gnu/bits/gthr-default.h \
- /usr/include/pthread.h /usr/include/sched.h /usr/include/bits/sched.h \
+ /usr/include/pthread.h /usr/include/sched.h /usr/include/time.h \
+ /usr/include/bits/sched.h /usr/include/bits/time.h \
  /usr/include/bits/pthreadtypes.h /usr/include/bits/setjmp.h \
  /usr/local/Cluster-Apps/gcc/4.8.1/include/c++/4.8.1/x86_64-unknown-linux-gnu/bits/atomic_word.h \
  /usr/local/Cluster-Apps/gcc/4.8.1/include/c++/4.8.1/bits/basic_string.tcc \
- TempoNest.h /usr/local/Cluster-Apps/gcc/4.8.1/include/c++/4.8.1/vector \
+ /usr/include/libio.h /usr/include/_G_config.h \
+ /usr/include/bits/stdio_lim.h /usr/include/bits/sys_errlist.h \
+ /usr/include/bits/stdio.h \
+ /home/ltl21/PulsarCode/T2Runtime/include/TKlog.h \
+ /usr/local/Cluster-Apps/gcc/4.8.1/include/c++/4.8.1/cstdio \
+ /usr/local/Cluster-Apps/gcc/4.8.1/include/c++/4.8.1/ctime TempoNest.h \
+ /usr/local/Cluster-Apps/gcc/4.8.1/include/c++/4.8.1/vector \
  /usr/local/Cluster-Apps/gcc/4.8.1/include/c++/4.8.1/bits/stl_construct.h \
  /usr/local/Cluster-Apps/gcc/4.8.1/include/c++/4.8.1/ext/alloc_traits.h \
  /usr/local/Cluster-Apps/gcc/4.8.1/include/c++/4.8.1/bits/stl_uninitialized.h \
  /usr/local/Cluster-Apps/gcc/4.8.1/include/c++/4.8.1/bits/stl_vector.h \
  /usr/local/Cluster-Apps/gcc/4.8.1/include/c++/4.8.1/bits/stl_bvector.h \
  /usr/local/Cluster-Apps/gcc/4.8.1/include/c++/4.8.1/bits/vector.tcc \
- dgemm.h /usr/include/math.h /usr/include/bits/huge_val.h \
- /usr/include/bits/huge_valf.h /usr/include/bits/huge_vall.h \
- /usr/include/bits/inf.h /usr/include/bits/nan.h \
- /usr/include/bits/mathdef.h /usr/include/bits/mathcalls.h \
- /usr/include/bits/mathinline.h \
- /usr/local/Cluster-Apps/gcc/4.8.1/include/c++/4.8.1/algorithm \
+ dgemm.h /usr/local/Cluster-Apps/gcc/4.8.1/include/c++/4.8.1/algorithm \
  /usr/local/Cluster-Apps/gcc/4.8.1/include/c++/4.8.1/utility \
  /usr/local/Cluster-Apps/gcc/4.8.1/include/c++/4.8.1/bits/stl_relops.h \
  /usr/local/Cluster-Apps/gcc/4.8.1/include/c++/4.8.1/bits/stl_algo.h \
@@ -123,9 +127,11 @@ TempoNestUtilities.lo: TempoNestUtilities.cpp tempo2.h \
  /usr/local/Cluster-Apps/gcc/4.8.1/include/c++/4.8.1/iomanip \
  /usr/include/gsl/gsl_sf_gamma.h /usr/include/gsl/gsl_sf_result.h
 
-tempo2.h:
+/home/ltl21/PulsarCode/T2Runtime/include/tempo2.h:
 
-/usr/include/stdio.h:
+/home/ltl21/PulsarCode/T2Runtime/include/TKlongdouble.h:
+
+/usr/include/math.h:
 
 /usr/include/features.h:
 
@@ -137,45 +143,29 @@ tempo2.h:
 
 /usr/include/gnu/stubs-64.h:
 
-/usr/local/Cluster-Apps/gcc/4.8.1/lib/gcc/x86_64-unknown-linux-gnu/4.8.1/include/stddef.h:
+/usr/include/bits/huge_val.h:
 
-/usr/include/bits/types.h:
+/usr/include/bits/huge_valf.h:
 
-/usr/include/bits/typesizes.h:
+/usr/include/bits/huge_vall.h:
 
-/usr/include/libio.h:
+/usr/include/bits/inf.h:
 
-/usr/include/_G_config.h:
+/usr/include/bits/nan.h:
 
-/usr/include/wchar.h:
+/usr/include/bits/mathdef.h:
 
-/usr/local/Cluster-Apps/gcc/4.8.1/lib/gcc/x86_64-unknown-linux-gnu/4.8.1/include/stdarg.h:
+/usr/include/bits/mathcalls.h:
 
-/usr/include/bits/stdio_lim.h:
+/usr/include/bits/mathinline.h:
 
-/usr/include/bits/sys_errlist.h:
-
-/usr/include/bits/stdio.h:
-
-/usr/include/time.h:
-
-/usr/include/bits/time.h:
-
-/usr/include/xlocale.h:
-
-TKlog.h:
-
-/usr/local/Cluster-Apps/gcc/4.8.1/include/c++/4.8.1/cstdio:
+/usr/local/Cluster-Apps/gcc/4.8.1/include/c++/4.8.1/string:
 
 /usr/local/Cluster-Apps/gcc/4.8.1/include/c++/4.8.1/x86_64-unknown-linux-gnu/bits/c++config.h:
 
 /usr/local/Cluster-Apps/gcc/4.8.1/include/c++/4.8.1/x86_64-unknown-linux-gnu/bits/os_defines.h:
 
 /usr/local/Cluster-Apps/gcc/4.8.1/include/c++/4.8.1/x86_64-unknown-linux-gnu/bits/cpu_defines.h:
-
-/usr/local/Cluster-Apps/gcc/4.8.1/include/c++/4.8.1/ctime:
-
-/usr/local/Cluster-Apps/gcc/4.8.1/include/c++/4.8.1/string:
 
 /usr/local/Cluster-Apps/gcc/4.8.1/include/c++/4.8.1/bits/stringfwd.h:
 
@@ -213,7 +203,17 @@ TKlog.h:
 
 /usr/local/Cluster-Apps/gcc/4.8.1/include/c++/4.8.1/cwchar:
 
+/usr/include/wchar.h:
+
+/usr/include/stdio.h:
+
+/usr/local/Cluster-Apps/gcc/4.8.1/lib/gcc/x86_64-unknown-linux-gnu/4.8.1/include/stdarg.h:
+
 /usr/include/bits/wchar.h:
+
+/usr/local/Cluster-Apps/gcc/4.8.1/lib/gcc/x86_64-unknown-linux-gnu/4.8.1/include/stddef.h:
+
+/usr/include/xlocale.h:
 
 /usr/local/Cluster-Apps/gcc/4.8.1/include/c++/4.8.1/bits/allocator.h:
 
@@ -243,6 +243,10 @@ TKlog.h:
 
 /usr/include/ctype.h:
 
+/usr/include/bits/types.h:
+
+/usr/include/bits/typesizes.h:
+
 /usr/include/endian.h:
 
 /usr/include/bits/endian.h:
@@ -271,7 +275,11 @@ TKlog.h:
 
 /usr/include/sched.h:
 
+/usr/include/time.h:
+
 /usr/include/bits/sched.h:
+
+/usr/include/bits/time.h:
 
 /usr/include/bits/pthreadtypes.h:
 
@@ -280,6 +288,22 @@ TKlog.h:
 /usr/local/Cluster-Apps/gcc/4.8.1/include/c++/4.8.1/x86_64-unknown-linux-gnu/bits/atomic_word.h:
 
 /usr/local/Cluster-Apps/gcc/4.8.1/include/c++/4.8.1/bits/basic_string.tcc:
+
+/usr/include/libio.h:
+
+/usr/include/_G_config.h:
+
+/usr/include/bits/stdio_lim.h:
+
+/usr/include/bits/sys_errlist.h:
+
+/usr/include/bits/stdio.h:
+
+/home/ltl21/PulsarCode/T2Runtime/include/TKlog.h:
+
+/usr/local/Cluster-Apps/gcc/4.8.1/include/c++/4.8.1/cstdio:
+
+/usr/local/Cluster-Apps/gcc/4.8.1/include/c++/4.8.1/ctime:
 
 TempoNest.h:
 
@@ -298,24 +322,6 @@ TempoNest.h:
 /usr/local/Cluster-Apps/gcc/4.8.1/include/c++/4.8.1/bits/vector.tcc:
 
 dgemm.h:
-
-/usr/include/math.h:
-
-/usr/include/bits/huge_val.h:
-
-/usr/include/bits/huge_valf.h:
-
-/usr/include/bits/huge_vall.h:
-
-/usr/include/bits/inf.h:
-
-/usr/include/bits/nan.h:
-
-/usr/include/bits/mathdef.h:
-
-/usr/include/bits/mathcalls.h:
-
-/usr/include/bits/mathinline.h:
 
 /usr/local/Cluster-Apps/gcc/4.8.1/include/c++/4.8.1/algorithm:
 

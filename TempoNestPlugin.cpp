@@ -35,10 +35,10 @@
 #include <math.h>
 #include <time.h>
 #include "tempo2.h"
-#include "tempo2Util.h"
+//#include "tempo2Util.h"
 #include "tempo2pred.h"
 #include "tempo2pred_int.h"
-#include "T2accel.h"
+//#include "T2accel.h"
 #include <dlfcn.h>
 // #include "T2toolkit.h"
 #include <vector>
@@ -62,6 +62,18 @@
 #ifdef HAVE_CULA
 #include <cula_lapack_device.h>
 #endif /* HAVE_CULA */
+
+#ifdef HAVE_PSRCHIVE
+// psrchive stuff
+#include "Pulsar/Archive.h"
+#include "Pulsar/Integration.h"
+#include "Pulsar/Profile.h"
+#include "Pulsar/FaradayRotation.h"
+#include "Pulsar/PolnProfileStats.h"
+#include "T2Observatory.h"
+using namespace Pulsar;
+#endif
+
 
 void ephemeris_routines(pulsar *psr,int npsr);
 void clock_corrections(pulsar *psr,int npsr);
@@ -1670,6 +1682,15 @@ extern "C" int graphicalInterface(int argc, char **argv,
 		printf("Using GPUs\n");
 	}
 #endif
+
+#ifdef HAVE_MLAPACK
+	printf("Have access to mlapack\n");
+	if(useGPUS == 1){
+		printf("Using GPUs\n");
+	}
+#endif
+
+
 	printf("file root set to %s \n",root);
 	
 	int systemcount=0;
@@ -2550,6 +2571,9 @@ extern "C" int graphicalInterface(int argc, char **argv,
 */
 	if(GPTA == 0){
 
+
+
+
 		int *FitList=new int[ndims];
 		for(int i=0;i<ndims;i++){
 			FitList[i]=0;
@@ -2824,6 +2848,7 @@ extern "C" int graphicalInterface(int argc, char **argv,
 	}
 	else if(GPTA == 1){
 
+#ifdef HAVE_PSRCHIVE
 
 
 		//If not marginalising, only need to reget custom priors to overwrite anything done previously
@@ -2839,21 +2864,95 @@ extern "C" int graphicalInterface(int argc, char **argv,
 
 
 
-
+		
 
 		//if(GPTA == 1){
 
 		long double ***ProfileData = new long double**[((MNStruct *)context)->pulse->nobs];
 		long double **ProfileInfo = new long double*[((MNStruct *)context)->pulse->nobs];
 
-
-		 for(int t = 0; t < ((MNStruct *)context)->pulse->nobs; t++){
+		double weightsum=0;
+		double weightedfreq = 0;
+		for(int t = 0; t < ((MNStruct *)context)->pulse->nobs; t++){
 
 			std::string ProfileName =  ((MNStruct *)context)->pulse->obsn[t].fname;
 
 			printf("loading profiles %i %s \n", t, ((MNStruct *)context)->pulse->obsn[t].fname);
 
 			std::string fname = "profiles/"+ProfileName+".ASCII"; //"/home/ltl21/scratch/Pulsars/ProfileData/J1909-10cm/profiles/"+ProfileName+".ASCII";
+
+			std::string archivename = "profiles/"+ProfileName+".new_code"; //"/home/ltl21/scratch/Pulsars/ProfileData/J1909-10cm/profiles/"+ProfileName+".ASCII";
+			Reference::To< Archive > archive = Archive::load(archivename.c_str());
+			if( !archive ){
+				printf("Problem opening archive\n");			
+				 return 0;	
+
+			}
+
+			int nsub = archive->get_nsubint();
+			int nbins = 0;
+			int nchans = 0;
+			int npols = 0;
+			double foldingperiod = 0;
+			double inttime = 0;
+			double centerfreq = 0;
+			double chanfreq = 0;
+			int intday = 0;
+			double fracday = 0;
+			int intsec = 0;
+			double fracsecs = 0;
+			bool isdedispersed = 0;
+			//std::string telescope = archive->get_telescope();
+			//Tempo2::Observatory *obs = new Tempo2::Observatory(telescope);
+			//printf("telescope code: %s \n", telescope.c_str());
+			if(nsub > 1){
+				printf("Only one subint per archive supported currently: nsub %i \n", nsub);
+				return 0;
+			}
+
+			float *pvalues;
+			for(int i=0; i < nsub; i++){
+				Integration *subint = archive->get_Integration(i);
+
+				nbins = subint->get_nbin();
+				nchans = subint->get_nchan();
+				npols = subint->get_npol();
+				foldingperiod = subint->get_folding_period();
+				inttime = subint->get_duration();
+				centerfreq = subint->get_centre_frequency(); 
+				MJD firstbin = subint->get_epoch();
+				intday = firstbin.intday();
+				fracday = firstbin.fracday();
+				intsec = firstbin.get_secs();
+				fracsecs = firstbin.get_fracsec();
+				isdedispersed = subint->get_dedispersed();
+
+				if(nchans > 1){
+					printf("Only one channel per archive supported currently: nchan %i\n", nchans);
+					return 0;
+				}
+
+
+				
+				printf("archive info: %i %i %i %i %.16g %g %g %i %.16g %i %.16g\n", nsub, nbins, nchans, npols, foldingperiod, inttime, centerfreq, intday, fracday, intsec, fracsecs);
+				printf("dedispersed? %s \n", isdedispersed ? "true" : "false");
+				for(int j = 0; j < nchans; j++){
+					int ipol = 0; //only want total Intensity
+					Profile *prof = subint->get_Profile(ipol, j);
+					pvalues = prof->get_amps();
+					chanfreq = subint->get_centre_frequency(j);
+					float subintweight =  subint->get_weight(j);
+					weightsum += subintweight;
+					weightedfreq += subintweight*chanfreq;
+					printf("channel freq: %i %g %g\n", j, chanfreq, subintweight);
+
+				}
+			}
+	
+
+
+
+
 			std::ifstream ProfileFile;
 
 			ProfileFile.open(fname.c_str());
@@ -2870,13 +2969,13 @@ extern "C" int graphicalInterface(int argc, char **argv,
 			std::istream_iterator< long double > begin(myStream),eof;
 			std::vector<long double> ds(begin,eof);
 
-			long double ProfileMJD = ds[0];
-			long double FirstBinSec = ds[1];
-			long double FoldingPeriod = ds[2];
+			long double ProfileMJD = intday;    //ds[0];
+			long double FirstBinSec = intsec+(long double)fracsecs;   //ds[1];
+			long double FoldingPeriod = foldingperiod;  //ds[2];
 		
-			int Nbins = (int)ds[6];
+			int Nbins = nbins;  //(int)ds[6];
 		
-
+			printf("comp %Lg %i %.16Lg %.18Lg %.18Lg %.16g %i %i\n", ProfileMJD, intday, FirstBinSec, intsec+(long double)fracsecs, FoldingPeriod, foldingperiod, Nbins, nbins);
 		      
 			ProfileData[t] = new long double*[Nbins];
 			for(int i = 0; i < Nbins; i++){
@@ -2887,7 +2986,7 @@ extern "C" int graphicalInterface(int argc, char **argv,
 			ProfileInfo[t] = new long double[7];
 
 			ProfileInfo[t][0] = FoldingPeriod;
-			ProfileInfo[t][1] = (long double)ds[6];
+			ProfileInfo[t][1] = (long double)nbins;     //ds[6];
 
 			double oneflux = 0;	
 			for(int i =0; i < Nbins; i++){
@@ -2895,11 +2994,11 @@ extern "C" int graphicalInterface(int argc, char **argv,
 				std::istringstream lineStream( line );
 				std::istream_iterator< long double > pbegin(lineStream),eof;
 				std::vector<long double> prof(pbegin,eof);
-				ProfileData[t][i][1] = prof[1];
+				ProfileData[t][i][1] = pvalues[i];    //prof[1];
 				oneflux = oneflux + ProfileData[t][i][1];
-		 
+		 		//printf("comp: %Lg %g \n", ProfileData[t][i][1], pvalues[i]);
 			}   
-		 
+
 			ProfileFile.close();
 
 			if(oneflux == 0){
@@ -2913,6 +3012,8 @@ extern "C" int graphicalInterface(int argc, char **argv,
                                            Tobs=atof(((MNStruct *)context)->pulse->obsn[t].flagVal[f]);
                                  }
                         }
+			Tobs = inttime;
+
                         double PNoiseVal = 0;
 
 			ProfileInfo[t][2] = (long double) Tobs;
@@ -2932,8 +3033,18 @@ extern "C" int graphicalInterface(int argc, char **argv,
 				ProfileData[t][i][0] = FirstBinSec/SECDAY + pulsesamplerate*i + pulsesamplerate*0.5;
 			}
 
+			if(isdedispersed){
+				((MNStruct *)context)->pulse->obsn[t].freq = centerfreq;
+			}
+			else{
+				((MNStruct *)context)->pulse->obsn[t].freq = chanfreq;
+			}
+
+			printf("freqs: %g %g %g\n", ((MNStruct *)context)->pulse->obsn[t].freq, chanfreq, centerfreq);
+
 		}
 
+		printf("weighted average freq: %g \n", weightedfreq/weightsum);
 		printf("Loaded Profiles \n");
 
 	
@@ -3095,7 +3206,7 @@ extern "C" int graphicalInterface(int argc, char **argv,
 
 		assigncontext(context);
 
-
+		//return 0;
 		if(interpolateProfile == 1){
 
 			int Nbin = (int)ProfileInfo[0][1];
@@ -3169,6 +3280,12 @@ extern "C" int graphicalInterface(int argc, char **argv,
 			//AllTOAWriteMaxLike(longname, ndims);
 			WriteSubIntStocProfLike(longname, ndims);
 		}
+
+
+#else
+		printf("No installation of PSRCHIVE detected, cannot use GPTA likelihoods.  Please install PSRCHIVE, and set $PSRCHIVE to be the location of the installation directory\n");
+
+#endif
 		return 0;
 		
 

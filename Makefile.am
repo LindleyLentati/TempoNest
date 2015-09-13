@@ -26,14 +26,14 @@ plugin_LTLIBRARIES=temponest_@T2ARCH@_plug.la
 if HAVE_CULA
 
 temponest_@T2ARCH@_plug_la_SOURCES= tempo2pred_int.h T2accel.h tempo2pred.h tempo2Util.h constraints.h TKmatrix.h TKfit.h T2toolkit.h tempo2.h config.h configfile.h configfile.cpp TempoNestGPUFuncs.cu dpotrs.cpp dgesvd.cpp qrdecomp.h qrdecomp.cpp  dgemm.cpp dgemv.cpp dpotri.cpp dpotrf.cpp TempoNestParams.cpp MultiNestParams.cpp TempoNestTextOutput.cpp TempoNestUtilities.cpp TempoNestLikeFuncs.cpp TempoNestNGLikeFuncs.cpp TempoNestGPULikeFuncs.cpp TempoNestPlugin.cpp
-temponest_@T2ARCH@_plug_la_LIBADD=-ltempo2 -lsofa -lTNGPU  -L/home/ltl21/Code/HighPrecision/MLAPACK/MPackInstall/lib -lmblas_qd -L/home/ltl21/Code/HighPrecision/MLAPACK/MPackInstall/lib -lmlapack_qd -L/home/ltl21/Code/HighPrecision/MLAPACK/MPackInstall/lib -lmblas_dd -L/home/ltl21/Code/HighPrecision/MLAPACK/MPackInstall/lib -lmlapack_dd -L/home/ltl21/Code/HighPrecision/QDInstall/lib/ -lqd  @MULTINEST_LIBS@ @CULA_LIBS@ @GSL_LIBS@ @BLAS_LIBS@ @LIBS_LAPACK@ @TEMPO2_LIBS@
-temponest_@T2ARCH@_plug_la_INCLUDES=@MULTINEST_CFLAGS@ @CULA_CFLAGS@ @GSL_CFLAGS@ @TEMPO2_CFLAGS@
+temponest_@T2ARCH@_plug_la_LIBADD=-ltempo2 -lsofa -lTNGPU  @QDINSTALL_LIBS@ @MLAPACK_LIBS@ @MULTINEST_LIBS@ @CULA_LIBS@ @GSL_LIBS@ @BLAS_LIBS@ @LIBS_LAPACK@ @TEMPO2_LIBS@ @PSRCHIVE_LIBS@
+temponest_@T2ARCH@_plug_la_INCLUDES=@QDINSTALL_CFLAGS@ @MLAPACK_CFLAGS@ @MULTINEST_CFLAGS@ @CULA_CFLAGS@ @GSL_CFLAGS@ @TEMPO2_CFLAGS@ @PSRCHIVE_CFLAGS@
 
 else
 
 temponest_@T2ARCH@_plug_la_SOURCES= tempo2pred_int.h T2accel.h tempo2pred.h tempo2Util.h constraints.h TKmatrix.h TKfit.h T2toolkit.h tempo2.h config.h configfile.h configfile.cpp qrdecomp.h qrdecomp.cpp  dgemm.cpp dgesvd.h dpotrs.cpp TempoNest.h dgemm.h dpotrf.cpp dpotrs.h TempoNestLikeFuncs.cpp TempoNestNGLikeFuncs.cpp dgemv.cpp dpotrf.h multinest.h TempoNestTextOutput.cpp dgemv.h dpotri.cpp MultiNestParams.cpp  dgesvd.cpp  dpotri.h TempoNestPlugin.cpp TempoNestParams.cpp TempoNestUtilities.cpp
-temponest_@T2ARCH@_plug_la_LIBADD=-lgfortran -ltempo2 -lsofa @MULTINEST_LIBS@ @GSL_LIBS@ @BLAS_LIBS@ @LIBS_LAPACK@ @TEMPO2_LIBS@
-temponest_@T2ARCH@_plug_la_INCLUDES=@MULTINEST_CFLAGS@ @GSL_CFLAGS@ @TEMPO2_CFLAGS@
+temponest_@T2ARCH@_plug_la_LIBADD=-lgfortran -ltempo2 -lsofa @QDINSTALL_LIBS@ @MLAPACK_LIBS@ @MULTINEST_LIBS@ @GSL_LIBS@ @BLAS_LIBS@ @LIBS_LAPACK@ @TEMPO2_LIBS@ @PSRCHIVE_LIBS@
+temponest_@T2ARCH@_plug_la_INCLUDES=@QDINSTALL_CFLAGS@ @MLAPACK_CFLAGS@ @MULTINEST_CFLAGS@ @GSL_CFLAGS@ @TEMPO2_CFLAGS@ @PSRCHIVE_CFLAGS@
 
 endif
 

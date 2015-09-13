@@ -1,3 +1,7 @@
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 //  Copyright (C) 2013 Lindley Lentati
 
 /*
@@ -42,17 +46,20 @@
 #include "qrdecomp.h"
 #include "cholesky.h"
 #include "T2toolkit.h"
-//#include <mpack/mblas_dd.h>
-//#include <mpack/mlapack_dd.h>
 #include <fstream>
 #include <unistd.h>
-//#include <mpack/mblas_qd.h>
-//#include <mpack/mlapack_qd.h>
 #include <sstream>
 #include <iomanip>
 #include <sstream>
 #include <iterator>
 #include <cstring>
+
+#ifdef HAVE_MLAPACK
+#include <mpack/mblas_qd.h>
+#include <mpack/mlapack_qd.h>
+#include <mpack/mblas_dd.h>
+#include <mpack/mlapack_dd.h>
+#endif
 
 void *globalcontext;
 
@@ -282,7 +289,7 @@ void outputProfile(int ndim){
 
 }
 
-
+/*
 
 double  WhiteLogLike(int &ndim, double *Cube, int &npars, double *DerivedParams, void *context){
 
@@ -320,8 +327,8 @@ double  WhiteLogLike(int &ndim, double *Cube, int &npars, double *DerivedParams,
 			pcount++;
 		}
 		
-//		fastformBatsAll(((MNStruct *)globalcontext)->pulse,((MNStruct *)globalcontext)->numberpulsars);       /* Form Barycentric arrival times */
-		formResiduals(((MNStruct *)globalcontext)->pulse,((MNStruct *)globalcontext)->numberpulsars,1);       /* Form residuals */
+//		fastformBatsAll(((MNStruct *)globalcontext)->pulse,((MNStruct *)globalcontext)->numberpulsars);       
+		formResiduals(((MNStruct *)globalcontext)->pulse,((MNStruct *)globalcontext)->numberpulsars,1);       
 //		
 //		for(int o=0;o<((MNStruct *)globalcontext)->pulse->nobs; o++){
 //			Resvec[o]=(double)((MNStruct *)globalcontext)->pulse->obsn[o].residual+phase;
@@ -408,8 +415,8 @@ double  WhiteLogLike(int &ndim, double *Cube, int &npars, double *DerivedParams,
 
         if(((MNStruct *)globalcontext)->doLinear==0){
 
-                fastformBatsAll(((MNStruct *)globalcontext)->pulse,((MNStruct *)globalcontext)->numberpulsars);       /* Form Barycentric arrival times */
-                formResiduals(((MNStruct *)globalcontext)->pulse,((MNStruct *)globalcontext)->numberpulsars,1);       /* Form residuals */
+                fastformBatsAll(((MNStruct *)globalcontext)->pulse,((MNStruct *)globalcontext)->numberpulsars);       
+                formResiduals(((MNStruct *)globalcontext)->pulse,((MNStruct *)globalcontext)->numberpulsars,1);      
                 for(int o=0;o<((MNStruct *)globalcontext)->pulse->nobs; o++){
 			  //printf("res: %i %g \n", o, (double)((MNStruct *)globalcontext)->pulse->obsn[o].residual);
                           Resvec[o]=(double)((MNStruct *)globalcontext)->pulse->obsn[o].residual+NLphase;
@@ -530,8 +537,8 @@ void LRedLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *global
 		}
 		
 		
-		fastformBatsAll(((MNStruct *)globalcontext)->pulse,((MNStruct *)globalcontext)->numberpulsars);       /* Form Barycentric arrival times */
-		formResiduals(((MNStruct *)globalcontext)->pulse,((MNStruct *)globalcontext)->numberpulsars,1);       /* Form residuals */
+		fastformBatsAll(((MNStruct *)globalcontext)->pulse,((MNStruct *)globalcontext)->numberpulsars);      
+		formResiduals(((MNStruct *)globalcontext)->pulse,((MNStruct *)globalcontext)->numberpulsars,1);       
 		
 		for(int o=0;o<((MNStruct *)globalcontext)->pulse->nobs; o++){
 			Resvec[o]=(double)((MNStruct *)globalcontext)->pulse->obsn[o].residual+phase;
@@ -951,6 +958,7 @@ void LRedLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *global
 
 }
 
+*/
 
 double  FastNewLRedMarginLogLike(int &ndim, double *Cube, int &npars, double *DerivedParams, void *context){
 
@@ -1679,12 +1687,8 @@ double  NewLRedMarginLogLike(int &ndim, double *Cube, int &npars, double *Derive
 
 	int totalsize = ((MNStruct *)globalcontext)->totalsize;
 	
-	double *TotalMatrix=((MNStruct *)globalcontext)->StoredTMatrix;//new double[((MNStruct *)globalcontext)->pulse->nobs*totalsize];
-//	for(int i =0;i<((MNStruct *)globalcontext)->pulse->nobs;i++){
-//		for(int j =0;j<totalsize; j++){
-//			TotalMatrix[i + j*((MNStruct *)globalcontext)->pulse->nobs]=0;
-//		}
-//	}
+	double *TotalMatrix=((MNStruct *)globalcontext)->StoredTMatrix;
+
 
 		
 /////////////////////////////////////////////////////////////////////////////////////////////  
@@ -1692,84 +1696,13 @@ double  NewLRedMarginLogLike(int &ndim, double *Cube, int &npars, double *Derive
 //////////////////////////////////////////////////////////////////////////////////////////  
 
 
-//	for(int i =0; i < ((MNStruct *)globalcontext)->numFitTiming+((MNStruct *)globalcontext)->numFitJumps; i++){
-//		if(((MNStruct *)globalcontext)->LDpriors[i][2]==1)TimetoMargin++;
-//	}
-
-//	double *TNDM;
-
 	if(TimetoMargin != ((MNStruct *)globalcontext)->numFitTiming+((MNStruct *)globalcontext)->numFitJumps){
 
-/*
-		TNDM=new double*[((MNStruct *)globalcontext)->pulse->nobs]; 
-		for(int i=0;i<((MNStruct *)globalcontext)->pulse->nobs;i++){
-			TNDM[i]=new double[TimetoMargin];
-		}
-
-*/
-
-
-		//printf("allocating: %i \n", ((MNStruct *)globalcontext)->pulse->nobs*TimetoMargin);
-//		TNDM=new double[((MNStruct *)globalcontext)->pulse->nobs*TimetoMargin];
-		//printf("getting d matrix %i \n", TimetoMargin);
 		getCustomDVectorLike(globalcontext, TotalMatrix, ((MNStruct *)globalcontext)->pulse->nobs, TimetoMargin, totalsize);
-		//printf("got d matrix \n");
-		
-//		getCustomDMatrixLike(globalcontext, TNDM);
-
-//		double* S = new double[TimetoMargin];
-
-/*
-		double** U = new double*[((MNStruct *)globalcontext)->pulse->nobs];
-		for(int k=0; k < ((MNStruct *)globalcontext)->pulse->nobs; k++){
-			U[k] = new double[((MNStruct *)globalcontext)->pulse->nobs];
-
-
-		}
-
-*/
-//		double** VT = new double*[TimetoMargin]; 
-//		for (int k=0; k<TimetoMargin; k++) VT[k] = new double[TimetoMargin];
-
-//		double* U = new double[((MNStruct *)globalcontext)->pulse->nobs*TimetoMargin];
-		//printf("doing svd \n");
 		vector_dgesvd(TotalMatrix,((MNStruct *)globalcontext)->pulse->nobs, TimetoMargin);
-		//printf("done svd\n");
-//		dgesvd(TNDM,((MNStruct *)globalcontext)->pulse->nobs, TimetoMargin, S, U, VT);
-//		delete[]S;	
 
-//		for (int j = 0; j < TimetoMargin; j++){
-//			delete[]VT[j];
-//		}
-	
-//		delete[]VT;
-	
-		
-/*
-		for(int j=0;j<((MNStruct *)globalcontext)->pulse->nobs;j++){
-			for(int k=0;k < TimetoMargin;k++){
-					//TNDM[j][k]=U[j][k];
-					TNDM[j][k]=U[j*((MNStruct *)globalcontext)->pulse->nobs + k];
-			}
-		}
-*/
-//		for (int j = 0; j < ((MNStruct *)globalcontext)->pulse->nobs; j++){
-//			delete[]U[j];
-//		}
-//		delete[]U;
 		
 	}
-//	else{	
-//		TNDM=new double[((MNStruct *)globalcontext)->pulse->nobs*TimetoMargin];
-
-//		for(int j=0;j<((MNStruct *)globalcontext)->pulse->nobs;j++){
-//			for(int k=0;k < TimetoMargin;k++){
-//					TotalMatrix[j + k*((MNStruct *)globalcontext)->pulse->nobs]=((MNStruct *)globalcontext)->DMatrix[j][k];
-//					//printf("%i %i %g \n", j, k, ((MNStruct *)globalcontext)->DMatrix[j][k]);
-//			}
-//		}
-//		//TNDM = ((MNStruct *)globalcontext)->DMatrix;
-//	}
 
 
 
@@ -1778,82 +1711,19 @@ double  NewLRedMarginLogLike(int &ndim, double *Cube, int &npars, double *Derive
 /////////////////////////////////Set up Coefficients///////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////  
 
-/*
 
-	double start,end;
-	int go=0;
-	for (int i=0;i<((MNStruct *)globalcontext)->pulse->nobs;i++)
-	  {
-	    if (((MNStruct *)globalcontext)->pulse->obsn[i].deleted==0)
-	      {
-		if (go==0)
-		  {
-		    go = 1;
-		    start = (double)((MNStruct *)globalcontext)->pulse->obsn[i].bat;
-		    end  = start;
-		  }
-		else
-		  {
-		    if (start > (double)((MNStruct *)globalcontext)->pulse->obsn[i].bat)
-		      start = (double)((MNStruct *)globalcontext)->pulse->obsn[i].bat;
-		    if (end < (double)((MNStruct *)globalcontext)->pulse->obsn[i].bat)
-		      end = (double)((MNStruct *)globalcontext)->pulse->obsn[i].bat;
-		  }
-	      }
-	  }
-*/
-	double maxtspan=((MNStruct *)globalcontext)->Tspan; //1*(end-start);
+	double maxtspan=((MNStruct *)globalcontext)->Tspan;
 	double averageTSamp=2*maxtspan/((MNStruct *)globalcontext)->pulse->nobs;
 
-//	double **DMEventInfo;
+
 
 	int FitRedCoeff=2*(((MNStruct *)globalcontext)->numFitRedCoeff);
 	int FitDMCoeff=2*(((MNStruct *)globalcontext)->numFitDMCoeff);
 	int FitBandCoeff=2*(((MNStruct *)globalcontext)->numFitBandNoiseCoeff);
 	int FitGroupNoiseCoeff = 2*((MNStruct *)globalcontext)->numFitGroupNoiseCoeff;
-/*
-	if(((MNStruct *)globalcontext)->incFloatDM != 0)FitDMCoeff+=2*((MNStruct *)globalcontext)->incFloatDM;
-	if(((MNStruct *)globalcontext)->incFloatRed != 0)FitRedCoeff+=2*((MNStruct *)globalcontext)->incFloatRed;
-	int DMEventCoeff=0;
-	if(((MNStruct *)globalcontext)->incDMEvent != 0){
-		DMEventInfo=new double*[((MNStruct *)globalcontext)->incDMEvent];
-		for(int i =0; i < ((MNStruct *)globalcontext)->incDMEvent; i++){
-			DMEventInfo[i]=new double[7];
-			DMEventInfo[i][0]=Cube[pcount]; //Start time
-			pcount++;
-			DMEventInfo[i][1]=Cube[pcount]; //Length
-			pcount++;
-			DMEventInfo[i][2]=pow(10.0, Cube[pcount]); //Amplitude
-			pcount++;
-			DMEventInfo[i][3]=Cube[pcount]; //SpectralIndex
-			pcount++;
-			DMEventInfo[i][4]=Cube[pcount]; //Offset
-			pcount++;
-			DMEventInfo[i][5]=Cube[pcount]; //Linear
-			pcount++;
-			DMEventInfo[i][6]=Cube[pcount]; //Quadratic
-			pcount++;
-			DMEventCoeff+=2*int(DMEventInfo[i][1]/averageTSamp);
 
-			}
-	}
-
-*/
 	int totCoeff=((MNStruct *)globalcontext)->totCoeff;
 
-/*
-	if(((MNStruct *)globalcontext)->incRED != 0 || ((MNStruct *)globalcontext)->incGWB == 1)totCoeff+=FitRedCoeff;
-	if(((MNStruct *)globalcontext)->incDM != 0)totCoeff+=FitDMCoeff;
-
-	if(((MNStruct *)globalcontext)->incDMScatter == 1 || ((MNStruct *)globalcontext)->incDMScatter == 2  || ((MNStruct *)globalcontext)->incDMScatter == 3)totCoeff+=FitDMScatterCoeff;
-	if(((MNStruct *)globalcontext)->incDMScatter == 4 ||((MNStruct *)globalcontext)->incDMScatter == 5 )totCoeff+=3*FitDMScatterCoeff;
-
-	if(((MNStruct *)globalcontext)->incDMEvent != 0)totCoeff+=DMEventCoeff; 
-	if(((MNStruct *)globalcontext)->incNGJitter >0)totCoeff+=((MNStruct *)globalcontext)->numNGJitterEpochs;
-
-	if(((MNStruct *)globalcontext)->incGroupNoise > 0)totCoeff += ((MNStruct *)globalcontext)->incGroupNoise*FitGroupNoiseCoeff;
-
-*/
 
 
 
@@ -1861,14 +1731,7 @@ double  NewLRedMarginLogLike(int &ndim, double *Cube, int &npars, double *Derive
 	for(int o=0;o<totCoeff; o++){
 		powercoeff[o]=0;
 	}
-	
-//	double **FMatrix=new double*[((MNStruct *)globalcontext)->pulse->nobs];
-//	for(int i=0;i<((MNStruct *)globalcontext)->pulse->nobs;i++){
-//		FMatrix[i]=new double[totCoeff];
-//		for(int j=0;j<totCoeff;j++){
-//			FMatrix[i][j]=0;
-//		}
-//	}
+
 
 /////////////////////////////////////////////////////////////////////////////////////////////  
 /////////////////////////Red Noise///////////////////////////////////////////////////////////
@@ -1941,17 +1804,13 @@ double  NewLRedMarginLogLike(int &ndim, double *Cube, int &npars, double *Derive
 		for(int i=0;i<FitRedCoeff/2;i++){
 			for(int k=0;k<((MNStruct *)globalcontext)->pulse->nobs;k++){
 				double time=(double)((MNStruct *)globalcontext)->pulse->obsn[k].bat;
-	//                        FMatrix[k][i]=cos(2*M_PI*freqs[i]*time);
-	//			FMatrix[k][i+FitRedCoeff/2]=sin(2*M_PI*freqs[i]*time);
-
-	//			printf("Store check %i %i %g %g \n", k, i, TotalMatrix[k + (i+TimetoMargin+startpos)*((MNStruct *)globalcontext)->pulse->nobs], cos(2*M_PI*freqs[i]*time));
+	
 				TotalMatrix[k + (i+TimetoMargin+startpos)*((MNStruct *)globalcontext)->pulse->nobs]=cos(2*M_PI*freqs[i]*time);
 				TotalMatrix[k + (i+FitRedCoeff/2+TimetoMargin+startpos)*((MNStruct *)globalcontext)->pulse->nobs] = sin(2*M_PI*freqs[i]*time);
 
 
 			}
 		}
-		sleep(5);
 	}
 
 	if(((MNStruct *)globalcontext)->incRED==2){
@@ -2311,82 +2170,6 @@ double  NewLRedMarginLogLike(int &ndim, double *Cube, int &npars, double *Derive
 
 
 
-    
-
-    
-
-
-/////////////////////////////////////////////////////////////////////////////////////////////  
-/////////////////////////DM Power Spectrum Events////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////  
-
-/*	
-	if(((MNStruct *)globalcontext)->incDMEvent != 0){
-                for(int i =0; i < ((MNStruct *)globalcontext)->incDMEvent; i++){
-                        double DMamp=DMEventInfo[i][2];
-                        double DMindex=DMEventInfo[i][3];
-			double DMOff=DMEventInfo[i][4];
-			double DMLinear=0;//DMEventInfo[i][5];
-			double DMQuad=0;//DMEventInfo[i][6];
-
-                        double Tspan = DMEventInfo[i][1];
-                        double f1yr = 1.0/3.16e7;
-			int DMEventnumCoeff=int(Tspan/averageTSamp);
-
-                        for (int c=0; c<DMEventnumCoeff; c++){
-                                freqs[startpos+c]=((double)(c+1))/Tspan;
-                                freqs[startpos+c+DMEventnumCoeff]=freqs[startpos+c];
-
-                                double rho = (DMamp*DMamp)*pow(f1yr,(-3)) * pow(freqs[startpos+c]*365.25,(-DMindex))/(maxtspan*24*60*60);
-                                powercoeff[startpos+c]+=rho;
-                                powercoeff[startpos+c+DMEventnumCoeff]+=rho;
-				freqdet=freqdet+2*log(powercoeff[startpos+c]);
-                        }
-
-
-			double *DMshapecoeff=new double[3];
-			double *DMshapeVec=new double[3];
-			DMshapecoeff[0]=DMOff;
-			DMshapecoeff[1]=DMLinear;			
-			DMshapecoeff[2]=DMQuad;
-
-
-
-			for(int k=0;k<((MNStruct *)globalcontext)->pulse->nobs;k++){	
-				double time=(double)((MNStruct *)globalcontext)->pulse->obsn[k].bat;
-
-
-				if(time < DMEventInfo[i][0]+Tspan && time > DMEventInfo[i][0]){
-
-					Resvec[k] -= DMOff*DMVec[k];
-					Resvec[k] -= (time-DMEventInfo[i][0])*DMLinear*DMVec[k];
-					Resvec[k] -= pow((time-DMEventInfo[i][0]),2)*DMQuad*DMVec[k];
-
-				}
-			}
-
-		 	for(int c=0;c<DMEventnumCoeff;c++){
-                		for(int k=0;k<((MNStruct *)globalcontext)->pulse->nobs;k++){
-                        		double time=(double)((MNStruct *)globalcontext)->pulse->obsn[k].bat;
-					if(time < DMEventInfo[i][0]+Tspan && time > DMEventInfo[i][0]){
-						FMatrix[k][startpos+c]=cos(2*M_PI*freqs[startpos+c]*time)*DMVec[k];
-                        			FMatrix[k][startpos+c+DMEventnumCoeff]=sin(2*M_PI*freqs[startpos+c]*time)*DMVec[k];
-					}
-					else{
-						FMatrix[k][startpos+c]=0;
-						FMatrix[k][startpos+c+DMEventnumCoeff]=0;
-					}
-                		}
-		        }
-
-			startpos+=2*DMEventnumCoeff;
-
-
-
-		}
-	}
-
-*/
 
 /////////////////////////////////////////////////////////////////////////////////////////////  
 /////////////////////////Subtract  DM Shape Events////////////////////////////////////////////
@@ -2606,314 +2389,7 @@ double  NewLRedMarginLogLike(int &ndim, double *Cube, int &npars, double *Derive
 
     	}
 
-/*
-        if(((MNStruct *)globalcontext)->incDMScatter == 4 ){
 
-
-                if(((MNStruct *)globalcontext)->incDM == 0){
-                        for(int o=0;o<((MNStruct *)globalcontext)->pulse->nobs; o++){
-                                DMVec[o]=1.0/(DMKappa*pow((double)((MNStruct *)globalcontext)->pulse->obsn[o].freqSSB,2));
-                        }
-                }
-
-
-
-		double Amp1=Cube[pcount];
-		pcount++;
-		double index1=Cube[pcount];
-		pcount++;
-
-		double Amp2=Cube[pcount];
-		pcount++;
-		double index2=Cube[pcount];
-		pcount++;
-
-		double Amp3=Cube[pcount];
-		pcount++;
-		double index3=Cube[pcount];
-		pcount++;
-		
-		double Tspan = maxtspan;
-		double f1yr = 1.0/3.16e7;
-		
-
-		Amp1=pow(10.0, Amp1);
-		Amp2=pow(10.0, Amp2);
-		Amp3=pow(10.0, Amp3);
-		//Amp2=pow(10.0, -20.0);
-		//Amp3=pow(10.0, -20.0);
-		
-//		 uniformpriorterm += log(Amp3) + log(Amp2);
-		if(((MNStruct *)globalcontext)->DMPriorType ==1) { uniformpriorterm += log(Amp1) + log(Amp2) + log(Amp3); }
-
-
-		double startfreq=0;
-		double stopfreq=0;
-
-		/////////////////////////Amp1/////////////////////////////////////////////////////////////////////////////////////////////
-
-		startfreq = 0;
-		stopfreq=1000;
-
-		for (int i=0; i<FitDMScatterCoeff/2; i++){
-
-			freqs[startpos+i]=((double)(i+1.0))/maxtspan;
-			freqs[startpos+i+FitDMScatterCoeff/2]=freqs[startpos+i];
-//		        double rho = (Amp1*Amp1/12.0/(M_PI*M_PI))*pow(f1yr,(-3)) * pow(freqs[startpos+i]*365.25,(-index1))/(maxtspan*24*60*60);	
-			double rho = (Amp1*Amp1/12.0/(M_PI*M_PI))*pow(f1yr,(-3)) * pow(freqs[startpos+i]*365.25,(-index1))/(maxtspan*24*60*60);	
-			powercoeff[startpos+i]+=rho;
-			powercoeff[startpos+i+FitDMScatterCoeff/2]+=rho;
-		}
-		
-		
-			
-		for (int i=0; i<FitDMScatterCoeff/2; i++){
-			freqdet=freqdet+2*log(powercoeff[startpos+i]);
-		}
-
-		for(int i=0;i<FitDMScatterCoeff/2;i++){
-		        for(int k=0;k<((MNStruct *)globalcontext)->pulse->nobs;k++){
-				if(((MNStruct *)globalcontext)->pulse->obsn[k].freq > startfreq && ((MNStruct *)globalcontext)->pulse->obsn[k].freq < stopfreq){
-		               		double time=(double)((MNStruct *)globalcontext)->pulse->obsn[k].bat;
-		                	FMatrix[k][startpos+i]=cos(2*M_PI*freqs[startpos+i]*time);///(pow(sqrt(DMKappa)*((double)((MNStruct *)globalcontext)->pulse->obsn[k].freqSSB),2));
-
-					FMatrix[k][startpos+i+FitDMScatterCoeff/2]=sin(2*M_PI*freqs[startpos+i]*time);///(pow(sqrt(DMKappa)*((double)((MNStruct *)globalcontext)->pulse->obsn[k].freqSSB),2));
-				}
-				else{	
-					FMatrix[k][startpos+i]=0;
-					FMatrix[k][startpos+i+FitDMScatterCoeff/2]=0;
-				}
-		        }
-		}
-
-
-		startpos=startpos+FitDMScatterCoeff;
-
-		/////////////////////////Amp2/////////////////////////////////////////////////////////////////////////////////////////////
-
-		startfreq = 1000;
-		stopfreq=2000;
-
-		for (int i=0; i<FitDMScatterCoeff/2; i++){
-
-			freqs[startpos+i]=((double)(i+1.0))/maxtspan;
-			freqs[startpos+i+FitDMScatterCoeff/2]=freqs[startpos+i];
-			//double rho = (Amp2*Amp2/12.0/(M_PI*M_PI))*pow(f1yr,(-3)) * pow(freqs[startpos+i]*365.25,(-index1))/(maxtspan*24*60*60);
-			double rho = (Amp2*Amp2/12.0/(M_PI*M_PI))*pow(f1yr,(-3)) * pow(freqs[startpos+i]*365.25,(-index2))/(maxtspan*24*60*60);	
-			powercoeff[startpos+i]+=rho;
-			powercoeff[startpos+i+FitDMScatterCoeff/2]+=rho;
-		}
-		
-		
-			
-		for (int i=0; i<FitDMScatterCoeff/2; i++){
-			freqdet=freqdet+2*log(powercoeff[startpos+i]);
-		}
-
-
-		for(int i=0;i<FitDMScatterCoeff/2;i++){
-		        for(int k=0;k<((MNStruct *)globalcontext)->pulse->nobs;k++){
-				if(((MNStruct *)globalcontext)->pulse->obsn[k].freq > startfreq && ((MNStruct *)globalcontext)->pulse->obsn[k].freq < stopfreq){
-		               		double time=(double)((MNStruct *)globalcontext)->pulse->obsn[k].bat;
-		                	FMatrix[k][startpos+i]=cos(2*M_PI*freqs[startpos+i]*time);///(pow(sqrt(DMKappa)*((double)((MNStruct *)globalcontext)->pulse->obsn[k].freqSSB),2));
-					FMatrix[k][startpos+i+FitDMScatterCoeff/2]=sin(2*M_PI*freqs[startpos+i]*time);///(pow(sqrt(DMKappa)*((double)((MNStruct *)globalcontext)->pulse->obsn[k].freqSSB),2));
-				}
-				else{	
-					FMatrix[k][startpos+i]=0;
-					FMatrix[k][startpos+i+FitDMScatterCoeff/2]=0;
-				}
-		        }
-		}
-
-
-		startpos=startpos+FitDMScatterCoeff;
-
-		/////////////////////////Amp3/////////////////////////////////////////////////////////////////////////////////////////////
-
-
-		startfreq = 2000;
-		stopfreq= 10000;
-
-		for (int i=0; i<FitDMScatterCoeff/2; i++){
-
-			freqs[startpos+i]=((double)(i+1.0))/maxtspan;
-			freqs[startpos+i+FitDMScatterCoeff/2]=freqs[startpos+i];
-//			double rho = (Amp3*Amp3/12.0/(M_PI*M_PI))*pow(f1yr,(-3)) * pow(freqs[startpos+i]*365.25,(-index1))/(maxtspan*24*60*60);
-			double rho = (Amp3*Amp3/12.0/(M_PI*M_PI))*pow(f1yr,(-3)) * pow(freqs[startpos+i]*365.25,(-index3))/(maxtspan*24*60*60);	
-			powercoeff[startpos+i]+=rho;
-			powercoeff[startpos+i+FitDMScatterCoeff/2]+=rho;
-		}
-		
-		
-			
-		for (int i=0; i<FitDMScatterCoeff/2; i++){
-			freqdet=freqdet+2*log(powercoeff[startpos+i]);
-		}
-
-
-		for(int i=0;i<FitDMScatterCoeff/2;i++){
-		        for(int k=0;k<((MNStruct *)globalcontext)->pulse->nobs;k++){
-				if(((MNStruct *)globalcontext)->pulse->obsn[k].freq > startfreq && ((MNStruct *)globalcontext)->pulse->obsn[k].freq < stopfreq){
-		               		double time=(double)((MNStruct *)globalcontext)->pulse->obsn[k].bat;
-		                	FMatrix[k][startpos+i]=cos(2*M_PI*freqs[startpos+i]*time);///(pow(sqrt(DMKappa)*((double)((MNStruct *)globalcontext)->pulse->obsn[k].freqSSB),2));
-					FMatrix[k][startpos+i+FitDMScatterCoeff/2]=sin(2*M_PI*freqs[startpos+i]*time);///(pow(sqrt(DMKappa)*((double)((MNStruct *)globalcontext)->pulse->obsn[k].freqSSB),2));
-				}
-				else{	
-					FMatrix[k][startpos+i]=0;
-					FMatrix[k][startpos+i+FitDMScatterCoeff/2]=0;
-				}
-		        }
-		}
-
-		startpos=startpos+FitDMScatterCoeff;
-	}	
-
-
-        if(((MNStruct *)globalcontext)->incDMScatter == 5 ){
-
-	        
-		if(((MNStruct *)globalcontext)->incDM == 0){
-			for(int o=0;o<((MNStruct *)globalcontext)->pulse->nobs; o++){
-		       		DMVec[o]=1.0/(DMKappa*pow((double)((MNStruct *)globalcontext)->pulse->obsn[o].freqSSB,2));
-	      		}
-		}
-
-		double Amp1=Cube[pcount];
-		pcount++;
-		double index1=Cube[pcount];
-		pcount++;
-
-
-		double Tspan = maxtspan;
-		double f1yr = 1.0/3.16e7;
-		
-
-		Amp1=pow(10.0, Amp1);
-
-		if(((MNStruct *)globalcontext)->DMPriorType ==1) { uniformpriorterm += log(Amp1); }
-
-
-		double startfreq=0;
-		double stopfreq=0;
-
-		/////////////////////////50cm/////////////////////////////////////////////////////////////////////////////////////////////
-
-		startfreq = 0;
-		stopfreq=1000;
-
-		for (int i=0; i<FitDMScatterCoeff/2; i++){
-
-			freqs[startpos+i]=((double)(i+1.0))/maxtspan;
-			freqs[startpos+i+FitDMScatterCoeff/2]=freqs[startpos+i];
-			
-			double rho = (Amp1*Amp1)*pow(f1yr,(-3)) * pow(freqs[startpos+i]*365.25,(-index1))/(maxtspan*24*60*60);	
-			powercoeff[startpos+i]+=rho;
-			powercoeff[startpos+i+FitDMScatterCoeff/2]+=rho;
-		}
-		
-		
-			
-		for (int i=0; i<FitDMScatterCoeff/2; i++){
-			freqdet=freqdet+2*log(powercoeff[startpos+i]);
-		}
-
-		for(int i=0;i<FitDMScatterCoeff/2;i++){
-		        for(int k=0;k<((MNStruct *)globalcontext)->pulse->nobs;k++){
-				if(((MNStruct *)globalcontext)->pulse->obsn[k].freq > startfreq && ((MNStruct *)globalcontext)->pulse->obsn[k].freq < stopfreq){
-		               		double time=(double)((MNStruct *)globalcontext)->pulse->obsn[k].bat;
-		                	FMatrix[k][startpos+i]=cos(2*M_PI*freqs[startpos+i]*time)*DMVec[k];
-					FMatrix[k][startpos+i+FitDMScatterCoeff/2]=sin(2*M_PI*freqs[startpos+i]*time)*DMVec[k];
-				}
-				else{	
-					FMatrix[k][startpos+i]=0;
-					FMatrix[k][startpos+i+FitDMScatterCoeff/2]=0;
-				}
-		        }
-		}
-
-
-		startpos=startpos+FitDMScatterCoeff;
-
-		/////////////////////////20cm/////////////////////////////////////////////////////////////////////////////////////////////
-
-		startfreq = 1000;
-		stopfreq=1800;
-
-		for (int i=0; i<FitDMScatterCoeff/2; i++){
-
-			freqs[startpos+i]=((double)(i+1.0))/maxtspan;
-			freqs[startpos+i+FitDMScatterCoeff/2]=freqs[startpos+i];
-			
-			double rho = (Amp1*Amp1)*pow(f1yr,(-3)) * pow(freqs[startpos+i]*365.25,(-index1))/(maxtspan*24*60*60);	
-			powercoeff[startpos+i]+=rho;
-			powercoeff[startpos+i+FitDMScatterCoeff/2]+=rho;
-		}
-		
-		
-			
-		for (int i=0; i<FitDMScatterCoeff/2; i++){
-			freqdet=freqdet+2*log(powercoeff[startpos+i]);
-		}
-
-
-		for(int i=0;i<FitDMScatterCoeff/2;i++){
-		        for(int k=0;k<((MNStruct *)globalcontext)->pulse->nobs;k++){
-				if(((MNStruct *)globalcontext)->pulse->obsn[k].freq > startfreq && ((MNStruct *)globalcontext)->pulse->obsn[k].freq < stopfreq){
-		               		double time=(double)((MNStruct *)globalcontext)->pulse->obsn[k].bat;
-		                	FMatrix[k][startpos+i]=cos(2*M_PI*freqs[startpos+i]*time)*DMVec[k];
-					FMatrix[k][startpos+i+FitDMScatterCoeff/2]=sin(2*M_PI*freqs[startpos+i]*time)*DMVec[k];
-				}
-				else{	
-					FMatrix[k][startpos+i]=0;
-					FMatrix[k][startpos+i+FitDMScatterCoeff/2]=0;
-				}
-		        }
-		}
-
-
-		startpos=startpos+FitDMScatterCoeff;
-
-		/////////////////////////10cm/////////////////////////////////////////////////////////////////////////////////////////////
-
-
-		startfreq = 1800;
-		stopfreq=10000;
-
-		for (int i=0; i<FitDMScatterCoeff/2; i++){
-
-			freqs[startpos+i]=((double)(i+1.0))/maxtspan;
-			freqs[startpos+i+FitDMScatterCoeff/2]=freqs[startpos+i];
-			
-			double rho = (Amp1*Amp1)*pow(f1yr,(-3)) * pow(freqs[startpos+i]*365.25,(-index1))/(maxtspan*24*60*60);	
-			powercoeff[startpos+i]+=rho;
-			powercoeff[startpos+i+FitDMScatterCoeff/2]+=rho;
-		}
-		
-		
-			
-		for (int i=0; i<FitDMScatterCoeff/2; i++){
-			freqdet=freqdet+2*log(powercoeff[startpos+i]);
-		}
-
-
-		for(int i=0;i<FitDMScatterCoeff/2;i++){
-		        for(int k=0;k<((MNStruct *)globalcontext)->pulse->nobs;k++){
-				if(((MNStruct *)globalcontext)->pulse->obsn[k].freq > startfreq && ((MNStruct *)globalcontext)->pulse->obsn[k].freq < stopfreq){
-		               		double time=(double)((MNStruct *)globalcontext)->pulse->obsn[k].bat;
-		                	FMatrix[k][startpos+i]=cos(2*M_PI*freqs[startpos+i]*time)*DMVec[k];
-					FMatrix[k][startpos+i+FitDMScatterCoeff/2]=sin(2*M_PI*freqs[startpos+i]*time)*DMVec[k];
-				}
-				else{	
-					FMatrix[k][startpos+i]=0;
-					FMatrix[k][startpos+i+FitDMScatterCoeff/2]=0;
-				}
-		        }
-		}
-
-		startpos=startpos+FitDMScatterCoeff;
-	}	
-
-*/
 
 
 
@@ -3019,14 +2495,6 @@ double  NewLRedMarginLogLike(int &ndim, double *Cube, int &npars, double *Derive
 			powercoeff[startpos+i] = ECORRPrior[i];
 			freqdet = freqdet + log(ECORRPrior[i]);
 		}
-
-//		for(int k=0;k<((MNStruct *)globalcontext)->pulse->nobs;k++){
-//			for(int i=0; i < ((MNStruct *)globalcontext)->numNGJitterEpochs; i++){
-//				TotalMatrix[k + (i+TimetoMargin+startpos)*((MNStruct *)globalcontext)->pulse->nobs]= ((MNStruct *)globalcontext)->NGJitterMatrix[k][i];
-////				FMatrix[k][startpos+i] = ((MNStruct *)globalcontext)->NGJitterMatrix[k][i];
-//			}
-//		}
-
 	}
 
 
@@ -3037,13 +2505,16 @@ double  NewLRedMarginLogLike(int &ndim, double *Cube, int &npars, double *Derive
 /////////////////////////////////////////////////////////////////////////////////////////////  
 /////////////////////////Get Time domain likelihood//////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////  
-/*	static unsigned int oldcw;
+
+
+#ifdef HAVE_MLAPACK
+	static unsigned int oldcw;
 	if(((MNStruct *)globalcontext)->uselongdouble > 0 ){
 		fpu_fix_start(&oldcw);
 	//	printf("oldcw %i \n", oldcw);
 	}
-	
-*/
+#endif	
+
 
 	double tdet=0;
 	double timelike=0;
@@ -3054,13 +2525,13 @@ double  NewLRedMarginLogLike(int &ndim, double *Cube, int &npars, double *Derive
 		tdet -= log(Noise[o]);
 	}
 
-/*	dd_real ddtimelike=0.0;
+#ifdef HAVE_MLAPACK
+	dd_real ddtimelike=0.0;
 	if(((MNStruct *)globalcontext)->uselongdouble ==1){
 		for(int o=0; o<((MNStruct *)globalcontext)->pulse->nobs; o++){
 			dd_real res = (dd_real)Resvec[o];
 			dd_real Nval = (dd_real)Noise[o];
 			dd_real chicomp = res*res*Nval;
-		//	printf("Res %i %g %g \n", o, cast2double(res), cast2double(res*res*Nval));
 			ddtimelike += chicomp;
 		}
 	}
@@ -3078,125 +2549,30 @@ double  NewLRedMarginLogLike(int &ndim, double *Cube, int &npars, double *Derive
                 }
 		//printf("qdtimelike %15.10e\n", qdtimelike.x[0]);
         }
+#endif	
 
-*/
 
 //////////////////////////////////////////////////////////////////////////////////////////  
 ///////////////////////Form Total Matrices////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////
 
-//	int totalsize=TimetoMargin+totCoeff+totalredshapecoeff;
-
-/*
-	double **TotalMatrix=new double*[((MNStruct *)globalcontext)->pulse->nobs];
 	for(int i =0;i<((MNStruct *)globalcontext)->pulse->nobs;i++){
-		TotalMatrix[i]=new double[totalsize];
-		for(int j =0;j<totalsize; j++){
-			TotalMatrix[i][j]=0;
-		}
-	}
-	
-	
-	for(int i =0;i<((MNStruct *)globalcontext)->pulse->nobs;i++){
-		for(int j =0;j<TimetoMargin; j++){
-			TotalMatrix[i][j]= TNDM[i + j*((MNStruct *)globalcontext)->pulse->nobs];
-		}
-		
-		for(int j =0;j<totCoeff; j++){
-			TotalMatrix[i][j+TimetoMargin]=FMatrix[i][j];
-		}
-
-		for(int j =0;j<totalredshapecoeff; j++){
-			TotalMatrix[i][j+TimetoMargin+totCoeff]=RedShapeletMatrix[i][j];
-			//printf("Red shape: %i %i %g \n", i, j, RedShapeletMatrix[i][j]);
-		}
-	}
-
-        for (int j = 0; j < ((MNStruct *)globalcontext)->pulse->nobs; j++){
-                delete[] FMatrix[j];
-        }
-        delete[] FMatrix;
-//	if(TimetoMargin != ((MNStruct *)globalcontext)->numFitTiming+((MNStruct *)globalcontext)->numFitJumps){
-//		for (int j = 0; j < ((MNStruct *)globalcontext)->pulse->nobs; j++){
-  //              	delete[] TNDM[j];
-    //    	}
-        	delete[] TNDM;
-//	}
-
-
-*/
-
-//	double *TotalMatrix=new double[((MNStruct *)globalcontext)->pulse->nobs*totalsize];
-//	for(int i =0;i<((MNStruct *)globalcontext)->pulse->nobs;i++){
-//		for(int j =0;j<totalsize; j++){
-//			TotalMatrix[i + j*((MNStruct *)globalcontext)->pulse->nobs]=0;
-//		}
-//	}
-	
-	
-	for(int i =0;i<((MNStruct *)globalcontext)->pulse->nobs;i++){
-//		for(int j =0;j<TimetoMargin; j++){
-//			TotalMatrix[i + j*((MNStruct *)globalcontext)->pulse->nobs]= TNDM[i + j*((MNStruct *)globalcontext)->pulse->nobs];
-//		}
-		
-//		for(int j =0;j<totCoeff; j++){
-//			TotalMatrix[i + (j+TimetoMargin)*((MNStruct *)globalcontext)->pulse->nobs]=FMatrix[i][j];
-//		}
-
 		for(int j =0;j<totalredshapecoeff; j++){
 			TotalMatrix[i + (j+TimetoMargin+totCoeff)*((MNStruct *)globalcontext)->pulse->nobs]=RedShapeletMatrix[i][j];
-			//printf("Red shape: %i %i %g \n", i, j, RedShapeletMatrix[i][j]);
 		}
 	}
-
-  //      for (int j = 0; j < ((MNStruct *)globalcontext)->pulse->nobs; j++){
-    //            delete[] FMatrix[j];
-      //  }
-        //delete[] FMatrix;
-//	if(TimetoMargin != ((MNStruct *)globalcontext)->numFitTiming+((MNStruct *)globalcontext)->numFitJumps){
-//		for (int j = 0; j < ((MNStruct *)globalcontext)->pulse->nobs; j++){
-  //              	delete[] TNDM[j];
-    //    	}
-//        	delete[] TNDM;
-//	}
 
 
 //////////////////////////////////////////////////////////////////////////////////////////  
 ///////////////////////Do Algebra/////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////
 
-	double *NTd = new double[totalsize];
-
-/*	double **NT=new double*[((MNStruct *)globalcontext)->pulse->nobs];
-	for(int i=0;i<((MNStruct *)globalcontext)->pulse->nobs;i++){
-		NT[i]=new double[totalsize];
-	}
-
-	double **TNT=new double*[totalsize];
-	for(int i=0;i<totalsize;i++){
-		TNT[i]=new double[totalsize];
-	}
-	
-	for(int i=0;i<((MNStruct *)globalcontext)->pulse->nobs;i++){
-		for(int j=0;j<totalsize;j++){
-			NT[i][j]=TotalMatrix[i][j]*Noise[i];
-		}
-	}
-*/
-	
-
-	double *TNT=new double[totalsize*totalsize];
-
-/*	
-	for(int i=0;i<((MNStruct *)globalcontext)->pulse->nobs;i++){
-		for(int j=0;j<totalsize;j++){
-			NT[i + j*((MNStruct *)globalcontext)->pulse->nobs]=TotalMatrix[i + j*((MNStruct *)globalcontext)->pulse->nobs]*Noise[i];
-		}
-	}
-*/
-
 	int savememory = 0;
+	
+	double *NTd = new double[totalsize];
+	double *TNT=new double[totalsize*totalsize];
 	double *NT;	
+
 	if(savememory == 0){
 		NT=new double[((MNStruct *)globalcontext)->pulse->nobs*totalsize];
 		std::memcpy(NT, TotalMatrix, ((MNStruct *)globalcontext)->pulse->nobs*totalsize*sizeof(double));
@@ -3233,7 +2609,7 @@ double  NewLRedMarginLogLike(int &ndim, double *Cube, int &npars, double *Derive
 
 	}
 
-/*
+#ifdef HAVE_MLAPACK
         dd_real ddfreqlike = 0.0;
         dd_real ddsigmadet = 0.0;
 
@@ -3475,13 +2851,12 @@ double  NewLRedMarginLogLike(int &ndim, double *Cube, int &npars, double *Derive
                 delete[]CholC;
 
 	}
-*/
+#endif
+
 	if(savememory == 0){
 		delete[] NT;
 	}
-
 	for(int j=0;j<totCoeff;j++){
-			//printf("add coeffs %i %g %g \n", j, TNT[TimetoMargin+j + (TimetoMargin+j)*totalsize],powercoeff[j]);
 			TNT[TimetoMargin+j + (TimetoMargin+j)*totalsize] += 1.0/powercoeff[j];
 			
 	}
@@ -3497,9 +2872,7 @@ double  NewLRedMarginLogLike(int &ndim, double *Cube, int &npars, double *Derive
 	double *TNT2=new double[totalsize*totalsize];
 	
 	for(int i =0; i < totalsize; i++){
-//		TNT2[i] = new double[totalsize];
 		for(int j=0 ; j < totalsize; j++){
-//			TNT2[i][j] = TNT[i][j];
 			TNT2[i + j*totalsize] = TNT[i + j*totalsize];			
 		}
 	}
@@ -3562,7 +2935,8 @@ double  NewLRedMarginLogLike(int &ndim, double *Cube, int &npars, double *Derive
 		lnew=-pow(10.0,20);
 		
 	}
-/*
+
+#ifdef HAVE_MLAPACK
 	//printf("lnew double : %g", lnew);
 	if(((MNStruct *)globalcontext)->uselongdouble ==1){
 
@@ -3609,7 +2983,7 @@ double  NewLRedMarginLogLike(int &ndim, double *Cube, int &npars, double *Derive
         if(((MNStruct *)globalcontext)->uselongdouble > 0 ){
                 fpu_fix_end(&oldcw);
         }
-*/
+#endif
 	if(badshape == 1){lnew=-pow(10.0,20);}
 
 
@@ -3625,21 +2999,6 @@ double  NewLRedMarginLogLike(int &ndim, double *Cube, int &npars, double *Derive
 	delete[] freqs;
 	delete[] Noise;
 	delete[] Resvec;
-	
-//	for (int j = 0; j < ((MNStruct *)globalcontext)->pulse->nobs; j++){
-//		delete[] TotalMatrix[j];
-//		delete[] NT[j];
-		
-
-//	}
-//	delete[] TotalMatrix;
-//	delete[] NT;
-	
-
-//	for (int j = 0; j < totalsize; j++){
-//		delete[]TNT[j];
-//		delete[] TNT2[j];
-//	}
 	delete[]TNT;
 	delete[] TNT2;
 
@@ -10557,6 +9916,7 @@ double  SubIntStocProfLike(int &ndim, double *Cube, int &npars, double *DerivedP
 			}
 
 			MLSigma = sqrt(MLSigma/MLSigmaCount);
+			MLSigma = MLSigma*EFAC[((MNStruct *)globalcontext)->sysFlags[nTOA]];
 			maxamp = dataflux/modelflux;
 			if(debug == 1)printf("noise %g, dataflux %g, modelflux %g, maxamp %g \n", MLSigma, dataflux, modelflux, maxamp);
 
@@ -11050,7 +10410,18 @@ void  WriteSubIntStocProfLike(std::string longname, int &ndim){
 		}
 	}	  
 	  
-
+	double HighFreqStoc1 = 0;
+	double HighFreqStoc2 = 0;
+	if(((MNStruct *)globalcontext)->incHighFreqStoc == 1){
+		HighFreqStoc1 = pow(10.0,Cube[pcount]);
+		pcount++;
+	}
+        if(((MNStruct *)globalcontext)->incHighFreqStoc == 2){
+                HighFreqStoc1 = pow(10.0,Cube[pcount]);
+                pcount++;
+		HighFreqStoc2 = pow(10.0,Cube[pcount]);
+                pcount++;
+        }
 	//printf("End of White\n");
 
 
@@ -11113,8 +10484,8 @@ void  WriteSubIntStocProfLike(std::string longname, int &ndim){
 	double lnew = 0;
 	int badshape = 0;
 
-	int minoffpulse=750;
-	int maxoffpulse=1250;
+//	int minoffpulse=750;
+//	int maxoffpulse=1250;
        // int minoffpulse=200;
        // int maxoffpulse=800;
 	
@@ -11147,35 +10518,6 @@ void  WriteSubIntStocProfLike(std::string longname, int &ndim){
 		for(int i =0;i<Nbins;i++){JitterBasis[i]=new double[numcoeff];for(int j =0;j<numcoeff;j++){JitterBasis[i][j]=0;}}
 	
 	
-
-
-		double noisemean=0;
-		for(int j =minoffpulse; j < maxoffpulse; j++){
-			noisemean += (double)((MNStruct *)globalcontext)->ProfileData[nTOA][j][1];
-		}
-
-		noisemean = noisemean/(maxoffpulse-minoffpulse);
-
-		double MLSigma = 0;
-		int MLSigmaCount = 0;
-		double dataflux = 0;
-		for(int j = 0; j < Nbins; j++){
-			if(j>=minoffpulse && j < maxoffpulse){
-				double res = (double)((MNStruct *)globalcontext)->ProfileData[nTOA][j][1] -noisemean;
-				MLSigma += res*res; MLSigmaCount += 1;
-			}
-			else{
-				if((double)(((MNStruct *)globalcontext)->ProfileData[nTOA][j][1] - noisemean)/MLSigma > 1){
-					dataflux +=((double)((MNStruct *)globalcontext)->ProfileData[nTOA][j][1]-noisemean)*double(ProfileBats[t][1] - ProfileBats[t][0])*60*60*24;
-				}
-			}
-		}
-
-		MLSigma = sqrt(MLSigma/MLSigmaCount);
-		double maxamp = dataflux/modelflux;
-
-		if(debug == 1)printf("noise %g, dataflux %g, modelflux %g, maxamp %g \n", MLSigma, dataflux, modelflux, maxamp);
-
 
 		long double binpos = ModelBats[nTOA];
 
@@ -11222,26 +10564,63 @@ void  WriteSubIntStocProfLike(std::string longname, int &ndim){
 	    }
 
 
-	    double *shapevec  = new double[Nbins];
-	    double *Jittervec = new double[Nbins];
-	
-	    double OverallProfileAmp = shapecoeff[0];
-	    
-	    shapecoeff[0] = 1;
+		double *shapevec  = new double[Nbins];
+		double *Jittervec = new double[Nbins];
 
-	    dgemv(Hermitepoly,shapecoeff,shapevec,Nbins,numcoeff,'N');
-	    dgemv(JitterBasis,shapecoeff,Jittervec,Nbins,numcoeff,'N');
-	
-	    double *NDiffVec = new double[Nbins];
+		double OverallProfileAmp = shapecoeff[0];
 
-	    double maxshape=0;
+		shapecoeff[0] = 1;
+
+		dgemv(Hermitepoly,shapecoeff,shapevec,Nbins,numcoeff,'N');
+		dgemv(JitterBasis,shapecoeff,Jittervec,Nbins,numcoeff,'N');
+
+		double *NDiffVec = new double[Nbins];
+
+		double maxshape=0;
 
 
-	    for(int j =0; j < Nbins; j++){
+		for(int j =0; j < Nbins; j++){
 
 		    if(shapevec[j] > maxshape){ maxshape = shapevec[j];}
 
-	    }
+		}
+
+
+
+
+			double noisemean=0;
+			int numoffpulse = 0;
+			for(int j = 0; j < Nbins; j++){
+				if(shapevec[j] < maxshape*0.001){
+					noisemean += (double)((MNStruct *)globalcontext)->ProfileData[nTOA][j][1];
+					numoffpulse += 1;
+				}	
+			}
+
+
+			noisemean = noisemean/(numoffpulse);
+
+			double MLSigma = 0;
+			int MLSigmaCount = 0;
+			double dataflux = 0;
+			for(int j = 0; j < Nbins; j++){
+				if(shapevec[j] < maxshape*0.001){
+					double res = (double)((MNStruct *)globalcontext)->ProfileData[nTOA][j][1] - noisemean;
+					MLSigma += res*res; MLSigmaCount += 1;
+				}
+				else{
+					if((double)(((MNStruct *)globalcontext)->ProfileData[nTOA][j][1] - noisemean)/MLSigma > 1){
+						dataflux +=((double)((MNStruct *)globalcontext)->ProfileData[nTOA][j][1]-noisemean)*double(ProfileBats[t][1] - ProfileBats[t][0])*60*60*24;
+					}
+				}
+			}
+
+			MLSigma = sqrt(MLSigma/MLSigmaCount);
+			MLSigma = MLSigma*EFAC[((MNStruct *)globalcontext)->sysFlags[nTOA]];
+			double maxamp = dataflux/modelflux;
+			if(debug == 1)printf("noise %g, dataflux %g, modelflux %g, maxamp %g \n", MLSigma, dataflux, modelflux, maxamp);
+
+
 	
 	///////////////////////////////////////////Marginalise over arbitrary offset and absolute amplitude////////////////////////////////////////////////////////////
 
@@ -11287,9 +10666,8 @@ void  WriteSubIntStocProfLike(std::string longname, int &ndim){
 		detN = 0;
 
 	
- 
-		double highfreqnoise = SQUAD[((MNStruct *)globalcontext)->sysFlags[nTOA]];
-		double flatnoise = EFAC[((MNStruct *)globalcontext)->sysFlags[nTOA]];
+ 		double highfreqnoise = HighFreqStoc1;
+		double flatnoise = HighFreqStoc2;
 		
 		double *profilenoise = new double[Nbins];
 
