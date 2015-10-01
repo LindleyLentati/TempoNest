@@ -151,67 +151,82 @@ int main(int argc,char *argv[]){
 			fracsecs = firstbin.get_fracsec();
 			isdedispersed = subint->get_dedispersed();
 
-			if(nchans > 1){
-				printf("Only one channel per archive supported currently: nchan %i\n", nchans);
-				return 0;
-			}
+			//if(nchans > 1){
+			//	printf("Only one channel per archive supported currently: nchan %i\n", nchans);
+				//return 0;
+			//}
 
 
 				
 			//printf("archive info: %i %i %i %i %.16g %g %g %i %.16g %i %.16g\n", nsub, nbins, nchans, npols, foldingperiod, inttime, centerfreq, intday, fracday, intsec, fracsecs);
 			//printf("dedispersed? %s \n", isdedispersed ? "true" : "false");
+			double DMKappa = 2.410*pow(10.0,-16);
+			double chanzerofreq = subint->get_centre_frequency(0);
+			double DM = subint->get_dispersion_measure();
+			double zerofreqdelay = DM/(DMKappa*pow((chanzerofreq)*pow(10.0,6), 2));
+			double DMdelayDays=0;
+			printf("DM? %g \n", DM);
 			for(int j = 0; j < nchans; j++){
 				int ipol = 0; //only want total Intensity
 				Profile *prof = subint->get_Profile(ipol, j);
 				pvalues = prof->get_amps();
 				chanfreq = subint->get_centre_frequency(j);
-				//printf("channel freq: %i %g\n", j, chanfreq);
 
-			}
+				
+				
+				DMdelayDays = (DM/(DMKappa*pow((chanfreq)*pow(10.0,6), 2)) - zerofreqdelay)/24/60/60;
+				double DMfracday = fracday + DMdelayDays;
+				//printf("channel freq: %i %g %g\n", j, chanfreq, DMdelayDays*24*60*60);
+				if(DMfracday < 0 || DMfracday >= 1){
+					printf("DM delay has pushed day frac over a day.. fix this\n");
+					return 0;
+				}
+			
 		
 
-			double Tobs = inttime;
-			double ToAFreq = 0;
-			if(isdedispersed){
-				ToAFreq = centerfreq;
-			}
-			else{
-				ToAFreq = chanfreq;
-			}
+				double Tobs = inttime;
+				double ToAFreq = 0;
+				if(isdedispersed){
+					ToAFreq = centerfreq;
+				}
+				else{
+					ToAFreq = chanfreq;
+				}
 
-			long double ProfileMJD = intday;   
-			long double FirstBinSec = intsec+(long double)fracsecs;  
-
-
-			double oneflux = 0;	
-			for(int i =0; i < nbins; i++){
-				oneflux = oneflux + pvalues[i]; 
-			}   
-
-			char s[20];
-			char s2[18];
-			sprintf(s, "%.16g", fracday);
-
-			int lastisaspace=0;
-			for(int i =0; i < 18; i++){
-				s2[i] = s[i+2];
-				//printf("char: %i %c \n", i, s2[i]);
-				if(s2[i]=='\0'){lastisaspace=1;}
-			}
-			//printf("%8s", (s[0] == '0' ? &s[1] : s));
-
-			if(oneflux == 0){
-				printf("Profile %i is all zeros, will not add to tim file \n", l);
-			}
-			else{
-
-				printf("Archive details:\n");
-				printf("Archive has %s been dedispersed, using %s frequency %g\n", isdedispersed ? "" : "not", isdedispersed ? "center" : "channel", ToAFreq);
-				printf("SAT: %i.%s\n", intday, s2);
-				printf("Tobs: %.5g\n", Tobs);
-				fprintf(outputTim,"%s %.8f %i.%s 0.1 %s -tobs %.5g -nsub %i -nchan %i\n", line.c_str(), ToAFreq,  intday, s2, ObsCode, Tobs, nsub, nchans);
+				long double ProfileMJD = intday;   
+				long double FirstBinSec = intsec+(long double)(fracsecs);  
 
 
+				double oneflux = 0;	
+				for(int b =0; b < nbins; b++){
+					oneflux = oneflux + pvalues[b]; 
+				}   
+
+				char s[20];
+				char s2[18];
+				sprintf(s, "%.16g", DMfracday);
+
+				int lastisaspace=0;
+				for(int c =0; c < 18; c++){
+					s2[c] = s[c+2];
+					//printf("char: %i %c \n", i, s2[i]);
+					if(s2[c]=='\0'){lastisaspace=1;}
+				}
+				//printf("%8s", (s[0] == '0' ? &s[1] : s));
+
+				if(oneflux == 0){
+					printf("Archive %i, Subint %i, Channel %i is all zeros, will not add to tim file \n", l, i, j);
+				}
+				else{
+
+					printf("Archive details:\n");
+					printf("Archive has %s been dedispersed, using %s frequency %g\n", isdedispersed ? "" : "not", isdedispersed ? "center" : "channel", ToAFreq);
+					printf("SAT: %i.%s\n", intday, s2);
+					printf("Tobs: %.5g\n", Tobs);
+					fprintf(outputTim,"%s %.8f %i.%s 0.1 %s -tobs %.5g -nsub %i -nchan %i\n", line.c_str(), ToAFreq,  intday, s2, ObsCode, Tobs, nsub, nchans);
+
+
+				}
 			}
 
 		}

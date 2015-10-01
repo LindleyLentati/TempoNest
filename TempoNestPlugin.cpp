@@ -93,9 +93,9 @@ extern "C" void copy_staticTmat_(double *T, int totalsize, int Nobs);
 void fastephemeris_routines(pulsar *psr,int npsr)
 {
 vectorPulsar(psr,npsr); /* 1. Form a vector pointing at the pulsar */
-readEphemeris(psr,npsr,0);/* 2. Read the ephemeris */
-get_obsCoord(psr,npsr);   /* 3. Get Coordinate of observatory relative to Earth's centre */
-tt2tb(psr,npsr); /* Observatory/time-dependent part of TT-TB */
+//readEphemeris(psr,npsr,0);/* 2. Read the ephemeris */
+//get_obsCoord(psr,npsr);   /* 3. Get Coordinate of observatory relative to Earth's centre */
+//tt2tb(psr,npsr); /* Observatory/time-dependent part of TT-TB */
 readEphemeris(psr,npsr,0); /* Re-evaluate ephemeris with correct TB */
 
 }
@@ -114,11 +114,11 @@ get_obsCoord(psr,npsr);   /* 3. Get Coordinate of observatory relative to Earth'
 void fastformBatsAll(pulsar *psr,int npsr)
 {
     //clock_corrections(psr,npsr); /* Clock corrections ... */
-//    fastephemeris_routines(psr,npsr); /* Ephemeris routines ... */
-//  	extra_delays(psr,npsr); /* Other time delays ... */
-//	formBats(psr,npsr); /* Form Barycentric arrival times */
-//	secularMotion(psr,npsr);
-	updateBatsAll(psr, npsr);
+    fastephemeris_routines(psr,npsr); /* Ephemeris routines ... */
+  	extra_delays(psr,npsr); /* Other time delays ... */
+	formBats(psr,npsr); /* Form Barycentric arrival times */
+	secularMotion(psr,npsr);
+	//updateBatsAll(psr, npsr);
 
 }
 
@@ -133,7 +133,7 @@ void fastformSubIntBatsAll(pulsar *psr,int npsr)
 
 }
 
-MNStruct* init_struct(pulsar *pulseval,	 long double **LDpriorsval, int numberpulsarsval,int numFitJumpsval,int numFitTimingval, int systemcountval, int numFitEFACval, int numFitEQUADval, int numFitRedCoeffval, int numFitDMCoeffval,int numFitRedPLval, int numFitDMPLval, int **TempoFitNumsval,int *TempoJumpNumsval, int *sysFlagsval, int numdimsval, int incREDval, int incDMval, int incFloatDMval, int incFloatRedval, int DMFloatstartval, int RedFloatstartval, int TimeMarginVal, int JumpMarginVal, int doLinearVal, double *SampleFreqsVal, int incStepVal, char *whiteflagval, int whitemodelval, int varyRedCoeffval, int varyDMCoeffval, int yearlyDMval, int incsinusoidval, int EPolTermsval, int incGWBval,int RedPriorType,int DMPriorType,int EQUADPriorType,int EFACPriorType,int useOriginalErrors, int incShannonJitter, int incDMEvent, int incDMShapeEvent, int numDMShapeCoeff, int incBandNoise, int numFitBandNoiseCoeff, int incRedShapeEvent, int numRedShapeCoeff, int MarginRedShapeCoeff, int incDMScatterShapeEvent, int numDMScatterShapeCoeff, int incNGJitter, int incGlitch, int incGlitchTerms, int incBreakingIndex, int FitLowFreqCutoff, int uselongdouble, int incGroupNoise, int numFitGroupNoiseCoeff, int **FitForGroup, int numGroupstoFit, int *GroupNoiseFlags, int FitSolarWind, int FitWhiteSolarWind, int interpolateProfile, double InterpolatedTime, int sampler, int GPTAnumstoccoeff, int StoreFMatrices, int incHighFreqStoc, int numNGJitter, int **FitForBand)
+MNStruct* init_struct(pulsar *pulseval,	 long double **LDpriorsval, int numberpulsarsval,int numFitJumpsval,int numFitTimingval, int systemcountval, int numFitEFACval, int numFitEQUADval, int numFitRedCoeffval, int numFitDMCoeffval,int numFitRedPLval, int numFitDMPLval, int **TempoFitNumsval,int *TempoJumpNumsval, int *sysFlagsval, int numdimsval, int incREDval, int incDMval, int incFloatDMval, int incFloatRedval, int DMFloatstartval, int RedFloatstartval, int TimeMarginVal, int JumpMarginVal, int doLinearVal, double *SampleFreqsVal, int incStepVal, char *whiteflagval, int whitemodelval, int varyRedCoeffval, int varyDMCoeffval, int yearlyDMval, int incsinusoidval, int EPolTermsval, int incGWBval,int RedPriorType,int DMPriorType,int EQUADPriorType,int EFACPriorType,int useOriginalErrors, int incShannonJitter, int incDMEvent, int incDMShapeEvent, int numDMShapeCoeff, int incBandNoise, int numFitBandNoiseCoeff, int incRedShapeEvent, int numRedShapeCoeff, int MarginRedShapeCoeff, int incDMScatterShapeEvent, int numDMScatterShapeCoeff, int incNGJitter, int incGlitch, int incGlitchTerms, int incBreakingIndex, int FitLowFreqCutoff, int uselongdouble, int incGroupNoise, int numFitGroupNoiseCoeff, int **FitForGroup, int numGroupstoFit, int *GroupNoiseFlags, int FitSolarWind, int FitWhiteSolarWind, int interpolateProfile, double InterpolatedTime, int sampler, int GPTAnumstoccoeff, int StoreFMatrices, int incHighFreqStoc, int numNGJitter, int **FitForBand, int incProfileEvo, int numEvoCoeff, int incWideBandNoise, int incProfileFit, int numProfileFitCoeff)
 {
     MNStruct* MNS = (MNStruct*)malloc(sizeof(MNStruct));
 
@@ -209,7 +209,11 @@ MNStruct* init_struct(pulsar *pulseval,	 long double **LDpriorsval, int numberpu
 	MNS->incHighFreqStoc = incHighFreqStoc;
 	MNS->incNGJitter=numNGJitter;
 	MNS->FitForBand = FitForBand;
-
+	MNS->incProfileEvo = incProfileEvo;
+	MNS->numEvoCoeff = numEvoCoeff;
+	MNS->incWideBandNoise = incWideBandNoise;
+	MNS->incProfileFit = incProfileFit;
+	MNS->numProfileFitCoeff = numProfileFitCoeff;
 
         MNS->Tspan = 0;
         MNS->TimetoMargin = 0;
@@ -390,6 +394,23 @@ void printPriors(pulsar *psr, long double **TempoPriors, double **Dpriors, int i
 				
 			paramsfitted++;	
 			SQUADnum++;
+		}
+	}
+
+	if(((MNStruct *)context)->incHighFreqStoc>0){
+		int HF=1;	
+		for(int i =0;i<((MNStruct *)context)->incHighFreqStoc;i++){
+			printf("Prior on High Frequency Profile Stochasticity %i: %.5g -> %.5g\n",HF,Dpriors[paramsfitted][0],Dpriors[paramsfitted][1]);
+			
+			getdistparamnames << getdistlabel;
+			getdistparamnames << " ";
+			getdistparamnames <<  "HF";
+			getdistparamnames << i+1;
+			getdistparamnames << "\n";
+			getdistlabel++;
+				
+			paramsfitted++;	
+			HF++;
 		}
 	}
 
@@ -959,6 +980,35 @@ void printPriors(pulsar *psr, long double **TempoPriors, double **Dpriors, int i
 		paramsfitted++;
 	}
 
+	for(int i =0; i<((MNStruct *)context)->numProfileFitCoeff; i++){
+		printf("Prior on Profile Fit Coeff %i : %.5g -> %.5g\n",i,-0.1, 0.1);
+
+		getdistparamnames << getdistlabel;
+		getdistparamnames << " ";
+		getdistparamnames <<  "PF";
+		getdistparamnames <<  i+1;
+		getdistparamnames << "\n";
+		getdistlabel++;
+
+
+		paramsfitted++;
+	}
+	
+
+
+	for(int i =0; i<((MNStruct *)context)->numEvoCoeff; i++){
+		printf("Prior on Profile Evolution Coeff %i : %.5g -> %.5g\n",i,-0.1, 0.1);
+
+		getdistparamnames << getdistlabel;
+		getdistparamnames << " ";
+		getdistparamnames <<  "PE";
+		getdistparamnames <<  i+1;
+		getdistparamnames << "\n";
+		getdistlabel++;
+
+
+		paramsfitted++;
+	}
 	
 	getdistparamnames.close(); 
 			
@@ -1369,8 +1419,21 @@ extern "C" int graphicalInterface(int argc, char **argv,
 	int incHighFreqStoc = 0;
 	double *HighFreqStocPrior = new double[2];
 
-	setupparams(useGPUS, Type, numTempo2its, doLinearFit, doMax, incEFAC, numEPolTerms, incEQUAD, incRED, incDM, doTimeMargin, doJumpMargin, FitSig, customPriors, EFACPrior, EPolPrior, EQUADPrior, AlphaPrior, AmpPrior, DMAlphaPrior, DMAmpPrior, numRedCoeff, numDMCoeff, numRedPL, numDMPL, RedCoeffPrior, DMCoeffPrior, incFloatDM, DMFreqPrior, yearlyDM, incsinusoid, incFloatRed, RedFreqPrior, FourierSig, numStep, StepAmpPrior, WhiteName,whitemodel, varyRedCoeff, varyDMCoeff, incGWB, GWBAmpPrior, RedPriorType, DMPriorType, EQUADPriorType, EFACPriorType, useOriginalErrors, incShannonJitter, incDMEvent, DMEventStartPrior, DMEventLengthPrior,incDMShapeEvent, numDMShapeCoeff, DMShapeCoeffPrior, incRedShapeEvent, numRedShapeCoeff, MarginRedShapeCoeff, RedShapeCoeffPrior, incDMScatterShapeEvent, numDMScatterShapeCoeff, DMScatterShapeCoeffPrior,incBandNoise, numBandNoiseCoeff, BandNoiseAmpPrior, BandNoiseAlphaPrior, incNGJitter, incGlitch, incGlitchTerms, GlitchFitSig, incBreakingIndex, FitLowFreqCutoff, uselongdouble, incGroupNoise, numGroupCoeff, GroupNoiseAmpPrior, GroupNoiseAlphaPrior, FitSolarWind, FitWhiteSolarWind, SolarWindPrior, WhiteSolarWindPrior,  GPTA, GPTAnumshapecoeff, GPTAnumstocshapecoeff, GroupNoiseName, FixProfile, FitTemplate, interpolateProfile, InterpolatedTime, StoreFMatrices, incHighFreqStoc, HighFreqStocPrior); 
+	int incProfileEvo = 0;
+	int numEvoCoeff = 0;
+	double *ProfileEvoPrior = new double[2];
 
+	int incProfileFit = 0;
+	int numProfileFitCoeff = 0;
+	double *ProfileFitPrior = new double[2];
+	
+	int incWideBandNoise = 0;
+
+	setupparams(useGPUS, Type, numTempo2its, doLinearFit, doMax, incEFAC, numEPolTerms, incEQUAD, incRED, incDM, doTimeMargin, doJumpMargin, FitSig, customPriors, EFACPrior, EPolPrior, EQUADPrior, AlphaPrior, AmpPrior, DMAlphaPrior, DMAmpPrior, numRedCoeff, numDMCoeff, numRedPL, numDMPL, RedCoeffPrior, DMCoeffPrior, incFloatDM, DMFreqPrior, yearlyDM, incsinusoid, incFloatRed, RedFreqPrior, FourierSig, numStep, StepAmpPrior, WhiteName,whitemodel, varyRedCoeff, varyDMCoeff, incGWB, GWBAmpPrior, RedPriorType, DMPriorType, EQUADPriorType, EFACPriorType, useOriginalErrors, incShannonJitter, incDMEvent, DMEventStartPrior, DMEventLengthPrior,incDMShapeEvent, numDMShapeCoeff, DMShapeCoeffPrior, incRedShapeEvent, numRedShapeCoeff, MarginRedShapeCoeff, RedShapeCoeffPrior, incDMScatterShapeEvent, numDMScatterShapeCoeff, DMScatterShapeCoeffPrior,incBandNoise, numBandNoiseCoeff, BandNoiseAmpPrior, BandNoiseAlphaPrior, incNGJitter, incGlitch, incGlitchTerms, GlitchFitSig, incBreakingIndex, FitLowFreqCutoff, uselongdouble, incGroupNoise, numGroupCoeff, GroupNoiseAmpPrior, GroupNoiseAlphaPrior, FitSolarWind, FitWhiteSolarWind, SolarWindPrior, WhiteSolarWindPrior,  GPTA, GPTAnumshapecoeff, GPTAnumstocshapecoeff, GroupNoiseName, FixProfile, FitTemplate, interpolateProfile, InterpolatedTime, StoreFMatrices, incHighFreqStoc, HighFreqStocPrior, incProfileEvo, numEvoCoeff, ProfileEvoPrior, incWideBandNoise, incProfileFit, numProfileFitCoeff, ProfileFitPrior); 
+
+
+	if(incProfileEvo ==0){numEvoCoeff=0;}
+	if(incProfileFit ==0){numProfileFitCoeff=0;}
 
 	FitForGroup = new int*[incGroupNoise];
 	for(int i =0; i < incGroupNoise; i++){
@@ -1864,6 +1927,7 @@ extern "C" int graphicalInterface(int argc, char **argv,
 	if(incEQUAD == 1){printf("Including One EQUAD for all observations\n");numEQUAD=1;}
 	if(incEQUAD == 2){printf("Including One EQUAD for each %s\n", wflag);numEQUAD=systemcount;}
 	if(incEQUAD == 3){printf("Including One EQUAD for the %i included TNEQ in par file\n",psr[0].nTNEQ);numEQUAD=psr[0].nTNEQ;}
+	if(incHighFreqStoc > 0){printf("Including High frequency profile stochasticity \n");}
 	if(incShannonJitter==1){printf("Including One SQUAD for all observations \n");numSQUAD=1;}
 	if(incShannonJitter == 2){printf("Including One SQUAD for each %s\n", wflag);numSQUAD=systemcount;}
 	if(incNGJitter == 1){printf("Including ECORR for %i systems\n", psr->nTNECORR);numNGJitter=psr->nTNECORR;}
@@ -1890,6 +1954,8 @@ extern "C" int graphicalInterface(int argc, char **argv,
 	if(incRedShapeEvent != 0){printf("Including %i Red Shape Events\n",incRedShapeEvent);}
 	if(incBandNoise > 0){printf("Including Band Noise for %i bands\n", incBandNoise);}
 	if(incGroupNoise > 0){printf("Including Group Noise: Power Law Model to %i Coefficients \n", int(numGroupCoeff));}
+	if(incProfileFit > 0){printf("Including profile fit\n");}
+	if(incProfileEvo > 0){printf("Including profile evolution\n");}
 
 	int fitcount=0;
 	printf("fitting for: Arbitrary Phase \n");
@@ -1982,10 +2048,18 @@ extern "C" int graphicalInterface(int argc, char **argv,
 			int nread=sscanf(psr[0].jumpStr[i],"%s %s %s %s %s",str1,str2,str3,str4,str5);
 			double prejump=atof(str3);
 //			printf("Pre jump %i %g %g\n",i,prejump,psr[0].jumpVal[i]);
-			
-			TempoPriors[paramsfitted][0]=psr[0].jumpVal[i];
-			TempoPriors[paramsfitted][1]=psr[0].jumpValErr[i]/sqrt(psr[0].fitChisq/psr[0].fitNfree);
-			Tempo2Fit[paramsfitted]=psr[0].jumpVal[i];
+			//if(GPTA==0){	
+				TempoPriors[paramsfitted][0]=psr[0].jumpVal[i];
+				TempoPriors[paramsfitted][1]=psr[0].jumpValErr[i]/sqrt(psr[0].fitChisq/psr[0].fitNfree);
+				Tempo2Fit[paramsfitted]=psr[0].jumpVal[i];
+			//}
+			//else{
+
+                        //        TempoPriors[paramsfitted][0]=prejump;
+                        ///        TempoPriors[paramsfitted][1]=psr[0].jumpValErr[i]/sqrt(psr[0].fitChisq/psr[0].fitNfree);
+                       //         Tempo2Fit[paramsfitted]=prejump;
+
+			//}
 			TempoJumpNums[jumpsfitted]=i;
 			
 			if(doJumpMargin == 1)TempoPriors[paramsfitted][2]=1;
@@ -2036,7 +2110,7 @@ extern "C" int graphicalInterface(int argc, char **argv,
 	int FloatRedstart=numFitJumps+fitcount+numEFAC+numEQUAD+Reddims-incFloatRed*2;
 	int FloatDMstart=numFitJumps+fitcount+numEFAC+numEQUAD+Reddims+DMdims-incFloatDM*2;
 
-	MNStruct *MNS = init_struct(psr,TempoPriors,npsr,numFitJumps,fitcount,systemcount,numEFAC,numEQUAD, int(numRedCoeff), int(numDMCoeff), numRedPL, numDMPL, TempoFitNums,TempoJumpNums,numFlags, ndims, incRED,incDM, incFloatDM,incFloatRed, FloatDMstart, FloatRedstart, doTimeMargin,doJumpMargin, doLinearFit, SampleFreq, numStep, wflag, whitemodel,varyRedCoeff, varyDMCoeff,yearlyDM, incsinusoid, numEPolTerms, incGWB,RedPriorType, DMPriorType, EQUADPriorType,EFACPriorType,useOriginalErrors,numSQUAD, incDMEvent, incDMShapeEvent, numDMShapeCoeff, incBandNoise, numBandNoiseCoeff, incRedShapeEvent, numRedShapeCoeff, MarginRedShapeCoeff, incDMScatterShapeEvent, numDMScatterShapeCoeff, incNGJitter, incGlitch, incGlitchTerms, incBreakingIndex, FitLowFreqCutoff, uselongdouble, incGroupNoise, numGroupCoeff, FitForGroup, numGroupstoFit,GroupNoiseSys, FitSolarWind, FitWhiteSolarWind, interpolateProfile, InterpolatedTime, sampler, GPTAnumstocshapecoeff, StoreFMatrices, incHighFreqStoc, numNGJitter, FitForBand);
+	MNStruct *MNS = init_struct(psr,TempoPriors,npsr,numFitJumps,fitcount,systemcount,numEFAC,numEQUAD, int(numRedCoeff), int(numDMCoeff), numRedPL, numDMPL, TempoFitNums,TempoJumpNums,numFlags, ndims, incRED,incDM, incFloatDM,incFloatRed, FloatDMstart, FloatRedstart, doTimeMargin,doJumpMargin, doLinearFit, SampleFreq, numStep, wflag, whitemodel,varyRedCoeff, varyDMCoeff,yearlyDM, incsinusoid, numEPolTerms, incGWB,RedPriorType, DMPriorType, EQUADPriorType,EFACPriorType,useOriginalErrors,numSQUAD, incDMEvent, incDMShapeEvent, numDMShapeCoeff, incBandNoise, numBandNoiseCoeff, incRedShapeEvent, numRedShapeCoeff, MarginRedShapeCoeff, incDMScatterShapeEvent, numDMScatterShapeCoeff, incNGJitter, incGlitch, incGlitchTerms, incBreakingIndex, FitLowFreqCutoff, uselongdouble, incGroupNoise, numGroupCoeff, FitForGroup, numGroupstoFit,GroupNoiseSys, FitSolarWind, FitWhiteSolarWind, interpolateProfile, InterpolatedTime, sampler, GPTAnumstocshapecoeff, StoreFMatrices, incHighFreqStoc, numNGJitter, FitForBand, incProfileEvo, numEvoCoeff, incWideBandNoise, incProfileFit, numProfileFitCoeff);
 	
 	MNS->includeEQsys = includeEQsys;	
 
@@ -2863,36 +2937,43 @@ extern "C" int graphicalInterface(int argc, char **argv,
 		printPriors(psr, TempoPriors, Dpriors, numEFAC, numEQUAD, incRED, incDM, numRedCoeff, numDMCoeff, incFloatRed,incFloatDM,fitDMModel, longname, numStep, varyRedCoeff, varyDMCoeff,yearlyDM, incsinusoid, numEPolTerms,numSQUAD,context);
 
 
-
+		printf("\n\n");
 		
 
 		//if(GPTA == 1){
 
 		long double ***ProfileData = new long double**[((MNStruct *)context)->pulse->nobs];
 		long double **ProfileInfo = new long double*[((MNStruct *)context)->pulse->nobs];
-
-		double weightsum=0;
-		double weightedfreq = 0;
-		for(int t = 0; t < ((MNStruct *)context)->pulse->nobs; t++){
+		std::vector<int> NumChanPerInt;
+		//double weightsum=0;
+		//double weightedfreq = 0;
+		int t=0;
+		//for(int t = 0; t < ((MNStruct *)context)->pulse->nobs; t++){
+		while(t < ((MNStruct *)context)->pulse->nobs){
 
 			std::string ProfileName =  ((MNStruct *)context)->pulse->obsn[t].fname;
 
-			printf("loading profiles %i %s \n", t, ((MNStruct *)context)->pulse->obsn[t].fname);
+		//	printf("loading profile %i %s \n", t, ((MNStruct *)context)->pulse->obsn[t].fname);
 
-			std::string fname = "profiles/"+ProfileName+".ASCII"; //"/home/ltl21/scratch/Pulsars/ProfileData/J1909-10cm/profiles/"+ProfileName+".ASCII";
+			//std::string fname = "profiles/"+ProfileName+".ASCII"; //"/home/ltl21/scratch/Pulsars/ProfileData/J1909-10cm/profiles/"+ProfileName+".ASCII";
 
-			std::string archivename = "profiles/"+ProfileName+".new_code"; //"/home/ltl21/scratch/Pulsars/ProfileData/J1909-10cm/profiles/"+ProfileName+".ASCII";
-			Reference::To< Archive > archive = Archive::load(archivename.c_str());
+			//std::string archivename = "profiles/"+ProfileName+".new_code"; //"/home/ltl21/scratch/Pulsars/ProfileData/J1909-10cm/profiles/"+ProfileName+".ASCII";
+			Reference::To< Archive > archive = Archive::load(ProfileName.c_str());
 			if( !archive ){
 				printf("Problem opening archive\n");			
 				 return 0;	
 
 			}
+			int npols = 0;
+			npols = archive->get_npol();
+			if(npols > 1){printf("PScrunching Archive to get total Intensity\n"); archive->pscrunch();}
 
+
+			npols = archive->get_npol();
 			int nsub = archive->get_nsubint();
 			int nbins = 0;
 			int nchans = 0;
-			int npols = 0;
+			
 			double foldingperiod = 0;
 			double inttime = 0;
 			double centerfreq = 0;
@@ -2910,6 +2991,7 @@ extern "C" int graphicalInterface(int argc, char **argv,
 				return 0;
 			}
 
+			
 			float *pvalues;
 			for(int i=0; i < nsub; i++){
 				Integration *subint = archive->get_Integration(i);
@@ -2927,126 +3009,97 @@ extern "C" int graphicalInterface(int argc, char **argv,
 				fracsecs = firstbin.get_fracsec();
 				isdedispersed = subint->get_dedispersed();
 
-				if(nchans > 1){
-					printf("Only one channel per archive supported currently: nchan %i\n", nchans);
-					return 0;
-				}
+                                long double ProfileMJD = intday;    //ds[0];
+                                long double FirstBinSec = intsec+(long double)fracsecs;   //ds[1];
+                                long double FoldingPeriod = foldingperiod;  //ds[2];
+                                int Nbins = nbins;  //(int)ds[6];
 
-
-				
-				printf("archive info: %i %i %i %i %.16g %g %g %i %.16g %i %.16g\n", nsub, nbins, nchans, npols, foldingperiod, inttime, centerfreq, intday, fracday, intsec, fracsecs);
-				printf("dedispersed? %s \n", isdedispersed ? "true" : "false");
+				int usedchan=0;
 				for(int j = 0; j < nchans; j++){
+
+					//printf("in profile %i of %i, channel: %i of %i with %i pol\n", t, ((MNStruct *)context)->pulse->nobs, j, nchans, npols);
+
 					int ipol = 0; //only want total Intensity
 					Profile *prof = subint->get_Profile(ipol, j);
 					pvalues = prof->get_amps();
 					chanfreq = subint->get_centre_frequency(j);
-					float subintweight =  subint->get_weight(j);
-					weightsum += subintweight;
-					weightedfreq += subintweight*chanfreq;
-					printf("channel freq: %i %g %g\n", j, chanfreq, subintweight);
+					double toafreq = ((MNStruct *)context)->pulse->obsn[t].freq;
+					double checkfreq = 0;
+//					if(isdedispersed == 0){
+						checkfreq = chanfreq;				     
+//					}
+//					else{
+//						checkfreq = centerfreq;
+//					}
+ 
+					double oneflux = 0;	
+					for(int b =0; b < Nbins; b++){
+						oneflux = oneflux + pvalues[b];
+					}   
 
+
+					if(oneflux == 0){
+						//printf("Profile %i: subint %i, channel %i is all zeros, not including it in the analysis\n", t, i, j);
+					}
+					else{
+						if(fabs(toafreq - checkfreq) < 0.0001){
+							//printf("Including: ToA %i SubInt %i Chan %i \n", t, i, j);
+
+							ProfileData[t] = new long double*[Nbins];
+							for(int b = 0; b < Nbins; b++){
+								ProfileData[t][b] = new long double[2];
+							}
+
+
+							ProfileInfo[t] = new long double[7];
+
+							ProfileInfo[t][0] = FoldingPeriod;
+							ProfileInfo[t][1] = (long double)nbins;     //ds[6];
+
+							for(int b =0; b < Nbins; b++){
+								ProfileData[t][b][1] = pvalues[b];    //prof[1];
+							}   
+
+
+							double Tobs = inttime;
+
+							double PNoiseVal = 0;
+
+							ProfileInfo[t][2] = (long double) Tobs;
+							ProfileInfo[t][3] = (long double) PNoiseVal;
+							ProfileInfo[t][4] = ((MNStruct *)context)->pulse->obsn[t].sat_day;
+							ProfileInfo[t][5] = ((MNStruct *)context)->pulse->obsn[t].sat_sec;
+							ProfileInfo[t][6] = ProfileMJD;
+
+
+							long double pulsesamplerate = FoldingPeriod/Nbins/SECDAY;
+							long double pulsesamplerateSec = FoldingPeriod/Nbins;
+							long double *ProfileSATS = new long double[Nbins];
+
+							if(FirstBinSec/SECDAY > 1){ printf("GREATER THAN A DAY! \n");}
+
+							for(int b =0; b < Nbins; b++){
+								ProfileData[t][b][0] = FirstBinSec/SECDAY + pulsesamplerate*b + pulsesamplerate*0.5;
+							}
+
+							t=t+1;
+							usedchan++;
+						}
+					}
 				}
+				printf("num used chan is %i \n", usedchan);
+				NumChanPerInt.push_back(usedchan);
 			}
-	
-
-
-
-
-			std::ifstream ProfileFile;
-
-			ProfileFile.open(fname.c_str());
-
-
-			std::string line;
-			getline(ProfileFile,line);
-
-			int headersize=line.size() - 1;
-			char headerstring[headersize];
-			for(int i =0; i < headersize; i++){headerstring[i] = line[i+1];}
-		
-			std::istringstream myStream( headerstring );
-			std::istream_iterator< long double > begin(myStream),eof;
-			std::vector<long double> ds(begin,eof);
-
-			long double ProfileMJD = intday;    //ds[0];
-			long double FirstBinSec = intsec+(long double)fracsecs;   //ds[1];
-			long double FoldingPeriod = foldingperiod;  //ds[2];
-		
-			int Nbins = nbins;  //(int)ds[6];
-		
-			printf("comp %Lg %i %.16Lg %.18Lg %.18Lg %.16g %i %i\n", ProfileMJD, intday, FirstBinSec, intsec+(long double)fracsecs, FoldingPeriod, foldingperiod, Nbins, nbins);
-		      
-			ProfileData[t] = new long double*[Nbins];
-			for(int i = 0; i < Nbins; i++){
-				ProfileData[t][i] = new long double[2];
-			}
-
-
-			ProfileInfo[t] = new long double[7];
-
-			ProfileInfo[t][0] = FoldingPeriod;
-			ProfileInfo[t][1] = (long double)nbins;     //ds[6];
-
-			double oneflux = 0;	
-			for(int i =0; i < Nbins; i++){
-				getline(ProfileFile,line);
-				std::istringstream lineStream( line );
-				std::istream_iterator< long double > pbegin(lineStream),eof;
-				std::vector<long double> prof(pbegin,eof);
-				ProfileData[t][i][1] = pvalues[i];    //prof[1];
-				oneflux = oneflux + ProfileData[t][i][1];
-		 		//printf("comp: %Lg %g \n", ProfileData[t][i][1], pvalues[i]);
-			}   
-
-			ProfileFile.close();
-
-			if(oneflux == 0){
-				printf("Profile %i is all zeros, please remove from tim file \n", t);
-			}
-
-
-			double Tobs = 0;
-			for (int f=0;f<((MNStruct *)context)->pulse->obsn[t].nFlags;f++){
-                                 if(strcasecmp(((MNStruct *)context)->pulse->obsn[t].flagID[f],"-tobs")==0){
-                                           Tobs=atof(((MNStruct *)context)->pulse->obsn[t].flagVal[f]);
-                                 }
-                        }
-			Tobs = inttime;
-
-                        double PNoiseVal = 0;
-
-			ProfileInfo[t][2] = (long double) Tobs;
-			ProfileInfo[t][3] = (long double) PNoiseVal;
-			ProfileInfo[t][4] = ((MNStruct *)context)->pulse->obsn[t].sat_day;
-			ProfileInfo[t][5] = ((MNStruct *)context)->pulse->obsn[t].sat_sec;
-			ProfileInfo[t][6] = ProfileMJD;
-
-
-			long double pulsesamplerate = FoldingPeriod/Nbins/SECDAY;
-			long double pulsesamplerateSec = FoldingPeriod/Nbins;
-			long double *ProfileSATS = new long double[Nbins];
-
-			if(FirstBinSec/SECDAY > 1){ printf("GREATER THAN A DAY! \n");}
-
-			for(int i =0; i < Nbins; i++){
-				ProfileData[t][i][0] = FirstBinSec/SECDAY + pulsesamplerate*i + pulsesamplerate*0.5;
-			}
-
-			if(isdedispersed){
-				((MNStruct *)context)->pulse->obsn[t].freq = centerfreq;
-			}
-			else{
-				((MNStruct *)context)->pulse->obsn[t].freq = chanfreq;
-			}
-
-			printf("freqs: %g %g %g\n", ((MNStruct *)context)->pulse->obsn[t].freq, chanfreq, centerfreq);
-
 		}
 
-		printf("weighted average freq: %g \n", weightedfreq/weightsum);
-		printf("Loaded Profiles \n");
+		//printf("weighted average freq: %g \n", weightedfreq/weightsum);
+		printf("Loaded  %i  Profiles, %i Epochs\n", t, NumChanPerInt.size());
+	//	return 0;
 
+		int *numchanperint = new int[NumChanPerInt.size()];
+		for(int p = 0; p < NumChanPerInt.size(); p++){
+			numchanperint[p] = NumChanPerInt[p];
+		}
 	
 		for(int p = 0; p < ((MNStruct *)context)->pulse->nobs; p++){
 			((MNStruct *)context)->pulse->obsn[p].origsat = ((MNStruct *)context)->pulse->obsn[p].sat;
@@ -3055,7 +3108,8 @@ extern "C" int graphicalInterface(int argc, char **argv,
 		((MNStruct *)context)->ProfileData = ProfileData;
 		((MNStruct *)context)->ProfileInfo = ProfileInfo;
 		((MNStruct *)context)->ReferencePeriod = ProfileInfo[0][0];
-
+		((MNStruct *)context)->numChanPerInt = numchanperint;
+		((MNStruct *)context)->numProfileEpochs = NumChanPerInt.size();
 
 		int nprofcoeff = GPTAnumshapecoeff;
 		int numshapestoccoeff = GPTAnumstocshapecoeff;
@@ -3092,8 +3146,17 @@ extern "C" int graphicalInterface(int argc, char **argv,
 		((MNStruct *)context)->Factorials = Factorials;
 		((MNStruct *)context)->Binomial = Binomials;
 
-		int olddims=numFitJumps+fitcount+numEFAC+numEQUAD+numSQUAD+Reddims+DMdims;
-		ndims = nprofcoeff+1+numFitJumps+fitcount+numEFAC+numEQUAD+numSQUAD+numshapestoccoeff+Reddims+DMdims+incHighFreqStoc;
+		int profevodims = 0;
+		if(incProfileEvo == 0){profevodims = 0; numEvoCoeff = 0;}
+		if(incProfileEvo == 1){profevodims = numEvoCoeff;}
+		if(incProfileEvo == 2){profevodims = 1;}
+
+		int proffitdims = 0;
+		if(incProfileFit == 0){proffitdims = 0; numProfileFitCoeff = 0;}
+		if(incProfileFit == 1){proffitdims = numProfileFitCoeff;}
+
+		int olddims=numFitJumps+fitcount+numEFAC+numEQUAD+numSQUAD+Reddims+DMdims+incHighFreqStoc;
+		ndims = nprofcoeff+1+numFitJumps+fitcount+numEFAC+numEQUAD+numSQUAD+numshapestoccoeff+Reddims+DMdims+incHighFreqStoc+profevodims+proffitdims;
 		nPar = 0;
 
 
@@ -3196,6 +3259,35 @@ extern "C" int graphicalInterface(int argc, char **argv,
 
                 }
 
+		for(int p = 0; p < proffitdims; p++){
+			printf("fit %i %i %i\n", p, pcount, ndims);
+			printf("fit Prior %i %i %i %.10g %.10g \n", p,pcount, proffitdims, ProfileFitPrior[0], ProfileFitPrior[1]);
+
+                        PriorsArray[pcount] = ProfileFitPrior[0];
+                        PriorsArray[pcount+ndims] = ProfileFitPrior[1];
+			if(p==0){
+	                        PriorsArray[pcount] = 0;
+                       		PriorsArray[pcount+ndims] = 0;	
+			}
+                        pcount++;
+
+                }
+		
+		for(int p = 0; p < profevodims; p++){
+			printf("evo %i %i %i\n", p, pcount, ndims);
+			printf("evo Prior %i %i %i %.10g %.10g \n", p,pcount, profevodims, ProfileEvoPrior[0], ProfileEvoPrior[1]);
+
+                        PriorsArray[pcount] = ProfileEvoPrior[0];
+                        PriorsArray[pcount+ndims] = ProfileEvoPrior[1];
+			if(p==0){
+	                        PriorsArray[pcount] = 0;
+                       		PriorsArray[pcount+ndims] = 0;	
+			}
+                        pcount++;
+
+                }
+
+
 		printf("set priors \n");
 		((MNStruct *)context)->PriorsArray = PriorsArray;
 		((MNStruct *)context)->FixProfile = FixProfile;
@@ -3215,16 +3307,27 @@ extern "C" int graphicalInterface(int argc, char **argv,
 			long double finalInterpTime = ((MNStruct *)context)->ReferencePeriod/Nbin/numtointerpolate;
 			((MNStruct *)context)->InterpolatedTime = finalInterpTime;
 
+			int numShapeToSave = numshapestoccoeff;
+			if(numEvoCoeff >  numShapeToSave){numShapeToSave = numEvoCoeff;}
+			if(numProfileFitCoeff >  numShapeToSave){numShapeToSave = numProfileFitCoeff;}
+
 			printf("Final interp time %.10g %.10Lg \n", InterpolatedTime, finalInterpTime);
 
 			double ***StoredShapelets = new double**[numtointerpolate];
 			for(int i = 0; i < numtointerpolate; i++){
 				StoredShapelets[i] = new double*[Nbin];
 				for(int j = 0; j < Nbin; j++){
-					 StoredShapelets[i][j] = new double[numshapestoccoeff];
-					for(int k = 0; k < numshapestoccoeff; k++){
+					 StoredShapelets[i][j] = new double[numShapeToSave];
+					for(int k = 0; k < numShapeToSave; k++){
 						StoredShapelets[i][j][k] = 0;
 					}
+				}
+			}
+			double **StoredShapeletsVec = new double*[numtointerpolate];
+			for(int i = 0; i < numtointerpolate; i++){
+				StoredShapeletsVec[i] = new double[Nbin*numShapeToSave];
+				for(int j = 0; j < Nbin*numShapeToSave; j++){
+					StoredShapeletsVec[i][j] = 0;
 				}
 			}
 
@@ -3242,6 +3345,15 @@ extern "C" int graphicalInterface(int argc, char **argv,
 			double MaxShapeAmp = 0;
 			PreComputeShapelets(StoredShapelets, InterpolatedMeanProfile, InterpolatedJitterProfile, finalInterpTime, numtointerpolate, MeanBeta, MaxShapeAmp);
 
+			for(int i = 0; i < numtointerpolate; i++){
+				for(int j = 0; j < Nbin; j++){
+					for(int k = 0; k < numShapeToSave; k++){	
+						StoredShapeletsVec[i][j+k*Nbin] = StoredShapelets[i][j][k];	
+					}
+				}
+			}
+
+			((MNStruct *)context)->InterpolatedShapeletsVec = StoredShapeletsVec;
 			((MNStruct *)context)->InterpolatedShapelets = StoredShapelets;
 			((MNStruct *)context)->InterpolatedMeanProfile = InterpolatedMeanProfile;
 			((MNStruct *)context)->InterpolatedJitterProfile = InterpolatedJitterProfile;
@@ -3265,10 +3377,13 @@ extern "C" int graphicalInterface(int argc, char **argv,
 			}
 			else{
 				if(sampler == 0){
-					nested::run(IS,mmodal, ceff, nlive, tol, efr, ndims, ndims, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, SubIntStocProfLikeMNWrap, dumper, context);
+					//nested::run(IS,mmodal, ceff, nlive, tol, efr, ndims, ndims, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, SubIntStocProfLikeMNWrap, dumper, context);
+					nested::run(IS,mmodal, ceff, nlive, tol, efr, ndims, ndims, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, ProfileDomainLikeMNWrap, dumper, context);
 				}
 				if(sampler == 1){
-					chord::Sample(SubIntStocProfLike, ndims, NDerived, nlive, Nchords,  PriorsArray, root, context, output, do_grades, maxgrade, grades, grade_repeats, hypercube_indices, physical_indices);
+					chord::Sample(ProfileDomainLike, ndims, NDerived, nlive, Nchords,  PriorsArray, root, context, output, do_grades, maxgrade, grades, grade_repeats, hypercube_indices, physical_indices);
+
+					//chord::Sample(SubIntStocProfLike, ndims, NDerived, nlive, Nchords,  PriorsArray, root, context, output, do_grades, maxgrade, grades, grade_repeats, hypercube_indices, physical_indices);
 				}
 			}
 		}
@@ -3277,8 +3392,9 @@ extern "C" int graphicalInterface(int argc, char **argv,
 			WriteMaxTemplateProf(longname, ndims);
 		}
 		else{
+			WriteProfileDomainLike(longname, ndims);
 			//AllTOAWriteMaxLike(longname, ndims);
-			WriteSubIntStocProfLike(longname, ndims);
+			//WriteSubIntStocProfLike(longname, ndims);
 		}
 
 
@@ -3286,7 +3402,7 @@ extern "C" int graphicalInterface(int argc, char **argv,
 		printf("No installation of PSRCHIVE detected, cannot use GPTA likelihoods.  Please install PSRCHIVE, and set $PSRCHIVE to be the location of the installation directory\n");
 
 #endif
-		return 0;
+//		return 0;
 		
 
 		//}

@@ -122,6 +122,7 @@ typedef struct {
 	double *StoredTMatrix;
 	/*GPTA stuff*/
 
+	int incWideBandNoise;
 	int numshapecoeff;
 	int numshapestoccoeff;
 	int TOAnumber;
@@ -130,8 +131,11 @@ typedef struct {
 	int NumToInterpolate;
 	double InterpolatedTime;
 	double ***InterpolatedShapelets;
+	double **InterpolatedShapeletsVec;
 	double **InterpolatedMeanProfile;
 	double **InterpolatedJitterProfile;
+	int *numChanPerInt;
+	int numProfileEpochs;
 	double *MeanProfileShape;
 	double MeanProfileBeta;
 	long double **ProfileInfo;
@@ -141,6 +145,10 @@ typedef struct {
 	double *Binomial;
 	double MaxShapeAmp;
 	int incHighFreqStoc;
+	int incProfileEvo;
+	int numEvoCoeff;
+	int incProfileFit;
+	int numProfileFitCoeff;
 	/*Grade Stuff: Need to track Grades and store previous likelihood things for hierarchial evaluation*/
 
 	int sampler;
@@ -186,6 +194,10 @@ double TemplateProfLike(int &ndim, double *Cube, int &npars, double *DerivedPara
 void  WriteMaxTemplateProf(std::string longname, int &ndim);
 void  WriteSubIntStocProfLike(std::string longname, int &ndim);
 void PreComputeShapelets(double ***StoredShapelet, double **InterpolatedMeanProfile, double **InterpolatedJitterProfile, long double finalInterpTime, int numtointerpolate, double MeanBeta, double &MaxShapeAmp);
+
+double ProfileDomainLike(int &ndim, double *Cube, int &npars, double *DerivedParams, void *context);
+void ProfileDomainLikeMNWrap(double *Cube, int &ndim, int &npars, double &lnew, void *context);
+void  WriteProfileDomainLike(std::string longname, int &ndim);
 
 void TemplateProfLikeMNWrap(double *Cube, int &ndim, int &npars, double &lnew, void *context);
 double SubIntStocProfLike(int &ndim, double *Cube, int &npars, double *DerivedParams, void *context);
@@ -320,7 +332,14 @@ void setupparams(int &useGPUS,
 		double &InterpolatedTime,
 		int &StoreTMatrix, 
 		int &incHighFreqStoc,
-		double *HighFreqStocPrior);
+		double *HighFreqStocPrior,
+		int &incProfileEvo,
+		int &numEvoCoeff,
+		double *ProfileEvoPrior,
+		int &incWideBandNoise,
+		int &incProfileFit,
+		int &numProfileFitCoeff,
+		double *ProfileFitPrior);
 
 void setTNPriors(double **Dpriors, long double **TempoPriors, int TPsize, int DPsize);
 void setFrequencies(double *SampleFreq, int numRedfreqs, int numDMfreqs, int numRedLogFreqs, int numDMLogFreqs, double RedLowFreq, double DMLowFreq, double RedMidFreq, double DMMidFreq);

@@ -121,7 +121,14 @@ void setupparams(int &useGPUS,
 		double &InterpolatedTime,
 		int &StoreTMatrix,
 		int &incHighFreqStoc,
-		double *HighFreqStocPrior){
+		double *HighFreqStocPrior,
+		int &incProfileEvo,
+		int &numEvoCoeff,
+		double *ProfileEvoPrior,
+		int &incWideBandNoise,
+		int &incProfileFit,
+		int &numProfileFitCoeff,
+		double *ProfileFitPrior){
 
 	//General parameters:
 	//Use GPUs 0=No, 1=Yes
@@ -138,51 +145,62 @@ void setupparams(int &useGPUS,
 	StoreTMatrix = 1; // Recompute TMatrices when computing new bats - default is just precompute and use those
 
 
-    //Root of the results files,relative to the directory in which TempoNest is run. This will be followed by the pulsar name, and then the individual output file extensions.
-    strcpy( root, "results/Example1-");
+	//Root of the results files,relative to the directory in which TempoNest is run. This will be followed by the pulsar name, and then the individual output file extensions.
+	strcpy( root, "results/Example1-");
 
-    //numTempo2its - sets the number of iterations Tempo2 should do before setting the priors.  Should only be set to 0 if all the priors are set in setTNPriors
-    numTempo2its=1;
+	//numTempo2its - sets the number of iterations Tempo2 should do before setting the priors.  Should only be set to 0 if all the priors are set in setTNPriors
+	numTempo2its=1;
 
-    //doLinearFit:  Switches between the full non linear timing model (doLinearFit=0) and the linear approximation for the timing model based on the initial Tempo2 Fit (= 1).
+	//doLinearFit:  Switches between the full non linear timing model (doLinearFit=0) and the linear approximation for the timing model based on the initial Tempo2 Fit (= 1).
 
-    doLinearFit=0;
+	doLinearFit=0;
 
-    //doMax: Find maximum likelihood values for non linear timing model for the stochastic model chosen.
-    //Will find maximum in the full un marginalised problem in order to find the best values to then marginalise over.
-    //Start point of non linear search will be performed at this maximum if chosen unless set otherwise in custom priors.
-    //Central point of prior for non linear search will be set at this value unless set otherwise in custom priors.
-    doMax=0;
+	//doMax: Find maximum likelihood values for non linear timing model for the stochastic model chosen.
+	//Will find maximum in the full un marginalised problem in order to find the best values to then marginalise over.
+	//Start point of non linear search will be performed at this maximum if chosen unless set otherwise in custom priors.
+	//Central point of prior for non linear search will be set at this value unless set otherwise in custom priors.
+	doMax=0;
 
-    //ModelChoices
+	//ModelChoices
 
-    //White noise
+	//White noise
 
-    useOriginalErrors = 0;  // Use tempo2 errors before modification by TNEF/TNEQ
-    incEFAC=0; //include EFAC: 0 = none, 1 = one for all residuals, 2 = one for each observing system
-    EPolyTerms = 1; //Number of terms to include in EFAC polynomial (A*TOAerr + B*TOAERR^2 etc)
-    incEQUAD=0; //include EQUAD: 0 = no, 1 = yes
-    incNGJitter = 0; //Include NG Jitter for systems flagged in par file
+	useOriginalErrors = 0;  // Use tempo2 errors before modification by TNEF/TNEQ
+	incEFAC=0; //include EFAC: 0 = none, 1 = one for all residuals, 2 = one for each observing system
+	EPolyTerms = 1; //Number of terms to include in EFAC polynomial (A*TOAerr + B*TOAERR^2 etc)
+	incEQUAD=0; //include EQUAD: 0 = no, 1 = yes
+	incNGJitter = 0; //Include NG Jitter for systems flagged in par file
 
 	FitSolarWind = 0; // Basically for for ne_sw
 	FitWhiteSolarWind = 0; //Fit for a white component proportional to tdis2 with ne_sw=1
 
 
-    strcpy( whiteflag, "-sys");
-    whitemodel=0;
-    
-    incShannonJitter=0;
+	strcpy( whiteflag, "-sys");
+	whitemodel=0;
 
-    incRED=0; //include Red Noise model: 0 = no, 1 = power law model (vHL2013), 2 = model independent (L2013)
-    incDM=0; //include Red Noise model: 0 = no, 1 = power law model (vHL2013), 2 = model independent (L2013)
+	incShannonJitter=0;
+
+	incRED=0; //include Red Noise model: 0 = no, 1 = power law model (vHL2013), 2 = model independent (L2013)
+	incDM=0; //include Red Noise model: 0 = no, 1 = power law model (vHL2013), 2 = model independent (L2013)
 
 	FitLowFreqCutoff = 0; //Include f_low as a free parameter
 
-    doTimeMargin=0 ; //0=No Analytical Marginalisation over Timing Model. 1=Marginalise over QSD. 2=Marginalise over all Model params excluding jumps.
-    doJumpMargin=0; //0=No Analytical Marginalisation over Jumps. 1=Marginalise over Jumps.
-    incBreakingIndex=0; //Use breaking index to constrain F1/F2 etc
+	doTimeMargin=0 ; //0=No Analytical Marginalisation over Timing Model. 1=Marginalise over QSD. 2=Marginalise over all Model params excluding jumps.
+	doJumpMargin=0; //0=No Analytical Marginalisation over Jumps. 1=Marginalise over Jumps.
+	incBreakingIndex=0; //Use breaking index to constrain F1/F2 etc
 
 
+	incWideBandNoise = 0;
+
+	incProfileEvo = 0;
+	numEvoCoeff = 0;
+	ProfileEvoPrior[0] = -1;
+	ProfileEvoPrior[1] =  1;
+
+	incProfileFit = 0;
+	numProfileFitCoeff = 0;
+	ProfileFitPrior[0] = -1;
+	ProfileFitPrior[1] =  1;
 
     //Priors
 
@@ -484,6 +502,17 @@ void setupparams(int &useGPUS,
         parameters.readInto(HighFreqStocPrior[0], "HighFreqStocPrior[0]", HighFreqStocPrior[0]);
         parameters.readInto(HighFreqStocPrior[1], "HighFreqStocPrior[1]", HighFreqStocPrior[1]);
 
+        parameters.readInto(incProfileEvo, "incProfileEvo",incProfileEvo);
+        parameters.readInto(numEvoCoeff, "numEvoCoeff",numEvoCoeff);
+        parameters.readInto(ProfileEvoPrior[0], "ProfileEvoPrior[0]", ProfileEvoPrior[0]);
+        parameters.readInto(ProfileEvoPrior[1], "ProfileEvoPrior[1]", ProfileEvoPrior[1]);
+
+	parameters.readInto(incWideBandNoise, "incWideBandNoise",incWideBandNoise);
+
+        parameters.readInto(incProfileFit, "incProfileFit",incProfileFit);
+        parameters.readInto(numProfileFitCoeff, "numProfileFitCoeff",numProfileFitCoeff);
+        parameters.readInto(ProfileFitPrior[0], "ProfileFitPrior[0]", ProfileFitPrior[0]);
+        parameters.readInto(ProfileFitPrior[1], "ProfileFitPrior[1]", ProfileFitPrior[1]);
 	
 	
     } catch(ConfigFile::file_not_found oError) {

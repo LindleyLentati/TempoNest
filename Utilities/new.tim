@@ -1,3 +1,32 @@
 FORMAT 1
 MODE 1
-/home/ltl21/scratch/Pulsars/ProfileData/J1713/Nuppi/SubInts/nuppi_55804_1713+07_155238/profiles/nuppi_55804_1713+07_155238.calibP.0000.new_code 1484.00000000 55804.763738044616190400‘ 0.1 obscode -tobs 60.684 
+/home/ltl21/scratch/Pulsars/ProfileData/FrequencyData/J1909-3744/profiles/t081014_104001.rf.pcm.dzTf32 2646.00000000 54753.4668981858783216 0.1 pks -tobs 3840 -nsub 1 -nchan 32
+/home/ltl21/scratch/Pulsars/ProfileData/FrequencyData/J1909-3744/profiles/t081014_104001.rf.pcm.dzTf32 2668.50000000 54753.4668981846812271 0.1 pks -tobs 3840 -nsub 1 -nchan 32
+/home/ltl21/scratch/Pulsars/ProfileData/FrequencyData/J1909-3744/profiles/t081014_104001.rf.pcm.dzTf32 2700.50000000 54753.4668981830299566 0.1 pks -tobs 3840 -nsub 1 -nchan 32
+/home/ltl21/scratch/Pulsars/ProfileData/FrequencyData/J1909-3744/profiles/t081014_104001.rf.pcm.dzTf32 2732.50000000 54753.4668981814363593 0.1 pks -tobs 3840 -nsub 1 -nchan 32
+/home/ltl21/scratch/Pulsars/ProfileData/FrequencyData/J1909-3744/profiles/t081014_104001.rf.pcm.dzTf32 2764.50000000 54753.4668981798977803 0.1 pks -tobs 3840 -nsub 1 -nchan 32
+/home/ltl21/scratch/Pulsars/ProfileData/FrequencyData/J1909-3744/profiles/t081014_104001.rf.pcm.dzTf32 2796.50000000 54753.4668981784117159 0.1 pks -tobs 3840 -nsub 1 -nchan 32
+/home/ltl21/scratch/Pulsars/ProfileData/FrequencyData/J1909-3744/profiles/t081014_104001.rf.pcm.dzTf32 2828.50000000 54753.466898176975803 0.1 pks -tobs 3840 -nsub 1 -nchan 32
+/home/ltl21/scratch/Pulsars/ProfileData/FrequencyData/J1909-3744/profiles/t081014_104001.rf.pcm.dzTf32 2860.50000000 54753.4668981755878101 0.1 pks -tobs 3840 -nsub 1 -nchan 32
+/home/ltl21/scratch/Pulsars/ProfileData/FrequencyData/J1909-3744/profiles/t081014_104001.rf.pcm.dzTf32 2892.50000000 54753.4668981742456284 0.1 pks -tobs 3840 -nsub 1 -nchan 32
+/home/ltl21/scratch/Pulsars/ProfileData/FrequencyData/J1909-3744/profiles/t081014_104001.rf.pcm.dzTf32 2924.50000000 54753.4668981729472638 0.1 pks -tobs 3840 -nsub 1 -nchan 32
+/home/ltl21/scratch/Pulsars/ProfileData/FrequencyData/J1909-3744/profiles/t081014_104001.rf.pcm.dzTf32 2956.50000000 54753.4668981716908296 0.1 pks -tobs 3840 -nsub 1 -nchan 32
+/home/ltl21/scratch/Pulsars/ProfileData/FrequencyData/J1909-3744/profiles/t081014_104001.rf.pcm.dzTf32 2988.50000000 54753.4668981704745395 0.1 pks -tobs 3840 -nsub 1 -nchan 32
+/home/ltl21/scratch/Pulsars/ProfileData/FrequencyData/J1909-3744/profiles/t081014_104001.rf.pcm.dzTf32 3020.50000000 54753.4668981692967015 0.1 pks -tobs 3840 -nsub 1 -nchan 32
+/home/ltl21/scratch/Pulsars/ProfileData/FrequencyData/J1909-3744/profiles/t081014_104001.rf.pcm.dzTf32 3052.50000000 54753.4668981681557114 0.1 pks -tobs 3840 -nsub 1 -nchan 32
+/home/ltl21/scratch/Pulsars/ProfileData/FrequencyData/J1909-3744/profiles/t081014_104001.rf.pcm.dzTf32 3084.50000000 54753.4668981670500484 0.1 pks -tobs 3840 -nsub 1 -nchan 32
+/home/ltl21/scratch/Pulsars/ProfileData/FrequencyData/J1909-3744/profiles/t081014_104001.rf.pcm.dzTf32 3116.50000000 54753.4668981659782687 0.1 pks -tobs 3840 -nsub 1 -nchan 32
+/home/ltl21/scratch/Pulsars/ProfileData/FrequencyData/J1909-3744/profiles/t081014_104001.rf.pcm.dzTf32 3148.50000000 54753.466898164939002 0.1 pks -tobs 3840 -nsub 1 -nchan 32
+/home/ltl21/scratch/Pulsars/ProfileData/FrequencyData/J1909-3744/profiles/t081014_104001.rf.pcm.dzTf32 3180.50000000 54753.4668981639309465 0.1 pks -tobs 3840 -nsub 1 -nchan 32
+/home/ltl21/scratch/Pulsars/ProfileData/FrequencyData/J1909-3744/profiles/t081014_104001.rf.pcm.dzTf32 3212.50000000 54753.4668981629528646 0.1 pks -tobs 3840 -nsub 1 -nchan 32
+/home/ltl21/scratch/Pulsars/ProfileData/FrequencyData/J1909-3744/profiles/t081014_104001.rf.pcm.dzTf32 3244.50000000 54753.4668981620035798 0.1 pks -tobs 3840 -nsub 1 -nchan 32
+/home/ltl21/scratch/Pulsars/ProfileData/FrequencyData/J1909-3744/profiles/t081014_104001.rf.pcm.dzTf32 3276.50000000 54753.4668981610819725 0.1 pks -tobs 3840 -nsub 1 -nchan 32
+/home/ltl21/scratch/Pulsars/ProfileData/FrequencyData/J1909-3744/profiles/t081014_104001.rf.pcm.dzTf32 3308.50000000 54753.4668981601869772 0.1 pks -tobs 3840 -nsub 1 -nchan 32
+/home/ltl21/scratch/Pulsars/ProfileData/FrequencyData/J1909-3744/profiles/t081014_104001.rf.pcm.dzTf32 3340.50000000 54753.4668981593175791 0.1 pks -tobs 3840 -nsub 1 -nchan 32
+/home/ltl21/scratch/Pulsars/ProfileData/FrequencyData/J1909-3744/profiles/t081014_104001.rf.pcm.dzTf32 3372.50000000 54753.4668981584728113 0.1 pks -tobs 3840 -nsub 1 -nchan 32
+/home/ltl21/scratch/Pulsars/ProfileData/FrequencyData/J1909-3744/profiles/t081014_104001.rf.pcm.dzTf32 3404.50000000 54753.4668981576517521 0.1 pks -tobs 3840 -nsub 1 -nchan 32
+/home/ltl21/scratch/Pulsars/ProfileData/FrequencyData/J1909-3744/profiles/t081014_104001.rf.pcm.dzTf32 3436.50000000 54753.4668981568535225 0.1 pks -tobs 3840 -nsub 1 -nchan 32
+/home/ltl21/scratch/Pulsars/ProfileData/FrequencyData/J1909-3744/profiles/t081014_104001.rf.pcm.dzTf32 3468.50000000 54753.466898156077284 0.1 pks -tobs 3840 -nsub 1 -nchan 32
+/home/ltl21/scratch/Pulsars/ProfileData/FrequencyData/J1909-3744/profiles/t081014_104001.rf.pcm.dzTf32 3500.50000000 54753.4668981553222362 0.1 pks -tobs 3840 -nsub 1 -nchan 32
+/home/ltl21/scratch/Pulsars/ProfileData/FrequencyData/J1909-3744/profiles/t081014_104001.rf.pcm.dzTf32 3532.50000000 54753.4668981545876146 0.1 pks -tobs 3840 -nsub 1 -nchan 32
+/home/ltl21/scratch/Pulsars/ProfileData/FrequencyData/J1909-3744/profiles/t081014_104001.rf.pcm.dzTf32 3555.00000000 54753.4668981540829188 0.1 pks -tobs 3840 -nsub 1 -nchan 32
