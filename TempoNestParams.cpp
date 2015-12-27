@@ -112,8 +112,6 @@ void setupparams(int &useGPUS,
                 double *SolarWindPrior,
                 double *WhiteSolarWindPrior,
 		int &GPTA,
-		int &numGPTAshapecoeff,
-                int &numGPTAstocshapecoeff,
 		char *GroupNoiseFlag,
 		int &FixProfile,
 		int &FitTemplate,
@@ -123,31 +121,59 @@ void setupparams(int &useGPUS,
 		int &incHighFreqStoc,
 		double *HighFreqStocPrior,
 		int &incProfileEvo,
-		int &numEvoCoeff,
+		double &EvoRefFreq,
 		double *ProfileEvoPrior,
+		int &FitEvoExponent,
 		int &incWideBandNoise,
 		int &incProfileFit,
-		int &numProfileFitCoeff,
-		double *ProfileFitPrior){
+		double *ProfileFitPrior,
+		int &FitLinearProfileWidth,
+		double *LinearProfileWidthPrior,
+		int &incDMEQUAD,
+		double *DMEQUADPrior,
+		double &offPulseLevel,
+		char *ProfFile,
+		int &numProfComponents,
+		int &incWidthJitter,
+		double *WidthJitterPrior,
+		int &JitterProfComp,
+		int &incProfileEnergyEvo,
+		double *ProfileEnergyEvoPrior,
+		int &debug,
+		int &ProfileBaselineTerms,
+                int &incProfileNoise,
+                int &ProfileNoiseCoeff,
+                double *ProfileNoiseAmpPrior,
+                double *ProfileNoiseSpecPrior,
+		int &SubIntToFit,
+		int &ChannelToFit){
 
 	//General parameters:
 	//Use GPUs 0=No, 1=Yes
 		
+	debug = 0;
 	useGPUS=0;
 	uselongdouble=0;
+
 	GPTA = 0;
-	numGPTAshapecoeff=0;
-	numGPTAstocshapecoeff=0;
+	numProfComponents = 0;
 	FixProfile = 0;	
 	FitTemplate = 0;
+	ProfileBaselineTerms = 1;
+
 	InterpolateProfile = 0;
 	InterpolatedTime = 1; //in nanoseconds
+
 	StoreTMatrix = 1; // Recompute TMatrices when computing new bats - default is just precompute and use those
 
 
+
+	SubIntToFit = -1;
+	ChannelToFit = -1;
+
 	//Root of the results files,relative to the directory in which TempoNest is run. This will be followed by the pulsar name, and then the individual output file extensions.
 	strcpy( root, "results/Example1-");
-
+	strcpy( ProfFile, "Profile.dat");
 	//numTempo2its - sets the number of iterations Tempo2 should do before setting the priors.  Should only be set to 0 if all the priors are set in setTNPriors
 	numTempo2its=1;
 
@@ -170,6 +196,9 @@ void setupparams(int &useGPUS,
 	EPolyTerms = 1; //Number of terms to include in EFAC polynomial (A*TOAerr + B*TOAERR^2 etc)
 	incEQUAD=0; //include EQUAD: 0 = no, 1 = yes
 	incNGJitter = 0; //Include NG Jitter for systems flagged in par file
+	incDMEQUAD = 0;
+
+	JitterProfComp = 0;
 
 	FitSolarWind = 0; // Basically for for ne_sw
 	FitWhiteSolarWind = 0; //Fit for a white component proportional to tdis2 with ne_sw=1
@@ -191,16 +220,36 @@ void setupparams(int &useGPUS,
 
 
 	incWideBandNoise = 0;
-
+	EvoRefFreq = 1400.0;
 	incProfileEvo = 0;
-	numEvoCoeff = 0;
+	FitEvoExponent = 0;
 	ProfileEvoPrior[0] = -1;
 	ProfileEvoPrior[1] =  1;
 
+	incProfileEnergyEvo = 0;
+	ProfileEnergyEvoPrior[0] = -1;
+	ProfileEnergyEvoPrior[1] =  1;
+
 	incProfileFit = 0;
-	numProfileFitCoeff = 0;
+	
 	ProfileFitPrior[0] = -1;
 	ProfileFitPrior[1] =  1;
+
+	FitLinearProfileWidth = 0;
+	LinearProfileWidthPrior[0] = -0.01;
+	LinearProfileWidthPrior[1] =  0.01;
+
+	incWidthJitter = 0;
+	WidthJitterPrior[0] =  -10;
+	WidthJitterPrior[1] =  -1;
+
+	incProfileNoise = 0;
+	ProfileNoiseCoeff = 10;
+	ProfileNoiseAmpPrior[0] = -10;
+	ProfileNoiseAmpPrior[1] = 0;
+	ProfileNoiseSpecPrior[0] = -7;
+	ProfileNoiseSpecPrior[1] = 7;
+
 
     //Priors
 
@@ -231,6 +280,9 @@ void setupparams(int &useGPUS,
 	
 	EQUADPrior[0]=-10;
 	EQUADPrior[1]=-5;
+
+	DMEQUADPrior[0] = -10;
+	DMEQUADPrior[1] = -1;
 
 
 	SolarWindPrior[0] = 0;
@@ -339,6 +391,8 @@ void setupparams(int &useGPUS,
 	incHighFreqStoc = 0;
 	HighFreqStocPrior[0] = -10;
 	HighFreqStocPrior[1] = 1;
+	
+	offPulseLevel = 0.001;
 
 
 
@@ -361,13 +415,12 @@ void setupparams(int &useGPUS,
 	parameters.readInto(useGPUS, "useGPUS", useGPUS);
 	parameters.readInto(uselongdouble, "uselongdouble", uselongdouble);
 	parameters.readInto(GPTA, "GPTA", GPTA);
-	parameters.readInto(numGPTAshapecoeff, "numGPTAshapecoeff", numGPTAshapecoeff);
-	parameters.readInto(numGPTAstocshapecoeff, "numGPTAstocshapecoeff", numGPTAstocshapecoeff);
 	parameters.readInto(FixProfile, "FixProfile", FixProfile);
 	parameters.readInto(FitTemplate, "FitTemplate", FitTemplate);
 	parameters.readInto(InterpolateProfile, "InterpolateProfile", InterpolateProfile);
 	parameters.readInto(InterpolatedTime, "InterpolatedTime", InterpolatedTime);
         parameters.readInto(StoreTMatrix, "StoreTMatrix",StoreTMatrix );
+
 
 
         parameters.readInto(strBuf, "root", string("results/Example1"));
@@ -503,17 +556,57 @@ void setupparams(int &useGPUS,
         parameters.readInto(HighFreqStocPrior[1], "HighFreqStocPrior[1]", HighFreqStocPrior[1]);
 
         parameters.readInto(incProfileEvo, "incProfileEvo",incProfileEvo);
-        parameters.readInto(numEvoCoeff, "numEvoCoeff",numEvoCoeff);
+        parameters.readInto(FitEvoExponent, "FitEvoExponent",FitEvoExponent);
         parameters.readInto(ProfileEvoPrior[0], "ProfileEvoPrior[0]", ProfileEvoPrior[0]);
         parameters.readInto(ProfileEvoPrior[1], "ProfileEvoPrior[1]", ProfileEvoPrior[1]);
+
+        parameters.readInto(incProfileEnergyEvo, "incProfileEnergyEvo",incProfileEnergyEvo);
+        parameters.readInto(ProfileEnergyEvoPrior[0], "ProfileEnergyEvoPrior[0]", ProfileEnergyEvoPrior[0]);
+        parameters.readInto(ProfileEnergyEvoPrior[1], "ProfileEnergyEvoPrior[1]", ProfileEnergyEvoPrior[1]);
 
 	parameters.readInto(incWideBandNoise, "incWideBandNoise",incWideBandNoise);
 
         parameters.readInto(incProfileFit, "incProfileFit",incProfileFit);
-        parameters.readInto(numProfileFitCoeff, "numProfileFitCoeff",numProfileFitCoeff);
+        parameters.readInto(EvoRefFreq, "EvoRefFreq",EvoRefFreq);
         parameters.readInto(ProfileFitPrior[0], "ProfileFitPrior[0]", ProfileFitPrior[0]);
         parameters.readInto(ProfileFitPrior[1], "ProfileFitPrior[1]", ProfileFitPrior[1]);
+
+        parameters.readInto(FitLinearProfileWidth, "FitLinearProfileWidth",FitLinearProfileWidth);
+        parameters.readInto(LinearProfileWidthPrior[0], "LinearProfileWidthPrior[0]", LinearProfileWidthPrior[0]);
+        parameters.readInto(LinearProfileWidthPrior[1], "LinearProfileWidthPrior[1]", LinearProfileWidthPrior[1]);
+
+        parameters.readInto(incDMEQUAD, "incDMEQUAD",incDMEQUAD);
+        parameters.readInto(DMEQUADPrior[0], "DMEQUADPrior[0]", DMEQUADPrior[0]);
+        parameters.readInto(DMEQUADPrior[1], "DMEQUADPrior[1]", DMEQUADPrior[1]);
+
 	
+	parameters.readInto(offPulseLevel, "offPulseLevel",offPulseLevel);
+
+        parameters.readInto(strBuf, "ProfFile", string("Prof.dat"));
+        strcpy(ProfFile, strBuf.data());
+
+	parameters.readInto(numProfComponents, "numProfComponents",numProfComponents);
+
+        parameters.readInto(incWidthJitter, "incWidthJitter", incWidthJitter);
+        parameters.readInto(WidthJitterPrior[0], "WidthJitterPrior[0]", WidthJitterPrior[0]);
+        parameters.readInto(WidthJitterPrior[1], "WidthJitterPrior[1]", WidthJitterPrior[1]);
+
+        parameters.readInto(JitterProfComp, "JitterProfComp", JitterProfComp);
+
+        parameters.readInto(debug, "debug", debug);
+
+        parameters.readInto(ProfileBaselineTerms, "ProfileBaselineTerms", ProfileBaselineTerms);
+
+
+        parameters.readInto(incProfileNoise, "incProfileNoise", incProfileNoise);
+        parameters.readInto(ProfileNoiseCoeff, "ProfileNoiseCoeff", ProfileNoiseCoeff);
+        parameters.readInto(ProfileNoiseAmpPrior[0], "ProfileNoiseAmpPrior[0]", ProfileNoiseAmpPrior[0]);
+        parameters.readInto(ProfileNoiseAmpPrior[1], "ProfileNoiseAmpPrior[1]", ProfileNoiseAmpPrior[1]);
+        parameters.readInto(ProfileNoiseSpecPrior[0], "ProfileNoiseSpecPrior[0]", ProfileNoiseSpecPrior[0]);
+        parameters.readInto(ProfileNoiseSpecPrior[1], "ProfileNoiseSpecPrior[1]", ProfileNoiseSpecPrior[1]);
+	
+	parameters.readInto(SubIntToFit, "SubIntToFit", SubIntToFit);
+	parameters.readInto(ChannelToFit, "ChannelToFit", ChannelToFit);
 	
     } catch(ConfigFile::file_not_found oError) {
         printf("WARNING: parameters file '%s' not found. Using defaults.\n", oError.filename.c_str());
@@ -789,6 +882,125 @@ void GetGroupsToFit(int incGroupNoise, int **FitForGroup, int incBandNoise, int 
 
 
 
+void GetProfileFitInfo(int numProfComponents, int *numGPTAshapecoeff, int *numProfileFitCoeff, int *numEvoCoeff, int *numFitEvoCoeff, int *numGPTAstocshapecoeff){
+
+//This function reads in the groups that will be fit as Group Noise terms
+
+
+
+	for(int i =0;i<numProfComponents; i++){	
+
+
+		// Use a configfile, if we can, to overwrite the defaults set in this file.
+		try {
+			string strBuf;
+			strBuf = string("defaultparameters.conf");
+			ConfigFile parameters(strBuf);
+
+			char buffer [50];
+			int n;
+			n=sprintf (buffer, "numGPTAshapecoeff[%i]", i);
+			parameters.readInto(numGPTAshapecoeff[i], buffer, numGPTAshapecoeff[i]);
+
+
+		} 
+		catch(ConfigFile::file_not_found oError) {
+			printf("WARNING: parameters file '%s' not found. Using defaults.\n", oError.filename.c_str());
+	    } // try
+
+	}
+
+
+	for(int i =0;i<numProfComponents; i++){	
+
+
+		// Use a configfile, if we can, to overwrite the defaults set in this file.
+		try {
+			string strBuf;
+			strBuf = string("defaultparameters.conf");
+			ConfigFile parameters(strBuf);
+
+			char buffer [50];
+			int n;
+			n=sprintf (buffer, "numProfileFitCoeff[%i]", i);
+			parameters.readInto(numProfileFitCoeff[i], buffer, numProfileFitCoeff[i]);
+
+
+		} 
+		catch(ConfigFile::file_not_found oError) {
+			printf("WARNING: parameters file '%s' not found. Using defaults.\n", oError.filename.c_str());
+	    } // try
+
+	}
+
+
+	for(int i =0;i<numProfComponents; i++){	
+
+
+		// Use a configfile, if we can, to overwrite the defaults set in this file.
+		try {
+			string strBuf;
+			strBuf = string("defaultparameters.conf");
+			ConfigFile parameters(strBuf);
+
+			char buffer [50];
+			int n;
+			n=sprintf (buffer, "numEvoCoeff[%i]", i);
+			parameters.readInto(numEvoCoeff[i], buffer, numEvoCoeff[i]);
+
+
+		} 
+		catch(ConfigFile::file_not_found oError) {
+			printf("WARNING: parameters file '%s' not found. Using defaults.\n", oError.filename.c_str());
+	    } // try
+
+	}
+
+	for(int i =0;i<numProfComponents; i++){	
+
+
+		// Use a configfile, if we can, to overwrite the defaults set in this file.
+		try {
+			string strBuf;
+			strBuf = string("defaultparameters.conf");
+			ConfigFile parameters(strBuf);
+
+			char buffer [50];
+			int n;
+			n=sprintf (buffer, "numFitEvoCoeff[%i]", i);
+			parameters.readInto(numFitEvoCoeff[i], buffer, numFitEvoCoeff[i]);
+
+
+		} 
+		catch(ConfigFile::file_not_found oError) {
+			printf("WARNING: parameters file '%s' not found. Using defaults.\n", oError.filename.c_str());
+	    } // try
+
+	}
+
+	for(int i =0;i<numProfComponents; i++){	
+
+
+		// Use a configfile, if we can, to overwrite the defaults set in this file.
+		try {
+			string strBuf;
+			strBuf = string("defaultparameters.conf");
+			ConfigFile parameters(strBuf);
+
+			char buffer [50];
+			int n;
+			n=sprintf (buffer, "numGPTAstocshapecoeff[%i]", i);
+			parameters.readInto(numGPTAstocshapecoeff[i], buffer, numGPTAstocshapecoeff[i]);
+
+
+		} 
+		catch(ConfigFile::file_not_found oError) {
+			printf("WARNING: parameters file '%s' not found. Using defaults.\n", oError.filename.c_str());
+	    } // try
+
+	}
+
+}
 
 void setShapePriors(double **ShapePriors, double *BetaPrior, int numcoeff){
 

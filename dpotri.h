@@ -5,6 +5,7 @@
 
 void dpotri(double **A, int msize);
 
+void vector_dpotri(double *A, int msize);
 double *dpotri_ctof(double **in, int rows, int cols);
 void dpotri_ftoc(double *in, double **out, int rows, int cols);
 

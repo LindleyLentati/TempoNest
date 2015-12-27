@@ -32,11 +32,11 @@ void vector_dgesvd(double *A, int M, int N)
 		 N: no columns of U (no left singular vectors) are
 		    computed. */
 	lwork = -1;
-	dgesdd( "O", &m, &n, A, &ldu, s, u, &ldu, vt, &ldvt, &wkopt, &lwork, iwork, &info );
+	dgesdd_( "O", &m, &n, A, &ldu, s, u, &ldu, vt, &ldvt, &wkopt, &lwork, iwork, &info );
 	lwork = (int)wkopt;
 	work = (double*)malloc( lwork*sizeof(double) );
 	/* Compute SVD */
-	dgesdd( "O", &m, &n, A, &ldu, s, u, &ldu, vt, &ldvt, work,  &lwork, iwork, &info );
+	dgesdd_( "O", &m, &n, A, &ldu, s, u, &ldu, vt, &ldvt, work,  &lwork, iwork, &info );
 
 
 	delete vt;
@@ -68,11 +68,11 @@ void dgesvd(double **A, int M, int N, double *S, double **U, double **VT)
 
   
 	lwork = -1;
-	dgesdd( "O", &m, &n, a, &lda, s, u, &ldu, vt, &ldvt, &wkopt, &lwork, iwork, &info );
+	dgesdd_( "O", &m, &n, a, &lda, s, u, &ldu, vt, &ldvt, &wkopt, &lwork, iwork, &info );
 	lwork = (int)wkopt;
 	work = (double*)malloc( lwork*sizeof(double) );
 	/* Compute SVD */
-	dgesdd( "O", &m, &n, a, &lda, s, u, &ldu, vt, &ldvt, work,  &lwork, iwork, &info );
+	dgesdd_( "O", &m, &n, a, &lda, s, u, &ldu, vt, &ldvt, work,  &lwork, iwork, &info );
 
 
 	dgesvd_ftoc(u, U, ldu, ldu);

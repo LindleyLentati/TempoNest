@@ -34,6 +34,9 @@ int main(int argc,char *argv[]){
 	int providedTim=0;
 	int providedObs=0;
 
+	int providedisub = 0;
+	int isub = 0;
+
   	// Check inputs
 	for (int i=0;i<argc;i++){
 		if (strcmp(argv[i],"-f")==0){
@@ -49,6 +52,11 @@ int main(int argc,char *argv[]){
 			ObsCode=argv[i+1];
 			printf("Using Obs Code: %s \n", ObsCode);
 			providedObs = 1;
+		}
+		else if (strcmp(argv[i],"-isub")==0){
+			isub = atoi(argv[i+1]);
+			printf("Using SubInt: %i \n", isub);
+			providedisub = 1;
 		}
 		else if (strcmp(argv[i],"-h")==0){
 			printf("This program reads in a list of PSRChive files, and writes out a tim file that TempoNest can then use to do ToA estimation.\n");
@@ -135,7 +143,15 @@ int main(int argc,char *argv[]){
 		}
 
 		float *pvalues;
-		for(int i=0; i < nsub; i++){
+
+		int startisub = 0;
+		int stopisub = nsub;
+
+		if(providedisub == 1){
+			startisub = isub;
+			stopisub=isub+1;
+		}
+		for(int i=startisub; i < stopisub; i++){
 			Integration *subint = archive->get_Integration(i);
 
 			nbins = subint->get_nbin();

@@ -28,6 +28,7 @@
 
 #include <vector>
 
+
 typedef struct {
 	pulsar *pulse;
 	double Tspan;
@@ -52,6 +53,7 @@ typedef struct {
 	int numFitEFAC;
 	int EPolTerms;
 	int numFitEQUAD;
+	int incDMEQUAD;
 	int *includeEQsys;
 	int numFitRedCoeff;
 	int numFitDMCoeff;
@@ -111,6 +113,7 @@ typedef struct {
 	int numFitGroupNoiseCoeff;
 	int **FitForGroup;
 	int numGroupstoFit;
+	double **GroupStartTimes;
 	int incBandNoise;
 	int numFitBandNoiseCoeff;
 	int **FitForBand;
@@ -120,35 +123,65 @@ typedef struct {
 	int FitWhiteSolarWind;
 	int storeFMatrices;
 	double *StoredTMatrix;
+	double *StoredDMVals;
 	/*GPTA stuff*/
 
 	int incWideBandNoise;
-	int numshapecoeff;
-	int numshapestoccoeff;
+	int *numshapecoeff;
+	int totshapecoeff;
+	int *numshapestoccoeff;
+	int totalshapestoccoeff;
 	int TOAnumber;
 	int FixProfile;
 	int InterpolateProfile;
 	int NumToInterpolate;
 	double InterpolatedTime;
-	double ***InterpolatedShapelets;
+	//double ***InterpolatedShapelets;
 	double **InterpolatedShapeletsVec;
+	double **InterpolatedJitterProfileVec;
 	double **InterpolatedMeanProfile;
 	double **InterpolatedJitterProfile;
+	double **InterpolatedWidthProfile;
 	int *numChanPerInt;
 	int numProfileEpochs;
 	double *MeanProfileShape;
+	double *MeanProfileEvo;
 	double MeanProfileBeta;
 	long double **ProfileInfo;
 	long double ***ProfileData;
 	long double ReferencePeriod;
 	double *Factorials;
 	double *Binomial;
-	double MaxShapeAmp;
+	double MaxShapeAmp;	
+	double offPulseLevel;
 	int incHighFreqStoc;
 	int incProfileEvo;
-	int numEvoCoeff;
+	int FitEvoExponent;
+	double EvoRefFreq;
+	int *numEvoCoeff;
+	int totalEvoCoeff;
+	int *numEvoFitCoeff;
+	int totalEvoFitCoeff;
 	int incProfileFit;
-	int numProfileFitCoeff;
+	int *numProfileFitCoeff;
+	int totalProfileFitCoeff;
+	int FitLinearProfileWidth;
+	int numProfComponents;
+	int incWidthJitter;
+	int JitterProfComp;
+	int incProfileEnergyEvo;
+	int ProfileBaselineTerms;
+	int incProfileNoise;
+	int ProfileNoiseCoeff;
+	int SubIntToFit;
+	int ChannelToFit;
+	double **MLProfileNoise;
+	/*Template Stuff*/
+
+	int numTempFreqs;
+	double *TemplateFreqs;
+	double *TemplateChans;
+
 	/*Grade Stuff: Need to track Grades and store previous likelihood things for hierarchial evaluation*/
 
 	int sampler;
@@ -164,6 +197,8 @@ typedef struct {
 	double **PreviousNT;
 	double *PreviousNoise;
 	int *hypercube_indices;
+
+	int debug;
 
 } MNStruct;
 
@@ -193,12 +228,19 @@ double AllTOAMarginStocProfLike(int &ndim, double *Cube, int &npars, double *Der
 double TemplateProfLike(int &ndim, double *Cube, int &npars, double *DerivedParams, void *context);
 void  WriteMaxTemplateProf(std::string longname, int &ndim);
 void  WriteSubIntStocProfLike(std::string longname, int &ndim);
-void PreComputeShapelets(double ***StoredShapelet, double **InterpolatedMeanProfile, double **InterpolatedJitterProfile, long double finalInterpTime, int numtointerpolate, double MeanBeta, double &MaxShapeAmp);
+void PreComputeShapelets(double **StoredShapelet, double **StoredJitter, double **InterpolatedMeanProfile, double **InterpolatedJitterProfile, double **InterpolatedWidthProfile, long double finalInterpTime, int numtointerpolate, double MeanBeta, double &MaxShapeAmp);
+void Tscrunch(void *globalcontext);
+void getNumTempFreqs(int &NumFreqs, void *context);
 
 double ProfileDomainLike(int &ndim, double *Cube, int &npars, double *DerivedParams, void *context);
 void ProfileDomainLikeMNWrap(double *Cube, int &ndim, int &npars, double &lnew, void *context);
 void  WriteProfileDomainLike(std::string longname, int &ndim);
 
+
+double  Template2DProfLike(int &ndim, double *Cube, int &npars, double *DerivedParams, void *context);
+void Template2DProfLikeMNWrap(double *Cube, int &ndim, int &npars, double &lnew, void *context);
+void WriteTemplate2DProfLike(std::string longname, int &ndim);
+void  WriteDMSignal(std::string longname, int &ndim);
 void TemplateProfLikeMNWrap(double *Cube, int &ndim, int &npars, double &lnew, void *context);
 double SubIntStocProfLike(int &ndim, double *Cube, int &npars, double *DerivedParams, void *context);
 void SubIntStocProfLikeMNWrap(double *Cube, int &ndim, int &npars, double &lnew, void *context);
@@ -238,6 +280,7 @@ void getNGJitterMatrix(pulsar *pulse, double **JitterMatrix, int &NumEpochs);
 void getNGJitterMatrixEpochs(pulsar *pulse, int &NumEpochs);
 void StoreTMatrix(double *TMatrix, void *context);
 void getArraySizeInfo(void *context);
+
 
 void readsummary(pulsar *psr, std::string longname, int ndim, void *context, long double *Tempo2Fit, int incRED, int ndims, int MarginTime, int MarginJumps, int doLinear);
 
@@ -323,8 +366,6 @@ void setupparams(int &useGPUS,
 		double *SolarWindPrior,
 		double *WhiteSolarWindPrior,
 		int &GPTA,
-		int &numGPTAshapecoeff,
-		int &numGPTAstocshapecoeff,
 		char *GroupNoiseFlag,
 		int &FixProfile,
 		int &FitTemplate,
@@ -334,14 +375,35 @@ void setupparams(int &useGPUS,
 		int &incHighFreqStoc,
 		double *HighFreqStocPrior,
 		int &incProfileEvo,
-		int &numEvoCoeff,
+		double &EvoRefFreq, 
 		double *ProfileEvoPrior,
+		int &FitEvoExponent,
 		int &incWideBandNoise,
 		int &incProfileFit,
-		int &numProfileFitCoeff,
-		double *ProfileFitPrior);
+		double *ProfileFitPrior,
+		int &FitLinearProfileWidth,
+		double *LinearProfileWidthPrior,
+		int &incDMEQUAD,
+		double *DMEQUADPrior,
+		double &offPulseLevel,
+		char *ProfFile,
+		int &numProfComponents,
+		int &incWidthJitter,
+		double *WidthJitterPrior,
+		int &JitterProfCompint,
+		int &incProfileEnergyEvo,
+		double *ProfileEnergyEvoPrior,
+		int &debug,
+		int &ProfileBaselineTerms,
+		int &incProfileNoise,
+		int &ProfileNoiseCoeff,
+		double *ProfileNoiseAmpPrior,
+		double *ProfileNoiseSpecPrior,
+		int &SubIntToFit,
+		int &ChannelToFit);
 
 void setTNPriors(double **Dpriors, long double **TempoPriors, int TPsize, int DPsize);
 void setFrequencies(double *SampleFreq, int numRedfreqs, int numDMfreqs, int numRedLogFreqs, int numDMLogFreqs, double RedLowFreq, double DMLowFreq, double RedMidFreq, double DMMidFreq);
 void GetGroupsToFit(int incGroupNoise, int **FitForGroup, int incBandNoise, int **FitForBand);
 void setShapePriors(double **ShapePriors, double *BetaPrior, int numcoeff);
+void GetProfileFitInfo(int numProfComponents, int *numGPTAshapecoeff, int *numProfileFitCoeff, int *numEvoCoeff, int *numFitEvoCoeff, 	int *numGPTAstocshapecoeff);

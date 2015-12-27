@@ -838,6 +838,11 @@ double NewLRedMarginGPULogLike(int &ndim, double *Cube, int &npars, double *Deri
 		delete[] ECorrCoeffs;
 	} 
 
+	double DMEQUAD = 0;
+	if(((MNStruct *)GPUglobalcontext)->incDMEQUAD > 0){
+		DMEQUAD = pow(10.0, Cube[pcount]);
+		pcount++;
+	}
 
 
 
@@ -846,7 +851,7 @@ double NewLRedMarginGPULogLike(int &ndim, double *Cube, int &npars, double *Deri
 /////////////////////////Set Noise Vector////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////// 
 
-
+	double DMKappa = 2.410*pow(10.0,-16);
 	double *Noise;	
 	double *BATvec;
 	Noise=new double[((MNStruct *)GPUglobalcontext)->pulse->nobs];
@@ -864,7 +869,7 @@ double NewLRedMarginGPULogLike(int &ndim, double *Cube, int &npars, double *Deri
 			double EFACterm=0;
 			double noiseval=0;
 			double ShannonJitterTerm=0;
-			
+			double DMEQUADTerm = DMEQUAD/(DMKappa*pow((double)((MNStruct *)GPUglobalcontext)->pulse->obsn[o].freqSSB,2));	
 			
 			if(((MNStruct *)GPUglobalcontext)->useOriginalErrors==0){
 				noiseval=((MNStruct *)GPUglobalcontext)->pulse->obsn[o].toaErr;
@@ -882,7 +887,7 @@ double NewLRedMarginGPULogLike(int &ndim, double *Cube, int &npars, double *Deri
 			 	ShannonJitterTerm=SQUAD[((MNStruct *)GPUglobalcontext)->sysFlags[o]]*((MNStruct *)GPUglobalcontext)->TobsInfo[o]/1000.0;
 			}
 
-			Noise[o]= 1.0/(pow(EFACterm,2) + EQUAD[((MNStruct *)GPUglobalcontext)->sysFlags[o]]+ShannonJitterTerm);
+			Noise[o]= 1.0/(pow(EFACterm,2) + EQUAD[((MNStruct *)GPUglobalcontext)->sysFlags[o]]+ShannonJitterTerm + DMEQUADTerm*DMEQUADTerm);
 
 		}
 		
@@ -955,7 +960,6 @@ double NewLRedMarginGPULogLike(int &ndim, double *Cube, int &npars, double *Deri
 	double *DMVec=new double[((MNStruct *)GPUglobalcontext)->pulse->nobs];
 	double *ObsFreqs = new double[((MNStruct *)GPUglobalcontext)->pulse->nobs];
 	int *GroupNoiseGroups = new int[((MNStruct *)GPUglobalcontext)->pulse->nobs];
-	double DMKappa = 2.410*pow(10.0,-16);
 	int startpos=0;
 	double freqdet=0;
 	double GWBAmpPrior=0;

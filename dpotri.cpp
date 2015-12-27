@@ -25,6 +25,25 @@ void dpotri(double **A, int msize)
 
 }
 
+void vector_dpotri(double *A, int msize)
+{
+
+	int info;
+	char UPLO='L';
+
+	
+	dpotri_(&UPLO, &msize, A, &msize, &info);
+
+	for(int i=0;i<msize;i++){
+		for(int j=0;j<i;j++){
+			A[j + msize*i]=A[i + msize*j];
+		}
+	}
+
+  
+
+}
+
 
 double* dpotri_ctof(double **in, int rows, int cols)
 {

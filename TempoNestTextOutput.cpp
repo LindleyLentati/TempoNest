@@ -348,16 +348,17 @@ void TNtextOutput(pulsar *psr, int npsr, int newpar, long double *Tempo2Fit, voi
 	}
       }
 
-	if(((MNStruct *)context)->incStep > 0){
+/*	if(((MNStruct *)context)->incStep > 0){
 		printf("%i Step Functions used:\n",((MNStruct *)context)->incStep);
 		for(int i =0; i < ((MNStruct *)context)->incStep; i++){
-
-			printf("Step Amp %i: %g +/- %g\n", i+1, paramlist[fitcount],paramlist[fitcount+ndim]);
 			fitcount++;
 			printf("Step Time %i: %g +/- %g\n", i+1, paramlist[fitcount],paramlist[fitcount+ndim]);
 			fitcount++;
+			printf("Step Amp %i: %g +/- %g\n", i+1, paramlist[fitcount],paramlist[fitcount+ndim]);
+			fitcount++;
+
 		}	
-	}
+	}*/
                 std::vector<int>systempos;
                 std::vector<int>sysflag;
                 std::vector<std::string>systemnames;
@@ -436,6 +437,10 @@ void TNtextOutput(pulsar *psr, int npsr, int newpar, long double *Tempo2Fit, voi
                                 system++;
                         }
                 }
+
+ 		if(((MNStruct *)context)->incDMEQUAD > 0){
+			fitcount++;
+		  }
 
 		if(((MNStruct *)context)->FitLowFreqCutoff > 0){
 		        printf("Red Noise Model Low Frequency Cutoff: %g +/- %g \n",paramarray[fitcount][0], paramarray[fitcount][1]);
@@ -1268,7 +1273,25 @@ void TNtextOutput(pulsar *psr, int npsr, int newpar, long double *Tempo2Fit, voi
 	      else if (strcasecmp(str1,"NAME")==0 || strcasecmp(str1,"TEL")==0 || str1[0]=='-')
 		fprintf(fout2,"JUMP %s %s %.14g %d\n",str1,str2,psr[p].jumpVal[i],psr[p].fitJump[i]);
 	    }	
-//	printf("end of T2 parms %i \n", whitefitcount);	
+	printf("end of T2 parms %i \n", whitefitcount);	
+
+	if(((MNStruct *)context)->incStep > 0){
+		for(int i =0; i < ((MNStruct *)context)->incStep; i++){
+			int system = floor(paramarray[whitefitcount][2]);
+			whitefitcount++;
+			double STime = paramarray[whitefitcount][2];
+			whitefitcount++;
+			double Samp = paramarray[whitefitcount][2];
+			whitefitcount++;
+
+			double GLength = ((MNStruct *)context)->GroupStartTimes[system][1] - ((MNStruct *)context)->GroupStartTimes[system][0];
+                        STime = ((MNStruct *)context)->GroupStartTimes[system][0] + STime*GLength;
+
+			fprintf(fout2,"JUMP  %s %s %g %i\n", ((MNStruct *)context)->whiteflag, ((MNStruct *)context)->pulse[0].obsn[systempos[system]].flagVal[sysflag[system]], STime, Samp); 
+
+		}	
+	}
+
 
   	    //Add glitches to par file
   	    if(((MNStruct *)context)->incGlitch > 0){
@@ -1356,7 +1379,11 @@ void TNtextOutput(pulsar *psr, int npsr, int newpar, long double *Tempo2Fit, voi
 
             }
 
-//	printf("end of White parms\n");
+	  if(((MNStruct *)context)->incDMEQUAD > 0){
+		whitefitcount++;
+	  }
+
+	printf("end of White parms %i\n", whitefitcount);
 	if(((MNStruct *)context)->FitLowFreqCutoff > 0){
 		fprintf(fout2, "TNRedFLow %g\n", paramarray[whitefitcount][2]);
 		fprintf(fout2, "TNRedFMid %g\n", 2.0);

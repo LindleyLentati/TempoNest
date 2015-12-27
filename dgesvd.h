@@ -7,7 +7,7 @@ void vector_dgesvd(double *A, int M, int N);
 void dgesvd_2Dto1D(double **in, double *out, int rows, int cols);
 void dgesvd_1Dto2D(double *in, double **out, int rows, int cols);
 
-extern "C" void dgesdd(char *JOBZ, int *M, int *N, double *A, int *LDA, double *S, double *U, int *LDU, double *VT, int *LDVT, double *WORK, int *LWORK, int *IWORK, int *INFO);
+extern "C" void dgesdd_(char *JOBZ, int *M, int *N, double *A, int *LDA, double *S, double *U, int *LDU, double *VT, int *LDVT, double *WORK, int *LWORK, int *IWORK, int *INFO);
 //
 double* dgesvd_ctof(double **in, int rows, int cols);
 void dgesvd_ftoc(double *in, double **out, int rows, int cols);

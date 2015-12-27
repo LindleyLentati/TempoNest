@@ -48,6 +48,26 @@
 #include <iomanip>
 #include <gsl/gsl_sf_gamma.h>
 
+#ifdef HAVE_PSRCHIVE
+// psrchive stuff
+#include "Pulsar/Archive.h"
+#include "Pulsar/Integration.h"
+#include "Pulsar/Profile.h"
+#include "Pulsar/FaradayRotation.h"
+#include "Pulsar/PolnProfileStats.h"
+#include "T2Observatory.h"
+using namespace Pulsar;
+#endif
+
+int UtWrap(int kX, int const kLowerBound, int const kUpperBound)
+{
+    int range_size = kUpperBound - kLowerBound + 1;
+
+    if (kX < kLowerBound)
+        kX += range_size * ((kLowerBound - kX) / range_size + 1);
+
+    return kLowerBound + (kX - kLowerBound) % range_size;
+}
 
 double iter_factorial(unsigned int n)
 {
@@ -125,7 +145,7 @@ void readtxtoutput(std::string longname, int ndim, double **paramarray){
 
 	summaryfile.open(fname.c_str());
 
-//	printf("Getting Errors \n");
+	printf("Getting Errors \n");
 
         for(int i=0;i<number_of_lines;i++){
 
@@ -1388,7 +1408,7 @@ void StoreTMatrix(double *TotalMatrix, void *context){
 
 		for(int k=0;k<((MNStruct *)context)->pulse->nobs;k++){
 			for(int i=0; i < ((MNStruct *)context)->numNGJitterEpochs; i++){
-				TotalMatrix[k + (i+TimetoMargin+startpos)*((MNStruct *)context)->pulse->nobs] = NGJitterMatrix[k][i];
+				TotalMatrix[k + (i+TimetoMargin+startpos)*((MNStruct *)context)->pulse->nobs] = NGJitterMatrix[k][i];///sqrt((((MNStruct *)context)->TobsInfo[k]/3600.0));
 			}
 		}
 
@@ -1495,3 +1515,303 @@ void getArraySizeInfo(void *context){
 //	printf("TimetoMargin %i, totCoeff %i, totalredshapecoeff %i, totalsize %i \n", TimetoMargin, totCoeff, totalredshapecoeff, totalsize);
 
 }
+
+void getNumTempFreqs(int &NumFreqs, void *globalcontext){
+
+
+	int chanwidth  = 30;
+	double minfreq=pow(10.0, 100);
+
+	for(int p=0;p< ((MNStruct *)globalcontext)->pulse->nobs; p++){
+		double freq = floor(((MNStruct *)globalcontext)->pulse->obsn[p].freq);
+		if(freq < minfreq){minfreq=freq;}
+	}
+
+	if(NumFreqs == 0){
+
+		printf("getting freqs \n");
+		std::vector <double> freqs;
+		for(int p=0;p< ((MNStruct *)globalcontext)->pulse->nobs; p++){
+			double freq = floor(((MNStruct *)globalcontext)->pulse->obsn[p].freq);
+			freq = floor((freq-minfreq)/chanwidth)*chanwidth + minfreq;
+			printf("freq: %i %g %g \n", p, freq, ((MNStruct *)globalcontext)->pulse->obsn[p].freq);
+			if(std::find(freqs.begin(),freqs.end(), freq) != freqs.end()) {
+	
+			}
+			else{
+				freqs.push_back(freq);
+			}
+		}
+
+		NumFreqs = int(freqs.size());
+		printf("have %i unique frequencies \n", NumFreqs);
+	}
+	else{
+		std::vector <double> freqs;
+		for(int p=0;p< ((MNStruct *)globalcontext)->pulse->nobs; p++){
+			double freq = floor(((MNStruct *)globalcontext)->pulse->obsn[p].freq);
+			freq = floor((freq-minfreq)/chanwidth)*chanwidth + minfreq;
+			printf("freq: %i %g %g \n", p, freq, ((MNStruct *)globalcontext)->pulse->obsn[p].freq);
+			if(std::find(freqs.begin(),freqs.end(), freq) != freqs.end()) {
+	
+			}
+			else{
+				((MNStruct *)globalcontext)->TemplateFreqs[int(freqs.size())] = freq;
+				freqs.push_back(freq);
+				
+			}
+		}
+
+		NumFreqs = int(freqs.size());
+		printf("have set %i unique frequencies \n", NumFreqs);
+
+	}
+
+}
+
+
+void Tscrunch(void *globalcontext){
+
+
+	int chanwidth  = 30;
+	double minfreq=pow(10.0, 100);
+
+	for(int p=0;p< ((MNStruct *)globalcontext)->pulse->nobs; p++){
+		double freq = floor(((MNStruct *)globalcontext)->pulse->obsn[p].freq);
+		if(freq < minfreq){minfreq=freq;}
+	}
+
+
+        long double LDparams[((MNStruct *)globalcontext)->numFitTiming + ((MNStruct *)globalcontext)->numFitJumps];
+	int pcount = 0;
+	int fitcount=0;
+
+	int debug = 0;
+
+	int numfreqs = ((MNStruct *)globalcontext)->numTempFreqs;
+	double *freqs = ((MNStruct *)globalcontext)->TemplateFreqs;
+	double *fweights = new double[numfreqs]();
+
+/////////////////////////////////////////////////////////////////////////////////////////////  
+/////////////////////////Timing Model////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////
+
+
+	long double phase = 0.0*((MNStruct *)globalcontext)->ReferencePeriod/SECDAY;
+
+
+	for(int p=0;p< ((MNStruct *)globalcontext)->pulse->nobs; p++){
+		((MNStruct *)globalcontext)->pulse->obsn[p].sat = ((MNStruct *)globalcontext)->pulse->obsn[p].origsat-phase;
+	}
+
+
+
+	fastformBatsAll(((MNStruct *)globalcontext)->pulse,((MNStruct *)globalcontext)->numberpulsars);       /* Form Barycentric arrival times */
+	formResiduals(((MNStruct *)globalcontext)->pulse,((MNStruct *)globalcontext)->numberpulsars,0);       /* Form residuals */
+	
+
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////  
+/////////////////////////Profile Params//////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////
+
+	 long double **ProfileBats=new long double*[((MNStruct *)globalcontext)->pulse->nobs];
+	 long double *ModelBats = new long double[((MNStruct *)globalcontext)->pulse->nobs];
+	 for(int i = 0; i < ((MNStruct *)globalcontext)->pulse->nobs; i++){
+
+	      int Nbin  = (int)((MNStruct *)globalcontext)->ProfileInfo[i][1];
+	      ProfileBats[i] = new long double[Nbin];
+	      for(int j = 0; j < Nbin; j++){
+		    ProfileBats[i][j] = ((MNStruct *)globalcontext)->ProfileData[i][j][0] + ((MNStruct *)globalcontext)->pulse->obsn[i].batCorr;
+		
+	      }
+	      
+	      
+	      ModelBats[i] = ((MNStruct *)globalcontext)->ProfileInfo[i][5]+((MNStruct *)globalcontext)->pulse->obsn[i].batCorr - phase - ((MNStruct *)globalcontext)->pulse->obsn[i].residual/SECDAY ;
+
+	 }
+
+	int GlobalNBins = (int)((MNStruct *)globalcontext)->ProfileInfo[0][1];
+	double *TScrunched = new double[numfreqs*GlobalNBins]();
+
+	int t = 0;
+	int nTOA = 0;
+
+	double WeightSum = 0.0;
+	
+	for(int ep = 0; ep < ((MNStruct *)globalcontext)->numProfileEpochs; ep++){
+	
+		int NChanInEpoch = ((MNStruct *)globalcontext)->numChanPerInt[ep];
+
+		for(int ch = 0; ch < NChanInEpoch; ch++){
+
+
+			nTOA = t;
+
+			long double FoldingPeriod = ((MNStruct *)globalcontext)->ProfileInfo[nTOA][0];
+			long double FoldingPeriodDays = FoldingPeriod/SECDAY;
+			int Nbins = (int)((MNStruct *)globalcontext)->ProfileInfo[nTOA][1];
+			double Tobs = (double)((MNStruct *)globalcontext)->ProfileInfo[nTOA][2];
+			double noiseval = (double)((MNStruct *)globalcontext)->ProfileInfo[nTOA][3];
+			long double ReferencePeriod = ((MNStruct *)globalcontext)->ReferencePeriod;
+
+			double *Betatimes = new double[Nbins];
+	
+
+		
+
+			double noisemean=0;
+			double MLSigma = 0;
+
+
+
+			long double binpos = ModelBats[nTOA];
+
+			if(binpos < ProfileBats[nTOA][0])binpos+=FoldingPeriodDays;
+
+			long double minpos = binpos - FoldingPeriodDays/2;
+			if(minpos < ProfileBats[nTOA][0])minpos=ProfileBats[nTOA][0];
+			long double maxpos = binpos + FoldingPeriodDays/2;
+			if(maxpos> ProfileBats[nTOA][Nbins-1])maxpos =ProfileBats[nTOA][Nbins-1];
+
+
+
+			int InterpBin = 0;
+			double FirstInterpTimeBin = 0;
+			int  NumWholeBinInterpOffset = 0;
+
+			if(((MNStruct *)globalcontext)->InterpolateProfile == 1){
+
+		
+				long double timediff = 0;
+				long double bintime = ProfileBats[t][0];
+
+
+				if(bintime  >= minpos && bintime <= maxpos){
+				    timediff = bintime - binpos;
+				}
+				else if(bintime < minpos){
+				    timediff = FoldingPeriodDays+bintime - binpos;
+				}
+				else if(bintime > maxpos){
+				    timediff = bintime - FoldingPeriodDays - binpos;
+				}
+
+				timediff=timediff*SECDAY;
+
+				double OneBin = FoldingPeriod/Nbins;
+				int NumBinsInTimeDiff = floor(timediff/OneBin + 0.5);
+				double WholeBinsInTimeDiff = NumBinsInTimeDiff*FoldingPeriod/Nbins;
+				double OneBinTimeDiff = -1*((double)timediff - WholeBinsInTimeDiff);
+
+				double PWrappedTimeDiff = (OneBinTimeDiff - floor(OneBinTimeDiff/OneBin)*OneBin);
+
+				if(debug == 1)printf("Making InterpBin: %g %g %i %g %g %g\n", (double)timediff, OneBin, NumBinsInTimeDiff, WholeBinsInTimeDiff, OneBinTimeDiff, PWrappedTimeDiff);
+
+				InterpBin = floor(PWrappedTimeDiff/((MNStruct *)globalcontext)->InterpolatedTime+0.5);
+				if(InterpBin >= ((MNStruct *)globalcontext)->NumToInterpolate)InterpBin -= ((MNStruct *)globalcontext)->NumToInterpolate;
+
+				FirstInterpTimeBin = -1*(InterpBin-1)*((MNStruct *)globalcontext)->InterpolatedTime;
+
+				if(debug == 1)printf("Interp Time Diffs: %g %g %g %g \n", ((MNStruct *)globalcontext)->InterpolatedTime, InterpBin*((MNStruct *)globalcontext)->InterpolatedTime, PWrappedTimeDiff, InterpBin*((MNStruct *)globalcontext)->InterpolatedTime-PWrappedTimeDiff);
+
+				double FirstBinOffset = timediff-FirstInterpTimeBin;
+				double dNumWholeBinOffset = FirstBinOffset/(FoldingPeriod/Nbins);
+				int  NumWholeBinOffset = 0;
+
+				NumWholeBinInterpOffset = floor(dNumWholeBinOffset+0.5);
+
+	
+				if(debug == 1)printf("Interp bin is: %i , First Bin is %g, Offset is %i \n", InterpBin, FirstInterpTimeBin, NumWholeBinInterpOffset);
+
+
+			}
+		   
+
+
+
+
+
+			///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+			//////////////////////////////////////////////////////Get Noise Level//////////////////////////////////////////////////////////////////////////
+			///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+			noisemean=0;
+			int numoffpulse = 0;
+			MLSigma = 0;
+			int MLSigmaCount = 0;
+
+			double MinSigma = pow(10.0, 100);
+			for(int b = 0; b < Nbins-100; b+=100){
+				for(int j =b; j < b+100; j++){
+
+						noisemean += (double)((MNStruct *)globalcontext)->ProfileData[nTOA][j][1];
+						numoffpulse += 1;
+				}
+
+				noisemean = noisemean/(numoffpulse);
+
+				for(int j =b; j < b+100; j++){
+
+					double res = (double)((MNStruct *)globalcontext)->ProfileData[nTOA][j][1] - noisemean;
+					MLSigma += res*res; MLSigmaCount += 1;
+				}
+
+				MLSigma = sqrt(MLSigma/MLSigmaCount);
+
+				if(MLSigma < MinSigma)MinSigma = MLSigma;
+			}
+
+
+			if(debug == 1)printf("noise mean %g num off pulse %i\n", noisemean, numoffpulse);
+
+
+			double cfreq = floor(((MNStruct *)globalcontext)->pulse->obsn[t].freq);
+			cfreq = floor((cfreq-minfreq)/chanwidth)*chanwidth + minfreq;
+			int freqpos = 0;
+
+			for(int f = 0; f < numfreqs; f++){
+				if(fabs(cfreq -freqs[f]) < 0.01){freqpos=f;}
+			}
+			//printf("have freq %i %i %g %g \n", t, freqpos, cfreq, freqs[freqpos]);
+	
+			//printf("epoch chan sig %i %i %g \n", ep, ch, MinSigma);				
+			for(int i =0; i < Nbins; i++){
+				int Nj =  UtWrap(i+Nbins/2 + NumWholeBinInterpOffset, 0, Nbins-1);
+
+				TScrunched[freqpos*GlobalNBins + Nj] += (double)((MNStruct *)globalcontext)->ProfileData[nTOA][i][1]*(1.0/(MinSigma*MinSigma));
+
+			}
+
+			fweights[freqpos] += (1.0/(MinSigma*MinSigma));
+			t++;
+		
+		}		
+
+	}
+
+	for(int f = 0; f < numfreqs; f++){
+		 for(int i =0; i < GlobalNBins; i++){
+
+                        TScrunched[f*GlobalNBins + i] /= fweights[f];
+                }
+
+		double minval=pow(10.0, 100);
+		for(int i =0; i < GlobalNBins; i++){
+			if(TScrunched[f*GlobalNBins + i] < minval){minval=TScrunched[f*GlobalNBins + i];}
+		}
+		for(int i =0; i < GlobalNBins; i++){
+			((MNStruct *)globalcontext)->TemplateChans[f*GlobalNBins + i] = TScrunched[f*GlobalNBins + i]-minval;
+                        //printf("Tscrunched: %i %i %.10g \n", i, f, TScrunched[f*GlobalNBins + i]-minval);
+                }
+
+	}
+
+	delete[] TScrunched;	
+
+}
+
+
+
