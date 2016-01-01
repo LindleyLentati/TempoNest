@@ -11774,6 +11774,7 @@ double  ProfileDomainLike(int &ndim, double *Cube, int &npars, double *DerivedPa
 	for(int i =0;i<GlobalNBins;i++){JitterBasis[i]=new double[totshapecoeff];}
 
 	int ProfileBaselineTerms = ((MNStruct *)globalcontext)->ProfileBaselineTerms;
+	int PerEpochSize = ProfileBaselineTerms + 1 + 2*ProfileNoiseCoeff;
 	int Msize = 1+ProfileBaselineTerms+2*ProfileNoiseCoeff + totalshapestoccoeff;
 	int Mcounter=0;
 	if(((MNStruct *)globalcontext)->numFitEQUAD > 0){
@@ -11841,7 +11842,7 @@ double  ProfileDomainLike(int &ndim, double *Cube, int &npars, double *DerivedPa
 
 		if(((MNStruct *)globalcontext)->incWideBandNoise == 1){
 
-			EpochMsize = (1+ProfileBaselineTerms)*NChanInEpoch+totalshapestoccoeff;
+			EpochMsize = PerEpochSize*NChanInEpoch+totalshapestoccoeff;
 			if(((MNStruct *)globalcontext)->numFitEQUAD > 0){
 				EpochMsize++;
 			}
@@ -12442,11 +12443,12 @@ double  ProfileDomainLike(int &ndim, double *Cube, int &npars, double *DerivedPa
 		
 			if(((MNStruct *)globalcontext)->incWideBandNoise == 1){
 
-				int ppterms = 1+ProfileBaselineTerms;
-
+				int ppterms = PerEpochSize;
+				if(debug==1){printf("Filling EpochMNM: %i %i %i \n", ppterms, Msize, EpochMsize);}
 				for(int j = 0; j < ppterms; j++){
 					EpochdNM[ppterms*ch+j] = dNM[j];
 					for(int k = 0; k < ppterms; k++){
+						if(debug==1){if(j==k && ep == 0){printf("Filling EpochMNM diag: %i %i %i %g \n", j,k,ppterms*ch+j + (ppterms*ch+k)*EpochMsize, MNM[j + k*Msize]);}}
 						EpochMNM[ppterms*ch+j + (ppterms*ch+k)*EpochMsize] = MNM[j + k*Msize];
 					}
 				}
@@ -12500,6 +12502,7 @@ double  ProfileDomainLike(int &ndim, double *Cube, int &npars, double *DerivedPa
 
 				if(((MNStruct *)globalcontext)->incProfileNoise == 3 || ((MNStruct *)globalcontext)->incProfileNoise == 4){
 					for(int q = 0; q < ProfileNoiseCoeff; q++){
+						if(debug == 1){if(ep==0){printf("PN BW %i %i %i %i %g %g \n", ep, ch, Mcounter, q, MNM[Mcounter + Mcounter*Msize], MNM[Mcounter+1 + (Mcounter+1)*Msize]);}}
 						double profnoise = ProfileNoiseAmps[q]*((MNStruct *)globalcontext)->MLProfileNoise[ep][q+1];
 						JitterDet += 2*log(profnoise);
 						MNM[Mcounter + Mcounter*Msize] += 1.0/profnoise;
@@ -12606,8 +12609,27 @@ double  ProfileDomainLike(int &ndim, double *Cube, int &npars, double *DerivedPa
 				EpochTempdNM[i] = EpochdNM[i];
 			}
 
-			int EpochMcount=(1+ProfileBaselineTerms)*NChanInEpoch;
+			int EpochMcount=0;
+			if(((MNStruct *)globalcontext)->incProfileNoise == 0){EpochMcount = (1+ProfileBaselineTerms)*NChanInEpoch;}
+
 			double BandJitterDet = 0;
+
+			if(((MNStruct *)globalcontext)->incProfileNoise == 3 || ((MNStruct *)globalcontext)->incProfileNoise == 4){
+				for(int ch = 0; ch < ((MNStruct *)globalcontext)->numChanPerInt[ep]; ch++){
+					
+					EpochMcount += 1+ProfileBaselineTerms;
+					for(int q = 0; q < ProfileNoiseCoeff; q++){
+						if(debug == 1){printf("PN BW %i %i %i %i %g %g \n", ep, ch, EpochMcount, q, EpochMNM[EpochMcount + EpochMcount*EpochMsize], EpochMNM[EpochMcount+1 + (EpochMcount+1)*EpochMsize]);}
+						double profnoise = ((MNStruct *)globalcontext)->MLProfileNoise[ep][q+1];
+						BandJitterDet += 2*log(profnoise);
+						EpochMNM[EpochMcount + EpochMcount*EpochMsize] += 1.0/profnoise;
+						EpochMcount++;
+						EpochMNM[EpochMcount + EpochMcount*EpochMsize] += 1.0/profnoise;
+						EpochMcount++;
+					}
+				}
+			}
+
 			if(((MNStruct *)globalcontext)->numFitEQUAD > 0){
 
 				double profnoise = EQUAD[((MNStruct *)globalcontext)->sysFlags[0]];
@@ -12656,7 +12678,7 @@ double  ProfileDomainLike(int &ndim, double *Cube, int &npars, double *DerivedPa
 
 			double EpochProfileLike = -0.5*(EpochdetN + EpochChisq + EpochMargindet - EpochMarginlike + BandJitterDet + BandStocProfDet);
 			lnew += EpochProfileLike;
-
+			if(debug == 1){printf("BWLike %i %g %g %g %g %g %g \n", ep,EpochdetN ,EpochChisq ,EpochMargindet , EpochMarginlike, BandJitterDet, BandStocProfDet );}
 
 
 
@@ -14115,7 +14137,7 @@ void  WriteProfileDomainLike(std::string longname, int &ndim){
 	
 					profilefile.open(dname.c_str());
 					double MLChisq = 0;
-
+					profilefile << "#" << std::setprecision(20) << ((MNStruct *)globalcontext)->ProfileInfo[nTOA][0] << "\n";
 					for(int i =0; i < Nbins; i++){
 						StocSN += StocVec[i]*StocVec[i]/profilenoise[i]/profilenoise[i];
 					}
@@ -14189,8 +14211,27 @@ void  WriteProfileDomainLike(std::string longname, int &ndim){
 				EpochTempdNM[i] = EpochdNM[i];
 			}
 
-			int EpochMcount=(1+ProfileBaselineTerms)*NChanInEpoch;
+			int EpochMcount=0;
+			if(((MNStruct *)globalcontext)->incProfileNoise == 0){EpochMcount = (1+ProfileBaselineTerms)*NChanInEpoch;}
+
 			double BandJitterDet = 0;
+
+			if(((MNStruct *)globalcontext)->incProfileNoise == 3 || ((MNStruct *)globalcontext)->incProfileNoise == 4){
+				for(int ch = 0; ch < ((MNStruct *)globalcontext)->numChanPerInt[ep]; ch++){
+					
+					EpochMcount += 1+ProfileBaselineTerms;
+					for(int q = 0; q < ProfileNoiseCoeff; q++){
+						if(debug == 1){printf("PN BW %i %i %i %i %g %g \n", ep, ch, EpochMcount, q, EpochMNM[EpochMcount + EpochMcount*EpochMsize], EpochMNM[EpochMcount+1 + (EpochMcount+1)*EpochMsize]);}
+						double profnoise = ((MNStruct *)globalcontext)->MLProfileNoise[ep][q+1];
+						BandJitterDet += 2*log(profnoise);
+						EpochMNM[EpochMcount + EpochMcount*EpochMsize] += 1.0/profnoise;
+						EpochMcount++;
+						EpochMNM[EpochMcount + EpochMcount*EpochMsize] += 1.0/profnoise;
+						EpochMcount++;
+					}
+				}
+			}
+
 			if(((MNStruct *)globalcontext)->numFitEQUAD > 0){
 
 				double profnoise = EQUAD[((MNStruct *)globalcontext)->sysFlags[0]];

@@ -11047,8 +11047,8 @@ void PreComputeShapelets(double **StoredShapelets, double **StoredJitterShapelet
 	CompSeps[0] = 0;
 	for(int i = 1; i < ((MNStruct *)globalcontext)->numProfComponents; i++){
 
-		CompSeps[i] = 0.075676881*((MNStruct *)globalcontext)->ReferencePeriod; //Sim
-		//CompSeps[i] = 0.336277178806697163*((MNStruct *)globalcontext)->ReferencePeriod; //J1744
+//		CompSeps[i] = 0.075676881*((MNStruct *)globalcontext)->ReferencePeriod; //Sim
+		CompSeps[i] = 0.336277178806697163*((MNStruct *)globalcontext)->ReferencePeriod; //J1744
 
 
 		//printf("CompSep: %g \n", Cube[pcount-1]);
@@ -11384,12 +11384,14 @@ double  ProfileDomainLike(int &ndim, double *Cube, int &npars, double *DerivedPa
                 for(int o=0;o<((MNStruct *)globalcontext)->systemcount; o++){
 			EQUAD[o]=pow(10.0,Cube[pcount]);
 		}
+		if(((MNStruct *)globalcontext)->EQUADPriorType ==1) {uniformpriorterm += log(EQUAD[0]);}
 		pcount++;
 	}
 	else if(((MNStruct *)globalcontext)->numFitEQUAD > 1){
                 EQUAD=new double[((MNStruct *)globalcontext)->systemcount];
                 for(int o=0;o<((MNStruct *)globalcontext)->systemcount; o++){
                         EQUAD[o]=pow(10.0,Cube[pcount]);
+			if(((MNStruct *)globalcontext)->EQUADPriorType ==1) {uniformpriorterm += log(EQUAD[o]);}
 			pcount++;
                 }
         }
@@ -11440,7 +11442,7 @@ double  ProfileDomainLike(int &ndim, double *Cube, int &npars, double *DerivedPa
 	double WidthJitter = 0;
 	if(((MNStruct *)globalcontext)->incWidthJitter > 0){
    		WidthJitter=pow(10.0,Cube[pcount]);
-		//uniformpriorterm += log(WidthJitter);
+		if(((MNStruct *)globalcontext)->EQUADPriorType ==1) {uniformpriorterm += log(WidthJitter);}
 		pcount++;
     	}
 
@@ -11498,7 +11500,7 @@ double  ProfileDomainLike(int &ndim, double *Cube, int &npars, double *DerivedPa
 	double JDet = 0;
 	double FreqLike = 0;
 	int startpos = 0;
-	if(((MNStruct *)globalcontext)->incDM==5){
+	if(((MNStruct *)globalcontext)->incDM > 4){
 
 		int FitDMCoeff = 2*((MNStruct *)globalcontext)->numFitDMCoeff;
 		double *SignalCoeff = new double[FitDMCoeff];
@@ -11514,29 +11516,55 @@ double  ProfileDomainLike(int &ndim, double *Cube, int &npars, double *DerivedPa
 		double f1yr = 1.0/3.16e7;
 
 
-		double DMamp=Cube[pcount];
-		pcount++;
-		double DMindex=Cube[pcount];
-		pcount++;
+		if(((MNStruct *)globalcontext)->incDM==5){
 
-		
-		DMamp=pow(10.0, DMamp);
-		if(((MNStruct *)globalcontext)->DMPriorType == 1) { uniformpriorterm +=log(DMamp); }
+			double DMamp=Cube[pcount];
+			pcount++;
+			double DMindex=Cube[pcount];
+			pcount++;
 
-
-
-		for (int i=0; i< FitDMCoeff/2; i++){
 			
-			double freq = ((double)(i+1.0))/Tspan;
-			
-			double rho = (DMamp*DMamp)*pow(f1yr,(-3)) * pow(freq*365.25,(-DMindex))/(Tspan*24*60*60);
-	//		SignalCoeff[i] = SignalCoeff[i]*sqrt(rho);
-	//		SignalCoeff[i+FitDMCoeff/2] = SignalCoeff[i+FitDMCoeff/2]*sqrt(rho);  
-			FreqDet += 2*log(rho);	
-			JDet += 2*log(sqrt(rho));
-			FreqLike += SignalCoeff[i]*SignalCoeff[i]/rho + SignalCoeff[i+FitDMCoeff/2]*SignalCoeff[i+FitDMCoeff/2]/rho;
-		//	printf("ps: %i %g %g %g %g %g %g %g \n", i, FreqDet, FreqLike, rho, SignalCoeff[i], SignalCoeff[i+FitDMCoeff/2], SignalCoeff[i]*SignalCoeff[i]/rho, SignalCoeff[i+FitDMCoeff/2]*SignalCoeff[i+FitDMCoeff/2]/rho);
+			DMamp=pow(10.0, DMamp);
+			if(((MNStruct *)globalcontext)->DMPriorType == 1) { uniformpriorterm +=log(DMamp); }
+
+
+
+			for (int i=0; i< FitDMCoeff/2; i++){
+				
+				double freq = ((double)(i+1.0))/Tspan;
+				
+				double rho = (DMamp*DMamp)*pow(f1yr,(-3)) * pow(freq*365.25,(-DMindex))/(Tspan*24*60*60);
+				SignalCoeff[i] = SignalCoeff[i]*sqrt(rho);
+				SignalCoeff[i+FitDMCoeff/2] = SignalCoeff[i+FitDMCoeff/2]*sqrt(rho);  
+				FreqDet += 2*log(rho);	
+				JDet += 2*log(sqrt(rho));
+				FreqLike += SignalCoeff[i]*SignalCoeff[i]/rho + SignalCoeff[i+FitDMCoeff/2]*SignalCoeff[i+FitDMCoeff/2]/rho;
+			}
 		}
+
+
+		if(((MNStruct *)globalcontext)->incDM==6){
+
+
+
+
+			for (int i=0; i< FitDMCoeff/2; i++){
+			
+
+				double DMAmp = pow(10.0, Cube[pcount]);	
+				double freq = ((double)(i+1.0))/Tspan;
+				
+				if(((MNStruct *)globalcontext)->DMPriorType == 1) { uniformpriorterm +=log(DMAmp); }
+				double rho = (DMAmp*DMAmp);
+				SignalCoeff[i] = SignalCoeff[i]*sqrt(rho);
+				SignalCoeff[i+FitDMCoeff/2] = SignalCoeff[i+FitDMCoeff/2]*sqrt(rho);  
+				FreqDet += 2*log(rho);	
+				JDet += 2*log(sqrt(rho));
+				FreqLike += SignalCoeff[i]*SignalCoeff[i]/rho + SignalCoeff[i+FitDMCoeff/2]*SignalCoeff[i+FitDMCoeff/2]/rho;
+				pcount++;
+			}
+		}
+
 		double *FMatrix = new double[FitDMCoeff*((MNStruct *)globalcontext)->numProfileEpochs];
 		for(int i=0;i< FitDMCoeff/2;i++){
 			int DMt = 0;
@@ -11545,7 +11573,6 @@ double  ProfileDomainLike(int &ndim, double *Cube, int &npars, double *DerivedPa
 	
 				FMatrix[k + (i+startpos)*((MNStruct *)globalcontext)->numProfileEpochs]=cos(2*M_PI*(double(i+1)/Tspan)*time);
 				FMatrix[k + (i+FitDMCoeff/2+startpos)*((MNStruct *)globalcontext)->numProfileEpochs] = sin(2*M_PI*(double(i+1)/Tspan)*time);
-				//printf("FM: %i %i %g %g \n", i, k, FMatrix[k + (i+startpos)*((MNStruct *)globalcontext)->numProfileEpochs], Tspan);
 				DMt += ((MNStruct *)globalcontext)->numChanPerInt[k];
 
 			}
@@ -11554,9 +11581,6 @@ double  ProfileDomainLike(int &ndim, double *Cube, int &npars, double *DerivedPa
 		SignalVec = new double[((MNStruct *)globalcontext)->numProfileEpochs];
 		vector_dgemv(FMatrix,SignalCoeff,SignalVec,((MNStruct *)globalcontext)->numProfileEpochs, FitDMCoeff,'N');
 		startpos=FitDMCoeff;
-//		 for(int k=0;k<((MNStruct *)globalcontext)->numProfileEpochs;k++){
-//			printf("%i %g \n", k, SignalVec[k]);
-//		}
 		delete[] FMatrix;	
 		
 
@@ -11750,6 +11774,7 @@ double  ProfileDomainLike(int &ndim, double *Cube, int &npars, double *DerivedPa
 	for(int i =0;i<GlobalNBins;i++){JitterBasis[i]=new double[totshapecoeff];}
 
 	int ProfileBaselineTerms = ((MNStruct *)globalcontext)->ProfileBaselineTerms;
+	int PerEpochSize = ProfileBaselineTerms + 1 + 2*ProfileNoiseCoeff;
 	int Msize = 1+ProfileBaselineTerms+2*ProfileNoiseCoeff + totalshapestoccoeff;
 	int Mcounter=0;
 	if(((MNStruct *)globalcontext)->numFitEQUAD > 0){
@@ -11817,7 +11842,7 @@ double  ProfileDomainLike(int &ndim, double *Cube, int &npars, double *DerivedPa
 
 		if(((MNStruct *)globalcontext)->incWideBandNoise == 1){
 
-			EpochMsize = (1+ProfileBaselineTerms)*NChanInEpoch+totalshapestoccoeff;
+			EpochMsize = PerEpochSize*NChanInEpoch+totalshapestoccoeff;
 			if(((MNStruct *)globalcontext)->numFitEQUAD > 0){
 				EpochMsize++;
 			}
@@ -11885,27 +11910,30 @@ double  ProfileDomainLike(int &ndim, double *Cube, int &npars, double *DerivedPa
 
 			double maxamp = 0;
 			double maxshape=0;
+
+			//if(ep==36){printf("SSB %i %.10g %.10g \n", nTOA, (double)((MNStruct *)globalcontext)->pulse->obsn[t].freqSSB/pow(10.0, 6), (double)((MNStruct *)globalcontext)->pulse->obsn[t].freq);}
+
 	//
 	//		if(debug == 1)printf("noise %g, dataflux %g, modelflux %g, maxamp %g \n", MLSigma, dataflux, modelflux, maxamp);
 
 
 		    
 			long double binpos = ModelBats[nTOA]; 
-
-			//if(((MNStruct *)globalcontext)->incDM==5 || ((MNStruct *)globalcontext)->yearlyDM == 1){
+			//binpos += (long double)(((MNStruct *)globalcontext)->StoredDMVals[ep]/SECDAY);
+			if(((MNStruct *)globalcontext)->incDM > 4 || ((MNStruct *)globalcontext)->yearlyDM == 1){
 	                	double DMKappa = 2.410*pow(10.0,-16);
         		        double DMScale = 1.0/(DMKappa*pow((double)((MNStruct *)globalcontext)->pulse->obsn[t].freqSSB,2));
 				//printf("DMSig %i %g\n", t, SignalVec[ep]*DMScale);
 				long double DMshift = (long double)(SignalVec[ep]*DMScale);
 
-				DMshift = (long double)(((((MNStruct *)globalcontext)->StoredDMVals[ep]-((MNStruct *)globalcontext)->pulse->param[param_dm].val[0])*DMScale));
+				//DMshift = (long double)(((((MNStruct *)globalcontext)->StoredDMVals[ep]-((MNStruct *)globalcontext)->pulse->param[param_dm].val[0])*DMScale));
 
 				//printf("DMSig: %i %.10g %g %Lg \n", nTOA, (double)((MNStruct *)globalcontext)->pulse->obsn[nTOA].bat, double((((MNStruct *)globalcontext)->StoredDMVals[ep]-((MNStruct *)globalcontext)->pulse->param[param_dm].val[0])), DMshift);
 				
 		 		binpos+=DMshift/SECDAY;
 			//	printf("After %.15Lg \n", binpos);
 
-			//}
+			}
 
 
 			//if(binpos < ProfileBats[nTOA][0]){printf("UnderBoard! %.10Lg %.10Lg %.10Lg\n", binpos, ProfileBats[nTOA][0], ProfileBats[nTOA][Nbins-1]);}
@@ -12415,11 +12443,12 @@ double  ProfileDomainLike(int &ndim, double *Cube, int &npars, double *DerivedPa
 		
 			if(((MNStruct *)globalcontext)->incWideBandNoise == 1){
 
-				int ppterms = 1+ProfileBaselineTerms;
-
+				int ppterms = PerEpochSize;
+				if(debug==1){printf("Filling EpochMNM: %i %i %i \n", ppterms, Msize, EpochMsize);}
 				for(int j = 0; j < ppterms; j++){
 					EpochdNM[ppterms*ch+j] = dNM[j];
 					for(int k = 0; k < ppterms; k++){
+						if(debug==1){if(j==k && ep == 0){printf("Filling EpochMNM diag: %i %i %i %g \n", j,k,ppterms*ch+j + (ppterms*ch+k)*EpochMsize, MNM[j + k*Msize]);}}
 						EpochMNM[ppterms*ch+j + (ppterms*ch+k)*EpochMsize] = MNM[j + k*Msize];
 					}
 				}
@@ -12473,6 +12502,7 @@ double  ProfileDomainLike(int &ndim, double *Cube, int &npars, double *DerivedPa
 
 				if(((MNStruct *)globalcontext)->incProfileNoise == 3 || ((MNStruct *)globalcontext)->incProfileNoise == 4){
 					for(int q = 0; q < ProfileNoiseCoeff; q++){
+						if(debug == 1){if(ep==0){printf("PN BW %i %i %i %i %g %g \n", ep, ch, Mcounter, q, MNM[Mcounter + Mcounter*Msize], MNM[Mcounter+1 + (Mcounter+1)*Msize]);}}
 						double profnoise = ProfileNoiseAmps[q]*((MNStruct *)globalcontext)->MLProfileNoise[ep][q+1];
 						JitterDet += 2*log(profnoise);
 						MNM[Mcounter + Mcounter*Msize] += 1.0/profnoise;
@@ -12579,8 +12609,27 @@ double  ProfileDomainLike(int &ndim, double *Cube, int &npars, double *DerivedPa
 				EpochTempdNM[i] = EpochdNM[i];
 			}
 
-			int EpochMcount=(1+ProfileBaselineTerms)*NChanInEpoch;
+			int EpochMcount=0;
+			if(((MNStruct *)globalcontext)->incProfileNoise == 0){EpochMcount = (1+ProfileBaselineTerms)*NChanInEpoch;}
+
 			double BandJitterDet = 0;
+
+			if(((MNStruct *)globalcontext)->incProfileNoise == 3 || ((MNStruct *)globalcontext)->incProfileNoise == 4){
+				for(int ch = 0; ch < ((MNStruct *)globalcontext)->numChanPerInt[ep]; ch++){
+					
+					EpochMcount += 1+ProfileBaselineTerms;
+					for(int q = 0; q < ProfileNoiseCoeff; q++){
+						if(debug == 1){printf("PN BW %i %i %i %i %g %g \n", ep, ch, EpochMcount, q, EpochMNM[EpochMcount + EpochMcount*EpochMsize], EpochMNM[EpochMcount+1 + (EpochMcount+1)*EpochMsize]);}
+						double profnoise = ((MNStruct *)globalcontext)->MLProfileNoise[ep][q+1];
+						BandJitterDet += 2*log(profnoise);
+						EpochMNM[EpochMcount + EpochMcount*EpochMsize] += 1.0/profnoise;
+						EpochMcount++;
+						EpochMNM[EpochMcount + EpochMcount*EpochMsize] += 1.0/profnoise;
+						EpochMcount++;
+					}
+				}
+			}
+
 			if(((MNStruct *)globalcontext)->numFitEQUAD > 0){
 
 				double profnoise = EQUAD[((MNStruct *)globalcontext)->sysFlags[0]];
@@ -12629,7 +12678,7 @@ double  ProfileDomainLike(int &ndim, double *Cube, int &npars, double *DerivedPa
 
 			double EpochProfileLike = -0.5*(EpochdetN + EpochChisq + EpochMargindet - EpochMarginlike + BandJitterDet + BandStocProfDet);
 			lnew += EpochProfileLike;
-
+			if(debug == 1){printf("BWLike %i %g %g %g %g %g %g \n", ep,EpochdetN ,EpochChisq ,EpochMargindet , EpochMarginlike, BandJitterDet, BandStocProfDet );}
 
 
 
@@ -12689,7 +12738,7 @@ double  ProfileDomainLike(int &ndim, double *Cube, int &npars, double *DerivedPa
 	if(((MNStruct *)globalcontext)->incDM > 0 || ((MNStruct *)globalcontext)->yearlyDM == 1){
 		delete[] SignalVec;
 	}
-	lnew += uniformpriorterm;// - 0.5*(FreqLike + FreqDet) + JDet;
+	lnew += uniformpriorterm - 0.5*(FreqLike + FreqDet) + JDet;
 	//printf("Cube: %g %g %g %g %g \n", lnew+5.8185e6, FreqLike, FreqDet, Cube[19], Cube[20]);
 	if(debug == 1)printf("End Like: %.10g \n", lnew);
 	//printf("End Like: %.10g \n", lnew);
@@ -13012,11 +13061,13 @@ void  WriteProfileDomainLike(std::string longname, int &ndim){
         }
 
 
+
 	double *SignalVec;
 	double FreqDet = 0;
+	double JDet = 0;
 	double FreqLike = 0;
 	int startpos = 0;
-	if(((MNStruct *)globalcontext)->incDM==5){
+	if(((MNStruct *)globalcontext)->incDM > 4){
 
 		int FitDMCoeff = 2*((MNStruct *)globalcontext)->numFitDMCoeff;
 		double *SignalCoeff = new double[FitDMCoeff];
@@ -13032,28 +13083,55 @@ void  WriteProfileDomainLike(std::string longname, int &ndim){
 		double f1yr = 1.0/3.16e7;
 
 
-		double DMamp=Cube[pcount];
-		pcount++;
-		double DMindex=Cube[pcount];
-		pcount++;
+		if(((MNStruct *)globalcontext)->incDM==5){
 
-		
-		DMamp=pow(10.0, DMamp);
-		if(((MNStruct *)globalcontext)->DMPriorType == 1) { uniformpriorterm +=log(DMamp); }
+			double DMamp=Cube[pcount];
+			pcount++;
+			double DMindex=Cube[pcount];
+			pcount++;
 
-
-
-		for (int i=0; i< FitDMCoeff/2; i++){
 			
-			double freq = ((double)(i+1.0))/Tspan;
-			
-			double rho = (DMamp*DMamp)*pow(f1yr,(-3)) * pow(freq*365.25,(-DMindex))/(Tspan*24*60*60);
-			//SignalCoeff[i] = SignalCoeff[i]*sqrt(rho);
-			//SignalCoeff[i+FitDMCoeff/2] = SignalCoeff[i+FitDMCoeff/2]*sqrt(rho);  
-			FreqDet += 2*log(rho);	
-			FreqLike += SignalCoeff[i]*SignalCoeff[i]/rho + SignalCoeff[i+FitDMCoeff/2]*SignalCoeff[i+FitDMCoeff/2]/rho;
-		//	printf("ps: %i %g %g %g %g %g %g %g \n", i, FreqDet, FreqLike, rho, SignalCoeff[i], SignalCoeff[i+FitDMCoeff/2], SignalCoeff[i]*SignalCoeff[i]/rho, SignalCoeff[i+FitDMCoeff/2]*SignalCoeff[i+FitDMCoeff/2]/rho);
+			DMamp=pow(10.0, DMamp);
+			if(((MNStruct *)globalcontext)->DMPriorType == 1) { uniformpriorterm +=log(DMamp); }
+
+
+
+			for (int i=0; i< FitDMCoeff/2; i++){
+				
+				double freq = ((double)(i+1.0))/Tspan;
+				
+				double rho = (DMamp*DMamp)*pow(f1yr,(-3)) * pow(freq*365.25,(-DMindex))/(Tspan*24*60*60);
+				SignalCoeff[i] = SignalCoeff[i]*sqrt(rho);
+				SignalCoeff[i+FitDMCoeff/2] = SignalCoeff[i+FitDMCoeff/2]*sqrt(rho);  
+				FreqDet += 2*log(rho);	
+				JDet += 2*log(sqrt(rho));
+				FreqLike += SignalCoeff[i]*SignalCoeff[i]/rho + SignalCoeff[i+FitDMCoeff/2]*SignalCoeff[i+FitDMCoeff/2]/rho;
+			}
 		}
+
+
+		if(((MNStruct *)globalcontext)->incDM==6){
+
+
+
+
+			for (int i=0; i< FitDMCoeff/2; i++){
+			
+
+				double DMAmp = pow(10.0, Cube[pcount]);	
+				double freq = ((double)(i+1.0))/Tspan;
+				
+				if(((MNStruct *)globalcontext)->DMPriorType == 1) { uniformpriorterm +=log(DMAmp); }
+				double rho = (DMAmp*DMAmp);
+				SignalCoeff[i] = SignalCoeff[i]*sqrt(rho);
+				SignalCoeff[i+FitDMCoeff/2] = SignalCoeff[i+FitDMCoeff/2]*sqrt(rho);  
+				FreqDet += 2*log(rho);	
+				JDet += 2*log(sqrt(rho));
+				FreqLike += SignalCoeff[i]*SignalCoeff[i]/rho + SignalCoeff[i+FitDMCoeff/2]*SignalCoeff[i+FitDMCoeff/2]/rho;
+				pcount++;
+			}
+		}
+
 		double *FMatrix = new double[FitDMCoeff*((MNStruct *)globalcontext)->numProfileEpochs];
 		for(int i=0;i< FitDMCoeff/2;i++){
 			int DMt = 0;
@@ -13062,7 +13140,6 @@ void  WriteProfileDomainLike(std::string longname, int &ndim){
 	
 				FMatrix[k + (i+startpos)*((MNStruct *)globalcontext)->numProfileEpochs]=cos(2*M_PI*(double(i+1)/Tspan)*time);
 				FMatrix[k + (i+FitDMCoeff/2+startpos)*((MNStruct *)globalcontext)->numProfileEpochs] = sin(2*M_PI*(double(i+1)/Tspan)*time);
-				//printf("FM: %i %i %g %g \n", i, k, FMatrix[k + (i+startpos)*((MNStruct *)globalcontext)->numProfileEpochs], Tspan);
 				DMt += ((MNStruct *)globalcontext)->numChanPerInt[k];
 
 			}
@@ -13071,13 +13148,26 @@ void  WriteProfileDomainLike(std::string longname, int &ndim){
 		SignalVec = new double[((MNStruct *)globalcontext)->numProfileEpochs];
 		vector_dgemv(FMatrix,SignalCoeff,SignalVec,((MNStruct *)globalcontext)->numProfileEpochs, FitDMCoeff,'N');
 		startpos=FitDMCoeff;
-//		 for(int k=0;k<((MNStruct *)globalcontext)->numProfileEpochs;k++){
-//			printf("%i %g \n", k, SignalVec[k]);
-//		}
 		delete[] FMatrix;	
 		
 
     	}
+
+	double sinAmp = 0;
+	double cosAmp = 0;
+	if(((MNStruct *)globalcontext)->yearlyDM == 1){
+		if(((MNStruct *)globalcontext)->incDM == 0){ SignalVec = new double[((MNStruct *)globalcontext)->numProfileEpochs]();}
+		sinAmp = Cube[pcount];
+		pcount++;
+		cosAmp = Cube[pcount];
+		pcount++;
+		int DMt = 0;
+		for(int o=0;o<((MNStruct *)globalcontext)->numProfileEpochs; o++){
+			double time=(double)((MNStruct *)globalcontext)->pulse->obsn[DMt].bat - ((MNStruct *)globalcontext)->pulse->param[param_dmepoch].val[0];
+			SignalVec[o] += sinAmp*sin((2*M_PI/365.25)*time) + cosAmp*cos((2*M_PI/365.25)*time);
+			DMt += ((MNStruct *)globalcontext)->numChanPerInt[o];
+		}
+	}
 /////////////////////////////////////////////////////////////////////////////////////////////  
 /////////////////////////Profile Params//////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////
@@ -14047,7 +14137,7 @@ void  WriteProfileDomainLike(std::string longname, int &ndim){
 	
 					profilefile.open(dname.c_str());
 					double MLChisq = 0;
-
+					profilefile << "#" << std::setprecision(20) << ((MNStruct *)globalcontext)->ProfileInfo[nTOA][0] << "\n";
 					for(int i =0; i < Nbins; i++){
 						StocSN += StocVec[i]*StocVec[i]/profilenoise[i]/profilenoise[i];
 					}
@@ -14258,7 +14348,7 @@ void  WriteProfileDomainLike(std::string longname, int &ndim){
 	//}
 
 //	if(((MNStruct *)globalcontext)->incDM > 0){
-		WriteDMSignal(longname, ndim);
+		//WriteDMSignal(longname, ndim);
 //	}
 	//WriteProfileFreqEvo(longname, ndim,profiledimstart);
 
@@ -14526,33 +14616,26 @@ void  WriteDMSignal(std::string longname, int &ndim){
 			double *SignalCoeff = new double[FitDMCoeff];
 			for(int i = 0; i < FitDMCoeff; i++){
 				SignalCoeff[startpos + i] = Cube[pcount];
-				//printf("coeffs %i %g \n", i, SignalCoeff[i]);
 				pcount++;
 			}
-				
-			
 
 			double Tspan = ((MNStruct *)globalcontext)->Tspan;
 			double f1yr = 1.0/3.16e7;
-
 
 			double DMamp=Cube[pcount];
 			pcount++;
 			double DMindex=Cube[pcount];
 			pcount++;
-
 			
 			DMamp=pow(10.0, DMamp);
-
-
 
 			for (int i=0; i< FitDMCoeff/2; i++){
 				
 				double freq = ((double)(i+1.0))/Tspan;
 				
 				double rho = (DMamp*DMamp)*pow(f1yr,(-3)) * pow(freq*365.25,(-DMindex))/(Tspan*24*60*60);
-				//SignalCoeff[i] = SignalCoeff[i]*sqrt(rho);
-				//SignalCoeff[i+FitDMCoeff/2] = SignalCoeff[i+FitDMCoeff/2]*sqrt(rho);  
+				SignalCoeff[i] = SignalCoeff[i]*sqrt(rho);
+				SignalCoeff[i+FitDMCoeff/2] = SignalCoeff[i+FitDMCoeff/2]*sqrt(rho);  
 				FreqDet += 2*log(rho);	
 				FreqLike += SignalCoeff[i]*SignalCoeff[i]/rho + SignalCoeff[i+FitDMCoeff/2]*SignalCoeff[i+FitDMCoeff/2]/rho;
 			}
@@ -14582,10 +14665,69 @@ void  WriteDMSignal(std::string longname, int &ndim){
 			delete[] SignalVec;
 
 		}
+	
+
+		if(((MNStruct *)globalcontext)->incDM==6){
+
+			int FitDMCoeff = 2*((MNStruct *)globalcontext)->numFitDMCoeff;
+			double *SignalCoeff = new double[FitDMCoeff];
+			for(int i = 0; i < FitDMCoeff; i++){
+				SignalCoeff[startpos + i] = Cube[pcount];
+				//printf("coeffs %i %g \n", i, SignalCoeff[i]);
+				pcount++;
+			}
+				
+			
+
+			double Tspan = ((MNStruct *)globalcontext)->Tspan;
+			double f1yr = 1.0/3.16e7;
+
+
+
+			for (int i=0; i< FitDMCoeff/2; i++){
 		
+				double DMamp=pow(10.0, Cube[pcount]);
+				pcount++;
+				
+				double freq = ((double)(i+1.0))/Tspan;
+				
+				double rho = (DMamp*DMamp);
+				SignalCoeff[i] = SignalCoeff[i]*sqrt(rho);
+				SignalCoeff[i+FitDMCoeff/2] = SignalCoeff[i+FitDMCoeff/2]*sqrt(rho);  
+				FreqDet += 2*log(rho);	
+				FreqLike += SignalCoeff[i]*SignalCoeff[i]/rho + SignalCoeff[i+FitDMCoeff/2]*SignalCoeff[i+FitDMCoeff/2]/rho;
+			}
+			double *FMatrix = new double[FitDMCoeff*((MNStruct *)globalcontext)->numProfileEpochs];
+			for(int i=0;i< FitDMCoeff/2;i++){
+				int DMt = 0;
+				for(int k=0;k<((MNStruct *)globalcontext)->numProfileEpochs;k++){
+
+					double time=(double)((MNStruct *)globalcontext)->pulse->obsn[DMt].bat;
+		
+					FMatrix[k + (i+startpos)*((MNStruct *)globalcontext)->numProfileEpochs]=cos(2*M_PI*(double(i+1)/Tspan)*time);
+					FMatrix[k + (i+FitDMCoeff/2+startpos)*((MNStruct *)globalcontext)->numProfileEpochs] = sin(2*M_PI*(double(i+1)/Tspan)*time);
+					DMt += ((MNStruct *)globalcontext)->numChanPerInt[k];
+
+				}
+			}
+
+			SignalVec = new double[((MNStruct *)globalcontext)->numProfileEpochs];
+			vector_dgemv(FMatrix,SignalCoeff,SignalVec,((MNStruct *)globalcontext)->numProfileEpochs, FitDMCoeff,'N');
+			startpos=FitDMCoeff;
+			
+			 for(int k=0;k<((MNStruct *)globalcontext)->numProfileEpochs;k++){
+				DMSignal[k] += (SignalVec[k])*weight;//(SignalVec[k]+dmDot)*weight;
+			}
+			delete[] FMatrix;	
+			delete[] SignalCoeff;	
+			delete[] SignalVec;
+
+		}
+	
         }       
 
  
+		
 	 for(int k=0;k<((MNStruct *)globalcontext)->numProfileEpochs;k++){
 		DMSignal[k] = DMSignal[k]/weightsum;
 	}
@@ -14842,8 +14984,8 @@ void  WriteDMSignal(std::string longname, int &ndim){
 				double freq = ((double)(i+1.0))/Tspan;
 				
 				double rho = (DMamp*DMamp)*pow(f1yr,(-3)) * pow(freq*365.25,(-DMindex))/(Tspan*24*60*60);
-				//SignalCoeff[i] = SignalCoeff[i]*sqrt(rho);
-				//SignalCoeff[i+FitDMCoeff/2] = SignalCoeff[i+FitDMCoeff/2]*sqrt(rho);  
+				SignalCoeff[i] = SignalCoeff[i]*sqrt(rho);
+				SignalCoeff[i+FitDMCoeff/2] = SignalCoeff[i+FitDMCoeff/2]*sqrt(rho);  
 
 
 
@@ -14873,7 +15015,6 @@ void  WriteDMSignal(std::string longname, int &ndim){
 			 int DMt = 0;	
 			 for(int k=0;k<((MNStruct *)globalcontext)->numProfileEpochs;k++){
 				NonPLSignalVec[k] += SignalVec[k];
-				//if(l==0){printf("Sig Comp %i %g %g %g \n", k, (double)((MNStruct *)globalcontext)->pulse->obsn[DMt].bat, TempSignalVec[k], SignalVec[k]);}
 				DMt += ((MNStruct *)globalcontext)->numChanPerInt[k];
 			}
 
@@ -14888,6 +15029,64 @@ void  WriteDMSignal(std::string longname, int &ndim){
 
 		}
 
+		if(((MNStruct *)globalcontext)->incDM==6){
+
+			int FitDMCoeff = 2*((MNStruct *)globalcontext)->numFitDMCoeff;
+			double *SignalCoeff = new double[FitDMCoeff];
+			for(int i = 0; i < FitDMCoeff; i++){
+				SignalCoeff[startpos + i] = Cube[pcount];
+				//printf("coeffs %i %g \n", i, SignalCoeff[i]);
+				pcount++;
+			}
+				
+			
+
+			double Tspan = ((MNStruct *)globalcontext)->Tspan;
+			double f1yr = 1.0/3.16e7;
+
+
+
+			for (int i=0; i< FitDMCoeff/2; i++){
+		
+				double DMamp=pow(10.0, Cube[pcount]);
+				pcount++;
+				
+				double freq = ((double)(i+1.0))/Tspan;
+				
+				double rho = (DMamp*DMamp);
+				SignalCoeff[i] = SignalCoeff[i]*sqrt(rho);
+				SignalCoeff[i+FitDMCoeff/2] = SignalCoeff[i+FitDMCoeff/2]*sqrt(rho);  
+				FreqDet += 2*log(rho);	
+				FreqLike += SignalCoeff[i]*SignalCoeff[i]/rho + SignalCoeff[i+FitDMCoeff/2]*SignalCoeff[i+FitDMCoeff/2]/rho;
+			}
+			double *FMatrix = new double[FitDMCoeff*((MNStruct *)globalcontext)->numProfileEpochs];
+			for(int i=0;i< FitDMCoeff/2;i++){
+				int DMt = 0;
+				for(int k=0;k<((MNStruct *)globalcontext)->numProfileEpochs;k++){
+
+					double time=(double)((MNStruct *)globalcontext)->pulse->obsn[DMt].bat;
+		
+					FMatrix[k + (i+startpos)*((MNStruct *)globalcontext)->numProfileEpochs]=cos(2*M_PI*(double(i+1)/Tspan)*time);
+					FMatrix[k + (i+FitDMCoeff/2+startpos)*((MNStruct *)globalcontext)->numProfileEpochs] = sin(2*M_PI*(double(i+1)/Tspan)*time);
+					DMt += ((MNStruct *)globalcontext)->numChanPerInt[k];
+
+				}
+			}
+
+			SignalVec = new double[((MNStruct *)globalcontext)->numProfileEpochs];
+			vector_dgemv(FMatrix,SignalCoeff,SignalVec,((MNStruct *)globalcontext)->numProfileEpochs, FitDMCoeff,'N');
+			startpos=FitDMCoeff;
+			 
+			int DMt = 0;	
+			 for(int k=0;k<((MNStruct *)globalcontext)->numProfileEpochs;k++){
+				NonPLSignalVec[k] += SignalVec[k];
+				DMt += ((MNStruct *)globalcontext)->numChanPerInt[k];
+			}
+			delete[] FMatrix;	
+			delete[] SignalCoeff;	
+			delete[] SignalVec;
+
+		}
 		 for(int k=0;k<((MNStruct *)globalcontext)->numProfileEpochs;k++){
 			DMSignalErr[k] += (NonPLSignalVec[k] - DMSignal[k])*(NonPLSignalVec[k] - DMSignal[k])*weight;
 		}
