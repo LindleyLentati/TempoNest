@@ -146,7 +146,8 @@ void setupparams(int &useGPUS,
                 double *ProfileNoiseAmpPrior,
                 double *ProfileNoiseSpecPrior,
 		int &SubIntToFit,
-		int &ChannelToFit){
+		int &ChannelToFit,
+		int &NProfileEvoPoly){
 
 	//General parameters:
 	//Use GPUs 0=No, 1=Yes
@@ -222,6 +223,7 @@ void setupparams(int &useGPUS,
 	incWideBandNoise = 0;
 	EvoRefFreq = 1400.0;
 	incProfileEvo = 0;
+	NProfileEvoPoly = 1;
 	FitEvoExponent = 0;
 	ProfileEvoPrior[0] = -1;
 	ProfileEvoPrior[1] =  1;
@@ -607,6 +609,9 @@ void setupparams(int &useGPUS,
 	
 	parameters.readInto(SubIntToFit, "SubIntToFit", SubIntToFit);
 	parameters.readInto(ChannelToFit, "ChannelToFit", ChannelToFit);
+
+
+	parameters.readInto(NProfileEvoPoly, "NProfileEvoPoly", NProfileEvoPoly);
 	
     } catch(ConfigFile::file_not_found oError) {
         printf("WARNING: parameters file '%s' not found. Using defaults.\n", oError.filename.c_str());
@@ -621,7 +626,7 @@ void setTNPriors(double **Dpriors, long double **TempoPriors, int TPsize, int DP
 //THe order of the parameters is always the same:
 //Timing Model parameters (linear or non linear)
 //Jumps
-//EFAC(s)
+//EFAC(s) 
 //EQUAD
 //Red Noise Parameters (Amplitude then Alpha for incRed=1, coefficients 1..n for incRed=2)
 
@@ -882,7 +887,7 @@ void GetGroupsToFit(int incGroupNoise, int **FitForGroup, int incBandNoise, int 
 
 
 
-void GetProfileFitInfo(int numProfComponents, int *numGPTAshapecoeff, int *numProfileFitCoeff, int *numEvoCoeff, int *numFitEvoCoeff, int *numGPTAstocshapecoeff){
+void GetProfileFitInfo(int numProfComponents, int *numGPTAshapecoeff, int *numProfileFitCoeff, int *numEvoCoeff, int *numFitEvoCoeff, int *numGPTAstocshapecoeff, double *ProfCompSeps){
 
 //This function reads in the groups that will be fit as Group Noise terms
 
@@ -922,6 +927,28 @@ void GetProfileFitInfo(int numProfComponents, int *numGPTAshapecoeff, int *numPr
 
 			char buffer [50];
 			int n;
+			n=sprintf (buffer, "ProfCompSeps[%i]", i);
+			parameters.readInto(ProfCompSeps[i], buffer, ProfCompSeps[i]);
+
+
+		} 
+		catch(ConfigFile::file_not_found oError) {
+			printf("WARNING: parameters file '%s' not found. Using defaults.\n", oError.filename.c_str());
+	    } // try
+
+	}
+
+	for(int i =0;i<numProfComponents; i++){	
+
+
+		// Use a configfile, if we can, to overwrite the defaults set in this file.
+		try {
+			string strBuf;
+			strBuf = string("defaultparameters.conf");
+			ConfigFile parameters(strBuf);
+
+			char buffer [50];
+			int n;
 			n=sprintf (buffer, "numProfileFitCoeff[%i]", i);
 			parameters.readInto(numProfileFitCoeff[i], buffer, numProfileFitCoeff[i]);
 
@@ -932,7 +959,6 @@ void GetProfileFitInfo(int numProfComponents, int *numGPTAshapecoeff, int *numPr
 	    } // try
 
 	}
-
 
 	for(int i =0;i<numProfComponents; i++){	
 

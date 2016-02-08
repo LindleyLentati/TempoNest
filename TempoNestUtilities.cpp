@@ -698,6 +698,264 @@ void getCustomDMatrix(pulsar *pulse, int *MarginList, int **TempoFitNums, int *T
 		}
 }
 
+void getPhysDVector(void *context, double **TNDM, int Nobs, int *TimingGradientSigns){
+	
+	double pdParamDeriv[MAX_PARAMS], dMultiplication;
+
+
+	//In order to get design matrix in physical units, need to use update parameters function.  Current fit values/errors are backed up in TempoPriors. Set value/error to 0,1 then call update params.
+	//The new error will be the scaling required for the design matrix, then set values/errors back to old values.
+
+	//long double newF0 = 3.5*(((MNStruct *)context)->LDpriors[1][1]) + (((MNStruct *)context)->LDpriors[1][0]);
+	//((MNStruct *)context)->pulse->param[((MNStruct *)context)->TempoFitNums[1][0]].val[((MNStruct *)context)->TempoFitNums[1][1]] = newF0;
+
+	fastformBatsAll(((MNStruct *)context)->pulse,((MNStruct *)context)->numberpulsars);       /* Form Barycentric arrival times */
+	formResiduals(((MNStruct *)context)->pulse,((MNStruct *)context)->numberpulsars,0);       /* Form residuals */
+
+
+
+	int numToFit = ((MNStruct *)context)->numFitTiming + ((MNStruct *)context)->numFitJumps;
+	double *newVals = new double[numToFit]();
+	double *newErrs = new double[numToFit]();
+	double *oldErrs = new double[numToFit]();
+
+	int fitcount=0;
+	oldErrs[fitcount] = 0;
+	fitcount++;
+	for (int p=0;p<MAX_PARAMS;p++) {
+		for (int k=0;k<((MNStruct *)context)->pulse->param[p].aSize;k++){
+			if(((MNStruct *)context)->pulse->param[p].fitFlag[k] == 1 && p != param_dmmodel){
+				//printf("Old Error for: %s %g\n",((MNStruct *)context)->pulse->param[p].shortlabel[k], (double)((MNStruct *)context)->pulse->param[p].err[k]);
+				oldErrs[fitcount] = (double)((MNStruct *)context)->pulse->param[p].err[k];
+				newErrs[fitcount] = 1;
+				fitcount++;
+	    		}
+		}
+	}
+
+	updateParameters(((MNStruct *)context)->pulse, 0,newVals,newErrs);
+
+
+
+	for (int p=0;p<numToFit;p++) {
+		TimingGradientSigns[p] = 1;
+	}
+
+	fitcount=0;
+	newVals[fitcount] = 1;
+	fitcount++;
+	for (int p=0;p<MAX_PARAMS;p++) {
+		for (int k=0;k<((MNStruct *)context)->pulse->param[p].aSize;k++){
+			if(((MNStruct *)context)->pulse->param[p].fitFlag[k] == 1 && p != param_dmmodel){
+				//printf("Scaling factor for: %s %g\n",((MNStruct *)context)->pulse->param[p].shortlabel[k], (double)((MNStruct *)context)->pulse->param[p].err[k]);
+				newVals[fitcount] =  (double)((MNStruct *)context)->pulse->param[p].err[k];
+				//printf("Resetting to old error: %g\n",oldErrs[fitcount]);
+				((MNStruct *)context)->pulse->param[p].err[k] = oldErrs[fitcount];
+				fitcount++;
+	    		}
+		}
+	}
+
+	for(int i = 0; i <  ((MNStruct *)context)->numFitJumps; i++){
+		newVals[((MNStruct *)context)->numFitTiming+i] = 1;
+	}
+	
+
+	
+	for(int i=0; i < ((MNStruct *)context)->pulse->nobs; i++) {
+		FITfuncs(((MNStruct *)context)->pulse->obsn[i].bat - ((MNStruct *)context)->pulse->param[param_pepoch].val[0], pdParamDeriv, numToFit, ((MNStruct *)context)->pulse, i,0);
+		for(int j=0; j<numToFit; j++) {
+			double PriorFac = (double)((MNStruct *)context)->LDpriors[j][1];
+	//		printf("CDML: %i %i %i %g %g %g\n", i,j,numToFit,pdParamDeriv[j], pdParamDeriv[j]/newVals[j], (pdParamDeriv[j]/newVals[j])*PriorFac);
+			TNDM[i][j]= pdParamDeriv[j];//(pdParamDeriv[j]/newVals[j])*PriorFac;
+		} 
+	} 
+
+	for(int p= 1; p < ((MNStruct *)context)->numFitTiming; p++){
+		double zeroval=	TNDM[0][p];
+		for(int i=0; i < ((MNStruct *)context)->pulse->nobs; i++) {
+			TNDM[i][p] = TNDM[i][p]-zeroval;
+		}
+	}
+
+
+
+
+	double *oldRes = new double[((MNStruct *)context)->pulse->nobs];
+	for(int i=0; i < ((MNStruct *)context)->pulse->nobs; i++) {	
+		oldRes[i] = (double)((MNStruct *)context)->pulse->obsn[i].residual;
+	}
+
+	for(int p= 1; p < ((MNStruct *)context)->numFitTiming; p++){
+
+		fastformBatsAll(((MNStruct *)context)->pulse,((MNStruct *)context)->numberpulsars);       /* Form Barycentric arrival times */
+		formResiduals(((MNStruct *)context)->pulse,((MNStruct *)context)->numberpulsars,0);       /* Form residuals */
+
+
+		double nobatsSTD1 = 0;
+		double nobatsSTD2 = 0;
+
+		long double newVal = ((MNStruct *)context)->LDpriors[p][1] + ((MNStruct *)context)->LDpriors[p][0];
+		long double oldVal = ((MNStruct *)context)->LDpriors[p][0];
+		((MNStruct *)context)->pulse->param[((MNStruct *)context)->TempoFitNums[p][0]].val[((MNStruct *)context)->TempoFitNums[p][1]] = newVal;
+
+
+//		fastformBatsAll(((MNStruct *)context)->pulse,((MNStruct *)context)->numberpulsars);       /* Form Barycentric arrival times */
+		formResiduals(((MNStruct *)context)->pulse,((MNStruct *)context)->numberpulsars,0);       /* Form residuals */
+		double sign = 0;
+		for(int i=0; i < ((MNStruct *)context)->pulse->nobs; i++) {	
+			double PriorFac = (double)((MNStruct *)context)->LDpriors[p][1];
+			TNDM[i][p] = (TNDM[i][p]/newVals[p])*PriorFac;
+		//	printf("Vecs: %i %i %.16g %.16g %.16g\n", p, i, (double)((MNStruct *)context)->pulse->obsn[i].bat, (double)((MNStruct *)context)->pulse->obsn[i].residual-oldRes[i],TNDM[i][p]);
+			sign += double(((MNStruct *)context)->pulse->obsn[i].residual-oldRes[i])*TNDM[i][p];
+
+			nobatsSTD1 += (((MNStruct *)context)->pulse->obsn[i].residual-oldRes[i])*(((MNStruct *)context)->pulse->obsn[i].residual-oldRes[i]);
+			nobatsSTD2 += TNDM[i][p]*TNDM[i][p];
+			//TNDM[i][p] = (double)((MNStruct *)context)->pulse->obsn[i].residual-oldRes[i];
+		}
+
+                double withbatsSTD1 = 0;
+                double withbatsSTD2 = 0;
+
+		fastformBatsAll(((MNStruct *)context)->pulse,((MNStruct *)context)->numberpulsars);       /* Form Barycentric arrival times */
+		formResiduals(((MNStruct *)context)->pulse,((MNStruct *)context)->numberpulsars,0);       /* Form residuals */
+		for(int i=0; i < ((MNStruct *)context)->pulse->nobs; i++) {	
+		//	 printf("Vecs: %i %i %.16g %.16g %.16g\n", p, i, (double)((MNStruct *)context)->pulse->obsn[i].bat, (double)((MNStruct *)context)->pulse->obsn[i].residual-oldRes[i],TNDM[i][p]);
+
+			withbatsSTD1 += (((MNStruct *)context)->pulse->obsn[i].residual-oldRes[i])*(((MNStruct *)context)->pulse->obsn[i].residual-oldRes[i]);
+			withbatsSTD2 += TNDM[i][p]*TNDM[i][p];
+			//TNDM[i][p] = (double)((MNStruct *)context)->pulse->obsn[i].residual-oldRes[i];
+		}
+
+		printf("BATS Ratio: %i %s %g %g \n", p, ((MNStruct *)context)->pulse->param[((MNStruct *)context)->TempoFitNums[p][0]].shortlabel[0], nobatsSTD1/withbatsSTD1, withbatsSTD2/nobatsSTD2);
+
+
+//		printf("Sign? %i %g %g\n", p, sign, sign/fabs(sign));
+		TimingGradientSigns[p] = int(sign/fabs(sign));
+		((MNStruct *)context)->pulse->param[((MNStruct *)context)->TempoFitNums[p][0]].val[((MNStruct *)context)->TempoFitNums[p][1]] = oldVal;
+
+		if(fabs(1-(nobatsSTD1/withbatsSTD1)) > 0.01){
+
+			printf("param %i changes bats alot, using residuals to form gradient \n", p);
+			for(int i=0; i < ((MNStruct *)context)->pulse->nobs; i++) {
+				TNDM[i][p] = (double)((MNStruct *)context)->pulse->obsn[i].residual-oldRes[i];
+			}
+		}
+		else{
+			printf("param %i only changes residuals, using design matrix for gradient \n");
+			if(sign < 0){
+				for(int i=0; i < ((MNStruct *)context)->pulse->nobs; i++) {	
+					TNDM[i][p] *=-1;
+				}
+			}
+		}	
+		
+	}
+
+	for(int p = 0; p < ((MNStruct *)context)->numFitJumps; p++){
+
+
+		for(int i=0; i < ((MNStruct *)context)->pulse->nobs; i++) {
+//			printf("Jumps in TNDM: %i %i %g %g \n", p, i,  (double)((MNStruct *)context)->LDpriors[p+((MNStruct *)context)->numFitTiming][1], TNDM[i][p+((MNStruct *)context)->numFitTiming]);
+			TNDM[i][p+((MNStruct *)context)->numFitTiming] = ((MNStruct *)context)->LDpriors[p+((MNStruct *)context)->numFitTiming][1]*TNDM[i][p+((MNStruct *)context)->numFitTiming];
+		}
+	
+
+	}
+
+
+
+	for(int j=0; j<numToFit; j++) {
+		double dsum = 0;
+		double gsum = 0;
+		for(int i=0; i < ((MNStruct *)context)->pulse->nobs; i++) {	
+			dsum += TNDM[i][j]*TNDM[i][j]/(((MNStruct *)context)->pulse->obsn[i].toaErr*pow(10.0, -6))/(((MNStruct *)context)->pulse->obsn[i].toaErr*pow(10.0, -6));
+			gsum+= TNDM[i][j]*(((MNStruct *)context)->pulse->obsn[i].residual)/(((MNStruct *)context)->pulse->obsn[i].toaErr*pow(10.0, -6))/(((MNStruct *)context)->pulse->obsn[i].toaErr*pow(10.0, -6));
+		}
+		printf("TOA Hess and grad: %i %g %g \n", j, dsum, gsum);
+	}
+
+	delete[] newVals;
+	delete[] newErrs;
+	delete[] oldErrs;
+	delete[] oldRes;
+}
+
+
+void UpdatePhysDVector(void *context, double **TNDM, int Nobs){
+	
+	double pdParamDeriv[MAX_PARAMS], dMultiplication;
+
+
+	//In order to get design matrix in physical units, need to use update parameters function.  Current fit values/errors are backed up in TempoPriors. Set value/error to 0,1 then call update params.
+	//The new error will be the scaling required for the design matrix, then set values/errors back to old values.
+
+	//long double newF0 = 3.5*(((MNStruct *)context)->LDpriors[1][1]) + (((MNStruct *)context)->LDpriors[1][0]);
+	//((MNStruct *)context)->pulse->param[((MNStruct *)context)->TempoFitNums[1][0]].val[((MNStruct *)context)->TempoFitNums[1][1]] = newF0;
+
+
+
+	int numToFit = ((MNStruct *)context)->numFitTiming + ((MNStruct *)context)->numFitJumps;
+	double *newVals = new double[numToFit]();
+	double *newErrs = new double[numToFit]();
+
+	for(int p= 0; p < numToFit; p++){
+		newErrs[p] = 1;
+	}
+
+	updateParameters(((MNStruct *)context)->pulse, 0,newVals,newErrs);
+
+
+	int fitcount=1;
+
+	for (int p=0;p<MAX_PARAMS;p++) {
+		for (int k=0;k<((MNStruct *)context)->pulse->param[p].aSize;k++){
+			if(((MNStruct *)context)->pulse->param[p].fitFlag[k] == 1 && p != param_dmmodel){
+				//printf("Scaling factor for: %s %g\n",((MNStruct *)context)->pulse->param[p].shortlabel[k], (double)((MNStruct *)context)->pulse->param[p].err[k]);
+				newVals[fitcount] =  (double)((MNStruct *)context)->pulse->param[p].err[k];
+				fitcount++;
+	    		}
+		}
+	}
+
+	
+	for(int i=0; i < ((MNStruct *)context)->pulse->nobs; i++) {
+		FITfuncs(((MNStruct *)context)->pulse->obsn[i].bat - ((MNStruct *)context)->pulse->param[param_pepoch].val[0], pdParamDeriv, numToFit, ((MNStruct *)context)->pulse, i,0);
+		for(int j=1; j<((MNStruct *)context)->numFitTiming; j++) {
+			TNDM[i][j]= pdParamDeriv[j];
+		} 
+	} 
+
+	for(int p= 1; p < ((MNStruct *)context)->numFitTiming; p++){
+		double zeroval=	TNDM[0][p];
+		for(int i=0; i < ((MNStruct *)context)->pulse->nobs; i++) {
+			TNDM[i][p] = TNDM[i][p]-zeroval;
+		}
+	}
+
+
+
+
+	for(int p= 1; p < ((MNStruct *)context)->numFitTiming; p++){
+
+		int sign = ((MNStruct *)context)->TimingGradientSigns[p];
+		double PriorFac = (double)((MNStruct *)context)->LDpriors[p][1];
+		PriorFac *= sign/newVals[p];
+		//printf("updating %i %i %g %g \n", p, sign, newVals[p], PriorFac);
+
+		for(int i=0; i < ((MNStruct *)context)->pulse->nobs; i++) {	
+
+			TNDM[i][p] = TNDM[i][p]*PriorFac;
+
+		}
+	}
+
+	delete[] newVals;
+	delete[] newErrs;
+
+}
+
+
 
 void getCustomDVectorLike(void *context, double *TNDM, int Nobs, int TimeToMargin, int TotalSize){
 	
@@ -1633,7 +1891,14 @@ void Tscrunch(void *globalcontext){
 	 }
 
 	int GlobalNBins = (int)((MNStruct *)globalcontext)->ProfileInfo[0][1];
+	int interpFactor = 2;
+	int interpNBins = GlobalNBins*interpFactor;
+
 	double *TScrunched = new double[numfreqs*GlobalNBins]();
+	double **interpTScrunched = new double*[interpFactor];
+	for(int i = 0; i < interpFactor; i++){interpTScrunched[i]= new double[numfreqs*GlobalNBins]();}
+	double **interpWeights = new double*[interpFactor];
+	for(int i = 0; i < interpFactor; i++){interpWeights[i] = new double[numfreqs*GlobalNBins]();}
 
 	int t = 0;
 	int nTOA = 0;
@@ -1677,61 +1942,114 @@ void Tscrunch(void *globalcontext){
 
 
 
+
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////Work Out bin position for NBins/////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
 			int InterpBin = 0;
 			double FirstInterpTimeBin = 0;
 			int  NumWholeBinInterpOffset = 0;
-
-			if(((MNStruct *)globalcontext)->InterpolateProfile == 1){
-
 		
-				long double timediff = 0;
-				long double bintime = ProfileBats[t][0];
+			long double timediff = 0;
+			long double bintime = ProfileBats[t][0];
 
 
-				if(bintime  >= minpos && bintime <= maxpos){
-				    timediff = bintime - binpos;
-				}
-				else if(bintime < minpos){
-				    timediff = FoldingPeriodDays+bintime - binpos;
-				}
-				else if(bintime > maxpos){
-				    timediff = bintime - FoldingPeriodDays - binpos;
-				}
-
-				timediff=timediff*SECDAY;
-
-				double OneBin = FoldingPeriod/Nbins;
-				int NumBinsInTimeDiff = floor(timediff/OneBin + 0.5);
-				double WholeBinsInTimeDiff = NumBinsInTimeDiff*FoldingPeriod/Nbins;
-				double OneBinTimeDiff = -1*((double)timediff - WholeBinsInTimeDiff);
-
-				double PWrappedTimeDiff = (OneBinTimeDiff - floor(OneBinTimeDiff/OneBin)*OneBin);
-
-				if(debug == 1)printf("Making InterpBin: %g %g %i %g %g %g\n", (double)timediff, OneBin, NumBinsInTimeDiff, WholeBinsInTimeDiff, OneBinTimeDiff, PWrappedTimeDiff);
-
-				InterpBin = floor(PWrappedTimeDiff/((MNStruct *)globalcontext)->InterpolatedTime+0.5);
-				if(InterpBin >= ((MNStruct *)globalcontext)->NumToInterpolate)InterpBin -= ((MNStruct *)globalcontext)->NumToInterpolate;
-
-				FirstInterpTimeBin = -1*(InterpBin-1)*((MNStruct *)globalcontext)->InterpolatedTime;
-
-				if(debug == 1)printf("Interp Time Diffs: %g %g %g %g \n", ((MNStruct *)globalcontext)->InterpolatedTime, InterpBin*((MNStruct *)globalcontext)->InterpolatedTime, PWrappedTimeDiff, InterpBin*((MNStruct *)globalcontext)->InterpolatedTime-PWrappedTimeDiff);
-
-				double FirstBinOffset = timediff-FirstInterpTimeBin;
-				double dNumWholeBinOffset = FirstBinOffset/(FoldingPeriod/Nbins);
-				int  NumWholeBinOffset = 0;
-
-				NumWholeBinInterpOffset = floor(dNumWholeBinOffset+0.5);
-
-	
-				if(debug == 1)printf("Interp bin is: %i , First Bin is %g, Offset is %i \n", InterpBin, FirstInterpTimeBin, NumWholeBinInterpOffset);
-
-
+			if(bintime  >= minpos && bintime <= maxpos){
+			    timediff = bintime - binpos;
 			}
-		   
+			else if(bintime < minpos){
+			    timediff = FoldingPeriodDays+bintime - binpos;
+			}
+			else if(bintime > maxpos){
+			    timediff = bintime - FoldingPeriodDays - binpos;
+			}
+
+			timediff=timediff*SECDAY;
+
+			double OneBin = FoldingPeriod/Nbins;
+			int NumBinsInTimeDiff = floor(timediff/OneBin + 0.5);
+			double WholeBinsInTimeDiff = NumBinsInTimeDiff*FoldingPeriod/Nbins;
+			double OneBinTimeDiff = -1*((double)timediff - WholeBinsInTimeDiff);
+
+			double PWrappedTimeDiff = (OneBinTimeDiff - floor(OneBinTimeDiff/OneBin)*OneBin);
+
+			if(debug == 1)printf("Making InterpBin: %g %g %i %g %g %g\n", (double)timediff, OneBin, NumBinsInTimeDiff, WholeBinsInTimeDiff, OneBinTimeDiff, PWrappedTimeDiff);
+
+			InterpBin = floor(PWrappedTimeDiff/((MNStruct *)globalcontext)->InterpolatedTime+0.5);
+			if(InterpBin >= ((MNStruct *)globalcontext)->NumToInterpolate)InterpBin -= ((MNStruct *)globalcontext)->NumToInterpolate;
+
+			FirstInterpTimeBin = -1*(InterpBin-1)*((MNStruct *)globalcontext)->InterpolatedTime;
+
+			if(debug == 1)printf("Interp Time Diffs: %g %g %g %g \n", ((MNStruct *)globalcontext)->InterpolatedTime, InterpBin*((MNStruct *)globalcontext)->InterpolatedTime, PWrappedTimeDiff, InterpBin*((MNStruct *)globalcontext)->InterpolatedTime-PWrappedTimeDiff);
+
+			double FirstBinOffset = timediff-FirstInterpTimeBin;
+			double dNumWholeBinOffset = FirstBinOffset/(FoldingPeriod/Nbins);
+			int  NumWholeBinOffset = 0;
+
+			NumWholeBinInterpOffset = floor(dNumWholeBinOffset+0.5);
+
+
+			if(debug == 1)printf("Interp bin is: %i , First Bin is %g, Offset is %i \n", InterpBin, FirstInterpTimeBin, NumWholeBinInterpOffset);
 
 
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////Work Out bin position for InterpBins////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+
+			InterpBin = 0;
+			FirstInterpTimeBin = 0;
+			int  InterpFacNumWholeBinInterpOffset = 0;
+		
+			timediff = 0;
+		        bintime = ProfileBats[t][0];
+
+
+			if(bintime  >= minpos && bintime <= maxpos){
+			    timediff = bintime - binpos;
+			}
+			else if(bintime < minpos){
+			    timediff = FoldingPeriodDays+bintime - binpos;
+			}
+			else if(bintime > maxpos){
+			    timediff = bintime - FoldingPeriodDays - binpos;
+			}
+
+			timediff=timediff*SECDAY;
+
+			OneBin = FoldingPeriod/interpNBins;
+			NumBinsInTimeDiff = floor(timediff/OneBin + 0.5);
+			WholeBinsInTimeDiff = NumBinsInTimeDiff*FoldingPeriod/interpNBins;
+			OneBinTimeDiff = -1*((double)timediff - WholeBinsInTimeDiff);
+
+			PWrappedTimeDiff = (OneBinTimeDiff - floor(OneBinTimeDiff/OneBin)*OneBin);
+
+			if(debug == 1)printf("Making InterpBin: %g %g %i %g %g %g\n", (double)timediff, OneBin, NumBinsInTimeDiff, WholeBinsInTimeDiff, OneBinTimeDiff, PWrappedTimeDiff);
+
+			InterpBin = floor(PWrappedTimeDiff/((MNStruct *)globalcontext)->InterpolatedTime+0.5);
+			if(InterpBin >= ((MNStruct *)globalcontext)->NumToInterpolate)InterpBin -= ((MNStruct *)globalcontext)->NumToInterpolate;
+
+			FirstInterpTimeBin = -1*(InterpBin-1)*((MNStruct *)globalcontext)->InterpolatedTime;
+
+			if(debug == 1)printf("Interp Time Diffs: %g %g %g %g \n", ((MNStruct *)globalcontext)->InterpolatedTime, InterpBin*((MNStruct *)globalcontext)->InterpolatedTime, PWrappedTimeDiff, InterpBin*((MNStruct *)globalcontext)->InterpolatedTime-PWrappedTimeDiff);
+
+			FirstBinOffset = timediff-FirstInterpTimeBin;
+			dNumWholeBinOffset = FirstBinOffset/(FoldingPeriod/interpNBins);
+			NumWholeBinOffset = 0;
+
+			InterpFacNumWholeBinInterpOffset = floor(dNumWholeBinOffset+0.5);
+
+
+			if(debug == 1)printf("Interp bin is: %i , First Bin is %g, Offset is %i \n", InterpBin, FirstInterpTimeBin, NumWholeBinInterpOffset);		   
+
+
+			int interpIndex=int(abs(InterpFacNumWholeBinInterpOffset-interpFactor*NumWholeBinInterpOffset));
+			printf("InterpBins: %i %i %i\n", InterpFacNumWholeBinInterpOffset, NumWholeBinInterpOffset, ((InterpFacNumWholeBinInterpOffset-interpFactor*NumWholeBinInterpOffset)));
 
 			///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 			//////////////////////////////////////////////////////Get Noise Level//////////////////////////////////////////////////////////////////////////
@@ -1739,12 +2057,14 @@ void Tscrunch(void *globalcontext){
 
 
 			noisemean=0;
+			int MLnoisemean=0;
 			int numoffpulse = 0;
 			MLSigma = 0;
 			int MLSigmaCount = 0;
 
 			double MinSigma = pow(10.0, 100);
 			for(int b = 0; b < Nbins-100; b+=100){
+				MLSigmaCount = 0;
 				for(int j =b; j < b+100; j++){
 
 						noisemean += (double)((MNStruct *)globalcontext)->ProfileData[nTOA][j][1];
@@ -1761,11 +2081,14 @@ void Tscrunch(void *globalcontext){
 
 				MLSigma = sqrt(MLSigma/MLSigmaCount);
 
-				if(MLSigma < MinSigma)MinSigma = MLSigma;
+				if(MLSigma < MinSigma){
+					MinSigma = MLSigma;
+					MLnoisemean = noisemean;
+				}
 			}
 
 
-			if(debug == 1)printf("noise mean %g num off pulse %i\n", noisemean, numoffpulse);
+			if(debug == 1)printf("noise mean %g num off pulse %i\n", MLnoisemean, numoffpulse);
 
 
 			double cfreq = floor(((MNStruct *)globalcontext)->pulse->obsn[t].freq);
@@ -1775,13 +2098,17 @@ void Tscrunch(void *globalcontext){
 			for(int f = 0; f < numfreqs; f++){
 				if(fabs(cfreq -freqs[f]) < 0.01){freqpos=f;}
 			}
-			//printf("have freq %i %i %g %g \n", t, freqpos, cfreq, freqs[freqpos]);
-	
-			//printf("epoch chan sig %i %i %g \n", ep, ch, MinSigma);				
+				
 			for(int i =0; i < Nbins; i++){
 				int Nj =  UtWrap(i+Nbins/2 + NumWholeBinInterpOffset, 0, Nbins-1);
+				int INj =  UtWrap(interpFactor*i+interpNBins/2 + InterpFacNumWholeBinInterpOffset, 0, interpNBins-1);
 
+				//if(t==0){printf("Interped Bins: %i %i \n", Nj, INj);}
 				TScrunched[freqpos*GlobalNBins + Nj] += (double)((MNStruct *)globalcontext)->ProfileData[nTOA][i][1]*(1.0/(MinSigma*MinSigma));
+
+				interpTScrunched[interpIndex][freqpos*GlobalNBins + Nj] += (double)(((MNStruct *)globalcontext)->ProfileData[nTOA][i][1]-MLnoisemean)*(1.0/(MinSigma*MinSigma));
+
+				interpWeights[interpIndex][freqpos*GlobalNBins + Nj] += (1.0/(MinSigma*MinSigma));
 
 			}
 
@@ -1804,13 +2131,71 @@ void Tscrunch(void *globalcontext){
 		}
 		for(int i =0; i < GlobalNBins; i++){
 			((MNStruct *)globalcontext)->TemplateChans[f*GlobalNBins + i] = TScrunched[f*GlobalNBins + i]-minval;
-                        //printf("Tscrunched: %i %i %.10g \n", i, f, TScrunched[f*GlobalNBins + i]-minval);
+                        //if(f==5){printf("Tscrunched: %i %i %.10g\n", i, f, TScrunched[f*GlobalNBins + i]-minval);}
                 }
+
+		for(int ifac = 0; ifac < interpFactor; ifac++){
+
+	 	 	for(int i =0; i < GlobalNBins; i++){
+				//printf("index %i %i %i\n", i, f*interpNBins+i, numfreqs*interpNBins);
+		                interpTScrunched[ifac][f*GlobalNBins + i] /= interpWeights[ifac][f*GlobalNBins + i];
+		        }
+
+			double noisemean=0;
+			double MLNoiseMean=0;
+			int numoffpulse = 0;
+			double MLSigma = 0;
+			double MLSigmaCount = 0;
+
+			double MinSigma = pow(10.0, 100);
+			for(int b = 0; b < GlobalNBins-100; b+=100){
+				MLSigmaCount = 0;
+				for(int j =b; j < b+100; j++){
+
+						noisemean += interpTScrunched[ifac][f*GlobalNBins + j];
+						numoffpulse += 1;
+				}
+
+				noisemean = noisemean/(numoffpulse);
+
+				for(int j =b; j < b+100; j++){
+
+					double res = interpTScrunched[ifac][f*GlobalNBins + j] - noisemean;
+					MLSigma += res*res; MLSigmaCount += 1;
+				}
+
+				MLSigma = sqrt(MLSigma/MLSigmaCount);
+
+				if(MLSigma < MinSigma){
+					MinSigma = MLSigma;
+					MLNoiseMean = noisemean;
+				}
+			}
+			
+			double dsum=0;
+			for(int i =0; i < GlobalNBins; i++){
+				interpTScrunched[ifac][f*GlobalNBins + i] -= MLNoiseMean;
+				if(interpTScrunched[ifac][f*GlobalNBins + i] > 3*MinSigma){
+					dsum+=interpTScrunched[ifac][f*GlobalNBins + i];
+				}
+		        }
+			printf("Noise mean: %i %i %g %g \n", ifac, f, MLNoiseMean, dsum);
+			for(int i =0; i < GlobalNBins; i++){
+				//((MNStruct *)globalcontext)->TemplateChans[f*GlobalNBins + i] = TScrunched[f*GlobalNBins + i]-minval;
+		                if(f==5){printf("ITscrunched: %g %.10g %g\n", (double(i))+double(ifac)/interpFactor, interpTScrunched[ifac][f*GlobalNBins + i]/dsum, MinSigma/dsum);}
+		        }
+		}
 
 	}
 
-	delete[] TScrunched;	
+	printf("made TScrunched Data \n");
 
+	delete[] TScrunched;	
+	delete[] interpTScrunched;
+	delete[] interpWeights;
+
+
+	printf("done \n");
 }
 
 

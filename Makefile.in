@@ -103,7 +103,8 @@ am__temponest_@T2ARCH@_plug_la_SOURCES_DIST = tempo2pred_int.h \
 	dpotrf.h multinest.h TempoNestTextOutput.cpp dgemv.h \
 	dpotri.cpp MultiNestParams.cpp dgesvd.cpp dpotri.h \
 	TempoNestPlugin.cpp TempoNestParams.cpp TempoNestUtilities.cpp \
-	TempoNestGPUFuncs.cu TempoNestGPULikeFuncs.cpp
+	GHSLikeFuncs.cpp TempoNestGPUFuncs.cu \
+	TempoNestGPULikeFuncs.cpp
 @HAVE_CULA_FALSE@@HAVE_MULTINEST_TRUE@am_temponest_@T2ARCH@_plug_la_OBJECTS =  \
 @HAVE_CULA_FALSE@@HAVE_MULTINEST_TRUE@	configfile.lo \
 @HAVE_CULA_FALSE@@HAVE_MULTINEST_TRUE@	qrdecomp.lo dgemm.lo \
@@ -117,7 +118,8 @@ am__temponest_@T2ARCH@_plug_la_SOURCES_DIST = tempo2pred_int.h \
 @HAVE_CULA_FALSE@@HAVE_MULTINEST_TRUE@	dgesvd.lo \
 @HAVE_CULA_FALSE@@HAVE_MULTINEST_TRUE@	TempoNestPlugin.lo \
 @HAVE_CULA_FALSE@@HAVE_MULTINEST_TRUE@	TempoNestParams.lo \
-@HAVE_CULA_FALSE@@HAVE_MULTINEST_TRUE@	TempoNestUtilities.lo
+@HAVE_CULA_FALSE@@HAVE_MULTINEST_TRUE@	TempoNestUtilities.lo \
+@HAVE_CULA_FALSE@@HAVE_MULTINEST_TRUE@	GHSLikeFuncs.lo
 @HAVE_CULA_TRUE@@HAVE_MULTINEST_TRUE@am_temponest_@T2ARCH@_plug_la_OBJECTS =  \
 @HAVE_CULA_TRUE@@HAVE_MULTINEST_TRUE@	configfile.lo dpotrs.lo \
 @HAVE_CULA_TRUE@@HAVE_MULTINEST_TRUE@	dgesvd.lo qrdecomp.lo \
@@ -130,6 +132,7 @@ am__temponest_@T2ARCH@_plug_la_SOURCES_DIST = tempo2pred_int.h \
 @HAVE_CULA_TRUE@@HAVE_MULTINEST_TRUE@	TempoNestLikeFuncs.lo \
 @HAVE_CULA_TRUE@@HAVE_MULTINEST_TRUE@	TempoNestNGLikeFuncs.lo \
 @HAVE_CULA_TRUE@@HAVE_MULTINEST_TRUE@	TempoNestGPULikeFuncs.lo \
+@HAVE_CULA_TRUE@@HAVE_MULTINEST_TRUE@	GHSLikeFuncs.lo \
 @HAVE_CULA_TRUE@@HAVE_MULTINEST_TRUE@	TempoNestPlugin.lo
 temponest_@T2ARCH@_plug_la_OBJECTS =  \
 	$(am_temponest_@T2ARCH@_plug_la_OBJECTS)
@@ -339,8 +342,8 @@ EXTRA_DIST = $(xtra_dist_sources)
 #	rm -rf `find $(distdir)/unsupported_plugins/ -name '*.o'`
 plugindir = @TEMPO2_PLUG_INSTALL@
 @HAVE_MULTINEST_TRUE@plugin_LTLIBRARIES = temponest_@T2ARCH@_plug.la
-@HAVE_CULA_FALSE@@HAVE_MULTINEST_TRUE@temponest_@T2ARCH@_plug_la_SOURCES = tempo2pred_int.h T2accel.h tempo2pred.h tempo2Util.h constraints.h TKmatrix.h TKfit.h T2toolkit.h tempo2.h config.h configfile.h configfile.cpp qrdecomp.h qrdecomp.cpp  dgemm.cpp dgesvd.h dpotrs.cpp TempoNest.h dgemm.h dpotrf.cpp dpotrs.h TempoNestLikeFuncs.cpp TempoNestNGLikeFuncs.cpp dgemv.cpp dpotrf.h multinest.h TempoNestTextOutput.cpp dgemv.h dpotri.cpp MultiNestParams.cpp  dgesvd.cpp  dpotri.h TempoNestPlugin.cpp TempoNestParams.cpp TempoNestUtilities.cpp
-@HAVE_CULA_TRUE@@HAVE_MULTINEST_TRUE@temponest_@T2ARCH@_plug_la_SOURCES = tempo2pred_int.h T2accel.h tempo2pred.h tempo2Util.h constraints.h TKmatrix.h TKfit.h T2toolkit.h tempo2.h config.h configfile.h configfile.cpp TempoNestGPUFuncs.cu dpotrs.cpp dgesvd.cpp qrdecomp.h qrdecomp.cpp  dgemm.cpp dgemv.cpp dpotri.cpp dpotrf.cpp TempoNestParams.cpp MultiNestParams.cpp TempoNestTextOutput.cpp TempoNestUtilities.cpp TempoNestLikeFuncs.cpp TempoNestNGLikeFuncs.cpp TempoNestGPULikeFuncs.cpp TempoNestPlugin.cpp
+@HAVE_CULA_FALSE@@HAVE_MULTINEST_TRUE@temponest_@T2ARCH@_plug_la_SOURCES = tempo2pred_int.h T2accel.h tempo2pred.h tempo2Util.h constraints.h TKmatrix.h TKfit.h T2toolkit.h tempo2.h config.h configfile.h configfile.cpp qrdecomp.h qrdecomp.cpp  dgemm.cpp dgesvd.h dpotrs.cpp TempoNest.h dgemm.h dpotrf.cpp dpotrs.h TempoNestLikeFuncs.cpp TempoNestNGLikeFuncs.cpp dgemv.cpp dpotrf.h multinest.h TempoNestTextOutput.cpp dgemv.h dpotri.cpp MultiNestParams.cpp  dgesvd.cpp  dpotri.h TempoNestPlugin.cpp TempoNestParams.cpp TempoNestUtilities.cpp GHSLikeFuncs.cpp
+@HAVE_CULA_TRUE@@HAVE_MULTINEST_TRUE@temponest_@T2ARCH@_plug_la_SOURCES = tempo2pred_int.h T2accel.h tempo2pred.h tempo2Util.h constraints.h TKmatrix.h TKfit.h T2toolkit.h tempo2.h config.h configfile.h configfile.cpp TempoNestGPUFuncs.cu dpotrs.cpp dgesvd.cpp qrdecomp.h qrdecomp.cpp  dgemm.cpp dgemv.cpp dpotri.cpp dpotrf.cpp TempoNestParams.cpp MultiNestParams.cpp TempoNestTextOutput.cpp TempoNestUtilities.cpp TempoNestLikeFuncs.cpp TempoNestNGLikeFuncs.cpp TempoNestGPULikeFuncs.cpp GHSLikeFuncs.cpp TempoNestPlugin.cpp
 @HAVE_CULA_FALSE@@HAVE_MULTINEST_TRUE@temponest_@T2ARCH@_plug_la_LIBADD = -lgfortran -ltempo2 -lsofa @QDINSTALL_LIBS@ @MLAPACK_LIBS@ @MULTINEST_LIBS@ @GSL_LIBS@ @BLAS_LIBS@ @LIBS_LAPACK@ @TEMPO2_LIBS@ @PSRCHIVE_LIBS@
 @HAVE_CULA_TRUE@@HAVE_MULTINEST_TRUE@temponest_@T2ARCH@_plug_la_LIBADD = -ltempo2 -lsofa -lTNGPU  @QDINSTALL_LIBS@ @MLAPACK_LIBS@ @MULTINEST_LIBS@ @CULA_LIBS@ @GSL_LIBS@ @BLAS_LIBS@ @LIBS_LAPACK@ @TEMPO2_LIBS@ @PSRCHIVE_LIBS@
 @HAVE_CULA_FALSE@@HAVE_MULTINEST_TRUE@temponest_@T2ARCH@_plug_la_INCLUDES = @QDINSTALL_CFLAGS@ @MLAPACK_CFLAGS@ @MULTINEST_CFLAGS@ @GSL_CFLAGS@ @TEMPO2_CFLAGS@ @PSRCHIVE_CFLAGS@
@@ -442,6 +445,7 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/GHSLikeFuncs.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/MultiNestParams.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/TempoNestGPULikeFuncs.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/TempoNestLikeFuncs.Plo@am__quote@

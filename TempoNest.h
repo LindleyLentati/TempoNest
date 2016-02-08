@@ -124,6 +124,7 @@ typedef struct {
 	int storeFMatrices;
 	double *StoredTMatrix;
 	double *StoredDMVals;
+	int *TimingGradientSigns;
 	/*GPTA stuff*/
 
 	int incWideBandNoise;
@@ -144,8 +145,9 @@ typedef struct {
 	double **InterpolatedWidthProfile;
 	int *numChanPerInt;
 	int numProfileEpochs;
+	int TotalProfiles;
 	double *MeanProfileShape;
-	double *MeanProfileEvo;
+	double **MeanProfileEvo;
 	double MeanProfileBeta;
 	long double **ProfileInfo;
 	long double ***ProfileData;
@@ -165,6 +167,7 @@ typedef struct {
 	int incProfileFit;
 	int *numProfileFitCoeff;
 	int totalProfileFitCoeff;
+	int totalCoeffForMult;
 	int FitLinearProfileWidth;
 	int numProfComponents;
 	int incWidthJitter;
@@ -176,6 +179,12 @@ typedef struct {
 	int SubIntToFit;
 	int ChannelToFit;
 	double **MLProfileNoise;
+	int NProfileEvoPoly;
+	double *ProfCompSeps;
+	int diagonalGHS;
+	double PhasePrior;
+	int WriteNewML;
+
 	/*Template Stuff*/
 
 	int numTempFreqs;
@@ -203,8 +212,13 @@ typedef struct {
 } MNStruct;
 
 
+
+
 void assigncontext(void *context);
 void assignGPUcontext(void *context);
+void assignGHScontext(void *context);
+
+void callGHS();
 
 double iter_factorial(unsigned int n);
 void store_factorial();
@@ -263,7 +277,7 @@ void TempoNestNGLikeFunc(double *Cube, int &ndim, int &npars, double &lnew, void
 //void WhiteMarginGPULogLike(double *Cube, int &ndim, int &npars, double &lnew, void *context);
 //void LRedGPULogLike(double *Cube, int &ndim, int &npars, double &lnew, void *context);
 double NewLRedMarginGPULogLike(int &ndim, double *Cube, int &npars, double *DerivedParams, void *globalcontext);
-
+void NelderMeadOptimum(int nParameters);
 
 
 
@@ -280,7 +294,8 @@ void getNGJitterMatrix(pulsar *pulse, double **JitterMatrix, int &NumEpochs);
 void getNGJitterMatrixEpochs(pulsar *pulse, int &NumEpochs);
 void StoreTMatrix(double *TMatrix, void *context);
 void getArraySizeInfo(void *context);
-
+void getPhysDVector(void *context, double **TNDM, int Nobs, int *TimingGradientSigns);
+void UpdatePhysDVector(void *context, double **TNDM, int Nobs);
 
 void readsummary(pulsar *psr, std::string longname, int ndim, void *context, long double *Tempo2Fit, int incRED, int ndims, int MarginTime, int MarginJumps, int doLinear);
 
@@ -400,10 +415,11 @@ void setupparams(int &useGPUS,
 		double *ProfileNoiseAmpPrior,
 		double *ProfileNoiseSpecPrior,
 		int &SubIntToFit,
-		int &ChannelToFit);
+		int &ChannelToFit,
+		int &NProfileEvoPoly);
 
 void setTNPriors(double **Dpriors, long double **TempoPriors, int TPsize, int DPsize);
 void setFrequencies(double *SampleFreq, int numRedfreqs, int numDMfreqs, int numRedLogFreqs, int numDMLogFreqs, double RedLowFreq, double DMLowFreq, double RedMidFreq, double DMMidFreq);
 void GetGroupsToFit(int incGroupNoise, int **FitForGroup, int incBandNoise, int **FitForBand);
 void setShapePriors(double **ShapePriors, double *BetaPrior, int numcoeff);
-void GetProfileFitInfo(int numProfComponents, int *numGPTAshapecoeff, int *numProfileFitCoeff, int *numEvoCoeff, int *numFitEvoCoeff, 	int *numGPTAstocshapecoeff);
+void GetProfileFitInfo(int numProfComponents, int *numGPTAshapecoeff, int *numProfileFitCoeff, int *numEvoCoeff, int *numFitEvoCoeff, 	int *numGPTAstocshapecoeff, double *ProfCompSeps);

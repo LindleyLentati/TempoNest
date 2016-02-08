@@ -26818,7 +26818,7 @@ $as_echo_n "checking for MultiNest installation... " >&6; }
     MULTINEST_LIBS="-L$MULTINEST_DIR"
   fi
 
-  MULTINEST_LIBS="$MULTINEST_LIBS -lchord -lnest3"
+  MULTINEST_LIBS="$MULTINEST_LIBS -lchord -lnest3 -lellipsis"
 
   ac_save_CFLAGS="$CFLAGS"
   ac_save_LIBS="$LIBS"

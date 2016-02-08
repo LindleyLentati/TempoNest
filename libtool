@@ -2,7 +2,7 @@
 
 # libtool - Provide generalized library-building support services.
 # Generated automatically by config.status (temponest) 0.1
-# Libtool was configured on host login-sand7:
+# Libtool was configured on host login-sand1:
 # NOTE: Changes made to this file will be lost: look at ltmain.sh.
 #
 #   Copyright (C) 1996, 1997, 1998, 1999, 2000, 2001, 2003, 2004, 2005,
@@ -129,10 +129,10 @@ old_postinstall_cmds="chmod 644 \$oldlib~\$RANLIB \$oldlib"
 old_postuninstall_cmds=""
 
 # A C compiler.
-LTCC="mpicc -cc=gcc"
+LTCC="mpicc"
 
 # LTCC compiler flags.
-LTCFLAGS="-O3"
+LTCFLAGS="-fopenmp"
 
 # Take the output of nm and produce a listing of raw symbols and C names.
 global_symbol_pipe="sed -n -e 's/^.*[	 ]\\([ABCDGIRSTW][ABCDGIRSTW]*\\)[	 ][	 ]*\\([_A-Za-z][_A-Za-z0-9]*\\)\$/\\1 \\2 \\2/p'"
@@ -234,7 +234,7 @@ finish_eval=""
 hardcode_into_libs=yes
 
 # Compile-time system search path for libraries.
-sys_lib_search_path_spec="/usr/local/Cluster-Apps/cuda/6.0/lib64 /usr/local/Cluster-Apps/cuda/6.0/extras/CUPTI/lib64 /usr/local/Cluster-Apps/cuda/6.0/nvvm/lib64 /usr/local/Cluster-Apps/gcc/4.8.1/lib/gcc/x86_64-unknown-linux-gnu/4.8.1 /usr/local/Cluster-Apps/gcc/4.8.1/lib64 /lib64 /usr/lib64 /usr/local/Cluster-Apps/fftw/intel/64/3.3.3/lib /usr/local/Cluster-Apps/intel/cce/15.0.1.133/ipp/lib/intel64 /usr/local/Cluster-Apps/intel/cce/15.0.1.133/tbb/lib/intel64 /usr/local/Cluster-Apps/intel/fce/15.0.1.133/lib/intel64 /usr/local/Cluster-Apps/pgplot /usr/local/Cluster-Apps/cuda/6.0/open64/lib /usr/local/Cluster-Apps/intel/mkl/10.3.10.319/composer_xe_2011_sp1.10.319/mkl/lib/intel64 /usr/local/Cluster-Apps/intel/impi/4.1.3.045/lib64 /usr/local/Cluster-Users/sjr20/cfitsio/3.03/icc/lib"
+sys_lib_search_path_spec="/usr/local/Cluster-Apps/cuda/6.0/lib64 /usr/local/Cluster-Apps/cuda/6.0/extras/CUPTI/lib64 /usr/local/Cluster-Apps/cuda/6.0/nvvm/lib64 /usr/local/Cluster-Apps/gcc/4.8.1/lib/gcc/x86_64-unknown-linux-gnu/4.8.1 /usr/local/Cluster-Apps/gcc/4.8.1/lib64 /lib64 /usr/lib64 /usr/local/Cluster-Apps/OpenMPI/gcc/1.8.2/lib /usr/local/Cluster-Apps/intel/cce/15.0.1.133/ipp/lib/intel64 /usr/local/Cluster-Apps/intel/cce/15.0.1.133/tbb/lib/intel64 /usr/local/Cluster-Apps/intel/fce/15.0.1.133/lib/intel64 /usr/local/Cluster-Apps/pgplot /usr/local/Cluster-Apps/cuda/6.0/open64/lib /usr/local/Cluster-Apps/fftw/intel/64/3.3.3/lib /usr/local/Cluster-Apps/intel/mkl/10.3.10.319/composer_xe_2011_sp1.10.319/mkl/lib/intel64 /usr/local/Cluster-Apps/intel/impi/4.1.3.045/lib64 /usr/local/Cluster-Users/sjr20/cfitsio/3.03/icc/lib"
 
 # Run-time system search path for libraries.
 sys_lib_dlsearch_path_spec="/lib64 /usr/lib64 /lib /usr/lib /usr/lib64/R/lib /usr/lib64/atlas /usr/lib64/ctapi /opt/mellanox/fca/lib /opt/ibutils/lib64 /opt/mellanox/libibprof/lib /usr/lib64/llvm /opt/mellanox/mxm/lib /usr/lib64/mysql /usr/lib64/octave/3.4.3 /usr/lib64/papi-4.1.3 /usr/lib64/papi-5.1.1/usr/lib /usr/lib64/qt-3.3/lib /opt/dell/srvadmin/lib64 /opt/dell/srvadmin/lib64/openmanage /opt/dell/srvadmin/lib64 /opt/dell/srvadmin/lib64 /opt/dell/srvadmin/lib64/srvadmin-isvc /usr/lib64/tcl8.5/tclx8.4 /usr/lib/wine/ /usr/lib64/wine/ /usr/lib64/xulrunner "
@@ -260,7 +260,7 @@ LD="/usr/bin/ld -m elf_x86_64"
 old_archive_cmds="\$AR \$AR_FLAGS \$oldlib\$oldobjs~\$RANLIB \$oldlib"
 
 # A language specific compiler.
-CC="mpicc -cc=gcc"
+CC="mpicc"
 
 # Is the compiler the GNU compiler?
 with_gcc=yes
@@ -275,7 +275,7 @@ wl="-Wl,"
 pic_flag=" -fPIC -DPIC"
 
 # Compiler flag to prevent dynamic linking.
-link_static_flag=""
+link_static_flag="-static"
 
 # Does compiler simultaneously support -c and -o options?
 compiler_c_o="yes"
@@ -8915,7 +8915,7 @@ LD="/usr/bin/ld -m elf_x86_64"
 old_archive_cmds="\$AR \$AR_FLAGS \$oldlib\$oldobjs~\$RANLIB \$oldlib"
 
 # A language specific compiler.
-CC="mpicxx -cxx=g++"
+CC="mpicxx"
 
 # Is the compiler the GNU compiler?
 with_gcc=yes
@@ -9040,18 +9040,18 @@ file_list_spec=""
 hardcode_action=immediate
 
 # The directories searched by this compiler when creating a shared library.
-compiler_lib_search_dirs="/usr/local/Cluster-Apps/intel/impi/4.1.3.045/intel64/lib /usr/local/Cluster-Apps/cuda/6.0/lib64/../lib64 /usr/local/Cluster-Apps/cuda/6.0/lib/../lib64 /usr/local/Cluster-Apps/cuda/6.0/extras/CUPTI/lib64/../lib64 /usr/local/Cluster-Apps/cuda/6.0/nvvm/lib64/../lib64 /usr/local/Cluster-Apps/gcc/4.8.1/lib/gcc/x86_64-unknown-linux-gnu/4.8.1 /usr/local/Cluster-Apps/gcc/4.8.1/lib/gcc/x86_64-unknown-linux-gnu/4.8.1/../../../../lib64 /lib/../lib64 /usr/lib/../lib64 /usr/local/Cluster-Apps/fftw/intel/64/3.3.3/lib /usr/local/Cluster-Apps/intel/cce/15.0.1.133/ipp/lib/intel64 /usr/local/Cluster-Apps/intel/cce/15.0.1.133/tbb/lib/intel64 /usr/local/Cluster-Apps/intel/fce/15.0.1.133/lib/intel64 /usr/local/Cluster-Apps/pgplot /usr/local/Cluster-Apps/cuda/6.0/lib64 /usr/local/Cluster-Apps/cuda/6.0/lib /usr/local/Cluster-Apps/cuda/6.0/extras/CUPTI/lib64 /usr/local/Cluster-Apps/cuda/6.0/nvvm/lib64 /usr/local/Cluster-Apps/cuda/6.0/open64/lib /usr/local/Cluster-Apps/intel/mkl/10.3.10.319/composer_xe_2011_sp1.10.319/mkl/lib/intel64 /usr/local/Cluster-Apps/intel/impi/4.1.3.045/lib64 /usr/local/Cluster-Users/sjr20/cfitsio/3.03/icc/lib /usr/local/Cluster-Apps/gcc/4.8.1/lib/gcc/x86_64-unknown-linux-gnu/4.8.1/../../.."
+compiler_lib_search_dirs="/usr/local/Cluster-Apps/OpenMPI/gcc/1.8.2/lib /usr/local/Cluster-Apps/cuda/6.0/lib64/../lib64 /usr/local/Cluster-Apps/cuda/6.0/lib/../lib64 /usr/local/Cluster-Apps/cuda/6.0/extras/CUPTI/lib64/../lib64 /usr/local/Cluster-Apps/cuda/6.0/nvvm/lib64/../lib64 /usr/local/Cluster-Apps/gcc/4.8.1/lib/gcc/x86_64-unknown-linux-gnu/4.8.1 /usr/local/Cluster-Apps/gcc/4.8.1/lib/gcc/x86_64-unknown-linux-gnu/4.8.1/../../../../lib64 /lib/../lib64 /usr/lib/../lib64 /usr/local/Cluster-Apps/OpenMPI/gcc/1.8.2/lib /usr/local/Cluster-Apps/intel/cce/15.0.1.133/ipp/lib/intel64 /usr/local/Cluster-Apps/intel/cce/15.0.1.133/tbb/lib/intel64 /usr/local/Cluster-Apps/intel/fce/15.0.1.133/lib/intel64 /usr/local/Cluster-Apps/pgplot /usr/local/Cluster-Apps/cuda/6.0/lib64 /usr/local/Cluster-Apps/cuda/6.0/lib /usr/local/Cluster-Apps/cuda/6.0/extras/CUPTI/lib64 /usr/local/Cluster-Apps/cuda/6.0/nvvm/lib64 /usr/local/Cluster-Apps/cuda/6.0/open64/lib /usr/local/Cluster-Apps/fftw/intel/64/3.3.3/lib /usr/local/Cluster-Apps/intel/mkl/10.3.10.319/composer_xe_2011_sp1.10.319/mkl/lib/intel64 /usr/local/Cluster-Apps/intel/impi/4.1.3.045/lib64 /usr/local/Cluster-Users/sjr20/cfitsio/3.03/icc/lib /usr/local/Cluster-Apps/gcc/4.8.1/lib/gcc/x86_64-unknown-linux-gnu/4.8.1/../../.."
 
 # Dependencies to place before and after the objects being linked to
 # create a shared library.
 predep_objects="/usr/lib/../lib64/crti.o /usr/local/Cluster-Apps/gcc/4.8.1/lib/gcc/x86_64-unknown-linux-gnu/4.8.1/crtbeginS.o"
 postdep_objects="/usr/local/Cluster-Apps/gcc/4.8.1/lib/gcc/x86_64-unknown-linux-gnu/4.8.1/crtendS.o /usr/lib/../lib64/crtn.o"
 predeps=""
-postdeps="-lmpigc4 -lmpigf -lmpi_dbg -lmpigi -ldl -lrt -lpthread -lstdc++ -lm -lgcc_s -lc -lgcc_s"
+postdeps="-lmpi_cxx -lmpi -lstdc++ -lm -lgomp -lgcc_s -lpthread -lc -lgcc_s"
 
 # The library search path used internally by the compiler when linking
 # a shared library.
-compiler_lib_search_path="-L/usr/local/Cluster-Apps/intel/impi/4.1.3.045/intel64/lib -L/usr/local/Cluster-Apps/cuda/6.0/lib64/../lib64 -L/usr/local/Cluster-Apps/cuda/6.0/lib/../lib64 -L/usr/local/Cluster-Apps/cuda/6.0/extras/CUPTI/lib64/../lib64 -L/usr/local/Cluster-Apps/cuda/6.0/nvvm/lib64/../lib64 -L/usr/local/Cluster-Apps/gcc/4.8.1/lib/gcc/x86_64-unknown-linux-gnu/4.8.1 -L/usr/local/Cluster-Apps/gcc/4.8.1/lib/gcc/x86_64-unknown-linux-gnu/4.8.1/../../../../lib64 -L/lib/../lib64 -L/usr/lib/../lib64 -L/usr/local/Cluster-Apps/fftw/intel/64/3.3.3/lib -L/usr/local/Cluster-Apps/intel/cce/15.0.1.133/ipp/lib/intel64 -L/usr/local/Cluster-Apps/intel/cce/15.0.1.133/tbb/lib/intel64 -L/usr/local/Cluster-Apps/intel/fce/15.0.1.133/lib/intel64 -L/usr/local/Cluster-Apps/pgplot -L/usr/local/Cluster-Apps/cuda/6.0/lib64 -L/usr/local/Cluster-Apps/cuda/6.0/lib -L/usr/local/Cluster-Apps/cuda/6.0/extras/CUPTI/lib64 -L/usr/local/Cluster-Apps/cuda/6.0/nvvm/lib64 -L/usr/local/Cluster-Apps/cuda/6.0/open64/lib -L/usr/local/Cluster-Apps/intel/mkl/10.3.10.319/composer_xe_2011_sp1.10.319/mkl/lib/intel64 -L/usr/local/Cluster-Apps/intel/impi/4.1.3.045/lib64 -L/usr/local/Cluster-Users/sjr20/cfitsio/3.03/icc/lib -L/usr/local/Cluster-Apps/gcc/4.8.1/lib/gcc/x86_64-unknown-linux-gnu/4.8.1/../../.."
+compiler_lib_search_path="-L/usr/local/Cluster-Apps/OpenMPI/gcc/1.8.2/lib -L/usr/local/Cluster-Apps/cuda/6.0/lib64/../lib64 -L/usr/local/Cluster-Apps/cuda/6.0/lib/../lib64 -L/usr/local/Cluster-Apps/cuda/6.0/extras/CUPTI/lib64/../lib64 -L/usr/local/Cluster-Apps/cuda/6.0/nvvm/lib64/../lib64 -L/usr/local/Cluster-Apps/gcc/4.8.1/lib/gcc/x86_64-unknown-linux-gnu/4.8.1 -L/usr/local/Cluster-Apps/gcc/4.8.1/lib/gcc/x86_64-unknown-linux-gnu/4.8.1/../../../../lib64 -L/lib/../lib64 -L/usr/lib/../lib64 -L/usr/local/Cluster-Apps/OpenMPI/gcc/1.8.2/lib -L/usr/local/Cluster-Apps/intel/cce/15.0.1.133/ipp/lib/intel64 -L/usr/local/Cluster-Apps/intel/cce/15.0.1.133/tbb/lib/intel64 -L/usr/local/Cluster-Apps/intel/fce/15.0.1.133/lib/intel64 -L/usr/local/Cluster-Apps/pgplot -L/usr/local/Cluster-Apps/cuda/6.0/lib64 -L/usr/local/Cluster-Apps/cuda/6.0/lib -L/usr/local/Cluster-Apps/cuda/6.0/extras/CUPTI/lib64 -L/usr/local/Cluster-Apps/cuda/6.0/nvvm/lib64 -L/usr/local/Cluster-Apps/cuda/6.0/open64/lib -L/usr/local/Cluster-Apps/fftw/intel/64/3.3.3/lib -L/usr/local/Cluster-Apps/intel/mkl/10.3.10.319/composer_xe_2011_sp1.10.319/mkl/lib/intel64 -L/usr/local/Cluster-Apps/intel/impi/4.1.3.045/lib64 -L/usr/local/Cluster-Users/sjr20/cfitsio/3.03/icc/lib -L/usr/local/Cluster-Apps/gcc/4.8.1/lib/gcc/x86_64-unknown-linux-gnu/4.8.1/../../.."
 
 # ### END LIBTOOL TAG CONFIG: CXX
 
@@ -9064,7 +9064,7 @@ LD="/usr/bin/ld -m elf_x86_64"
 old_archive_cmds="\$AR \$AR_FLAGS \$oldlib\$oldobjs~\$RANLIB \$oldlib"
 
 # A language specific compiler.
-CC="mpif77 -fc=gfortran"
+CC="mpif77"
 
 # Is the compiler the GNU compiler?
 with_gcc=yes
@@ -9216,7 +9216,7 @@ LD="/usr/bin/ld -m elf_x86_64"
 old_archive_cmds="\$AR \$AR_FLAGS \$oldlib\$oldobjs~\$RANLIB \$oldlib"
 
 # A language specific compiler.
-CC="mpif90 -fc=gfortran"
+CC="mpif90"
 
 # Is the compiler the GNU compiler?
 with_gcc=yes
@@ -9351,7 +9351,7 @@ compiler_lib_search_dirs=""
 predep_objects=""
 postdep_objects="/usr/lib/../lib64/crti.o /usr/local/Cluster-Apps/gcc/4.8.1/lib/gcc/x86_64-unknown-linux-gnu/4.8.1/crtbeginS.o /usr/local/Cluster-Apps/gcc/4.8.1/lib/gcc/x86_64-unknown-linux-gnu/4.8.1/crtendS.o /usr/lib/../lib64/crtn.o"
 predeps=""
-postdeps="-L/usr/local/Cluster-Apps/intel/impi/4.1.3.045/intel64/lib -lmpigf -lmpi_dbg -lmpigi -ldl -lrt -lpthread -l -l -L/usr/local/Cluster-Apps/intel/impi/4.1.3.045/intel64/lib -L/usr/local/Cluster-Apps/cuda/6.0/lib64/../lib64 -L/usr/local/Cluster-Apps/cuda/6.0/lib/../lib64 -L/usr/local/Cluster-Apps/cuda/6.0/extras/CUPTI/lib64/../lib64 -L/usr/local/Cluster-Apps/cuda/6.0/nvvm/lib64/../lib64 -L/usr/local/Cluster-Apps/gcc/4.8.1/lib/gcc/x86_64-unknown-linux-gnu/4.8.1 -L/usr/local/Cluster-Apps/gcc/4.8.1/lib/gcc/x86_64-unknown-linux-gnu/4.8.1/../../../../lib64 -L/lib/../lib64 -L/usr/lib/../lib64 -L/usr/local/Cluster-Apps/fftw/intel/64/3.3.3/lib -L/usr/local/Cluster-Apps/intel/cce/15.0.1.133/ipp/lib/intel64 -L/usr/local/Cluster-Apps/intel/cce/15.0.1.133/tbb/lib/intel64 -L/usr/local/Cluster-Apps/intel/fce/15.0.1.133/lib/intel64 -L/usr/local/Cluster-Apps/pgplot -L/usr/local/Cluster-Apps/cuda/6.0/lib64 -L/usr/local/Cluster-Apps/cuda/6.0/lib -L/usr/local/Cluster-Apps/cuda/6.0/extras/CUPTI/lib64 -L/usr/local/Cluster-Apps/cuda/6.0/nvvm/lib64 -L/usr/local/Cluster-Apps/cuda/6.0/open64/lib -L/usr/local/Cluster-Apps/intel/mkl/10.3.10.319/composer_xe_2011_sp1.10.319/mkl/lib/intel64 -L/usr/local/Cluster-Apps/intel/impi/4.1.3.045/lib64 -L/usr/local/Cluster-Users/sjr20/cfitsio/3.03/icc/lib -L/usr/local/Cluster-Apps/gcc/4.8.1/lib/gcc/x86_64-unknown-linux-gnu/4.8.1/../../.. -lmpigf -lmpi_dbg -lmpigi -ldl -lrt -lpthread -lgfortran -lm -lgcc_s -lquadmath -lm -lgcc_s -lc -lgcc_s"
+postdeps="-L/usr/local/Cluster-Apps/OpenMPI/gcc/1.8.2/lib -lmpi_usempi -lmpi_mpifh -lmpi -l -l -L/usr/local/Cluster-Apps/OpenMPI/gcc/1.8.2/lib -L/usr/local/Cluster-Apps/cuda/6.0/lib64/../lib64 -L/usr/local/Cluster-Apps/cuda/6.0/lib/../lib64 -L/usr/local/Cluster-Apps/cuda/6.0/extras/CUPTI/lib64/../lib64 -L/usr/local/Cluster-Apps/cuda/6.0/nvvm/lib64/../lib64 -L/usr/local/Cluster-Apps/gcc/4.8.1/lib/gcc/x86_64-unknown-linux-gnu/4.8.1 -L/usr/local/Cluster-Apps/gcc/4.8.1/lib/gcc/x86_64-unknown-linux-gnu/4.8.1/../../../../lib64 -L/lib/../lib64 -L/usr/lib/../lib64 -L/usr/local/Cluster-Apps/OpenMPI/gcc/1.8.2/lib -L/usr/local/Cluster-Apps/intel/cce/15.0.1.133/ipp/lib/intel64 -L/usr/local/Cluster-Apps/intel/cce/15.0.1.133/tbb/lib/intel64 -L/usr/local/Cluster-Apps/intel/fce/15.0.1.133/lib/intel64 -L/usr/local/Cluster-Apps/pgplot -L/usr/local/Cluster-Apps/cuda/6.0/lib64 -L/usr/local/Cluster-Apps/cuda/6.0/lib -L/usr/local/Cluster-Apps/cuda/6.0/extras/CUPTI/lib64 -L/usr/local/Cluster-Apps/cuda/6.0/nvvm/lib64 -L/usr/local/Cluster-Apps/cuda/6.0/open64/lib -L/usr/local/Cluster-Apps/fftw/intel/64/3.3.3/lib -L/usr/local/Cluster-Apps/intel/mkl/10.3.10.319/composer_xe_2011_sp1.10.319/mkl/lib/intel64 -L/usr/local/Cluster-Apps/intel/impi/4.1.3.045/lib64 -L/usr/local/Cluster-Users/sjr20/cfitsio/3.03/icc/lib -L/usr/local/Cluster-Apps/gcc/4.8.1/lib/gcc/x86_64-unknown-linux-gnu/4.8.1/../../.. -lmpi_usempi -lmpi_mpifh -lmpi -lgfortran -lm -lgomp -lgcc_s -lquadmath -lm -lgcc_s -lpthread -lc -lgcc_s"
 
 # The library search path used internally by the compiler when linking
 # a shared library.

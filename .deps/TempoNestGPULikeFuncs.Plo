@@ -7,7 +7,6 @@ TempoNestGPULikeFuncs.lo: TempoNestGPULikeFuncs.cpp /usr/include/stdio.h \
  /usr/include/libio.h /usr/include/_G_config.h /usr/include/wchar.h \
  /usr/local/Cluster-Apps/gcc/4.8.1/lib/gcc/x86_64-unknown-linux-gnu/4.8.1/include/stdarg.h \
  /usr/include/bits/stdio_lim.h /usr/include/bits/sys_errlist.h \
- /usr/include/bits/stdio.h \
  /usr/local/Cluster-Apps/gcc/4.8.1/include/c++/4.8.1/vector \
  /usr/local/Cluster-Apps/gcc/4.8.1/include/c++/4.8.1/bits/stl_algobase.h \
  /usr/local/Cluster-Apps/gcc/4.8.1/include/c++/4.8.1/x86_64-unknown-linux-gnu/bits/c++config.h \
@@ -44,7 +43,6 @@ TempoNestGPULikeFuncs.lo: TempoNestGPULikeFuncs.cpp /usr/include/stdio.h \
  /usr/include/bits/huge_valf.h /usr/include/bits/huge_vall.h \
  /usr/include/bits/inf.h /usr/include/bits/nan.h \
  /usr/include/bits/mathdef.h /usr/include/bits/mathcalls.h \
- /usr/include/bits/mathinline.h \
  /usr/local/Cluster-Apps/gcc/4.8.1/include/c++/4.8.1/algorithm \
  /usr/local/Cluster-Apps/gcc/4.8.1/include/c++/4.8.1/utility \
  /usr/local/Cluster-Apps/gcc/4.8.1/include/c++/4.8.1/bits/stl_relops.h \
@@ -122,8 +120,6 @@ TempoNestGPULikeFuncs.lo: TempoNestGPULikeFuncs.cpp /usr/include/stdio.h \
 /usr/include/bits/stdio_lim.h:
 
 /usr/include/bits/sys_errlist.h:
-
-/usr/include/bits/stdio.h:
 
 /usr/local/Cluster-Apps/gcc/4.8.1/include/c++/4.8.1/vector:
 
@@ -208,8 +204,6 @@ dgemm.h:
 /usr/include/bits/mathdef.h:
 
 /usr/include/bits/mathcalls.h:
-
-/usr/include/bits/mathinline.h:
 
 /usr/local/Cluster-Apps/gcc/4.8.1/include/c++/4.8.1/algorithm:
 

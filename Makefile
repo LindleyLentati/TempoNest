@@ -103,7 +103,8 @@ am__temponest_linux-gnu_plug_la_SOURCES_DIST = tempo2pred_int.h \
 	dpotrf.h multinest.h TempoNestTextOutput.cpp dgemv.h \
 	dpotri.cpp MultiNestParams.cpp dgesvd.cpp dpotri.h \
 	TempoNestPlugin.cpp TempoNestParams.cpp TempoNestUtilities.cpp \
-	TempoNestGPUFuncs.cu TempoNestGPULikeFuncs.cpp
+	GHSLikeFuncs.cpp TempoNestGPUFuncs.cu \
+	TempoNestGPULikeFuncs.cpp
 #am_temponest_linux-gnu_plug_la_OBJECTS =  \
 #	configfile.lo \
 #	qrdecomp.lo dgemm.lo \
@@ -117,7 +118,8 @@ am__temponest_linux-gnu_plug_la_SOURCES_DIST = tempo2pred_int.h \
 #	dgesvd.lo \
 #	TempoNestPlugin.lo \
 #	TempoNestParams.lo \
-#	TempoNestUtilities.lo
+#	TempoNestUtilities.lo \
+#	GHSLikeFuncs.lo
 am_temponest_linux-gnu_plug_la_OBJECTS =  \
 	configfile.lo dpotrs.lo \
 	dgesvd.lo qrdecomp.lo \
@@ -130,6 +132,7 @@ am_temponest_linux-gnu_plug_la_OBJECTS =  \
 	TempoNestLikeFuncs.lo \
 	TempoNestNGLikeFuncs.lo \
 	TempoNestGPULikeFuncs.lo \
+	GHSLikeFuncs.lo \
 	TempoNestPlugin.lo
 temponest_linux-gnu_plug_la_OBJECTS =  \
 	$(am_temponest_linux-gnu_plug_la_OBJECTS)
@@ -180,17 +183,17 @@ AUTOHEADER = ${SHELL} /home/ltl21/PulsarCode/Git/TempoNest/config/missing --run 
 AUTOMAKE = ${SHELL} /home/ltl21/PulsarCode/Git/TempoNest/config/missing --run automake-1.11
 AWK = gawk
 BLAS_LIBS = -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5 -lpthread
-CC = mpicc -cc=gcc
+CC = mpicc
 CCDEPMODE = depmode=gcc3
-CFLAGS = -O3
-CPP = mpicc -cc=gcc -E
+CFLAGS = -fopenmp
+CPP = mpicc -E
 CPPFLAGS = 
 CULA_CFLAGS = -I/home/ltl21/PulsarCode/cula/include
 CULA_LIBS = -L/home/ltl21/PulsarCode/cula/lib64 -lcula_lapack -lcuda 
-CXX = mpicxx -cxx=g++
-CXXCPP = mpicxx -cxx=g++ -E
+CXX = mpicxx
+CXXCPP = mpicxx -E
 CXXDEPMODE = depmode=gcc3
-CXXFLAGS = -O3 -I/home/ltl21/PulsarCode/cula/include -I/home/ltl21/PulsarCode/T2Runtime/include -I/home/ltl21/PulsarCode/PSRCHIVE/INSTALL//include -I/home/ltl21/Code/HighPrecision/QDInstall//include -I/home/ltl21/Code/HighPrecision/MLAPACK/MPackInstall//include
+CXXFLAGS = -fopenmp -I/home/ltl21/PulsarCode/cula/include -I/home/ltl21/PulsarCode/T2Runtime/include -I/home/ltl21/PulsarCode/PSRCHIVE/INSTALL//include -I/home/ltl21/Code/HighPrecision/QDInstall//include -I/home/ltl21/Code/HighPrecision/MLAPACK/MPackInstall//include
 CYGPATH_W = echo
 DEFS = -DHAVE_CONFIG_H
 DEPDIR = .deps
@@ -201,13 +204,13 @@ ECHO_N = -n
 ECHO_T = 
 EGREP = /bin/grep -E
 EXEEXT = 
-F77 = mpif77 -fc=gfortran
-FC = mpif90 -fc=gfortran
+F77 = mpif77
+FC = mpif90
 FCFLAGS = -g -O2
-FCLIBS =  -L/usr/local/Cluster-Apps/intel/impi/4.1.3.045/intel64/lib -L/usr/local/Cluster-Apps/cuda/6.0/lib64/../lib64 -L/usr/local/Cluster-Apps/cuda/6.0/lib/../lib64 -L/usr/local/Cluster-Apps/cuda/6.0/extras/CUPTI/lib64/../lib64 -L/usr/local/Cluster-Apps/cuda/6.0/nvvm/lib64/../lib64 -L/usr/local/Cluster-Apps/gcc/4.8.1/lib/gcc/x86_64-unknown-linux-gnu/4.8.1 -L/usr/local/Cluster-Apps/gcc/4.8.1/lib/gcc/x86_64-unknown-linux-gnu/4.8.1/../../../../lib64 -L/lib/../lib64 -L/usr/lib/../lib64 -L/usr/local/Cluster-Apps/fftw/intel/64/3.3.3/lib -L/usr/local/Cluster-Apps/intel/cce/15.0.1.133/ipp/lib/intel64 -L/usr/local/Cluster-Apps/intel/cce/15.0.1.133/tbb/lib/intel64 -L/usr/local/Cluster-Apps/intel/fce/15.0.1.133/lib/intel64 -L/usr/local/Cluster-Apps/pgplot -L/usr/local/Cluster-Apps/cuda/6.0/lib64 -L/usr/local/Cluster-Apps/cuda/6.0/lib -L/usr/local/Cluster-Apps/cuda/6.0/extras/CUPTI/lib64 -L/usr/local/Cluster-Apps/cuda/6.0/nvvm/lib64 -L/usr/local/Cluster-Apps/cuda/6.0/open64/lib -L/usr/local/Cluster-Apps/intel/mkl/10.3.10.319/composer_xe_2011_sp1.10.319/mkl/lib/intel64 -L/usr/local/Cluster-Apps/intel/impi/4.1.3.045/lib64 -L/usr/local/Cluster-Users/sjr20/cfitsio/3.03/icc/lib -L/usr/local/Cluster-Apps/gcc/4.8.1/lib/gcc/x86_64-unknown-linux-gnu/4.8.1/../../.. -lgfortran -lm -lmpigf -lmpi_dbg -lmpigi -ldl -lrt -lpthread -lquadmath
+FCLIBS =  -L/usr/local/Cluster-Apps/OpenMPI/gcc/1.8.2/lib -L/usr/local/Cluster-Apps/cuda/6.0/lib64/../lib64 -L/usr/local/Cluster-Apps/cuda/6.0/lib/../lib64 -L/usr/local/Cluster-Apps/cuda/6.0/extras/CUPTI/lib64/../lib64 -L/usr/local/Cluster-Apps/cuda/6.0/nvvm/lib64/../lib64 -L/usr/local/Cluster-Apps/gcc/4.8.1/lib/gcc/x86_64-unknown-linux-gnu/4.8.1 -L/usr/local/Cluster-Apps/gcc/4.8.1/lib/gcc/x86_64-unknown-linux-gnu/4.8.1/../../../../lib64 -L/lib/../lib64 -L/usr/lib/../lib64 -L/usr/local/Cluster-Apps/intel/cce/15.0.1.133/ipp/lib/intel64 -L/usr/local/Cluster-Apps/intel/cce/15.0.1.133/tbb/lib/intel64 -L/usr/local/Cluster-Apps/intel/fce/15.0.1.133/lib/intel64 -L/usr/local/Cluster-Apps/pgplot -L/usr/local/Cluster-Apps/cuda/6.0/lib64 -L/usr/local/Cluster-Apps/cuda/6.0/lib -L/usr/local/Cluster-Apps/cuda/6.0/extras/CUPTI/lib64 -L/usr/local/Cluster-Apps/cuda/6.0/nvvm/lib64 -L/usr/local/Cluster-Apps/cuda/6.0/open64/lib -L/usr/local/Cluster-Apps/fftw/intel/64/3.3.3/lib -L/usr/local/Cluster-Apps/intel/mkl/10.3.10.319/composer_xe_2011_sp1.10.319/mkl/lib/intel64 -L/usr/local/Cluster-Apps/intel/impi/4.1.3.045/lib64 -L/usr/local/Cluster-Users/sjr20/cfitsio/3.03/icc/lib -L/usr/local/Cluster-Apps/gcc/4.8.1/lib/gcc/x86_64-unknown-linux-gnu/4.8.1/../../.. -lgfortran -lm -lmpi_usempi -lmpi_mpifh -lmpi -lgomp -lquadmath -lpthread
 FFLAGS = -O3 -DHAVE_CONFIG_H
 FGREP = /bin/grep -F
-FLIBS =  -L/usr/local/Cluster-Apps/intel/impi/4.1.3.045/intel64/lib -L/usr/local/Cluster-Apps/cuda/6.0/lib64/../lib64 -L/usr/local/Cluster-Apps/cuda/6.0/lib/../lib64 -L/usr/local/Cluster-Apps/cuda/6.0/extras/CUPTI/lib64/../lib64 -L/usr/local/Cluster-Apps/cuda/6.0/nvvm/lib64/../lib64 -L/usr/local/Cluster-Apps/gcc/4.8.1/lib/gcc/x86_64-unknown-linux-gnu/4.8.1 -L/usr/local/Cluster-Apps/gcc/4.8.1/lib/gcc/x86_64-unknown-linux-gnu/4.8.1/../../../../lib64 -L/lib/../lib64 -L/usr/lib/../lib64 -L/usr/local/Cluster-Apps/fftw/intel/64/3.3.3/lib -L/usr/local/Cluster-Apps/intel/cce/15.0.1.133/ipp/lib/intel64 -L/usr/local/Cluster-Apps/intel/cce/15.0.1.133/tbb/lib/intel64 -L/usr/local/Cluster-Apps/intel/fce/15.0.1.133/lib/intel64 -L/usr/local/Cluster-Apps/pgplot -L/usr/local/Cluster-Apps/cuda/6.0/lib64 -L/usr/local/Cluster-Apps/cuda/6.0/lib -L/usr/local/Cluster-Apps/cuda/6.0/extras/CUPTI/lib64 -L/usr/local/Cluster-Apps/cuda/6.0/nvvm/lib64 -L/usr/local/Cluster-Apps/cuda/6.0/open64/lib -L/usr/local/Cluster-Apps/intel/mkl/10.3.10.319/composer_xe_2011_sp1.10.319/mkl/lib/intel64 -L/usr/local/Cluster-Apps/intel/impi/4.1.3.045/lib64 -L/usr/local/Cluster-Users/sjr20/cfitsio/3.03/icc/lib -L/usr/local/Cluster-Apps/gcc/4.8.1/lib/gcc/x86_64-unknown-linux-gnu/4.8.1/../../.. -lmpigf -lmpi_dbg -lmpigi -ldl -lrt -lpthread -lgfortran -lm -lquadmath
+FLIBS =  -L/usr/local/Cluster-Apps/OpenMPI/gcc/1.8.2/lib -L/usr/local/Cluster-Apps/cuda/6.0/lib64/../lib64 -L/usr/local/Cluster-Apps/cuda/6.0/lib/../lib64 -L/usr/local/Cluster-Apps/cuda/6.0/extras/CUPTI/lib64/../lib64 -L/usr/local/Cluster-Apps/cuda/6.0/nvvm/lib64/../lib64 -L/usr/local/Cluster-Apps/gcc/4.8.1/lib/gcc/x86_64-unknown-linux-gnu/4.8.1 -L/usr/local/Cluster-Apps/gcc/4.8.1/lib/gcc/x86_64-unknown-linux-gnu/4.8.1/../../../../lib64 -L/lib/../lib64 -L/usr/lib/../lib64 -L/usr/local/Cluster-Apps/intel/cce/15.0.1.133/ipp/lib/intel64 -L/usr/local/Cluster-Apps/intel/cce/15.0.1.133/tbb/lib/intel64 -L/usr/local/Cluster-Apps/intel/fce/15.0.1.133/lib/intel64 -L/usr/local/Cluster-Apps/pgplot -L/usr/local/Cluster-Apps/cuda/6.0/lib64 -L/usr/local/Cluster-Apps/cuda/6.0/lib -L/usr/local/Cluster-Apps/cuda/6.0/extras/CUPTI/lib64 -L/usr/local/Cluster-Apps/cuda/6.0/nvvm/lib64 -L/usr/local/Cluster-Apps/cuda/6.0/open64/lib -L/usr/local/Cluster-Apps/fftw/intel/64/3.3.3/lib -L/usr/local/Cluster-Apps/intel/mkl/10.3.10.319/composer_xe_2011_sp1.10.319/mkl/lib/intel64 -L/usr/local/Cluster-Apps/intel/impi/4.1.3.045/lib64 -L/usr/local/Cluster-Users/sjr20/cfitsio/3.03/icc/lib -L/usr/local/Cluster-Apps/gcc/4.8.1/lib/gcc/x86_64-unknown-linux-gnu/4.8.1/../../.. -lmpi_usempi -lmpi_mpifh -lmpi -lgfortran -lm -lgomp -lquadmath -lpthread
 GREP = /bin/grep
 GSL_CFLAGS = -I/usr/include
 GSL_CONFIG = /usr/bin/gsl-config
@@ -218,7 +221,7 @@ INSTALL_PROGRAM = ${INSTALL}
 INSTALL_SCRIPT = ${INSTALL}
 INSTALL_STRIP_PROGRAM = $(install_sh) -c -s
 LD = /usr/bin/ld -m elf_x86_64
-LDFLAGS =  $(am__append_1)
+LDFLAGS = -fopenmp $(am__append_1)
 LIBADD_DL =  
 LIBADD_DLD_LINK = 
 LIBADD_DLOPEN = 
@@ -237,7 +240,7 @@ MKDIR_P = /bin/mkdir -p
 MLAPACK_CFLAGS = -I/home/ltl21/Code/HighPrecision/MLAPACK/MPackInstall//include
 MLAPACK_LIBS = -L/home/ltl21/Code/HighPrecision/MLAPACK/MPackInstall//lib -lmblas_qd -lmlapack_qd -lmblas_dd -lmlapack_dd 
 MULTINEST_CFLAGS = -I/home/ltl21/PulsarCode/MPIMultiNest3
-MULTINEST_LIBS = -L/home/ltl21/PulsarCode/MPIMultiNest3 -lchord -lnest3
+MULTINEST_LIBS = -L/home/ltl21/PulsarCode/MPIMultiNest3 -lchord -lnest3 -lellipsis
 NM = /usr/bin/nm -B
 NMEDIT = 
 OBJDUMP = objdump
@@ -339,10 +342,10 @@ EXTRA_DIST = $(xtra_dist_sources)
 #	rm -rf `find $(distdir)/unsupported_plugins/ -name '*.o'`
 plugindir = /home/ltl21/PulsarCode/T2Runtime/plugins/
 plugin_LTLIBRARIES = temponest_linux-gnu_plug.la
-#temponest_linux-gnu_plug_la_SOURCES = tempo2pred_int.h T2accel.h tempo2pred.h tempo2Util.h constraints.h TKmatrix.h TKfit.h T2toolkit.h tempo2.h config.h configfile.h configfile.cpp qrdecomp.h qrdecomp.cpp  dgemm.cpp dgesvd.h dpotrs.cpp TempoNest.h dgemm.h dpotrf.cpp dpotrs.h TempoNestLikeFuncs.cpp TempoNestNGLikeFuncs.cpp dgemv.cpp dpotrf.h multinest.h TempoNestTextOutput.cpp dgemv.h dpotri.cpp MultiNestParams.cpp  dgesvd.cpp  dpotri.h TempoNestPlugin.cpp TempoNestParams.cpp TempoNestUtilities.cpp
-temponest_linux-gnu_plug_la_SOURCES = tempo2pred_int.h T2accel.h tempo2pred.h tempo2Util.h constraints.h TKmatrix.h TKfit.h T2toolkit.h tempo2.h config.h configfile.h configfile.cpp TempoNestGPUFuncs.cu dpotrs.cpp dgesvd.cpp qrdecomp.h qrdecomp.cpp  dgemm.cpp dgemv.cpp dpotri.cpp dpotrf.cpp TempoNestParams.cpp MultiNestParams.cpp TempoNestTextOutput.cpp TempoNestUtilities.cpp TempoNestLikeFuncs.cpp TempoNestNGLikeFuncs.cpp TempoNestGPULikeFuncs.cpp TempoNestPlugin.cpp
-#temponest_linux-gnu_plug_la_LIBADD = -lgfortran -ltempo2 -lsofa -L/home/ltl21/Code/HighPrecision/QDInstall//lib -lqd  -L/home/ltl21/Code/HighPrecision/MLAPACK/MPackInstall//lib -lmblas_qd -lmlapack_qd -lmblas_dd -lmlapack_dd  -L/home/ltl21/PulsarCode/MPIMultiNest3 -lchord -lnest3 -lgsl -lgslcblas -lm -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5 -lpthread -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5 -lpthread -L/home/ltl21/PulsarCode/T2Runtime/lib -ltempo2  -L/home/ltl21/PulsarCode/PSRCHIVE/INSTALL//lib -lpsrbase -lpsrmore -lpsrutil -lstdc++ -lfftw3 -lfftw3f -lcfitsio -lgfortran -ltempo2
-temponest_linux-gnu_plug_la_LIBADD = -ltempo2 -lsofa -lTNGPU  -L/home/ltl21/Code/HighPrecision/QDInstall//lib -lqd  -L/home/ltl21/Code/HighPrecision/MLAPACK/MPackInstall//lib -lmblas_qd -lmlapack_qd -lmblas_dd -lmlapack_dd  -L/home/ltl21/PulsarCode/MPIMultiNest3 -lchord -lnest3 -L/home/ltl21/PulsarCode/cula/lib64 -lcula_lapack -lcuda  -lgsl -lgslcblas -lm -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5 -lpthread -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5 -lpthread -L/home/ltl21/PulsarCode/T2Runtime/lib -ltempo2  -L/home/ltl21/PulsarCode/PSRCHIVE/INSTALL//lib -lpsrbase -lpsrmore -lpsrutil -lstdc++ -lfftw3 -lfftw3f -lcfitsio -lgfortran -ltempo2
+#temponest_linux-gnu_plug_la_SOURCES = tempo2pred_int.h T2accel.h tempo2pred.h tempo2Util.h constraints.h TKmatrix.h TKfit.h T2toolkit.h tempo2.h config.h configfile.h configfile.cpp qrdecomp.h qrdecomp.cpp  dgemm.cpp dgesvd.h dpotrs.cpp TempoNest.h dgemm.h dpotrf.cpp dpotrs.h TempoNestLikeFuncs.cpp TempoNestNGLikeFuncs.cpp dgemv.cpp dpotrf.h multinest.h TempoNestTextOutput.cpp dgemv.h dpotri.cpp MultiNestParams.cpp  dgesvd.cpp  dpotri.h TempoNestPlugin.cpp TempoNestParams.cpp TempoNestUtilities.cpp GHSLikeFuncs.cpp
+temponest_linux-gnu_plug_la_SOURCES = tempo2pred_int.h T2accel.h tempo2pred.h tempo2Util.h constraints.h TKmatrix.h TKfit.h T2toolkit.h tempo2.h config.h configfile.h configfile.cpp TempoNestGPUFuncs.cu dpotrs.cpp dgesvd.cpp qrdecomp.h qrdecomp.cpp  dgemm.cpp dgemv.cpp dpotri.cpp dpotrf.cpp TempoNestParams.cpp MultiNestParams.cpp TempoNestTextOutput.cpp TempoNestUtilities.cpp TempoNestLikeFuncs.cpp TempoNestNGLikeFuncs.cpp TempoNestGPULikeFuncs.cpp GHSLikeFuncs.cpp TempoNestPlugin.cpp
+#temponest_linux-gnu_plug_la_LIBADD = -lgfortran -ltempo2 -lsofa -L/home/ltl21/Code/HighPrecision/QDInstall//lib -lqd  -L/home/ltl21/Code/HighPrecision/MLAPACK/MPackInstall//lib -lmblas_qd -lmlapack_qd -lmblas_dd -lmlapack_dd  -L/home/ltl21/PulsarCode/MPIMultiNest3 -lchord -lnest3 -lellipsis -lgsl -lgslcblas -lm -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5 -lpthread -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5 -lpthread -L/home/ltl21/PulsarCode/T2Runtime/lib -ltempo2  -L/home/ltl21/PulsarCode/PSRCHIVE/INSTALL//lib -lpsrbase -lpsrmore -lpsrutil -lstdc++ -lfftw3 -lfftw3f -lcfitsio -lgfortran -ltempo2
+temponest_linux-gnu_plug_la_LIBADD = -ltempo2 -lsofa -lTNGPU  -L/home/ltl21/Code/HighPrecision/QDInstall//lib -lqd  -L/home/ltl21/Code/HighPrecision/MLAPACK/MPackInstall//lib -lmblas_qd -lmlapack_qd -lmblas_dd -lmlapack_dd  -L/home/ltl21/PulsarCode/MPIMultiNest3 -lchord -lnest3 -lellipsis -L/home/ltl21/PulsarCode/cula/lib64 -lcula_lapack -lcuda  -lgsl -lgslcblas -lm -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5 -lpthread -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5 -lpthread -L/home/ltl21/PulsarCode/T2Runtime/lib -ltempo2  -L/home/ltl21/PulsarCode/PSRCHIVE/INSTALL//lib -lpsrbase -lpsrmore -lpsrutil -lstdc++ -lfftw3 -lfftw3f -lcfitsio -lgfortran -ltempo2
 #temponest_linux-gnu_plug_la_INCLUDES = -I/home/ltl21/Code/HighPrecision/QDInstall//include -I/home/ltl21/Code/HighPrecision/MLAPACK/MPackInstall//include -I/home/ltl21/PulsarCode/MPIMultiNest3 -I/usr/include -I/home/ltl21/PulsarCode/T2Runtime/include -I/home/ltl21/PulsarCode/PSRCHIVE/INSTALL//include
 temponest_linux-gnu_plug_la_INCLUDES = -I/home/ltl21/Code/HighPrecision/QDInstall//include -I/home/ltl21/Code/HighPrecision/MLAPACK/MPackInstall//include -I/home/ltl21/PulsarCode/MPIMultiNest3 -I/home/ltl21/PulsarCode/cula/include -I/usr/include -I/home/ltl21/PulsarCode/T2Runtime/include -I/home/ltl21/PulsarCode/PSRCHIVE/INSTALL//include
 INCLUDES = -I./   #-I/home/ltl21/Code/HighPrecision/MLAPACK/MPackInstall/include -I/home/ltl21/Code/HighPrecision/QDInstall/include
@@ -442,6 +445,7 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+include ./$(DEPDIR)/GHSLikeFuncs.Plo
 include ./$(DEPDIR)/MultiNestParams.Plo
 include ./$(DEPDIR)/TempoNestGPULikeFuncs.Plo
 include ./$(DEPDIR)/TempoNestLikeFuncs.Plo

@@ -1,4 +1,4 @@
-FC = mpif90 -fc=gfortran
+FC = mpif90# -fc=gfortran
 CC = mpicc 
 CXX = mpicxx 
 FFLAGS += -O3 -DMPI -fPIC -ffree-line-length-none

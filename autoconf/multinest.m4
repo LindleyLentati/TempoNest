@@ -16,6 +16,8 @@
 # Notice that the environment variable MULTINEST_DIR is used. In the case the
 # library 'libnest' is not installed in a default location, let MULTINEST_DIR
 # point to the location of libnest
+# MULTINEST_LIBS="$MULTINEST_LIBS -lchord -lnest3 -lellipsis"
+#
 #
 # ----------------------------------------------------------
 AC_DEFUN([SWIN_LIB_MULTINEST],
