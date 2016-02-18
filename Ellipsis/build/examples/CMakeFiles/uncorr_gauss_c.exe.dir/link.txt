@@ -1,0 +1,1 @@
+/usr/local/Cluster-Apps/gcc/4.8.1/bin/gcc   -std=c89 -pedantic -Wall -Wextra -Wfatal-errors -O3    CMakeFiles/uncorr_gauss_c.exe.dir/uncorr_gauss_c.c.o  -o uncorr_gauss_c.exe -rdynamic ../ellipsis/libellipsis.a -lm 

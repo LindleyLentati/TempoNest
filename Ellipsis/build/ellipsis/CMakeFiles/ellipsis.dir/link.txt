@@ -1,0 +1,2 @@
+/usr/bin/ar cr libellipsis.a  CMakeFiles/ellipsis.dir/guided_hmc.c.o CMakeFiles/ellipsis.dir/hanson.c.o CMakeFiles/ellipsis.dir/mt19937.c.o
+/usr/bin/ranlib libellipsis.a

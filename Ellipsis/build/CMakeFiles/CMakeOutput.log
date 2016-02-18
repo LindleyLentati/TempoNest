@@ -1,0 +1,398 @@
+The system is: Linux - 2.6.32-573.12.1.el6.x86_64 - x86_64
+Compiling the C compiler identification source file "CMakeCCompilerId.c" succeeded.
+Compiler: /usr/local/Cluster-Apps/gcc/4.8.1/bin/gcc 
+Build flags: 
+Id flags: 
+
+The output was:
+0
+
+
+Compilation of the C compiler identification source "CMakeCCompilerId.c" produced "a.out"
+
+The C compiler identification is GNU, found in "/home/ltl21/PulsarCode/Ellipsis/build/CMakeFiles/2.8.12.2/CompilerIdC/a.out"
+
+Determining if the C compiler works passed with the following output:
+Change Dir: /home/ltl21/PulsarCode/Ellipsis/build/CMakeFiles/CMakeTmp
+
+Run Build Command:/usr/bin/gmake "cmTryCompileExec779637593/fast"
+/usr/bin/gmake -f CMakeFiles/cmTryCompileExec779637593.dir/build.make CMakeFiles/cmTryCompileExec779637593.dir/build
+gmake[1]: Entering directory `/home/ltl21/PulsarCode/Ellipsis/build/CMakeFiles/CMakeTmp'
+/usr/bin/cmake -E cmake_progress_report /home/ltl21/PulsarCode/Ellipsis/build/CMakeFiles/CMakeTmp/CMakeFiles 1
+Building C object CMakeFiles/cmTryCompileExec779637593.dir/testCCompiler.c.o
+/usr/local/Cluster-Apps/gcc/4.8.1/bin/gcc    -o CMakeFiles/cmTryCompileExec779637593.dir/testCCompiler.c.o   -c /home/ltl21/PulsarCode/Ellipsis/build/CMakeFiles/CMakeTmp/testCCompiler.c
+Linking C executable cmTryCompileExec779637593
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTryCompileExec779637593.dir/link.txt --verbose=1
+/usr/local/Cluster-Apps/gcc/4.8.1/bin/gcc       CMakeFiles/cmTryCompileExec779637593.dir/testCCompiler.c.o  -o cmTryCompileExec779637593 -rdynamic 
+gmake[1]: Leaving directory `/home/ltl21/PulsarCode/Ellipsis/build/CMakeFiles/CMakeTmp'
+
+
+Detecting C compiler ABI info compiled with the following output:
+Change Dir: /home/ltl21/PulsarCode/Ellipsis/build/CMakeFiles/CMakeTmp
+
+Run Build Command:/usr/bin/gmake "cmTryCompileExec3514411165/fast"
+/usr/bin/gmake -f CMakeFiles/cmTryCompileExec3514411165.dir/build.make CMakeFiles/cmTryCompileExec3514411165.dir/build
+gmake[1]: Entering directory `/home/ltl21/PulsarCode/Ellipsis/build/CMakeFiles/CMakeTmp'
+/usr/bin/cmake -E cmake_progress_report /home/ltl21/PulsarCode/Ellipsis/build/CMakeFiles/CMakeTmp/CMakeFiles 1
+Building C object CMakeFiles/cmTryCompileExec3514411165.dir/CMakeCCompilerABI.c.o
+/usr/local/Cluster-Apps/gcc/4.8.1/bin/gcc    -o CMakeFiles/cmTryCompileExec3514411165.dir/CMakeCCompilerABI.c.o   -c /usr/share/cmake/Modules/CMakeCCompilerABI.c
+Linking C executable cmTryCompileExec3514411165
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTryCompileExec3514411165.dir/link.txt --verbose=1
+/usr/local/Cluster-Apps/gcc/4.8.1/bin/gcc     -v CMakeFiles/cmTryCompileExec3514411165.dir/CMakeCCompilerABI.c.o  -o cmTryCompileExec3514411165 -rdynamic  
+Using built-in specs.
+COLLECT_GCC=/usr/local/Cluster-Apps/gcc/4.8.1/bin/gcc
+COLLECT_LTO_WRAPPER=/usr/local/Cluster-Apps/gcc/4.8.1/libexec/gcc/x86_64-unknown-linux-gnu/4.8.1/lto-wrapper
+Target: x86_64-unknown-linux-gnu
+Configured with: ../gcc-4.8.1/configure --prefix=/usr/local/Cluster-Apps/gcc/4.8.1 --with-arch=native --with-tune=native --disable-multilib --with-gmp=/usr/local/Cluster-Apps/gcc/4.8.1 --with-mpfr=/usr/local/Cluster-Apps/gcc/4.8.1 --with-mpc=/usr/local/Cluster-Apps/gcc/4.8.1
+Thread model: posix
+gcc version 4.8.1 (GCC) 
+COMPILER_PATH=/usr/local/Cluster-Apps/gcc/4.8.1/libexec/gcc/x86_64-unknown-linux-gnu/4.8.1/:/usr/local/Cluster-Apps/gcc/4.8.1/libexec/gcc/x86_64-unknown-linux-gnu/4.8.1/:/usr/local/Cluster-Apps/gcc/4.8.1/libexec/gcc/x86_64-unknown-linux-gnu/:/usr/local/Cluster-Apps/gcc/4.8.1/lib/gcc/x86_64-unknown-linux-gnu/4.8.1/:/usr/local/Cluster-Apps/gcc/4.8.1/lib/gcc/x86_64-unknown-linux-gnu/
+LIBRARY_PATH=/usr/local/Cluster-Apps/cuda/6.0/lib64/../lib64/:/usr/local/Cluster-Apps/cuda/6.0/lib/../lib64/:/usr/local/Cluster-Apps/cuda/6.0/extras/CUPTI/lib64/../lib64/:/usr/local/Cluster-Apps/cuda/6.0/nvvm/lib64/../lib64/:/usr/local/Cluster-Apps/gcc/4.8.1/lib/gcc/x86_64-unknown-linux-gnu/4.8.1/:/usr/local/Cluster-Apps/gcc/4.8.1/lib/gcc/x86_64-unknown-linux-gnu/4.8.1/../../../../lib64/:/lib/../lib64/:/usr/lib/../lib64/:/usr/local/Cluster-Apps/intel/cce/15.0.1.133/ipp/lib/intel64/:/usr/local/Cluster-Apps/intel/cce/15.0.1.133/tbb/lib/intel64/:/usr/local/Cluster-Apps/intel/fce/15.0.1.133/lib/intel64/:/usr/local/Cluster-Apps/pgplot/:/usr/local/Cluster-Apps/cuda/6.0/lib64/:/usr/local/Cluster-Apps/cuda/6.0/lib/:/usr/local/Cluster-Apps/cuda/6.0/extras/CUPTI/lib64/:/usr/local/Cluster-Apps/cuda/6.0/nvvm/lib64/:/usr/local/Cluster-Apps/cuda/6.0/open64/lib/:/usr/local/Cluster-Apps/fftw/intel/64/3.3.3/lib/:/usr/local/Cluster-Apps/intel/mkl/10.3.10.319/composer_xe_2011_sp1.10.319/mkl/lib/intel64/:/usr/local/Cluster-Apps/intel/impi/4.1.3.045/lib64/:/usr/local/Cluster-Users/sjr20/cfitsio/3.03/icc/lib/:/usr/local/Cluster-Apps/gcc/4.8.1/lib/gcc/x86_64-unknown-linux-gnu/4.8.1/../../../:/lib/:/usr/lib/
+COLLECT_GCC_OPTIONS='-v' '-o' 'cmTryCompileExec3514411165' '-rdynamic' '-mtune=native' '-march=native'
+ /usr/local/Cluster-Apps/gcc/4.8.1/libexec/gcc/x86_64-unknown-linux-gnu/4.8.1/collect2 --eh-frame-hdr -m elf_x86_64 -export-dynamic -dynamic-linker /lib64/ld-linux-x86-64.so.2 -o cmTryCompileExec3514411165 /usr/lib/../lib64/crt1.o /usr/lib/../lib64/crti.o /usr/local/Cluster-Apps/gcc/4.8.1/lib/gcc/x86_64-unknown-linux-gnu/4.8.1/crtbegin.o -L/usr/local/Cluster-Apps/cuda/6.0/lib64/../lib64 -L/usr/local/Cluster-Apps/cuda/6.0/lib/../lib64 -L/usr/local/Cluster-Apps/cuda/6.0/extras/CUPTI/lib64/../lib64 -L/usr/local/Cluster-Apps/cuda/6.0/nvvm/lib64/../lib64 -L/usr/local/Cluster-Apps/gcc/4.8.1/lib/gcc/x86_64-unknown-linux-gnu/4.8.1 -L/usr/local/Cluster-Apps/gcc/4.8.1/lib/gcc/x86_64-unknown-linux-gnu/4.8.1/../../../../lib64 -L/lib/../lib64 -L/usr/lib/../lib64 -L/usr/local/Cluster-Apps/intel/cce/15.0.1.133/ipp/lib/intel64 -L/usr/local/Cluster-Apps/intel/cce/15.0.1.133/tbb/lib/intel64 -L/usr/local/Cluster-Apps/intel/fce/15.0.1.133/lib/intel64 -L/usr/local/Cluster-Apps/pgplot -L/usr/local/Cluster-Apps/cuda/6.0/lib64 -L/usr/local/Cluster-Apps/cuda/6.0/lib -L/usr/local/Cluster-Apps/cuda/6.0/extras/CUPTI/lib64 -L/usr/local/Cluster-Apps/cuda/6.0/nvvm/lib64 -L/usr/local/Cluster-Apps/cuda/6.0/open64/lib -L/usr/local/Cluster-Apps/fftw/intel/64/3.3.3/lib -L/usr/local/Cluster-Apps/intel/mkl/10.3.10.319/composer_xe_2011_sp1.10.319/mkl/lib/intel64 -L/usr/local/Cluster-Apps/intel/impi/4.1.3.045/lib64 -L/usr/local/Cluster-Users/sjr20/cfitsio/3.03/icc/lib -L/usr/local/Cluster-Apps/gcc/4.8.1/lib/gcc/x86_64-unknown-linux-gnu/4.8.1/../../.. CMakeFiles/cmTryCompileExec3514411165.dir/CMakeCCompilerABI.c.o -lgcc --as-needed -lgcc_s --no-as-needed -lc -lgcc --as-needed -lgcc_s --no-as-needed /usr/local/Cluster-Apps/gcc/4.8.1/lib/gcc/x86_64-unknown-linux-gnu/4.8.1/crtend.o /usr/lib/../lib64/crtn.o
+gmake[1]: Leaving directory `/home/ltl21/PulsarCode/Ellipsis/build/CMakeFiles/CMakeTmp'
+
+
+Parsed C implicit link information from above output:
+  link line regex: [^( *|.*[/\])(ld|([^/\]+-)?ld|collect2)[^/\]*( |$)]
+  ignore line: [Change Dir: /home/ltl21/PulsarCode/Ellipsis/build/CMakeFiles/CMakeTmp]
+  ignore line: []
+  ignore line: [Run Build Command:/usr/bin/gmake "cmTryCompileExec3514411165/fast"]
+  ignore line: [/usr/bin/gmake -f CMakeFiles/cmTryCompileExec3514411165.dir/build.make CMakeFiles/cmTryCompileExec3514411165.dir/build]
+  ignore line: [gmake[1]: Entering directory `/home/ltl21/PulsarCode/Ellipsis/build/CMakeFiles/CMakeTmp']
+  ignore line: [/usr/bin/cmake -E cmake_progress_report /home/ltl21/PulsarCode/Ellipsis/build/CMakeFiles/CMakeTmp/CMakeFiles 1]
+  ignore line: [Building C object CMakeFiles/cmTryCompileExec3514411165.dir/CMakeCCompilerABI.c.o]
+  ignore line: [/usr/local/Cluster-Apps/gcc/4.8.1/bin/gcc    -o CMakeFiles/cmTryCompileExec3514411165.dir/CMakeCCompilerABI.c.o   -c /usr/share/cmake/Modules/CMakeCCompilerABI.c]
+  ignore line: [Linking C executable cmTryCompileExec3514411165]
+  ignore line: [/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTryCompileExec3514411165.dir/link.txt --verbose=1]
+  ignore line: [/usr/local/Cluster-Apps/gcc/4.8.1/bin/gcc     -v CMakeFiles/cmTryCompileExec3514411165.dir/CMakeCCompilerABI.c.o  -o cmTryCompileExec3514411165 -rdynamic  ]
+  ignore line: [Using built-in specs.]
+  ignore line: [COLLECT_GCC=/usr/local/Cluster-Apps/gcc/4.8.1/bin/gcc]
+  ignore line: [COLLECT_LTO_WRAPPER=/usr/local/Cluster-Apps/gcc/4.8.1/libexec/gcc/x86_64-unknown-linux-gnu/4.8.1/lto-wrapper]
+  ignore line: [Target: x86_64-unknown-linux-gnu]
+  ignore line: [Configured with: ../gcc-4.8.1/configure --prefix=/usr/local/Cluster-Apps/gcc/4.8.1 --with-arch=native --with-tune=native --disable-multilib --with-gmp=/usr/local/Cluster-Apps/gcc/4.8.1 --with-mpfr=/usr/local/Cluster-Apps/gcc/4.8.1 --with-mpc=/usr/local/Cluster-Apps/gcc/4.8.1]
+  ignore line: [Thread model: posix]
+  ignore line: [gcc version 4.8.1 (GCC) ]
+  ignore line: [COMPILER_PATH=/usr/local/Cluster-Apps/gcc/4.8.1/libexec/gcc/x86_64-unknown-linux-gnu/4.8.1/:/usr/local/Cluster-Apps/gcc/4.8.1/libexec/gcc/x86_64-unknown-linux-gnu/4.8.1/:/usr/local/Cluster-Apps/gcc/4.8.1/libexec/gcc/x86_64-unknown-linux-gnu/:/usr/local/Cluster-Apps/gcc/4.8.1/lib/gcc/x86_64-unknown-linux-gnu/4.8.1/:/usr/local/Cluster-Apps/gcc/4.8.1/lib/gcc/x86_64-unknown-linux-gnu/]
+  ignore line: [LIBRARY_PATH=/usr/local/Cluster-Apps/cuda/6.0/lib64/../lib64/:/usr/local/Cluster-Apps/cuda/6.0/lib/../lib64/:/usr/local/Cluster-Apps/cuda/6.0/extras/CUPTI/lib64/../lib64/:/usr/local/Cluster-Apps/cuda/6.0/nvvm/lib64/../lib64/:/usr/local/Cluster-Apps/gcc/4.8.1/lib/gcc/x86_64-unknown-linux-gnu/4.8.1/:/usr/local/Cluster-Apps/gcc/4.8.1/lib/gcc/x86_64-unknown-linux-gnu/4.8.1/../../../../lib64/:/lib/../lib64/:/usr/lib/../lib64/:/usr/local/Cluster-Apps/intel/cce/15.0.1.133/ipp/lib/intel64/:/usr/local/Cluster-Apps/intel/cce/15.0.1.133/tbb/lib/intel64/:/usr/local/Cluster-Apps/intel/fce/15.0.1.133/lib/intel64/:/usr/local/Cluster-Apps/pgplot/:/usr/local/Cluster-Apps/cuda/6.0/lib64/:/usr/local/Cluster-Apps/cuda/6.0/lib/:/usr/local/Cluster-Apps/cuda/6.0/extras/CUPTI/lib64/:/usr/local/Cluster-Apps/cuda/6.0/nvvm/lib64/:/usr/local/Cluster-Apps/cuda/6.0/open64/lib/:/usr/local/Cluster-Apps/fftw/intel/64/3.3.3/lib/:/usr/local/Cluster-Apps/intel/mkl/10.3.10.319/composer_xe_2011_sp1.10.319/mkl/lib/intel64/:/usr/local/Cluster-Apps/intel/impi/4.1.3.045/lib64/:/usr/local/Cluster-Users/sjr20/cfitsio/3.03/icc/lib/:/usr/local/Cluster-Apps/gcc/4.8.1/lib/gcc/x86_64-unknown-linux-gnu/4.8.1/../../../:/lib/:/usr/lib/]
+  ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'cmTryCompileExec3514411165' '-rdynamic' '-mtune=native' '-march=native']
+  link line: [ /usr/local/Cluster-Apps/gcc/4.8.1/libexec/gcc/x86_64-unknown-linux-gnu/4.8.1/collect2 --eh-frame-hdr -m elf_x86_64 -export-dynamic -dynamic-linker /lib64/ld-linux-x86-64.so.2 -o cmTryCompileExec3514411165 /usr/lib/../lib64/crt1.o /usr/lib/../lib64/crti.o /usr/local/Cluster-Apps/gcc/4.8.1/lib/gcc/x86_64-unknown-linux-gnu/4.8.1/crtbegin.o -L/usr/local/Cluster-Apps/cuda/6.0/lib64/../lib64 -L/usr/local/Cluster-Apps/cuda/6.0/lib/../lib64 -L/usr/local/Cluster-Apps/cuda/6.0/extras/CUPTI/lib64/../lib64 -L/usr/local/Cluster-Apps/cuda/6.0/nvvm/lib64/../lib64 -L/usr/local/Cluster-Apps/gcc/4.8.1/lib/gcc/x86_64-unknown-linux-gnu/4.8.1 -L/usr/local/Cluster-Apps/gcc/4.8.1/lib/gcc/x86_64-unknown-linux-gnu/4.8.1/../../../../lib64 -L/lib/../lib64 -L/usr/lib/../lib64 -L/usr/local/Cluster-Apps/intel/cce/15.0.1.133/ipp/lib/intel64 -L/usr/local/Cluster-Apps/intel/cce/15.0.1.133/tbb/lib/intel64 -L/usr/local/Cluster-Apps/intel/fce/15.0.1.133/lib/intel64 -L/usr/local/Cluster-Apps/pgplot -L/usr/local/Cluster-Apps/cuda/6.0/lib64 -L/usr/local/Cluster-Apps/cuda/6.0/lib -L/usr/local/Cluster-Apps/cuda/6.0/extras/CUPTI/lib64 -L/usr/local/Cluster-Apps/cuda/6.0/nvvm/lib64 -L/usr/local/Cluster-Apps/cuda/6.0/open64/lib -L/usr/local/Cluster-Apps/fftw/intel/64/3.3.3/lib -L/usr/local/Cluster-Apps/intel/mkl/10.3.10.319/composer_xe_2011_sp1.10.319/mkl/lib/intel64 -L/usr/local/Cluster-Apps/intel/impi/4.1.3.045/lib64 -L/usr/local/Cluster-Users/sjr20/cfitsio/3.03/icc/lib -L/usr/local/Cluster-Apps/gcc/4.8.1/lib/gcc/x86_64-unknown-linux-gnu/4.8.1/../../.. CMakeFiles/cmTryCompileExec3514411165.dir/CMakeCCompilerABI.c.o -lgcc --as-needed -lgcc_s --no-as-needed -lc -lgcc --as-needed -lgcc_s --no-as-needed /usr/local/Cluster-Apps/gcc/4.8.1/lib/gcc/x86_64-unknown-linux-gnu/4.8.1/crtend.o /usr/lib/../lib64/crtn.o]
+    arg [/usr/local/Cluster-Apps/gcc/4.8.1/libexec/gcc/x86_64-unknown-linux-gnu/4.8.1/collect2] ==> ignore
+    arg [--eh-frame-hdr] ==> ignore
+    arg [-m] ==> ignore
+    arg [elf_x86_64] ==> ignore
+    arg [-export-dynamic] ==> ignore
+    arg [-dynamic-linker] ==> ignore
+    arg [/lib64/ld-linux-x86-64.so.2] ==> ignore
+    arg [-o] ==> ignore
+    arg [cmTryCompileExec3514411165] ==> ignore
+    arg [/usr/lib/../lib64/crt1.o] ==> ignore
+    arg [/usr/lib/../lib64/crti.o] ==> ignore
+    arg [/usr/local/Cluster-Apps/gcc/4.8.1/lib/gcc/x86_64-unknown-linux-gnu/4.8.1/crtbegin.o] ==> ignore
+    arg [-L/usr/local/Cluster-Apps/cuda/6.0/lib64/../lib64] ==> dir [/usr/local/Cluster-Apps/cuda/6.0/lib64/../lib64]
+    arg [-L/usr/local/Cluster-Apps/cuda/6.0/lib/../lib64] ==> dir [/usr/local/Cluster-Apps/cuda/6.0/lib/../lib64]
+    arg [-L/usr/local/Cluster-Apps/cuda/6.0/extras/CUPTI/lib64/../lib64] ==> dir [/usr/local/Cluster-Apps/cuda/6.0/extras/CUPTI/lib64/../lib64]
+    arg [-L/usr/local/Cluster-Apps/cuda/6.0/nvvm/lib64/../lib64] ==> dir [/usr/local/Cluster-Apps/cuda/6.0/nvvm/lib64/../lib64]
+    arg [-L/usr/local/Cluster-Apps/gcc/4.8.1/lib/gcc/x86_64-unknown-linux-gnu/4.8.1] ==> dir [/usr/local/Cluster-Apps/gcc/4.8.1/lib/gcc/x86_64-unknown-linux-gnu/4.8.1]
+    arg [-L/usr/local/Cluster-Apps/gcc/4.8.1/lib/gcc/x86_64-unknown-linux-gnu/4.8.1/../../../../lib64] ==> dir [/usr/local/Cluster-Apps/gcc/4.8.1/lib/gcc/x86_64-unknown-linux-gnu/4.8.1/../../../../lib64]
+    arg [-L/lib/../lib64] ==> dir [/lib/../lib64]
+    arg [-L/usr/lib/../lib64] ==> dir [/usr/lib/../lib64]
+    arg [-L/usr/local/Cluster-Apps/intel/cce/15.0.1.133/ipp/lib/intel64] ==> dir [/usr/local/Cluster-Apps/intel/cce/15.0.1.133/ipp/lib/intel64]
+    arg [-L/usr/local/Cluster-Apps/intel/cce/15.0.1.133/tbb/lib/intel64] ==> dir [/usr/local/Cluster-Apps/intel/cce/15.0.1.133/tbb/lib/intel64]
+    arg [-L/usr/local/Cluster-Apps/intel/fce/15.0.1.133/lib/intel64] ==> dir [/usr/local/Cluster-Apps/intel/fce/15.0.1.133/lib/intel64]
+    arg [-L/usr/local/Cluster-Apps/pgplot] ==> dir [/usr/local/Cluster-Apps/pgplot]
+    arg [-L/usr/local/Cluster-Apps/cuda/6.0/lib64] ==> dir [/usr/local/Cluster-Apps/cuda/6.0/lib64]
+    arg [-L/usr/local/Cluster-Apps/cuda/6.0/lib] ==> dir [/usr/local/Cluster-Apps/cuda/6.0/lib]
+    arg [-L/usr/local/Cluster-Apps/cuda/6.0/extras/CUPTI/lib64] ==> dir [/usr/local/Cluster-Apps/cuda/6.0/extras/CUPTI/lib64]
+    arg [-L/usr/local/Cluster-Apps/cuda/6.0/nvvm/lib64] ==> dir [/usr/local/Cluster-Apps/cuda/6.0/nvvm/lib64]
+    arg [-L/usr/local/Cluster-Apps/cuda/6.0/open64/lib] ==> dir [/usr/local/Cluster-Apps/cuda/6.0/open64/lib]
+    arg [-L/usr/local/Cluster-Apps/fftw/intel/64/3.3.3/lib] ==> dir [/usr/local/Cluster-Apps/fftw/intel/64/3.3.3/lib]
+    arg [-L/usr/local/Cluster-Apps/intel/mkl/10.3.10.319/composer_xe_2011_sp1.10.319/mkl/lib/intel64] ==> dir [/usr/local/Cluster-Apps/intel/mkl/10.3.10.319/composer_xe_2011_sp1.10.319/mkl/lib/intel64]
+    arg [-L/usr/local/Cluster-Apps/intel/impi/4.1.3.045/lib64] ==> dir [/usr/local/Cluster-Apps/intel/impi/4.1.3.045/lib64]
+    arg [-L/usr/local/Cluster-Users/sjr20/cfitsio/3.03/icc/lib] ==> dir [/usr/local/Cluster-Users/sjr20/cfitsio/3.03/icc/lib]
+    arg [-L/usr/local/Cluster-Apps/gcc/4.8.1/lib/gcc/x86_64-unknown-linux-gnu/4.8.1/../../..] ==> dir [/usr/local/Cluster-Apps/gcc/4.8.1/lib/gcc/x86_64-unknown-linux-gnu/4.8.1/../../..]
+    arg [CMakeFiles/cmTryCompileExec3514411165.dir/CMakeCCompilerABI.c.o] ==> ignore
+    arg [-lgcc] ==> lib [gcc]
+    arg [--as-needed] ==> ignore
+    arg [-lgcc_s] ==> lib [gcc_s]
+    arg [--no-as-needed] ==> ignore
+    arg [-lc] ==> lib [c]
+    arg [-lgcc] ==> lib [gcc]
+    arg [--as-needed] ==> ignore
+    arg [-lgcc_s] ==> lib [gcc_s]
+    arg [--no-as-needed] ==> ignore
+    arg [/usr/local/Cluster-Apps/gcc/4.8.1/lib/gcc/x86_64-unknown-linux-gnu/4.8.1/crtend.o] ==> ignore
+    arg [/usr/lib/../lib64/crtn.o] ==> ignore
+  remove lib [gcc]
+  remove lib [gcc_s]
+  remove lib [gcc]
+  remove lib [gcc_s]
+  collapse library dir [/usr/local/Cluster-Apps/cuda/6.0/lib64/../lib64] ==> [/usr/local/Cluster-Apps/cuda/6.0/lib64]
+  collapse library dir [/usr/local/Cluster-Apps/cuda/6.0/lib/../lib64] ==> [/usr/local/Cluster-Apps/cuda/6.0/lib64]
+  collapse library dir [/usr/local/Cluster-Apps/cuda/6.0/extras/CUPTI/lib64/../lib64] ==> [/usr/local/Cluster-Apps/cuda/6.0/extras/CUPTI/lib64]
+  collapse library dir [/usr/local/Cluster-Apps/cuda/6.0/nvvm/lib64/../lib64] ==> [/usr/local/Cluster-Apps/cuda/6.0/nvvm/lib64]
+  collapse library dir [/usr/local/Cluster-Apps/gcc/4.8.1/lib/gcc/x86_64-unknown-linux-gnu/4.8.1] ==> [/usr/local/Cluster-Apps/gcc/4.8.1/lib/gcc/x86_64-unknown-linux-gnu/4.8.1]
+  collapse library dir [/usr/local/Cluster-Apps/gcc/4.8.1/lib/gcc/x86_64-unknown-linux-gnu/4.8.1/../../../../lib64] ==> [/usr/local/Cluster-Apps/gcc/4.8.1/lib64]
+  collapse library dir [/lib/../lib64] ==> [/lib64]
+  collapse library dir [/usr/lib/../lib64] ==> [/usr/lib64]
+  collapse library dir [/usr/local/Cluster-Apps/intel/cce/15.0.1.133/ipp/lib/intel64] ==> [/usr/local/Cluster-Apps/intel/cce/15.0.1.133/ipp/lib/intel64]
+  collapse library dir [/usr/local/Cluster-Apps/intel/cce/15.0.1.133/tbb/lib/intel64] ==> [/usr/local/Cluster-Apps/intel/cce/15.0.1.133/tbb/lib/intel64]
+  collapse library dir [/usr/local/Cluster-Apps/intel/fce/15.0.1.133/lib/intel64] ==> [/usr/local/Cluster-Apps/intel/fce/15.0.1.133/lib/intel64]
+  collapse library dir [/usr/local/Cluster-Apps/pgplot] ==> [/usr/local/Cluster-Apps/pgplot]
+  collapse library dir [/usr/local/Cluster-Apps/cuda/6.0/lib64] ==> [/usr/local/Cluster-Apps/cuda/6.0/lib64]
+  collapse library dir [/usr/local/Cluster-Apps/cuda/6.0/lib] ==> [/usr/local/Cluster-Apps/cuda/6.0/lib]
+  collapse library dir [/usr/local/Cluster-Apps/cuda/6.0/extras/CUPTI/lib64] ==> [/usr/local/Cluster-Apps/cuda/6.0/extras/CUPTI/lib64]
+  collapse library dir [/usr/local/Cluster-Apps/cuda/6.0/nvvm/lib64] ==> [/usr/local/Cluster-Apps/cuda/6.0/nvvm/lib64]
+  collapse library dir [/usr/local/Cluster-Apps/cuda/6.0/open64/lib] ==> [/usr/local/Cluster-Apps/cuda/6.0/open64/lib]
+  collapse library dir [/usr/local/Cluster-Apps/fftw/intel/64/3.3.3/lib] ==> [/usr/local/Cluster-Apps/fftw/intel/64/3.3.3/lib]
+  collapse library dir [/usr/local/Cluster-Apps/intel/mkl/10.3.10.319/composer_xe_2011_sp1.10.319/mkl/lib/intel64] ==> [/usr/local/Cluster-Apps/intel/mkl/10.3.10.319/composer_xe_2011_sp1.10.319/mkl/lib/intel64]
+  collapse library dir [/usr/local/Cluster-Apps/intel/impi/4.1.3.045/lib64] ==> [/usr/local/Cluster-Apps/intel/impi/4.1.3.045/lib64]
+  collapse library dir [/usr/local/Cluster-Users/sjr20/cfitsio/3.03/icc/lib] ==> [/usr/local/Cluster-Users/sjr20/cfitsio/3.03/icc/lib]
+  collapse library dir [/usr/local/Cluster-Apps/gcc/4.8.1/lib/gcc/x86_64-unknown-linux-gnu/4.8.1/../../..] ==> [/usr/local/Cluster-Apps/gcc/4.8.1/lib]
+  implicit libs: [c]
+  implicit dirs: [/usr/local/Cluster-Apps/cuda/6.0/lib64;/usr/local/Cluster-Apps/cuda/6.0/extras/CUPTI/lib64;/usr/local/Cluster-Apps/cuda/6.0/nvvm/lib64;/usr/local/Cluster-Apps/gcc/4.8.1/lib/gcc/x86_64-unknown-linux-gnu/4.8.1;/usr/local/Cluster-Apps/gcc/4.8.1/lib64;/lib64;/usr/lib64;/usr/local/Cluster-Apps/intel/cce/15.0.1.133/ipp/lib/intel64;/usr/local/Cluster-Apps/intel/cce/15.0.1.133/tbb/lib/intel64;/usr/local/Cluster-Apps/intel/fce/15.0.1.133/lib/intel64;/usr/local/Cluster-Apps/pgplot;/usr/local/Cluster-Apps/cuda/6.0/lib;/usr/local/Cluster-Apps/cuda/6.0/open64/lib;/usr/local/Cluster-Apps/fftw/intel/64/3.3.3/lib;/usr/local/Cluster-Apps/intel/mkl/10.3.10.319/composer_xe_2011_sp1.10.319/mkl/lib/intel64;/usr/local/Cluster-Apps/intel/impi/4.1.3.045/lib64;/usr/local/Cluster-Users/sjr20/cfitsio/3.03/icc/lib;/usr/local/Cluster-Apps/gcc/4.8.1/lib]
+  implicit fwks: []
+
+
+Compiling the Fortran compiler identification source file "CMakeFortranCompilerId.F" succeeded.
+Compiler: /usr/local/Cluster-Apps/gcc/4.8.1/bin/gfortran 
+Build flags: 
+Id flags: 
+
+The output was:
+0
+
+
+Compilation of the Fortran compiler identification source "CMakeFortranCompilerId.F" produced "a.out"
+
+The Fortran compiler identification is GNU, found in "/home/ltl21/PulsarCode/Ellipsis/build/CMakeFiles/2.8.12.2/CompilerIdFortran/a.out"
+
+Determining if the Fortran compiler works passed with the following output:
+Change Dir: /home/ltl21/PulsarCode/Ellipsis/build/CMakeFiles/CMakeTmp
+
+Run Build Command:/usr/bin/gmake "cmTryCompileExec2328048845/fast"
+/usr/bin/gmake -f CMakeFiles/cmTryCompileExec2328048845.dir/build.make CMakeFiles/cmTryCompileExec2328048845.dir/build
+gmake[1]: Entering directory `/home/ltl21/PulsarCode/Ellipsis/build/CMakeFiles/CMakeTmp'
+/usr/bin/cmake -E cmake_progress_report /home/ltl21/PulsarCode/Ellipsis/build/CMakeFiles/CMakeTmp/CMakeFiles 1
+Building Fortran object CMakeFiles/cmTryCompileExec2328048845.dir/testFortranCompiler.f.o
+/usr/local/Cluster-Apps/gcc/4.8.1/bin/gfortran    -c /home/ltl21/PulsarCode/Ellipsis/build/CMakeFiles/CMakeTmp/testFortranCompiler.f -o CMakeFiles/cmTryCompileExec2328048845.dir/testFortranCompiler.f.o
+Linking Fortran executable cmTryCompileExec2328048845
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTryCompileExec2328048845.dir/link.txt --verbose=1
+/usr/local/Cluster-Apps/gcc/4.8.1/bin/gfortran       CMakeFiles/cmTryCompileExec2328048845.dir/testFortranCompiler.f.o  -o cmTryCompileExec2328048845 -rdynamic 
+gmake[1]: Leaving directory `/home/ltl21/PulsarCode/Ellipsis/build/CMakeFiles/CMakeTmp'
+
+
+Detecting Fortran compiler ABI info compiled with the following output:
+Change Dir: /home/ltl21/PulsarCode/Ellipsis/build/CMakeFiles/CMakeTmp
+
+Run Build Command:/usr/bin/gmake "cmTryCompileExec1224892736/fast"
+/usr/bin/gmake -f CMakeFiles/cmTryCompileExec1224892736.dir/build.make CMakeFiles/cmTryCompileExec1224892736.dir/build
+gmake[1]: Entering directory `/home/ltl21/PulsarCode/Ellipsis/build/CMakeFiles/CMakeTmp'
+/usr/bin/cmake -E cmake_progress_report /home/ltl21/PulsarCode/Ellipsis/build/CMakeFiles/CMakeTmp/CMakeFiles 1
+Building Fortran object CMakeFiles/cmTryCompileExec1224892736.dir/CMakeFortranCompilerABI.F.o
+/usr/local/Cluster-Apps/gcc/4.8.1/bin/gfortran    -c /usr/share/cmake/Modules/CMakeFortranCompilerABI.F -o CMakeFiles/cmTryCompileExec1224892736.dir/CMakeFortranCompilerABI.F.o
+Linking Fortran executable cmTryCompileExec1224892736
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTryCompileExec1224892736.dir/link.txt --verbose=1
+/usr/local/Cluster-Apps/gcc/4.8.1/bin/gfortran   -v   CMakeFiles/cmTryCompileExec1224892736.dir/CMakeFortranCompilerABI.F.o  -o cmTryCompileExec1224892736 -rdynamic  
+Driving: /usr/local/Cluster-Apps/gcc/4.8.1/bin/gfortran -v CMakeFiles/cmTryCompileExec1224892736.dir/CMakeFortranCompilerABI.F.o -o cmTryCompileExec1224892736 -rdynamic -l gfortran -l m -shared-libgcc
+Using built-in specs.
+COLLECT_GCC=/usr/local/Cluster-Apps/gcc/4.8.1/bin/gfortran
+COLLECT_LTO_WRAPPER=/usr/local/Cluster-Apps/gcc/4.8.1/libexec/gcc/x86_64-unknown-linux-gnu/4.8.1/lto-wrapper
+Target: x86_64-unknown-linux-gnu
+Configured with: ../gcc-4.8.1/configure --prefix=/usr/local/Cluster-Apps/gcc/4.8.1 --with-arch=native --with-tune=native --disable-multilib --with-gmp=/usr/local/Cluster-Apps/gcc/4.8.1 --with-mpfr=/usr/local/Cluster-Apps/gcc/4.8.1 --with-mpc=/usr/local/Cluster-Apps/gcc/4.8.1
+Thread model: posix
+gcc version 4.8.1 (GCC) 
+Reading specs from /usr/local/Cluster-Apps/gcc/4.8.1/lib/gcc/x86_64-unknown-linux-gnu/4.8.1/../../../../lib64/libgfortran.spec
+rename spec lib to liborig
+COLLECT_GCC_OPTIONS='-v' '-o' 'cmTryCompileExec1224892736' '-rdynamic' '-shared-libgcc' '-mtune=native' '-march=native'
+COMPILER_PATH=/usr/local/Cluster-Apps/gcc/4.8.1/libexec/gcc/x86_64-unknown-linux-gnu/4.8.1/:/usr/local/Cluster-Apps/gcc/4.8.1/libexec/gcc/x86_64-unknown-linux-gnu/4.8.1/:/usr/local/Cluster-Apps/gcc/4.8.1/libexec/gcc/x86_64-unknown-linux-gnu/:/usr/local/Cluster-Apps/gcc/4.8.1/lib/gcc/x86_64-unknown-linux-gnu/4.8.1/:/usr/local/Cluster-Apps/gcc/4.8.1/lib/gcc/x86_64-unknown-linux-gnu/
+LIBRARY_PATH=/usr/local/Cluster-Apps/cuda/6.0/lib64/../lib64/:/usr/local/Cluster-Apps/cuda/6.0/lib/../lib64/:/usr/local/Cluster-Apps/cuda/6.0/extras/CUPTI/lib64/../lib64/:/usr/local/Cluster-Apps/cuda/6.0/nvvm/lib64/../lib64/:/usr/local/Cluster-Apps/gcc/4.8.1/lib/gcc/x86_64-unknown-linux-gnu/4.8.1/:/usr/local/Cluster-Apps/gcc/4.8.1/lib/gcc/x86_64-unknown-linux-gnu/4.8.1/../../../../lib64/:/lib/../lib64/:/usr/lib/../lib64/:/usr/local/Cluster-Apps/intel/cce/15.0.1.133/ipp/lib/intel64/:/usr/local/Cluster-Apps/intel/cce/15.0.1.133/tbb/lib/intel64/:/usr/local/Cluster-Apps/intel/fce/15.0.1.133/lib/intel64/:/usr/local/Cluster-Apps/pgplot/:/usr/local/Cluster-Apps/cuda/6.0/lib64/:/usr/local/Cluster-Apps/cuda/6.0/lib/:/usr/local/Cluster-Apps/cuda/6.0/extras/CUPTI/lib64/:/usr/local/Cluster-Apps/cuda/6.0/nvvm/lib64/:/usr/local/Cluster-Apps/cuda/6.0/open64/lib/:/usr/local/Cluster-Apps/fftw/intel/64/3.3.3/lib/:/usr/local/Cluster-Apps/intel/mkl/10.3.10.319/composer_xe_2011_sp1.10.319/mkl/lib/intel64/:/usr/local/Cluster-Apps/intel/impi/4.1.3.045/lib64/:/usr/local/Cluster-Users/sjr20/cfitsio/3.03/icc/lib/:/usr/local/Cluster-Apps/gcc/4.8.1/lib/gcc/x86_64-unknown-linux-gnu/4.8.1/../../../:/lib/:/usr/lib/
+COLLECT_GCC_OPTIONS='-v' '-o' 'cmTryCompileExec1224892736' '-rdynamic' '-shared-libgcc' '-mtune=native' '-march=native'
+ /usr/local/Cluster-Apps/gcc/4.8.1/libexec/gcc/x86_64-unknown-linux-gnu/4.8.1/collect2 --eh-frame-hdr -m elf_x86_64 -export-dynamic -dynamic-linker /lib64/ld-linux-x86-64.so.2 -o cmTryCompileExec1224892736 /usr/lib/../lib64/crt1.o /usr/lib/../lib64/crti.o /usr/local/Cluster-Apps/gcc/4.8.1/lib/gcc/x86_64-unknown-linux-gnu/4.8.1/crtbegin.o -L/usr/local/Cluster-Apps/cuda/6.0/lib64/../lib64 -L/usr/local/Cluster-Apps/cuda/6.0/lib/../lib64 -L/usr/local/Cluster-Apps/cuda/6.0/extras/CUPTI/lib64/../lib64 -L/usr/local/Cluster-Apps/cuda/6.0/nvvm/lib64/../lib64 -L/usr/local/Cluster-Apps/gcc/4.8.1/lib/gcc/x86_64-unknown-linux-gnu/4.8.1 -L/usr/local/Cluster-Apps/gcc/4.8.1/lib/gcc/x86_64-unknown-linux-gnu/4.8.1/../../../../lib64 -L/lib/../lib64 -L/usr/lib/../lib64 -L/usr/local/Cluster-Apps/intel/cce/15.0.1.133/ipp/lib/intel64 -L/usr/local/Cluster-Apps/intel/cce/15.0.1.133/tbb/lib/intel64 -L/usr/local/Cluster-Apps/intel/fce/15.0.1.133/lib/intel64 -L/usr/local/Cluster-Apps/pgplot -L/usr/local/Cluster-Apps/cuda/6.0/lib64 -L/usr/local/Cluster-Apps/cuda/6.0/lib -L/usr/local/Cluster-Apps/cuda/6.0/extras/CUPTI/lib64 -L/usr/local/Cluster-Apps/cuda/6.0/nvvm/lib64 -L/usr/local/Cluster-Apps/cuda/6.0/open64/lib -L/usr/local/Cluster-Apps/fftw/intel/64/3.3.3/lib -L/usr/local/Cluster-Apps/intel/mkl/10.3.10.319/composer_xe_2011_sp1.10.319/mkl/lib/intel64 -L/usr/local/Cluster-Apps/intel/impi/4.1.3.045/lib64 -L/usr/local/Cluster-Users/sjr20/cfitsio/3.03/icc/lib -L/usr/local/Cluster-Apps/gcc/4.8.1/lib/gcc/x86_64-unknown-linux-gnu/4.8.1/../../.. CMakeFiles/cmTryCompileExec1224892736.dir/CMakeFortranCompilerABI.F.o -lgfortran -lm -lgcc_s -lgcc -lquadmath -lm -lgcc_s -lgcc -lc -lgcc_s -lgcc /usr/local/Cluster-Apps/gcc/4.8.1/lib/gcc/x86_64-unknown-linux-gnu/4.8.1/crtend.o /usr/lib/../lib64/crtn.o
+gmake[1]: Leaving directory `/home/ltl21/PulsarCode/Ellipsis/build/CMakeFiles/CMakeTmp'
+
+
+Parsed Fortran implicit link information from above output:
+  link line regex: [^( *|.*[/\])(ld|([^/\]+-)?ld|collect2)[^/\]*( |$)]
+  ignore line: [Change Dir: /home/ltl21/PulsarCode/Ellipsis/build/CMakeFiles/CMakeTmp]
+  ignore line: []
+  ignore line: [Run Build Command:/usr/bin/gmake "cmTryCompileExec1224892736/fast"]
+  ignore line: [/usr/bin/gmake -f CMakeFiles/cmTryCompileExec1224892736.dir/build.make CMakeFiles/cmTryCompileExec1224892736.dir/build]
+  ignore line: [gmake[1]: Entering directory `/home/ltl21/PulsarCode/Ellipsis/build/CMakeFiles/CMakeTmp']
+  ignore line: [/usr/bin/cmake -E cmake_progress_report /home/ltl21/PulsarCode/Ellipsis/build/CMakeFiles/CMakeTmp/CMakeFiles 1]
+  ignore line: [Building Fortran object CMakeFiles/cmTryCompileExec1224892736.dir/CMakeFortranCompilerABI.F.o]
+  ignore line: [/usr/local/Cluster-Apps/gcc/4.8.1/bin/gfortran    -c /usr/share/cmake/Modules/CMakeFortranCompilerABI.F -o CMakeFiles/cmTryCompileExec1224892736.dir/CMakeFortranCompilerABI.F.o]
+  ignore line: [Linking Fortran executable cmTryCompileExec1224892736]
+  ignore line: [/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTryCompileExec1224892736.dir/link.txt --verbose=1]
+  ignore line: [/usr/local/Cluster-Apps/gcc/4.8.1/bin/gfortran   -v   CMakeFiles/cmTryCompileExec1224892736.dir/CMakeFortranCompilerABI.F.o  -o cmTryCompileExec1224892736 -rdynamic  ]
+  ignore line: [Driving: /usr/local/Cluster-Apps/gcc/4.8.1/bin/gfortran -v CMakeFiles/cmTryCompileExec1224892736.dir/CMakeFortranCompilerABI.F.o -o cmTryCompileExec1224892736 -rdynamic -l gfortran -l m -shared-libgcc]
+  ignore line: [Using built-in specs.]
+  ignore line: [COLLECT_GCC=/usr/local/Cluster-Apps/gcc/4.8.1/bin/gfortran]
+  ignore line: [COLLECT_LTO_WRAPPER=/usr/local/Cluster-Apps/gcc/4.8.1/libexec/gcc/x86_64-unknown-linux-gnu/4.8.1/lto-wrapper]
+  ignore line: [Target: x86_64-unknown-linux-gnu]
+  ignore line: [Configured with: ../gcc-4.8.1/configure --prefix=/usr/local/Cluster-Apps/gcc/4.8.1 --with-arch=native --with-tune=native --disable-multilib --with-gmp=/usr/local/Cluster-Apps/gcc/4.8.1 --with-mpfr=/usr/local/Cluster-Apps/gcc/4.8.1 --with-mpc=/usr/local/Cluster-Apps/gcc/4.8.1]
+  ignore line: [Thread model: posix]
+  ignore line: [gcc version 4.8.1 (GCC) ]
+  ignore line: [Reading specs from /usr/local/Cluster-Apps/gcc/4.8.1/lib/gcc/x86_64-unknown-linux-gnu/4.8.1/../../../../lib64/libgfortran.spec]
+  ignore line: [rename spec lib to liborig]
+  ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'cmTryCompileExec1224892736' '-rdynamic' '-shared-libgcc' '-mtune=native' '-march=native']
+  ignore line: [COMPILER_PATH=/usr/local/Cluster-Apps/gcc/4.8.1/libexec/gcc/x86_64-unknown-linux-gnu/4.8.1/:/usr/local/Cluster-Apps/gcc/4.8.1/libexec/gcc/x86_64-unknown-linux-gnu/4.8.1/:/usr/local/Cluster-Apps/gcc/4.8.1/libexec/gcc/x86_64-unknown-linux-gnu/:/usr/local/Cluster-Apps/gcc/4.8.1/lib/gcc/x86_64-unknown-linux-gnu/4.8.1/:/usr/local/Cluster-Apps/gcc/4.8.1/lib/gcc/x86_64-unknown-linux-gnu/]
+  ignore line: [LIBRARY_PATH=/usr/local/Cluster-Apps/cuda/6.0/lib64/../lib64/:/usr/local/Cluster-Apps/cuda/6.0/lib/../lib64/:/usr/local/Cluster-Apps/cuda/6.0/extras/CUPTI/lib64/../lib64/:/usr/local/Cluster-Apps/cuda/6.0/nvvm/lib64/../lib64/:/usr/local/Cluster-Apps/gcc/4.8.1/lib/gcc/x86_64-unknown-linux-gnu/4.8.1/:/usr/local/Cluster-Apps/gcc/4.8.1/lib/gcc/x86_64-unknown-linux-gnu/4.8.1/../../../../lib64/:/lib/../lib64/:/usr/lib/../lib64/:/usr/local/Cluster-Apps/intel/cce/15.0.1.133/ipp/lib/intel64/:/usr/local/Cluster-Apps/intel/cce/15.0.1.133/tbb/lib/intel64/:/usr/local/Cluster-Apps/intel/fce/15.0.1.133/lib/intel64/:/usr/local/Cluster-Apps/pgplot/:/usr/local/Cluster-Apps/cuda/6.0/lib64/:/usr/local/Cluster-Apps/cuda/6.0/lib/:/usr/local/Cluster-Apps/cuda/6.0/extras/CUPTI/lib64/:/usr/local/Cluster-Apps/cuda/6.0/nvvm/lib64/:/usr/local/Cluster-Apps/cuda/6.0/open64/lib/:/usr/local/Cluster-Apps/fftw/intel/64/3.3.3/lib/:/usr/local/Cluster-Apps/intel/mkl/10.3.10.319/composer_xe_2011_sp1.10.319/mkl/lib/intel64/:/usr/local/Cluster-Apps/intel/impi/4.1.3.045/lib64/:/usr/local/Cluster-Users/sjr20/cfitsio/3.03/icc/lib/:/usr/local/Cluster-Apps/gcc/4.8.1/lib/gcc/x86_64-unknown-linux-gnu/4.8.1/../../../:/lib/:/usr/lib/]
+  ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'cmTryCompileExec1224892736' '-rdynamic' '-shared-libgcc' '-mtune=native' '-march=native']
+  link line: [ /usr/local/Cluster-Apps/gcc/4.8.1/libexec/gcc/x86_64-unknown-linux-gnu/4.8.1/collect2 --eh-frame-hdr -m elf_x86_64 -export-dynamic -dynamic-linker /lib64/ld-linux-x86-64.so.2 -o cmTryCompileExec1224892736 /usr/lib/../lib64/crt1.o /usr/lib/../lib64/crti.o /usr/local/Cluster-Apps/gcc/4.8.1/lib/gcc/x86_64-unknown-linux-gnu/4.8.1/crtbegin.o -L/usr/local/Cluster-Apps/cuda/6.0/lib64/../lib64 -L/usr/local/Cluster-Apps/cuda/6.0/lib/../lib64 -L/usr/local/Cluster-Apps/cuda/6.0/extras/CUPTI/lib64/../lib64 -L/usr/local/Cluster-Apps/cuda/6.0/nvvm/lib64/../lib64 -L/usr/local/Cluster-Apps/gcc/4.8.1/lib/gcc/x86_64-unknown-linux-gnu/4.8.1 -L/usr/local/Cluster-Apps/gcc/4.8.1/lib/gcc/x86_64-unknown-linux-gnu/4.8.1/../../../../lib64 -L/lib/../lib64 -L/usr/lib/../lib64 -L/usr/local/Cluster-Apps/intel/cce/15.0.1.133/ipp/lib/intel64 -L/usr/local/Cluster-Apps/intel/cce/15.0.1.133/tbb/lib/intel64 -L/usr/local/Cluster-Apps/intel/fce/15.0.1.133/lib/intel64 -L/usr/local/Cluster-Apps/pgplot -L/usr/local/Cluster-Apps/cuda/6.0/lib64 -L/usr/local/Cluster-Apps/cuda/6.0/lib -L/usr/local/Cluster-Apps/cuda/6.0/extras/CUPTI/lib64 -L/usr/local/Cluster-Apps/cuda/6.0/nvvm/lib64 -L/usr/local/Cluster-Apps/cuda/6.0/open64/lib -L/usr/local/Cluster-Apps/fftw/intel/64/3.3.3/lib -L/usr/local/Cluster-Apps/intel/mkl/10.3.10.319/composer_xe_2011_sp1.10.319/mkl/lib/intel64 -L/usr/local/Cluster-Apps/intel/impi/4.1.3.045/lib64 -L/usr/local/Cluster-Users/sjr20/cfitsio/3.03/icc/lib -L/usr/local/Cluster-Apps/gcc/4.8.1/lib/gcc/x86_64-unknown-linux-gnu/4.8.1/../../.. CMakeFiles/cmTryCompileExec1224892736.dir/CMakeFortranCompilerABI.F.o -lgfortran -lm -lgcc_s -lgcc -lquadmath -lm -lgcc_s -lgcc -lc -lgcc_s -lgcc /usr/local/Cluster-Apps/gcc/4.8.1/lib/gcc/x86_64-unknown-linux-gnu/4.8.1/crtend.o /usr/lib/../lib64/crtn.o]
+    arg [/usr/local/Cluster-Apps/gcc/4.8.1/libexec/gcc/x86_64-unknown-linux-gnu/4.8.1/collect2] ==> ignore
+    arg [--eh-frame-hdr] ==> ignore
+    arg [-m] ==> ignore
+    arg [elf_x86_64] ==> ignore
+    arg [-export-dynamic] ==> ignore
+    arg [-dynamic-linker] ==> ignore
+    arg [/lib64/ld-linux-x86-64.so.2] ==> ignore
+    arg [-o] ==> ignore
+    arg [cmTryCompileExec1224892736] ==> ignore
+    arg [/usr/lib/../lib64/crt1.o] ==> ignore
+    arg [/usr/lib/../lib64/crti.o] ==> ignore
+    arg [/usr/local/Cluster-Apps/gcc/4.8.1/lib/gcc/x86_64-unknown-linux-gnu/4.8.1/crtbegin.o] ==> ignore
+    arg [-L/usr/local/Cluster-Apps/cuda/6.0/lib64/../lib64] ==> dir [/usr/local/Cluster-Apps/cuda/6.0/lib64/../lib64]
+    arg [-L/usr/local/Cluster-Apps/cuda/6.0/lib/../lib64] ==> dir [/usr/local/Cluster-Apps/cuda/6.0/lib/../lib64]
+    arg [-L/usr/local/Cluster-Apps/cuda/6.0/extras/CUPTI/lib64/../lib64] ==> dir [/usr/local/Cluster-Apps/cuda/6.0/extras/CUPTI/lib64/../lib64]
+    arg [-L/usr/local/Cluster-Apps/cuda/6.0/nvvm/lib64/../lib64] ==> dir [/usr/local/Cluster-Apps/cuda/6.0/nvvm/lib64/../lib64]
+    arg [-L/usr/local/Cluster-Apps/gcc/4.8.1/lib/gcc/x86_64-unknown-linux-gnu/4.8.1] ==> dir [/usr/local/Cluster-Apps/gcc/4.8.1/lib/gcc/x86_64-unknown-linux-gnu/4.8.1]
+    arg [-L/usr/local/Cluster-Apps/gcc/4.8.1/lib/gcc/x86_64-unknown-linux-gnu/4.8.1/../../../../lib64] ==> dir [/usr/local/Cluster-Apps/gcc/4.8.1/lib/gcc/x86_64-unknown-linux-gnu/4.8.1/../../../../lib64]
+    arg [-L/lib/../lib64] ==> dir [/lib/../lib64]
+    arg [-L/usr/lib/../lib64] ==> dir [/usr/lib/../lib64]
+    arg [-L/usr/local/Cluster-Apps/intel/cce/15.0.1.133/ipp/lib/intel64] ==> dir [/usr/local/Cluster-Apps/intel/cce/15.0.1.133/ipp/lib/intel64]
+    arg [-L/usr/local/Cluster-Apps/intel/cce/15.0.1.133/tbb/lib/intel64] ==> dir [/usr/local/Cluster-Apps/intel/cce/15.0.1.133/tbb/lib/intel64]
+    arg [-L/usr/local/Cluster-Apps/intel/fce/15.0.1.133/lib/intel64] ==> dir [/usr/local/Cluster-Apps/intel/fce/15.0.1.133/lib/intel64]
+    arg [-L/usr/local/Cluster-Apps/pgplot] ==> dir [/usr/local/Cluster-Apps/pgplot]
+    arg [-L/usr/local/Cluster-Apps/cuda/6.0/lib64] ==> dir [/usr/local/Cluster-Apps/cuda/6.0/lib64]
+    arg [-L/usr/local/Cluster-Apps/cuda/6.0/lib] ==> dir [/usr/local/Cluster-Apps/cuda/6.0/lib]
+    arg [-L/usr/local/Cluster-Apps/cuda/6.0/extras/CUPTI/lib64] ==> dir [/usr/local/Cluster-Apps/cuda/6.0/extras/CUPTI/lib64]
+    arg [-L/usr/local/Cluster-Apps/cuda/6.0/nvvm/lib64] ==> dir [/usr/local/Cluster-Apps/cuda/6.0/nvvm/lib64]
+    arg [-L/usr/local/Cluster-Apps/cuda/6.0/open64/lib] ==> dir [/usr/local/Cluster-Apps/cuda/6.0/open64/lib]
+    arg [-L/usr/local/Cluster-Apps/fftw/intel/64/3.3.3/lib] ==> dir [/usr/local/Cluster-Apps/fftw/intel/64/3.3.3/lib]
+    arg [-L/usr/local/Cluster-Apps/intel/mkl/10.3.10.319/composer_xe_2011_sp1.10.319/mkl/lib/intel64] ==> dir [/usr/local/Cluster-Apps/intel/mkl/10.3.10.319/composer_xe_2011_sp1.10.319/mkl/lib/intel64]
+    arg [-L/usr/local/Cluster-Apps/intel/impi/4.1.3.045/lib64] ==> dir [/usr/local/Cluster-Apps/intel/impi/4.1.3.045/lib64]
+    arg [-L/usr/local/Cluster-Users/sjr20/cfitsio/3.03/icc/lib] ==> dir [/usr/local/Cluster-Users/sjr20/cfitsio/3.03/icc/lib]
+    arg [-L/usr/local/Cluster-Apps/gcc/4.8.1/lib/gcc/x86_64-unknown-linux-gnu/4.8.1/../../..] ==> dir [/usr/local/Cluster-Apps/gcc/4.8.1/lib/gcc/x86_64-unknown-linux-gnu/4.8.1/../../..]
+    arg [CMakeFiles/cmTryCompileExec1224892736.dir/CMakeFortranCompilerABI.F.o] ==> ignore
+    arg [-lgfortran] ==> lib [gfortran]
+    arg [-lm] ==> lib [m]
+    arg [-lgcc_s] ==> lib [gcc_s]
+    arg [-lgcc] ==> lib [gcc]
+    arg [-lquadmath] ==> lib [quadmath]
+    arg [-lm] ==> lib [m]
+    arg [-lgcc_s] ==> lib [gcc_s]
+    arg [-lgcc] ==> lib [gcc]
+    arg [-lc] ==> lib [c]
+    arg [-lgcc_s] ==> lib [gcc_s]
+    arg [-lgcc] ==> lib [gcc]
+    arg [/usr/local/Cluster-Apps/gcc/4.8.1/lib/gcc/x86_64-unknown-linux-gnu/4.8.1/crtend.o] ==> ignore
+    arg [/usr/lib/../lib64/crtn.o] ==> ignore
+  remove lib [gcc_s]
+  remove lib [gcc]
+  remove lib [gcc_s]
+  remove lib [gcc]
+  remove lib [gcc_s]
+  remove lib [gcc]
+  collapse library dir [/usr/local/Cluster-Apps/cuda/6.0/lib64/../lib64] ==> [/usr/local/Cluster-Apps/cuda/6.0/lib64]
+  collapse library dir [/usr/local/Cluster-Apps/cuda/6.0/lib/../lib64] ==> [/usr/local/Cluster-Apps/cuda/6.0/lib64]
+  collapse library dir [/usr/local/Cluster-Apps/cuda/6.0/extras/CUPTI/lib64/../lib64] ==> [/usr/local/Cluster-Apps/cuda/6.0/extras/CUPTI/lib64]
+  collapse library dir [/usr/local/Cluster-Apps/cuda/6.0/nvvm/lib64/../lib64] ==> [/usr/local/Cluster-Apps/cuda/6.0/nvvm/lib64]
+  collapse library dir [/usr/local/Cluster-Apps/gcc/4.8.1/lib/gcc/x86_64-unknown-linux-gnu/4.8.1] ==> [/usr/local/Cluster-Apps/gcc/4.8.1/lib/gcc/x86_64-unknown-linux-gnu/4.8.1]
+  collapse library dir [/usr/local/Cluster-Apps/gcc/4.8.1/lib/gcc/x86_64-unknown-linux-gnu/4.8.1/../../../../lib64] ==> [/usr/local/Cluster-Apps/gcc/4.8.1/lib64]
+  collapse library dir [/lib/../lib64] ==> [/lib64]
+  collapse library dir [/usr/lib/../lib64] ==> [/usr/lib64]
+  collapse library dir [/usr/local/Cluster-Apps/intel/cce/15.0.1.133/ipp/lib/intel64] ==> [/usr/local/Cluster-Apps/intel/cce/15.0.1.133/ipp/lib/intel64]
+  collapse library dir [/usr/local/Cluster-Apps/intel/cce/15.0.1.133/tbb/lib/intel64] ==> [/usr/local/Cluster-Apps/intel/cce/15.0.1.133/tbb/lib/intel64]
+  collapse library dir [/usr/local/Cluster-Apps/intel/fce/15.0.1.133/lib/intel64] ==> [/usr/local/Cluster-Apps/intel/fce/15.0.1.133/lib/intel64]
+  collapse library dir [/usr/local/Cluster-Apps/pgplot] ==> [/usr/local/Cluster-Apps/pgplot]
+  collapse library dir [/usr/local/Cluster-Apps/cuda/6.0/lib64] ==> [/usr/local/Cluster-Apps/cuda/6.0/lib64]
+  collapse library dir [/usr/local/Cluster-Apps/cuda/6.0/lib] ==> [/usr/local/Cluster-Apps/cuda/6.0/lib]
+  collapse library dir [/usr/local/Cluster-Apps/cuda/6.0/extras/CUPTI/lib64] ==> [/usr/local/Cluster-Apps/cuda/6.0/extras/CUPTI/lib64]
+  collapse library dir [/usr/local/Cluster-Apps/cuda/6.0/nvvm/lib64] ==> [/usr/local/Cluster-Apps/cuda/6.0/nvvm/lib64]
+  collapse library dir [/usr/local/Cluster-Apps/cuda/6.0/open64/lib] ==> [/usr/local/Cluster-Apps/cuda/6.0/open64/lib]
+  collapse library dir [/usr/local/Cluster-Apps/fftw/intel/64/3.3.3/lib] ==> [/usr/local/Cluster-Apps/fftw/intel/64/3.3.3/lib]
+  collapse library dir [/usr/local/Cluster-Apps/intel/mkl/10.3.10.319/composer_xe_2011_sp1.10.319/mkl/lib/intel64] ==> [/usr/local/Cluster-Apps/intel/mkl/10.3.10.319/composer_xe_2011_sp1.10.319/mkl/lib/intel64]
+  collapse library dir [/usr/local/Cluster-Apps/intel/impi/4.1.3.045/lib64] ==> [/usr/local/Cluster-Apps/intel/impi/4.1.3.045/lib64]
+  collapse library dir [/usr/local/Cluster-Users/sjr20/cfitsio/3.03/icc/lib] ==> [/usr/local/Cluster-Users/sjr20/cfitsio/3.03/icc/lib]
+  collapse library dir [/usr/local/Cluster-Apps/gcc/4.8.1/lib/gcc/x86_64-unknown-linux-gnu/4.8.1/../../..] ==> [/usr/local/Cluster-Apps/gcc/4.8.1/lib]
+  implicit libs: [gfortran;m;quadmath;m;c]
+  implicit dirs: [/usr/local/Cluster-Apps/cuda/6.0/lib64;/usr/local/Cluster-Apps/cuda/6.0/extras/CUPTI/lib64;/usr/local/Cluster-Apps/cuda/6.0/nvvm/lib64;/usr/local/Cluster-Apps/gcc/4.8.1/lib/gcc/x86_64-unknown-linux-gnu/4.8.1;/usr/local/Cluster-Apps/gcc/4.8.1/lib64;/lib64;/usr/lib64;/usr/local/Cluster-Apps/intel/cce/15.0.1.133/ipp/lib/intel64;/usr/local/Cluster-Apps/intel/cce/15.0.1.133/tbb/lib/intel64;/usr/local/Cluster-Apps/intel/fce/15.0.1.133/lib/intel64;/usr/local/Cluster-Apps/pgplot;/usr/local/Cluster-Apps/cuda/6.0/lib;/usr/local/Cluster-Apps/cuda/6.0/open64/lib;/usr/local/Cluster-Apps/fftw/intel/64/3.3.3/lib;/usr/local/Cluster-Apps/intel/mkl/10.3.10.319/composer_xe_2011_sp1.10.319/mkl/lib/intel64;/usr/local/Cluster-Apps/intel/impi/4.1.3.045/lib64;/usr/local/Cluster-Users/sjr20/cfitsio/3.03/icc/lib;/usr/local/Cluster-Apps/gcc/4.8.1/lib]
+  implicit fwks: []
+
+
+Determining if the Fortran compiler supports Fortran 90 passed with the following output:
+Change Dir: /home/ltl21/PulsarCode/Ellipsis/build/CMakeFiles/CMakeTmp
+
+Run Build Command:/usr/bin/gmake "cmTryCompileExec1731333392/fast"
+/usr/bin/gmake -f CMakeFiles/cmTryCompileExec1731333392.dir/build.make CMakeFiles/cmTryCompileExec1731333392.dir/build
+gmake[1]: Entering directory `/home/ltl21/PulsarCode/Ellipsis/build/CMakeFiles/CMakeTmp'
+/usr/bin/cmake -E cmake_progress_report /home/ltl21/PulsarCode/Ellipsis/build/CMakeFiles/CMakeTmp/CMakeFiles 1
+Building Fortran object CMakeFiles/cmTryCompileExec1731333392.dir/testFortranCompilerF90.f90.o
+/usr/local/Cluster-Apps/gcc/4.8.1/bin/gfortran    -c /home/ltl21/PulsarCode/Ellipsis/build/CMakeFiles/CMakeTmp/testFortranCompilerF90.f90 -o CMakeFiles/cmTryCompileExec1731333392.dir/testFortranCompilerF90.f90.o
+Linking Fortran executable cmTryCompileExec1731333392
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTryCompileExec1731333392.dir/link.txt --verbose=1
+/usr/local/Cluster-Apps/gcc/4.8.1/bin/gfortran       CMakeFiles/cmTryCompileExec1731333392.dir/testFortranCompilerF90.f90.o  -o cmTryCompileExec1731333392 -rdynamic 
+gmake[1]: Leaving directory `/home/ltl21/PulsarCode/Ellipsis/build/CMakeFiles/CMakeTmp'
+
+
+Determining if files pthread.h exist passed with the following output:
+Change Dir: /home/ltl21/PulsarCode/Ellipsis/build/CMakeFiles/CMakeTmp
+
+Run Build Command:/usr/bin/gmake "cmTryCompileExec1959569922/fast"
+/usr/bin/gmake -f CMakeFiles/cmTryCompileExec1959569922.dir/build.make CMakeFiles/cmTryCompileExec1959569922.dir/build
+gmake[1]: Entering directory `/home/ltl21/PulsarCode/Ellipsis/build/CMakeFiles/CMakeTmp'
+/usr/bin/cmake -E cmake_progress_report /home/ltl21/PulsarCode/Ellipsis/build/CMakeFiles/CMakeTmp/CMakeFiles 1
+Building C object CMakeFiles/cmTryCompileExec1959569922.dir/CheckIncludeFiles.c.o
+/usr/local/Cluster-Apps/gcc/4.8.1/bin/gcc   -std=c89 -pedantic -Wall -Wextra -Wfatal-errors -O3    -o CMakeFiles/cmTryCompileExec1959569922.dir/CheckIncludeFiles.c.o   -c /home/ltl21/PulsarCode/Ellipsis/build/CMakeFiles/CMakeTmp/CheckIncludeFiles.c
+Linking C executable cmTryCompileExec1959569922
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTryCompileExec1959569922.dir/link.txt --verbose=1
+/usr/local/Cluster-Apps/gcc/4.8.1/bin/gcc   -std=c89 -pedantic -Wall -Wextra -Wfatal-errors -O3     CMakeFiles/cmTryCompileExec1959569922.dir/CheckIncludeFiles.c.o  -o cmTryCompileExec1959569922 -rdynamic 
+gmake[1]: Leaving directory `/home/ltl21/PulsarCode/Ellipsis/build/CMakeFiles/CMakeTmp'
+
+
+Determining if the function pthread_create exists in the pthread passed with the following output:
+Change Dir: /home/ltl21/PulsarCode/Ellipsis/build/CMakeFiles/CMakeTmp
+
+Run Build Command:/usr/bin/gmake "cmTryCompileExec3142707490/fast"
+/usr/bin/gmake -f CMakeFiles/cmTryCompileExec3142707490.dir/build.make CMakeFiles/cmTryCompileExec3142707490.dir/build
+gmake[1]: Entering directory `/home/ltl21/PulsarCode/Ellipsis/build/CMakeFiles/CMakeTmp'
+/usr/bin/cmake -E cmake_progress_report /home/ltl21/PulsarCode/Ellipsis/build/CMakeFiles/CMakeTmp/CMakeFiles 1
+Building C object CMakeFiles/cmTryCompileExec3142707490.dir/CheckFunctionExists.c.o
+/usr/local/Cluster-Apps/gcc/4.8.1/bin/gcc   -std=c89 -pedantic -Wall -Wextra -Wfatal-errors -O3 -DCHECK_FUNCTION_EXISTS=pthread_create   -o CMakeFiles/cmTryCompileExec3142707490.dir/CheckFunctionExists.c.o   -c /usr/share/cmake/Modules/CheckFunctionExists.c
+Linking C executable cmTryCompileExec3142707490
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTryCompileExec3142707490.dir/link.txt --verbose=1
+/usr/local/Cluster-Apps/gcc/4.8.1/bin/gcc   -std=c89 -pedantic -Wall -Wextra -Wfatal-errors -O3 -DCHECK_FUNCTION_EXISTS=pthread_create    CMakeFiles/cmTryCompileExec3142707490.dir/CheckFunctionExists.c.o  -o cmTryCompileExec3142707490 -rdynamic -lpthread 
+gmake[1]: Leaving directory `/home/ltl21/PulsarCode/Ellipsis/build/CMakeFiles/CMakeTmp'
+
+
+Determining if the Fortran sgemm exists passed with the following output:
+Change Dir: /home/ltl21/PulsarCode/Ellipsis/build/CMakeFiles/CMakeTmp
+
+Run Build Command:/usr/bin/gmake "cmTryCompileExec2657525324/fast"
+/usr/bin/gmake -f CMakeFiles/cmTryCompileExec2657525324.dir/build.make CMakeFiles/cmTryCompileExec2657525324.dir/build
+gmake[1]: Entering directory `/home/ltl21/PulsarCode/Ellipsis/build/CMakeFiles/CMakeTmp'
+/usr/bin/cmake -E cmake_progress_report /home/ltl21/PulsarCode/Ellipsis/build/CMakeFiles/CMakeTmp/CMakeFiles 1
+Building Fortran object CMakeFiles/cmTryCompileExec2657525324.dir/testFortranCompiler.f.o
+/usr/local/Cluster-Apps/gcc/4.8.1/bin/gfortran   -std=f95 -pedantic -Wall -Wextra  -Wfatal-errors -O3    -c /home/ltl21/PulsarCode/Ellipsis/build/CMakeFiles/CMakeTmp/testFortranCompiler.f -o CMakeFiles/cmTryCompileExec2657525324.dir/testFortranCompiler.f.o
+Linking Fortran executable cmTryCompileExec2657525324
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTryCompileExec2657525324.dir/link.txt --verbose=1
+/usr/local/Cluster-Apps/gcc/4.8.1/bin/gfortran      -std=f95 -pedantic -Wall -Wextra  -Wfatal-errors -O3  CMakeFiles/cmTryCompileExec2657525324.dir/testFortranCompiler.f.o  -o cmTryCompileExec2657525324 -rdynamic -lmkl_intel_lp64 -lmkl_gnu_thread -lmkl_core /usr/local/Cluster-Apps/gcc/4.8.1/lib64/libgomp.so -lpthread -lm 
+gmake[1]: Leaving directory `/home/ltl21/PulsarCode/Ellipsis/build/CMakeFiles/CMakeTmp'
+
+
+Determining if the Fortran cheev exists passed with the following output:
+Change Dir: /home/ltl21/PulsarCode/Ellipsis/build/CMakeFiles/CMakeTmp
+
+Run Build Command:/usr/bin/gmake "cmTryCompileExec43512721/fast"
+/usr/bin/gmake -f CMakeFiles/cmTryCompileExec43512721.dir/build.make CMakeFiles/cmTryCompileExec43512721.dir/build
+gmake[1]: Entering directory `/home/ltl21/PulsarCode/Ellipsis/build/CMakeFiles/CMakeTmp'
+/usr/bin/cmake -E cmake_progress_report /home/ltl21/PulsarCode/Ellipsis/build/CMakeFiles/CMakeTmp/CMakeFiles 1
+Building Fortran object CMakeFiles/cmTryCompileExec43512721.dir/testFortranCompiler.f.o
+/usr/local/Cluster-Apps/gcc/4.8.1/bin/gfortran   -std=f95 -pedantic -Wall -Wextra  -Wfatal-errors -O3    -c /home/ltl21/PulsarCode/Ellipsis/build/CMakeFiles/CMakeTmp/testFortranCompiler.f -o CMakeFiles/cmTryCompileExec43512721.dir/testFortranCompiler.f.o
+Linking Fortran executable cmTryCompileExec43512721
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTryCompileExec43512721.dir/link.txt --verbose=1
+/usr/local/Cluster-Apps/gcc/4.8.1/bin/gfortran      -std=f95 -pedantic -Wall -Wextra  -Wfatal-errors -O3  CMakeFiles/cmTryCompileExec43512721.dir/testFortranCompiler.f.o  -o cmTryCompileExec43512721 -rdynamic -lmkl_gf_lp64 -lmkl_intel_lp64 -lmkl_gnu_thread -lmkl_core /usr/local/Cluster-Apps/gcc/4.8.1/lib64/libgomp.so -lpthread -lm 
+gmake[1]: Leaving directory `/home/ltl21/PulsarCode/Ellipsis/build/CMakeFiles/CMakeTmp'
+
+

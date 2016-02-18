@@ -1,0 +1,22 @@
+#IncludeRegexLine: ^[ 	]*#[ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+../ellipsis/guided_hmc.h
+
+/home/ltl21/PulsarCode/Ellipsis/examples/uncorr_gauss_c.c
+stdlib.h
+-
+string.h
+-
+stdio.h
+-
+math.h
+-
+guided_hmc.h
+-
+

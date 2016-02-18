@@ -1,0 +1,6 @@
+#ifndef ELLIPSIS_TEST_KINETIC_ENERGY_H
+#define ELLIPSIS_TEST_KINETIC_ENERGY_H
+
+int test_kinetic_energy();
+
+#endif/*ELLIPSIS_TEST_KINETIC_ENERGY_H*/
