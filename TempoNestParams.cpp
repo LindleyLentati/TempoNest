@@ -147,7 +147,8 @@ void setupparams(int &useGPUS,
                 double *ProfileNoiseSpecPrior,
 		int &SubIntToFit,
 		int &ChannelToFit,
-		int &NProfileEvoPoly){
+		int &NProfileEvoPoly,
+		int &usecosiprior){
 
 	//General parameters:
 	//Use GPUs 0=No, 1=Yes
@@ -270,7 +271,7 @@ void setupparams(int &useGPUS,
 	DMPriorType = 0;   // 0 = Log, 1 = Uniform
 	EQUADPriorType = 0;   // 0 = Log, 1 = Uniform
 	EFACPriorType = 0;   // 0 = Log, 1 = Uniform
-
+	usecosiprior = 0; // 0 = uniform in sini, 1 = uniform in cosi
 
 
 	EFACPrior[0]=0.1;
@@ -612,6 +613,11 @@ void setupparams(int &useGPUS,
 
 
 	parameters.readInto(NProfileEvoPoly, "NProfileEvoPoly", NProfileEvoPoly);
+
+	parameters.readInto(usecosiprior, "usecosiprior", usecosiprior);
+
+
+
 	
     } catch(ConfigFile::file_not_found oError) {
         printf("WARNING: parameters file '%s' not found. Using defaults.\n", oError.filename.c_str());

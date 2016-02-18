@@ -125,6 +125,8 @@ typedef struct {
 	double *StoredTMatrix;
 	double *StoredDMVals;
 	int *TimingGradientSigns;
+	int usecosiprior;
+
 	/*GPTA stuff*/
 
 	int incWideBandNoise;
@@ -148,6 +150,7 @@ typedef struct {
 	int TotalProfiles;
 	double *MeanProfileShape;
 	double **MeanProfileEvo;
+	double *MeanProfileStoc;
 	double MeanProfileBeta;
 	long double **ProfileInfo;
 	long double ***ProfileData;
@@ -184,6 +187,7 @@ typedef struct {
 	int diagonalGHS;
 	double PhasePrior;
 	int WriteNewML;
+	
 
 	/*Template Stuff*/
 
@@ -296,6 +300,7 @@ void StoreTMatrix(double *TMatrix, void *context);
 void getArraySizeInfo(void *context);
 void getPhysDVector(void *context, double **TNDM, int Nobs, int *TimingGradientSigns);
 void UpdatePhysDVector(void *context, double **TNDM, int Nobs);
+void OutputMLFiles(int nParameters, double* pdParameterEstimates, double MLike, int startDim);
 
 void readsummary(pulsar *psr, std::string longname, int ndim, void *context, long double *Tempo2Fit, int incRED, int ndims, int MarginTime, int MarginJumps, int doLinear);
 
@@ -416,7 +421,8 @@ void setupparams(int &useGPUS,
 		double *ProfileNoiseSpecPrior,
 		int &SubIntToFit,
 		int &ChannelToFit,
-		int &NProfileEvoPoly);
+		int &NProfileEvoPoly,
+		int &usecosiprior);
 
 void setTNPriors(double **Dpriors, long double **TempoPriors, int TPsize, int DPsize);
 void setFrequencies(double *SampleFreq, int numRedfreqs, int numDMfreqs, int numRedLogFreqs, int numDMLogFreqs, double RedLowFreq, double DMLowFreq, double RedMidFreq, double DMMidFreq);
