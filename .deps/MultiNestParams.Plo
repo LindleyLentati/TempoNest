@@ -8,8 +8,7 @@ MultiNestParams.lo: MultiNestParams.cpp /usr/include/string.h \
  /usr/include/_G_config.h /usr/include/wchar.h \
  /usr/local/Cluster-Apps/gcc/4.8.1/lib/gcc/x86_64-unknown-linux-gnu/4.8.1/include/stdarg.h \
  /usr/include/bits/stdio_lim.h /usr/include/bits/sys_errlist.h \
- /usr/include/bits/stdio.h configfile.h \
- /usr/local/Cluster-Apps/gcc/4.8.1/include/c++/4.8.1/string \
+ configfile.h /usr/local/Cluster-Apps/gcc/4.8.1/include/c++/4.8.1/string \
  /usr/local/Cluster-Apps/gcc/4.8.1/include/c++/4.8.1/x86_64-unknown-linux-gnu/bits/c++config.h \
  /usr/local/Cluster-Apps/gcc/4.8.1/include/c++/4.8.1/x86_64-unknown-linux-gnu/bits/os_defines.h \
  /usr/local/Cluster-Apps/gcc/4.8.1/include/c++/4.8.1/x86_64-unknown-linux-gnu/bits/cpu_defines.h \
@@ -126,8 +125,6 @@ MultiNestParams.lo: MultiNestParams.cpp /usr/include/string.h \
 /usr/include/bits/stdio_lim.h:
 
 /usr/include/bits/sys_errlist.h:
-
-/usr/include/bits/stdio.h:
 
 configfile.h:
 

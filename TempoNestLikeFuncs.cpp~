@@ -1422,7 +1422,7 @@ double  NewLRedMarginLogLike(int &ndim, double *Cube, int &npars, double *Derive
 
 			if(p<((MNStruct *)globalcontext)->numFitTiming && ((MNStruct *)globalcontext)->usecosiprior == 1){
 				if(strcasecmp(((MNStruct *)globalcontext)->pulse->param[((MNStruct *)globalcontext)->TempoFitNums[p][0]].shortlabel[0],"SINI") == 0){
-					printf("sini: %i %g %g %Lg \n", p, val, sqrt(1.0 - val*val), LDparams[p]);
+					//printf("sini: %i %g %g %Lg \n", p, val, sqrt(1.0 - val*val), LDparams[p]);
 					val = Cube[fitcount];
 					LDparams[p] = sqrt(1.0 - val*val);
 				}
@@ -11006,10 +11006,10 @@ void  WriteSubIntStocProfLike(std::string longname, int &ndim){
 */
 
 
-void PreComputeShapelets(double **StoredShapelets, double **StoredJitterShapelets, double **InterpolatedMeanProfile, double **InterpolatedJitterProfile, double **InterpolatedWidthProfile, long double finalInterpTime, int numtointerpolate, double MeanBeta, double &MaxShapeAmp){
+void PreComputeShapelets(double **StoredShapelets, double **StoredJitterShapelets, double **InterpolatedMeanProfile, double **InterpolatedJitterProfile, double **InterpolatedWidthProfile, long double finalInterpTime, int numtointerpolate, double *MeanBeta, double &MaxShapeAmp){
 
 
-	printf("In function %Lg %i %g \n", finalInterpTime, numtointerpolate, MeanBeta);
+	printf("In function %Lg %i %g \n", finalInterpTime, numtointerpolate, MeanBeta[0]);
 
 /////////////////////////////////////////////////////////////////////////////////////////////  
 /////////////////////////Profile Params//////////////////////////////////////////////////////
@@ -11053,7 +11053,12 @@ void PreComputeShapelets(double **StoredShapelets, double **StoredJitterShapelet
 		//printf("ShapeCoeff: %i %g \n", i, shapecoeff[i]);
 	}
 
-	double beta = MeanBeta*((MNStruct *)globalcontext)->ReferencePeriod;
+
+	double *betas = new double[((MNStruct *)globalcontext)->numProfComponents]();
+	for(int i = 0; i < ((MNStruct *)globalcontext)->numProfComponents; i++){
+		betas[i] = MeanBeta[i]*((MNStruct *)globalcontext)->ReferencePeriod;
+	}
+
 
 	maxshapecoeff = totshapecoeff +  ((MNStruct *)globalcontext)->numProfComponents;
 
@@ -11061,22 +11066,12 @@ void PreComputeShapelets(double **StoredShapelets, double **StoredJitterShapelet
 	CompSeps[0] = 0;
 	for(int i = 1; i < ((MNStruct *)globalcontext)->numProfComponents; i++){
 
-//		CompSeps[i] = 0.075676881*((MNStruct *)globalcontext)->ReferencePeriod; //Sim
-//		CompSeps[i] = 0.336277178806697163*((MNStruct *)globalcontext)->ReferencePeriod; //J1744
+
 		CompSeps[i] = ((MNStruct *)globalcontext)->ProfCompSeps[i]*((MNStruct *)globalcontext)->ReferencePeriod;
 
-		//printf("CompSep: %g \n", Cube[pcount-1]);
+
 	}
 
-
-/*
-	if(totshapecoeff+1>=numshapestoccoeff+1){
-		maxshapecoeff=totshapecoeff+1;
-	}
-	if(numshapestoccoeff+1 > totshapecoeff+1){
-		maxshapecoeff=numshapestoccoeff+1;
-	}
-*/
 /////////////////////////////////////////////////////////////////////////////////////////////  
 /////////////////////////Profiles////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////
@@ -11142,14 +11137,14 @@ void PreComputeShapelets(double **StoredShapelets, double **StoredJitterShapelet
 				}
 
 				timediff=timediff*SECDAY;
-				double Betatime = timediff/beta;
+				double Betatime = timediff/betas[i];
 				TNothplMC(numcoeff[i]+1,Betatime,AllHermiteBasis[j], jpos);
 
 			
 				
 
 				for(int k =0; k < numcoeff[i]+1; k++){
-					double Bconst=(1.0/sqrt(beta))/sqrt(pow(2.0,k)*sqrt(M_PI));
+					double Bconst=(1.0/sqrt(betas[i]))/sqrt(pow(2.0,k)*sqrt(M_PI));
 					AllHermiteBasis[j][k+jpos] = AllHermiteBasis[j][k+jpos]*Bconst*exp(-0.5*Betatime*Betatime);
 		//			if(t == 0 && k == 0)printf("%i %i %g \n", i, j, AllHermiteBasis[j][k+jpos]);
 
@@ -11160,9 +11155,9 @@ void PreComputeShapelets(double **StoredShapelets, double **StoredJitterShapelet
  
 
 				if(((MNStruct *)globalcontext)->JitterProfComp == 0){
-					JitterBasis[j][0+cpos] = (1.0/sqrt(2.0))*(-1.0*AllHermiteBasis[j][1+jpos]);
+					JitterBasis[j][0+cpos] = (1.0/sqrt(2.0))*(-1.0*AllHermiteBasis[j][1+jpos])/betas[i];
 					for(int k =1; k < numcoeff[i]; k++){
-						JitterBasis[j][k+cpos] = (1.0/sqrt(2.0))*(sqrt(double(k))*AllHermiteBasis[j][k-1+jpos] - sqrt(double(k+1))*AllHermiteBasis[j][k+1+jpos]);
+						JitterBasis[j][k+cpos] = (1.0/sqrt(2.0))*(sqrt(double(k))*AllHermiteBasis[j][k-1+jpos] - sqrt(double(k+1))*AllHermiteBasis[j][k+1+jpos])/betas[i];
 					}
 
 					WidthBasis[j][0+cpos] = (Betatime*Betatime - 0.5)*AllHermiteBasis[j][0+jpos];
@@ -11172,9 +11167,9 @@ void PreComputeShapelets(double **StoredShapelets, double **StoredJitterShapelet
 				}
 				else{
 					if(i == ((MNStruct *)globalcontext)->JitterProfComp - 1){
-						JitterBasis[j][0+cpos] = (1.0/sqrt(2.0))*(-1.0*AllHermiteBasis[j][1+jpos]);
+						JitterBasis[j][0+cpos] = (1.0/sqrt(2.0))*(-1.0*AllHermiteBasis[j][1+jpos])/betas[i];
 						for(int k =1; k < numcoeff[i]; k++){
-							JitterBasis[j][k+cpos] = (1.0/sqrt(2.0))*(sqrt(double(k))*AllHermiteBasis[j][k-1+jpos] - sqrt(double(k+1))*AllHermiteBasis[j][k+1+jpos]);
+							JitterBasis[j][k+cpos] = (1.0/sqrt(2.0))*(sqrt(double(k))*AllHermiteBasis[j][k-1+jpos] - sqrt(double(k+1))*AllHermiteBasis[j][k+1+jpos])/betas[i];
 						}
 
 						WidthBasis[j][0+cpos] = (Betatime*Betatime - 0.5)*AllHermiteBasis[j][0+jpos];
@@ -11187,7 +11182,7 @@ void PreComputeShapelets(double **StoredShapelets, double **StoredJitterShapelet
 				int refbasis = 0;
 				if(i==0){refbasis = 1;}
 				for(int k = 0; k < numShapeToSave[i]; k++){
-					//if(t==0){printf("Save: %i %i %g \n", k+refbasis, j, spos, AllHermiteBasis[j][k+refbasis+jpos]);}
+					//if(t==0){printf("Save: %i %i %i %g \n", i, k+refbasis, j, spos, AllHermiteBasis[j][k+refbasis+jpos]);}
 					
 					StoredShapelets[t][j+(k+spos)*Nbins] = AllHermiteBasis[j][k+refbasis+jpos];
 					StoredJitterShapelets[t][j+(k+spos)*Nbins] = JitterBasis[j][k+refbasis+cpos];
@@ -11216,7 +11211,7 @@ void PreComputeShapelets(double **StoredShapelets, double **StoredJitterShapelet
 			InterpolatedWidthProfile[t][j] = Widthvec[j];
 			if(fabs(shapevec[j]) > maxshapeamp){ maxshapeamp = fabs(shapevec[j]); }
 
-			//if(t==0){printf("Means: %i %g %g %g \n", j, shapevec[j],Jittervec[j], Widthvec[j]);}
+			if(t==0){printf("Means: %i %g %g %g \n", j, shapevec[j],Jittervec[j], Widthvec[j]);}
 		}	
 
 		delete[] shapevec;
@@ -11241,6 +11236,7 @@ void PreComputeShapelets(double **StoredShapelets, double **StoredJitterShapelet
 
 	delete[] numcoeff;
 	delete[] CompSeps;	
+	delete[] betas;
 }
 
 
@@ -11719,7 +11715,14 @@ double  ProfileDomainLike(int &ndim, double *Cube, int &npars, double *DerivedPa
 		}
 	}
 	if(debug == 1){printf("Filled %i Coeff, %i EvoCoeff \n", totshapecoeff, totalEvoCoeff);}
-	double beta = ((MNStruct *)globalcontext)->MeanProfileBeta*((MNStruct *)globalcontext)->ReferencePeriod;
+
+
+	double *betas = new double[((MNStruct *)globalcontext)->numProfComponents]();
+	for(int i = 0; i < ((MNStruct *)globalcontext)->numProfComponents; i++){
+		betas[i] = ((MNStruct *)globalcontext)->MeanProfileBeta[i]*((MNStruct *)globalcontext)->ReferencePeriod;
+	}
+
+
 
 	int cpos = 0;
 	int epos = 0;
@@ -11791,7 +11794,7 @@ double  ProfileDomainLike(int &ndim, double *Cube, int &npars, double *DerivedPa
 	cpos = 0;
 	for(int i = 0; i < ((MNStruct *)globalcontext)->numProfComponents; i++){
 		for(int j =0; j < numcoeff[i]; j=j+2){
-			modelflux+=sqrt(sqrt(M_PI))*sqrt(beta)*pow(2.0, 0.5*(1.0-j))*sqrt(((MNStruct *)globalcontext)->Binomial[j])*shapecoeff[cpos+j];
+			modelflux+=sqrt(sqrt(M_PI))*sqrt(betas[i])*pow(2.0, 0.5*(1.0-j))*sqrt(((MNStruct *)globalcontext)->Binomial[j])*shapecoeff[cpos+j];
 		}
 		cpos+= numcoeff[i];
 	}
@@ -12238,7 +12241,7 @@ double  ProfileDomainLike(int &ndim, double *Cube, int &npars, double *DerivedPa
 				cpos=0;
 				for(int c = 0; c < ((MNStruct *)globalcontext)->numProfComponents; c++){
 					for(int j =0; j < NumCoeffForMult[c]; j=j+2){
-						ModModelFlux+=sqrt(sqrt(M_PI))*sqrt(beta)*pow(2.0, 0.5*(1.0-j))*sqrt(((MNStruct *)globalcontext)->Binomial[j])*ProfileModCoeffs[cpos+j];
+						ModModelFlux+=sqrt(sqrt(M_PI))*sqrt(betas[c])*pow(2.0, 0.5*(1.0-j))*sqrt(((MNStruct *)globalcontext)->Binomial[j])*ProfileModCoeffs[cpos+j];
 					}
 					cpos+= NumCoeffForMult[c];
 				}
@@ -12407,13 +12410,13 @@ double  ProfileDomainLike(int &ndim, double *Cube, int &npars, double *DerivedPa
 				Mcounter = 1+ProfileBaselineTerms+ProfileNoiseCoeff*2;
 				if(((MNStruct *)globalcontext)->numFitEQUAD > 0){
 					for(int j =0; j < Nbins; j++){
-						M[j + Mcounter*Nbins] = M[j + Mcounter*Nbins]*dataflux/ModModelFlux/beta;
+						M[j + Mcounter*Nbins] = M[j + Mcounter*Nbins]*dataflux/ModModelFlux;
 					}			
 					Mcounter++;
 				}
 				if(((MNStruct *)globalcontext)->incDMEQUAD > 0){
 					for(int j =0; j < Nbins; j++){
-						M[j + Mcounter*Nbins] = M[j + Mcounter*Nbins]*dataflux/ModModelFlux/beta;
+						M[j + Mcounter*Nbins] = M[j + Mcounter*Nbins]*dataflux/ModModelFlux;
 					}			
 					Mcounter++;
 				}
@@ -12810,6 +12813,7 @@ double  ProfileDomainLike(int &ndim, double *Cube, int &npars, double *DerivedPa
 	delete[] SQUAD;
 	delete[] numcoeff;
 	delete[] NumCoeffForMult;
+	delete[] betas;
 
 	for(int j =0; j< ((MNStruct *)globalcontext)->NProfileEvoPoly; j++){
 	    delete[] EvoCoeffs[j];
@@ -13340,7 +13344,13 @@ void  WriteProfileDomainLike(std::string longname, int &ndim){
 	if(debug == 1){printf("Filled %i Coeff, %i EvoCoeff \n", totshapecoeff, totalEvoCoeff);}
 	profiledimstart=pcount;
 
-	double beta = ((MNStruct *)globalcontext)->MeanProfileBeta*((MNStruct *)globalcontext)->ReferencePeriod;
+
+	double *betas = new double[((MNStruct *)globalcontext)->numProfComponents]();
+	for(int i = 0; i < ((MNStruct *)globalcontext)->numProfComponents; i++){
+		betas[i] = ((MNStruct *)globalcontext)->MeanProfileBeta[i]*((MNStruct *)globalcontext)->ReferencePeriod;
+	}
+
+
 
 	int cpos = 0;
 	int epos = 0;
@@ -13402,8 +13412,10 @@ void  WriteProfileDomainLike(std::string longname, int &ndim){
 		
 		}
 	}
-
-	printf("B: %g \n", ((MNStruct *)globalcontext)->MeanProfileBeta);
+	
+	for(int c = 0; c < ((MNStruct *)globalcontext)->numProfComponents; c++){
+		printf("B: %g \n", ((MNStruct *)globalcontext)->MeanProfileBeta[c]);
+	}
 	for(int p = 0; p < ((MNStruct *)globalcontext)->NProfileEvoPoly; p++){	
 		for(int i =0; i < totalEvoCoeff; i++){
 			printf("E: %g \n", EvoCoeffs[p][i]);
@@ -13432,7 +13444,7 @@ void  WriteProfileDomainLike(std::string longname, int &ndim){
 	cpos = 0;
 	for(int i = 0; i < ((MNStruct *)globalcontext)->numProfComponents; i++){
 		for(int j =0; j < numcoeff[i]; j=j+2){
-			modelflux+=sqrt(sqrt(M_PI))*sqrt(beta)*pow(2.0, 0.5*(1.0-j))*sqrt(((MNStruct *)globalcontext)->Binomial[j])*shapecoeff[cpos+j];
+			modelflux+=sqrt(sqrt(M_PI))*sqrt(betas[i])*pow(2.0, 0.5*(1.0-j))*sqrt(((MNStruct *)globalcontext)->Binomial[j])*shapecoeff[cpos+j];
 		}
 		cpos+= numcoeff[i];
 	}
@@ -13661,7 +13673,7 @@ void  WriteProfileDomainLike(std::string longname, int &ndim){
 
 			}
 		   
-			if(((MNStruct *)globalcontext)->InterpolateProfile == 0){
+/*			if(((MNStruct *)globalcontext)->InterpolateProfile == 0){
 
 				for(int j =0; j < Nbins; j++){
 
@@ -13784,7 +13796,7 @@ void  WriteProfileDomainLike(std::string longname, int &ndim){
 
 				}
 			}
-
+*/
 	//gettimeofday(&tval_after, NULL);
 	//timersub(&tval_after, &tval_before, &tval_resultone);
 	//printf("Time elapsed Up to Evo: %ld.%06ld\n", (long int)tval_resultone.tv_sec, (long int)tval_resultone.tv_usec);
@@ -13844,7 +13856,7 @@ void  WriteProfileDomainLike(std::string longname, int &ndim){
 				cpos=0;
 				for(int c = 0; c < ((MNStruct *)globalcontext)->numProfComponents; c++){
 					for(int j =0; j < NumCoeffForMult[c]; j=j+2){
-						ModModelFlux+=sqrt(sqrt(M_PI))*sqrt(beta)*pow(2.0, 0.5*(1.0-j))*sqrt(((MNStruct *)globalcontext)->Binomial[j])*ProfileModCoeffs[cpos+j];
+						ModModelFlux+=sqrt(sqrt(M_PI))*sqrt(betas[c])*pow(2.0, 0.5*(1.0-j))*sqrt(((MNStruct *)globalcontext)->Binomial[j])*ProfileModCoeffs[cpos+j];
 					}
 					cpos+= NumCoeffForMult[c];
 				}
@@ -13992,13 +14004,13 @@ void  WriteProfileDomainLike(std::string longname, int &ndim){
 				Mcounter = 1+ProfileBaselineTerms+ProfileNoiseCoeff*2;
 				if(((MNStruct *)globalcontext)->numFitEQUAD > 0){
 					for(int j =0; j < Nbins; j++){
-						M[j + Mcounter*Nbins] = M[j + Mcounter*Nbins]*dataflux/ModModelFlux/beta;
+						M[j + Mcounter*Nbins] = M[j + Mcounter*Nbins]*dataflux/ModModelFlux;
 					}			
 					Mcounter++;
 				}
 				if(((MNStruct *)globalcontext)->incDMEQUAD > 0){
 					for(int j =0; j < Nbins; j++){
-						M[j + Mcounter*Nbins] = M[j + Mcounter*Nbins]*dataflux/ModModelFlux/beta;
+						M[j + Mcounter*Nbins] = M[j + Mcounter*Nbins]*dataflux/ModModelFlux;
 					}			
 					Mcounter++;
 				}
@@ -14584,6 +14596,8 @@ void  WriteProfileDomainLike(std::string longname, int &ndim){
 	delete[] NumCoeffForMult;
 	delete[] EvoCoeffs;
 	delete[] ProfileNoiseAmps;
+	delete[] betas;
+
 	lnew += uniformpriorterm - 0.5*(FreqLike + FreqDet);
 	if(debug == 1)printf("End Like: %.10g \n", lnew);
 	//printf("End Like: %.10g \n", lnew);
@@ -16115,7 +16129,10 @@ void  WriteProfileFreqEvo(std::string longname, int &ndim, int profiledimstart){
 		for(int i =0; i < totshapecoeff; i++){
 			shapecoeff[i]=((MNStruct *)globalcontext)->MeanProfileShape[i];
 		}
-		double beta = ((MNStruct *)globalcontext)->MeanProfileBeta*((MNStruct *)globalcontext)->ReferencePeriod;
+		double *betas = new double[((MNStruct *)globalcontext)->numProfComponents]();
+		for(int i = 0; i < ((MNStruct *)globalcontext)->numProfComponents; i++){
+			betas[i] = ((MNStruct *)globalcontext)->MeanProfileBeta[i]*((MNStruct *)globalcontext)->ReferencePeriod;
+		}
 
 		for(int i =0; i < totalEvoCoeff; i++){
 			EvoCoeffs[i]=((MNStruct *)globalcontext)->MeanProfileEvo[0][i];
@@ -16342,7 +16359,10 @@ void  WriteProfileFreqEvo(std::string longname, int &ndim, int profiledimstart){
 		for(int i =0; i < totshapecoeff; i++){
 			shapecoeff[i]=((MNStruct *)globalcontext)->MeanProfileShape[i];
 		}
-		double beta = ((MNStruct *)globalcontext)->MeanProfileBeta*((MNStruct *)globalcontext)->ReferencePeriod;
+		double *betas = new double[((MNStruct *)globalcontext)->numProfComponents]();
+		for(int i = 0; i < ((MNStruct *)globalcontext)->numProfComponents; i++){
+			betas[i] = ((MNStruct *)globalcontext)->MeanProfileBeta[i]*((MNStruct *)globalcontext)->ReferencePeriod;
+		}
 
 		for(int i =0; i < totalEvoCoeff; i++){
 			EvoCoeffs[i]=((MNStruct *)globalcontext)->MeanProfileEvo[0][i];
@@ -16590,14 +16610,16 @@ double  Template2DProfLike(int &ndim, double *Cube, int &npars, double *DerivedP
 
 	if(debug == 1){printf("Total coeff %i \n", totalProfCoeff);}
 
-	double oldbeta=0.00373642;
+	//double oldbeta=0.00373642;
 	//double beta = oldbeta*((MNStruct *)globalcontext)->ReferencePeriod;
-	double beta = Cube[pcount]*((MNStruct *)globalcontext)->ReferencePeriod;
-
-
+	double *betas = new double[((MNStruct *)globalcontext)->numProfComponents]();
+	for(int i = 0; i < ((MNStruct *)globalcontext)->numProfComponents; i++){
+		betas[i] = Cube[pcount]*((MNStruct *)globalcontext)->ReferencePeriod;
+		pcount++;
+	}
 	//double Pscale = pow(10.0, 2*Cube[pcount]);
 	double PDet = 0;
-	pcount++;
+	
 
 	long double *CompSeps = new long double[((MNStruct *)globalcontext)->numProfComponents];
 	CompSeps[0] = 0;
@@ -16682,12 +16704,12 @@ double  Template2DProfLike(int &ndim, double *Cube, int &npars, double *DerivedP
 			timediff=timediff*SECDAY;
 		
 			//if(debug == 1 && i==2){printf("timediff %i %.15Lg %.15Lg %.15Lg %.15Lg\n", j, bintime, minpos, maxpos, timediff);}
-			Betatimes[j]=(timediff)/beta;
+			Betatimes[j]=(timediff)/betas[i];
 			TNothplMC(numcoeff[i],Betatimes[j],Hermitepoly[j], cpos);
 
 			for(int k =0; k < numcoeff[i]; k++){
 				
-				double Bconst=(1.0/sqrt(beta))/sqrt(pow(2.0,k)*sqrt(M_PI));//*((MNStruct *)globalcontext)->Factorials[k]);
+				double Bconst=(1.0/sqrt(betas[i]))/sqrt(pow(2.0,k)*sqrt(M_PI));//*((MNStruct *)globalcontext)->Factorials[k]);
 				Hermitepoly[j][cpos+k]=Hermitepoly[j][cpos+k]*Bconst*exp(-0.5*Betatimes[j]*Betatimes[j]);
 				//if(k==0 && i==2)printf("HP %i %i %.15Lg %g %g \n", i, j, bintime, Betatimes[j],Hermitepoly[j][cpos+k]);
 
@@ -16851,6 +16873,7 @@ double  Template2DProfLike(int &ndim, double *Cube, int &npars, double *DerivedP
 	delete[] ProfileBats;
 	delete[] numcoeff;
 	delete[] CompSeps;
+	delete[] betas;
 
 	if(debug ==1 || debug ==2){printf("End Like: %.10g %g %g\n", lnew, detN, Chisq);}
 
@@ -16977,12 +17000,16 @@ void WriteTemplate2DProfLike(std::string longname, int &ndim){
 
 	double oldbeta=0.00373642;
 	//double beta = oldbeta*((MNStruct *)globalcontext)->ReferencePeriod;
-	double beta = Cube[pcount]*((MNStruct *)globalcontext)->ReferencePeriod;
+	double *betas = new double[((MNStruct *)globalcontext)->numProfComponents]();
+	for(int i = 0; i < ((MNStruct *)globalcontext)->numProfComponents; i++){
+		betas[i] = Cube[pcount]*((MNStruct *)globalcontext)->ReferencePeriod;
+		pcount++;
+	}
 
 
 	//double Pscale = pow(10.0, 2*Cube[pcount]);
 	double PDet = 0;
-	pcount++;
+
 
 
 	long double *CompSeps = new long double[((MNStruct *)globalcontext)->numProfComponents];
@@ -17071,12 +17098,12 @@ void WriteTemplate2DProfLike(std::string longname, int &ndim){
 			timediff=timediff*SECDAY;
 		
 			//if(debug == 1 && i==2){printf("timediff %i %.15Lg %.15Lg %.15Lg %.15Lg\n", j, bintime, minpos, maxpos, timediff);}
-			Betatimes[j]=(timediff)/beta;
+			Betatimes[j]=(timediff)/betas[i];
 			TNothplMC(numcoeff[i],Betatimes[j],Hermitepoly[j], cpos);
 
 			for(int k =0; k < numcoeff[i]; k++){
 				
-				double Bconst=(1.0/sqrt(beta))/sqrt(pow(2.0,k)*sqrt(M_PI));//*((MNStruct *)globalcontext)->Factorials[k]);
+				double Bconst=(1.0/sqrt(betas[i]))/sqrt(pow(2.0,k)*sqrt(M_PI));//*((MNStruct *)globalcontext)->Factorials[k]);
 				Hermitepoly[j][cpos+k]=Hermitepoly[j][cpos+k]*Bconst*exp(-0.5*Betatimes[j]*Betatimes[j]);
 				//if(k==0 && i==2)printf("HP %i %i %.15Lg %g %g \n", i, j, bintime, Betatimes[j],Hermitepoly[j][cpos+k]);
 
@@ -17295,6 +17322,7 @@ void WriteTemplate2DProfLike(std::string longname, int &ndim){
 	delete[] ProfileBats;
 	delete[] numcoeff;
 	delete[] CompSeps;
+	delete[] betas;
 
 	printf("End Like: %.10g %g %g\n", lnew, detN, Chisq);
 
@@ -17474,7 +17502,7 @@ void NelderMeadOptimum(int nParameters) {
 	for(int p2 = 0; p2 < ((MNStruct *)globalcontext)->numProfComponents; p2++){
 		for(int p3 = 0; p3 < ((MNStruct *)globalcontext)->numProfileFitCoeff[p2]; p3++){
 
-			gsl_vector_set(vStepSize, pcount, 0.001);
+			gsl_vector_set(vStepSize, pcount, 0.1);
 			gsl_vector_set(vStart, pcount, 0);
 
 
@@ -17670,8 +17698,11 @@ void NelderMeadOptimum(int nParameters) {
 		nofitpsum+=((MNStruct *)globalcontext)->numshapecoeff[p2]-skipone;
 	}
 
-	printf("B: %g \n", ((MNStruct *)globalcontext)->MeanProfileBeta);
-	profilefile << std::setprecision(10) << ((MNStruct *)globalcontext)->MeanProfileBeta <<"\n";
+	for(int c = 0; c < ((MNStruct *)globalcontext)->numProfComponents; c++){
+		printf("B: %g \n", ((MNStruct *)globalcontext)->MeanProfileBeta[c]);
+		profilefile << std::setprecision(10) << ((MNStruct *)globalcontext)->MeanProfileBeta[c] <<"\n";
+	}
+	
 	double **EvoCoeffs=new double*[((MNStruct *)globalcontext)->NProfileEvoPoly]; 
 	for(int i = 0; i < ((MNStruct *)globalcontext)->NProfileEvoPoly; i++){EvoCoeffs[i] = new double[((MNStruct *)globalcontext)->totalEvoCoeff];}
 

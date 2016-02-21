@@ -87,7 +87,6 @@ configfile.lo: configfile.cpp configfile.h \
  /usr/local/Cluster-Apps/gcc/4.8.1/include/c++/4.8.1/cstdio \
  /usr/include/libio.h /usr/include/_G_config.h \
  /usr/include/bits/stdio_lim.h /usr/include/bits/sys_errlist.h \
- /usr/include/bits/stdio.h \
  /usr/local/Cluster-Apps/gcc/4.8.1/include/c++/4.8.1/x86_64-unknown-linux-gnu/bits/basic_file.h \
  /usr/local/Cluster-Apps/gcc/4.8.1/include/c++/4.8.1/x86_64-unknown-linux-gnu/bits/c++io.h \
  /usr/local/Cluster-Apps/gcc/4.8.1/include/c++/4.8.1/bits/fstream.tcc \
@@ -297,8 +296,6 @@ configfile.h:
 /usr/include/bits/stdio_lim.h:
 
 /usr/include/bits/sys_errlist.h:
-
-/usr/include/bits/stdio.h:
 
 /usr/local/Cluster-Apps/gcc/4.8.1/include/c++/4.8.1/x86_64-unknown-linux-gnu/bits/basic_file.h:
 

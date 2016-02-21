@@ -151,7 +151,7 @@ typedef struct {
 	double *MeanProfileShape;
 	double **MeanProfileEvo;
 	double *MeanProfileStoc;
-	double MeanProfileBeta;
+	double *MeanProfileBeta;
 	long double **ProfileInfo;
 	long double ***ProfileData;
 	long double ReferencePeriod;
@@ -246,9 +246,9 @@ double AllTOAMarginStocProfLike(int &ndim, double *Cube, int &npars, double *Der
 double TemplateProfLike(int &ndim, double *Cube, int &npars, double *DerivedParams, void *context);
 void  WriteMaxTemplateProf(std::string longname, int &ndim);
 void  WriteSubIntStocProfLike(std::string longname, int &ndim);
-void PreComputeShapelets(double **StoredShapelet, double **StoredJitter, double **InterpolatedMeanProfile, double **InterpolatedJitterProfile, double **InterpolatedWidthProfile, long double finalInterpTime, int numtointerpolate, double MeanBeta, double &MaxShapeAmp);
-void Tscrunch(void *globalcontext);
-void getNumTempFreqs(int &NumFreqs, void *context);
+void PreComputeShapelets(double **StoredShapelet, double **StoredJitter, double **InterpolatedMeanProfile, double **InterpolatedJitterProfile, double **InterpolatedWidthProfile, long double finalInterpTime, int numtointerpolate, double *MeanBeta, double &MaxShapeAmp);
+void Tscrunch(void *globalcontext, double TemplateChanWidth);
+void getNumTempFreqs(int &NumFreqs, void *context, double TemplateChanWidth);
 
 double ProfileDomainLike(int &ndim, double *Cube, int &npars, double *DerivedParams, void *context);
 void ProfileDomainLikeMNWrap(double *Cube, int &ndim, int &npars, double &lnew, void *context);
@@ -428,4 +428,4 @@ void setTNPriors(double **Dpriors, long double **TempoPriors, int TPsize, int DP
 void setFrequencies(double *SampleFreq, int numRedfreqs, int numDMfreqs, int numRedLogFreqs, int numDMLogFreqs, double RedLowFreq, double DMLowFreq, double RedMidFreq, double DMMidFreq);
 void GetGroupsToFit(int incGroupNoise, int **FitForGroup, int incBandNoise, int **FitForBand);
 void setShapePriors(double **ShapePriors, double *BetaPrior, int numcoeff);
-void GetProfileFitInfo(int numProfComponents, int *numGPTAshapecoeff, int *numProfileFitCoeff, int *numEvoCoeff, int *numFitEvoCoeff, 	int *numGPTAstocshapecoeff, double *ProfCompSeps);
+void GetProfileFitInfo(int numProfComponents, int *numGPTAshapecoeff, int *numProfileFitCoeff, int *numEvoCoeff, int *numFitEvoCoeff, 	int *numGPTAstocshapecoeff, double *ProfCompSeps, double &TemplateChanWidth);

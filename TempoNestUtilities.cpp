@@ -272,6 +272,13 @@ void readsummary(pulsar *psr, std::string longname, int ndim, void *context, lon
 			}
 
 			LDP[j]=val*(((MNStruct *)context)->LDpriors[pcount][1])+(((MNStruct *)context)->LDpriors[pcount][0]);
+
+			if(((MNStruct *)context)->TempoFitNums[pcount][0] == param_sini && ((MNStruct *)context)->usecosiprior == 1){
+				val = paramarray[fitcount][2];
+				LDP[j]  = sqrt(1.0 - val*val);
+			}
+
+
 			fitcount++;
 		}
 		else if(((MNStruct *)context)->Dpriors[pcount][0] == ((MNStruct *)context)->Dpriors[pcount][1]){  
@@ -1774,10 +1781,10 @@ void getArraySizeInfo(void *context){
 
 }
 
-void getNumTempFreqs(int &NumFreqs, void *globalcontext){
+void getNumTempFreqs(int &NumFreqs, void *globalcontext, double TemplateChanWidth){
 
 
-	int chanwidth  = 30;
+	double chanwidth  = TemplateChanWidth;
 	double minfreq=pow(10.0, 100);
 
 	for(int p=0;p< ((MNStruct *)globalcontext)->pulse->nobs; p++){
@@ -1792,7 +1799,7 @@ void getNumTempFreqs(int &NumFreqs, void *globalcontext){
 		for(int p=0;p< ((MNStruct *)globalcontext)->pulse->nobs; p++){
 			double freq = floor(((MNStruct *)globalcontext)->pulse->obsn[p].freq);
 			freq = floor((freq-minfreq)/chanwidth)*chanwidth + minfreq;
-			printf("freq: %i %g %g \n", p, freq, ((MNStruct *)globalcontext)->pulse->obsn[p].freq);
+			printf("freq: %i %g %g %g \n", p, chanwidth, freq, ((MNStruct *)globalcontext)->pulse->obsn[p].freq);
 			if(std::find(freqs.begin(),freqs.end(), freq) != freqs.end()) {
 	
 			}
@@ -1828,10 +1835,10 @@ void getNumTempFreqs(int &NumFreqs, void *globalcontext){
 }
 
 
-void Tscrunch(void *globalcontext){
+void Tscrunch(void *globalcontext, double TemplateChanWidth){
 
 
-	int chanwidth  = 30;
+	double chanwidth  = TemplateChanWidth;
 	double minfreq=pow(10.0, 100);
 
 	for(int p=0;p< ((MNStruct *)globalcontext)->pulse->nobs; p++){

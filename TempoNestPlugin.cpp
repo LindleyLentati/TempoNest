@@ -1310,6 +1310,24 @@ void update_MNPriors(MNStruct* MNS, double ** DPriorsval, long double **priorsva
                                         }
 
 				}
+				if(p == param_sini){
+
+					long double minprior=priorsval[paramsfitted][0]+DPriorsval[paramsfitted+linearPriors][0]*priorsval[paramsfitted][1];
+                                        long double maxprior=priorsval[paramsfitted][0]+DPriorsval[paramsfitted+linearPriors][1]*priorsval[paramsfitted][1];
+				
+					if(minprior < 0 && priorsval[paramsfitted][2]==0){
+						long double newprior=-priorsval[paramsfitted][0]/priorsval[paramsfitted][1];
+                                                DPriorsval[paramsfitted+linearPriors][0]=(double)newprior;
+                                                printf("Prior on %s updated to be physical (was <0) : %.25Lg -> %.25Lg\n", MNS->pulse->param[p].shortlabel[k], priorsval[paramsfitted][0]+DPriorsval[paramsfitted+linearPriors][0]*priorsval[paramsfitted][1],priorsval[paramsfitted][0]+DPriorsval[paramsfitted+linearPriors][1]*priorsval[paramsfitted][1]);
+                                        }
+                                        if(maxprior > 1 && priorsval[paramsfitted][2]==0 ){
+                                                long double newprior=(1.0-priorsval[paramsfitted][0])/priorsval[paramsfitted][1];
+                                                DPriorsval[paramsfitted+linearPriors][1]=(double)newprior;
+                                                printf("Prior on %s updated to be physical (was >1) : %.25Lg -> %.25Lg\n", MNS->pulse->param[p].shortlabel[k], priorsval[paramsfitted][0]+DPriorsval[paramsfitted+linearPriors][0]*priorsval[paramsfitted][1],priorsval[paramsfitted][0]+DPriorsval[paramsfitted+linearPriors][1]*priorsval[paramsfitted][1]);
+                                        }
+
+
+				}
                                 paramsfitted++;
 			 }
                 }
@@ -1763,6 +1781,9 @@ extern "C" int graphicalInterface(int argc, char **argv,
 	int totalEvoFitCoeff = 0;
 	int totalProfileFitCoeff = 0;
 	int totalshapestoccoeff = 0;
+
+	double TemplateChanWidth = 0;
+
 	if(GPTA ==1){
 		GPTAnumshapecoeff= new int[numProfComponents];
 		numEvoCoeff = new int[numProfComponents];
@@ -1780,7 +1801,7 @@ extern "C" int graphicalInterface(int argc, char **argv,
 		}
 
 
-		GetProfileFitInfo(numProfComponents, GPTAnumshapecoeff, numProfileFitCoeff, numEvoCoeff, numEvoFitCoeff, GPTAnumstocshapecoeff, ProfCompSeps);
+		GetProfileFitInfo(numProfComponents, GPTAnumshapecoeff, numProfileFitCoeff, numEvoCoeff, numEvoFitCoeff, GPTAnumstocshapecoeff, ProfCompSeps, TemplateChanWidth);
 		for(int i = 0; i < numProfComponents; i++){
 			totalEvoFitCoeff +=  numEvoFitCoeff[i];
 			totalProfileFitCoeff += numProfileFitCoeff[i];
@@ -3691,7 +3712,7 @@ extern "C" int graphicalInterface(int argc, char **argv,
 
 		if(FixProfile == 1){ndims -= (totshapecoeff+1);}
 		if(FitTemplate > 0){ndims = 2; shapedims=0;}
-		if(FitTemplate > 0 && numProfComponents > 1){ndims+=numProfComponents-1;}
+		if(FitTemplate > 0 && numProfComponents > 1){ndims+=(numProfComponents-1)*2;}
 
 
 		printf("Starting GPTA %i %i %i\n", ndims, totshapecoeff, totalshapestoccoeff);
@@ -3753,7 +3774,7 @@ extern "C" int graphicalInterface(int argc, char **argv,
 		double betaminp = 0;
 		double betamaxp = 0;
 		double *BetaPrior = new double[2];
-		double MeanBeta=0;
+		double *MeanBeta= new double[numProfComponents]();
 
 		int ReadProfFile = 1;
 		if(FitTemplate > 0){ReadProfFile = 0;}
@@ -3764,6 +3785,9 @@ extern "C" int graphicalInterface(int argc, char **argv,
 		double *MeanProfileStoc;
 
 		if(ReadProfFile == 1){
+			
+			printf("Reading File: %s\n", ProfileFileName.c_str());
+
 			std::ifstream MeanProfileFile;
 			std::string MeanProfileFilename = ProfileFileName;
 			MeanProfileFile.open(MeanProfileFilename.c_str());
@@ -3776,7 +3800,7 @@ extern "C" int graphicalInterface(int argc, char **argv,
 
 			int numMeanCoeff = ProfileVal[0];
 			int numMeanEvoCoeff = ProfileVal[1];
-			//printf("Read File: num coeffs = %i %i\n", numMeanCoeff,numEvoCoeff);
+			printf("Read File: num coeffs = %i %i\n", numMeanCoeff,numEvoCoeff);
 
 			MeanProfileShape  = new double[numMeanCoeff];
 			MeanProfileEvo    = new double*[NProfileEvoPoly];
@@ -3791,17 +3815,17 @@ extern "C" int graphicalInterface(int argc, char **argv,
 				std::istream_iterator< double > begin(myStream),eof;
 				std::vector<double> ProfileVal(begin,eof);
 				MeanProfileShape[i] = ProfileVal[0];
-				//printf("Read File: coeff %i = %g \n", i, MeanProfileShape[i]);
+				printf("Read File: coeff %i = %g \n", i, MeanProfileShape[i]);
 				
 			}
 
-			for(int i = 0; i < 1; i++){
+			for(int i = 0; i < numProfComponents; i++){
 				getline(MeanProfileFile,line);
 				std::istringstream myStream( line );
 				std::istream_iterator< double > begin(myStream),eof;
 				std::vector<double> ProfileVal(begin,eof);
-				MeanBeta = ProfileVal[0];
-				//printf("Read File: Beta = %g \n", MeanBeta);
+				MeanBeta[i] = ProfileVal[0];
+				printf("Read File: Beta = %g \n", MeanBeta[i]);
 				
 			}
 			for(int p = 0; p < NProfileEvoPoly; p++){		
@@ -3849,26 +3873,26 @@ extern "C" int graphicalInterface(int argc, char **argv,
 
 		}
 		if(FixProfile == 0 || FitTemplate > 0){
-			printf("Beta Prior: %i %i %g %g\n", totshapecoeff, pcount, BetaPrior[0], BetaPrior[1]);
-			PriorsArray[pcount] = BetaPrior[0];
-			PriorsArray[pcount+ndims] = BetaPrior[1];	
-			pcount++;
+			for(int c = 0; c < numProfComponents; c++){
+				printf("Beta Prior: %i %i %i %g %g\n", c, totshapecoeff, pcount, BetaPrior[0], BetaPrior[1]);
+				PriorsArray[pcount] = BetaPrior[0];
+				PriorsArray[pcount+ndims] = BetaPrior[1];	
+				pcount++;
+			}
 		}
 		//else{
 			//MeanBeta = BetaPrior[0];
 		//}
 
 		if(FitTemplate > 0 && numProfComponents > 1){
-			
-			printf("Additional component \n");
-			PriorsArray[pcount] =0.3;
-			PriorsArray[pcount+ndims] = 0.7;	
-			pcount++;
 
-			printf("Additional component \n");
-			PriorsArray[pcount] = -0.25;
-			PriorsArray[pcount+ndims] = -0.15;	
-			pcount++;
+			for(int c = 1; c < numProfComponents; c++){
+
+				printf("Additional component \n");
+				PriorsArray[pcount] = ProfCompSeps[c]-0.1;
+				PriorsArray[pcount+ndims] = ProfCompSeps[c]+0.1;
+				pcount++;
+			}
 		}
 			
 		for(int p = 0; p < totalshapestoccoeff; p++){
@@ -4044,7 +4068,7 @@ extern "C" int graphicalInterface(int argc, char **argv,
 
 		if(FitTemplate > 0){
 
-			 int Nbin = (int)ProfileInfo[0][1];
+			int Nbin = (int)ProfileInfo[0][1];
 			long double timetointerpolate = pow(10.0, -9)*InterpolatedTime;
 			int numtointerpolate = int(ceil(((MNStruct *)context)->ReferencePeriod/Nbin/timetointerpolate));
 			long double finalInterpTime = ((MNStruct *)context)->ReferencePeriod/Nbin/numtointerpolate;
@@ -4053,7 +4077,7 @@ extern "C" int graphicalInterface(int argc, char **argv,
 
 
 			int numTempFreqs = 0;
-			getNumTempFreqs(numTempFreqs, context);
+			getNumTempFreqs(numTempFreqs, context, TemplateChanWidth);
 
 			double *TemplateFreqs = new double[numTempFreqs];
 			double *TemplateChans = new double[numTempFreqs*Nbin];
@@ -4063,8 +4087,8 @@ extern "C" int graphicalInterface(int argc, char **argv,
 			((MNStruct *)context)->numTempFreqs = numTempFreqs;
 
 			
-			getNumTempFreqs(numTempFreqs, context);
-			Tscrunch(context);
+			getNumTempFreqs(numTempFreqs, context, TemplateChanWidth);
+			Tscrunch(context, TemplateChanWidth);
 			//return 0;
 		}
 

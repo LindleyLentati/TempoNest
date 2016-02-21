@@ -1307,8 +1307,10 @@ void TNtextOutput(pulsar *psr, int npsr, int newpar, long double *Tempo2Fit, voi
 			fprintf(fout2,"GLEP_%i %g\n", i+1+NumExistingGlitches, paramarray[whitefitcount][2]);
 			whitefitcount++;
 			fprintf(fout2,"GLPH_%i %g %i\n", i+1+NumExistingGlitches, 0.0, 1);
-			fprintf(fout2,"GLF0_%i %g %i\n", i+1+NumExistingGlitches, paramarray[whitefitcount][2], 1); 
-			whitefitcount++;
+			for(int g = 0; g < ((MNStruct *)context)->incGlitchTerms; g++){
+				fprintf(fout2,"GLF%i_%i %g %i\n", g, i+1+NumExistingGlitches, paramarray[whitefitcount][2], 1); 
+				whitefitcount++;
+			}
 		}
 	    }
 
@@ -1465,7 +1467,7 @@ void TNtextOutput(pulsar *psr, int npsr, int newpar, long double *Tempo2Fit, voi
 		}
         }
 
-	for(int g =0; g < ((MNStruct *)context)->incGroupNoise; g++){	
+	for(int g =0; g < ((MNStruct *)context)->incBandNoise; g++){	
 
                 double Amp = paramarray[whitefitcount][2];
                 tablefile <<  "Log$_{10}$[Band Noise Amp] \\dotfill & "<< paramarray[whitefitcount][0] <<" $\\pm$ "<< paramarray[whitefitcount][1] <<"  \\\\ \n";

@@ -123,7 +123,7 @@ void callGHS(){
 	void (*nlp)(int*,double*,double*,double*);
 	void (*wrt_ext)(int*,double*,double*,double*);
 	double ScaleFactor;
-	char* fl_pfx="GHSResults/Sim1-All-";
+	char* fl_pfx="GHSResults/Sim3-2B-Time-0-";
 	int seed;
 	int fb_int;
 	int max_stp;
@@ -131,7 +131,7 @@ void callGHS(){
 	char ext_file_name[128];
 	char gext_file_name[128];
 	int nburn=100;
-	int nsamp=500;
+	int nsamp=10000;
 	/*
 	Note that if nsamp>0, the sampler will be stopped forcefully after nsamp samples
 	have been taken. This does not mean that the algorithm will have converged.
@@ -244,6 +244,7 @@ void callGHS(){
 
 	GlobalParmSet = new double[epochpriordims+epochdims+globaldims]();
 /*	double GPSval = 50;
+	GlobalParmSet[0]  = GPSval;
 	GlobalParmSet[1]  = GPSval;
 	GlobalParmSet[6]  = GPSval;
 	GlobalParmSet[8]  = GPSval;
@@ -264,7 +265,7 @@ void callGHS(){
 	GlobalParmSet[23]  = GPSval;
 	GlobalParmSet[24]  = GPSval;
 
-
+/*
 	GlobalParmSet[1]  = 5;
 	GlobalParmSet[6]  = 5;
 	GlobalParmSet[8]  = 6;
@@ -1041,7 +1042,10 @@ void GHSProfileDomainLike(int* ndim, double* PrinCube, double* likelihood, doubl
 		}
 	}
 	if(debug == 1){printf("Filled %i Coeff, %i EvoCoeff \n", totshapecoeff, totalEvoCoeff);}
-	double beta = ((MNStruct *)GHSglobalcontext)->MeanProfileBeta*((MNStruct *)GHSglobalcontext)->ReferencePeriod;
+	double *betas = new double[((MNStruct *)GHSglobalcontext)->numProfComponents]();
+	for(int i = 0; i < ((MNStruct *)GHSglobalcontext)->numProfComponents; i++){
+		betas[i] = ((MNStruct *)GHSglobalcontext)->MeanProfileBeta[i]*((MNStruct *)GHSglobalcontext)->ReferencePeriod;
+	}
 
 
 	//double *StocProfPriorGrad = new double[totalshapestoccoeff]();
@@ -1131,7 +1135,7 @@ void GHSProfileDomainLike(int* ndim, double* PrinCube, double* likelihood, doubl
 	int fluxpos = 0;
 	for(int i = 0; i < ((MNStruct *)GHSglobalcontext)->numProfComponents; i++){
 		for(int j =0; j < numcoeff[i]; j=j+2){
-			modelflux+=sqrt(sqrt(M_PI))*sqrt(beta)*pow(2.0, 0.5*(1.0-j))*sqrt(((MNStruct *)GHSglobalcontext)->Binomial[j])*shapecoeff[fluxpos+j];
+			modelflux+=sqrt(sqrt(M_PI))*sqrt(betas[i])*pow(2.0, 0.5*(1.0-j))*sqrt(((MNStruct *)GHSglobalcontext)->Binomial[j])*shapecoeff[fluxpos+j];
 		}
 		fluxpos+= numcoeff[i];
 	}
@@ -1568,7 +1572,7 @@ void GHSProfileDomainLike(int* ndim, double* PrinCube, double* likelihood, doubl
 			int B2C = 0;
 			double PhaseGrad = 0;
 			for(int j = 0; j < Nbins; j++){
-				PhaseGrad += -1*NResVec[j]*((MNStruct *)GHSglobalcontext)->InterpolatedJitterProfile[InterpBin][j]*ProfileAmp/beta;
+				PhaseGrad += -1*NResVec[j]*((MNStruct *)GHSglobalcontext)->InterpolatedJitterProfile[InterpBin][j]*ProfileAmp;
 			}
 
 			for(int j = 0; j < ((MNStruct *)GHSglobalcontext)->numFitTiming + ((MNStruct *)GHSglobalcontext)->numFitJumps; j++){	
@@ -1852,6 +1856,7 @@ void GHSProfileDomainLike(int* ndim, double* PrinCube, double* likelihood, doubl
 
 	delete[] Cube;
 	delete[] grad;
+	delete[] betas;
 
 	if(((MNStruct *)GHSglobalcontext)->incDM > 4){
 
@@ -2089,7 +2094,10 @@ void GetMaxAmps(int ndim, double *MaxAmps){
 		}
 	}
 	if(debug == 1){printf("Filled %i Coeff, %i EvoCoeff \n", totshapecoeff, totalEvoCoeff);}
-	double beta = ((MNStruct *)GHSglobalcontext)->MeanProfileBeta*((MNStruct *)GHSglobalcontext)->ReferencePeriod;
+	double *betas = new double[((MNStruct *)GHSglobalcontext)->numProfComponents]();
+	for(int i = 0; i < ((MNStruct *)GHSglobalcontext)->numProfComponents; i++){
+		betas[i] = ((MNStruct *)GHSglobalcontext)->MeanProfileBeta[i]*((MNStruct *)GHSglobalcontext)->ReferencePeriod;
+	}
 
 	int cpos = 0;
 	int epos = 0;
@@ -2110,7 +2118,7 @@ void GetMaxAmps(int ndim, double *MaxAmps){
 	cpos = 0;
 	for(int i = 0; i < ((MNStruct *)GHSglobalcontext)->numProfComponents; i++){
 		for(int j =0; j < numcoeff[i]; j=j+2){
-			modelflux+=sqrt(sqrt(M_PI))*sqrt(beta)*pow(2.0, 0.5*(1.0-j))*sqrt(((MNStruct *)GHSglobalcontext)->Binomial[j])*shapecoeff[cpos+j];
+			modelflux+=sqrt(sqrt(M_PI))*sqrt(betas[i])*pow(2.0, 0.5*(1.0-j))*sqrt(((MNStruct *)GHSglobalcontext)->Binomial[j])*shapecoeff[cpos+j];
 		}
 		cpos+= numcoeff[i];
 	}
@@ -2469,7 +2477,7 @@ void GetMaxAmps(int ndim, double *MaxAmps){
 		int HessCount = TotalProfs;
 
 
-		double PhaseScale = MLAmp/beta/MLSigma;
+		double PhaseScale = MLAmp/MLSigma;
 		double OnePhaseHess = 0;
 		double OnePhaseGrad = 0;
 
@@ -2500,7 +2508,7 @@ void GetMaxAmps(int ndim, double *MaxAmps){
 				
 
 				for(int i =0; i < Nbins; i++){
-					EpochMMatrix[i + EpochDimCounter*Nbins] = ((MNStruct *)GHSglobalcontext)->InterpolatedJitterProfile[InterpBin][i]*MLAmp/beta;
+					EpochMMatrix[i + EpochDimCounter*Nbins] = ((MNStruct *)GHSglobalcontext)->InterpolatedJitterProfile[InterpBin][i]*MLAmp;
 				}
 				EpochDimCounter++;
 			}
@@ -2599,7 +2607,7 @@ void GetMaxAmps(int ndim, double *MaxAmps){
 		for(int p = 0; p < 1+((MNStruct *)GHSglobalcontext)->NProfileEvoPoly; p++){
 			for(int i =0; i < totalCoeffForMult; i++){
 			
-				PhaseScale = (pow(freqscale, p)*MLAmp)*(((MNStruct *)GHSglobalcontext)->ReferencePeriod*MLAmp/beta)/(MLSigma*MLSigma);
+				PhaseScale = (pow(freqscale, p)*MLAmp)*(((MNStruct *)GHSglobalcontext)->ReferencePeriod*MLAmp)/(MLSigma*MLSigma);
 				double val = PhaseShapeCross[i]*PhaseScale;
 
 			}
@@ -2681,7 +2689,7 @@ void GetMaxAmps(int ndim, double *MaxAmps){
 			int epochdimcount = 0;
 			if(((MNStruct *)GHSglobalcontext)->numFitEQUAD == 1){
 				
-				EpochMNMHess[epochdimcount+epochdimcount*EpochMsize] += 1.0/(pow(10.0,-2*6.43415));
+				EpochMNMHess[epochdimcount+epochdimcount*EpochMsize] += 1.0/(pow(10.0,-2*6.83109));
 				epochdimcount++;
 			}
 
@@ -2818,7 +2826,7 @@ void GetMaxAmps(int ndim, double *MaxAmps){
 
 			double Average = sqrt(EQStart/EpochPriorWeights[PerEpochDimCount]);
 
-			MaxAmps[dimCount + PerEpochDimCount] = -6.43415;//log10(Average);
+			MaxAmps[dimCount + PerEpochDimCount] = -6.83109;//log10(Average);
 			PerEpochDimCount++;
 			
 		}
@@ -3226,7 +3234,10 @@ void GetMaxSteps(int ndim, double *MaxAmps, double *StepSize, double **SSM){
 		}
 	}
 	if(debug == 1){printf("Filled %i Coeff, %i EvoCoeff \n", totshapecoeff, totalEvoCoeff);}
-	double beta = ((MNStruct *)GHSglobalcontext)->MeanProfileBeta*((MNStruct *)GHSglobalcontext)->ReferencePeriod;
+	double *betas = new double[((MNStruct *)GHSglobalcontext)->numProfComponents]();
+	for(int i = 0; i < ((MNStruct *)GHSglobalcontext)->numProfComponents; i++){
+		betas[i] = ((MNStruct *)GHSglobalcontext)->MeanProfileBeta[i]*((MNStruct *)GHSglobalcontext)->ReferencePeriod;
+	}
 
 
 	for(int i =0; i < totalshapestoccoeff; i++){
@@ -3278,7 +3289,7 @@ void GetMaxSteps(int ndim, double *MaxAmps, double *StepSize, double **SSM){
 	cpos = 0;
 	for(int i = 0; i < ((MNStruct *)GHSglobalcontext)->numProfComponents; i++){
 		for(int j =0; j < numcoeff[i]; j=j+2){
-			modelflux+=sqrt(sqrt(M_PI))*sqrt(beta)*pow(2.0, 0.5*(1.0-j))*sqrt(((MNStruct *)GHSglobalcontext)->Binomial[j])*shapecoeff[cpos+j];
+			modelflux+=sqrt(sqrt(M_PI))*sqrt(betas[i])*pow(2.0, 0.5*(1.0-j))*sqrt(((MNStruct *)GHSglobalcontext)->Binomial[j])*shapecoeff[cpos+j];
 		}
 		cpos+= numcoeff[i];
 	}
@@ -3662,7 +3673,7 @@ void GetMaxSteps(int ndim, double *MaxAmps, double *StepSize, double **SSM){
 
 			if(globaldims+epochdims+epochpriordims > 0){ 
 
-				double PhaseScale = -1*MLAmp/beta/MLSigma;
+				double PhaseScale = -1*MLAmp/MLSigma;
 				double ShapeScale = MLAmp*modelflux/MLSigma;
 
 				int EpochPriorCount = 0;
@@ -3741,7 +3752,7 @@ void GetMaxSteps(int ndim, double *MaxAmps, double *StepSize, double **SSM){
 					for(int c =0; c < totalCoeffForMult; c++){
 						for(int i = 0; i < Nbins; i++){
 							EpochMMatrix[i + EpochCount*Nbins] =  pow(freqscale, p)*((MNStruct *)GHSglobalcontext)->InterpolatedShapeletsVec[InterpBin][i+c*Nbins]*MLAmp/MLSigma;
-							//printf("Shape bit of matrix: %i %i %i %i %i %g \n", ep, ch, p, c, i,pow(freqscale, p)*((MNStruct *)GHSglobalcontext)->InterpolatedShapeletsVec[InterpBin][i]*MLAmp/MLSigma);
+							if(t==0){printf("Shape bit of matrix: %i %i %i %i %i %g \n", ep, ch, p, c, i,pow(freqscale, p)*((MNStruct *)GHSglobalcontext)->InterpolatedShapeletsVec[InterpBin][i+c*Nbins]*MLAmp/MLSigma);}
 						}	
 						EpochCount++;	
 					}	
@@ -3814,7 +3825,7 @@ void GetMaxSteps(int ndim, double *MaxAmps, double *StepSize, double **SSM){
 		
 
 
-		double PhaseScale = MLAmp/beta/MLSigma;
+		double PhaseScale = MLAmp/MLSigma;
 		double OnePhaseHess = 0;
 		double OnePhaseGrad = 0;
 
@@ -3922,7 +3933,7 @@ void GetMaxSteps(int ndim, double *MaxAmps, double *StepSize, double **SSM){
 						if(((MNStruct *)GHSglobalcontext)->numFitEQUAD == 1 && GlobalParmSet[EpochCount] < 0.01 && GlobalParmSet[0] < 0.01){
 
 							//Need -ve for phase component as with gradient as sign is backwards
-							double CrossFac = (-MLAmp/beta)*MLAmp*modelflux/(MLSigma*MLSigma);
+							double CrossFac = (-MLAmp)*MLAmp*modelflux/(MLSigma*MLSigma);
 
 							double EQAmpShapePCrossTerm = log(10.0)*CrossFac*MLEQUAD*PhaseShapeCross[i+cpos]*MLShapeP*MLShapeSignal;
 
@@ -4144,7 +4155,7 @@ void GetMaxSteps(int ndim, double *MaxAmps, double *StepSize, double **SSM){
 	    delete[] EvoCoeffs[j];
 	}
 	delete[] EvoCoeffs;
-
+	delete[] betas;
 
 	if(debug == 1)printf("End Like: %.10g \n", lnew);
 
@@ -4181,7 +4192,7 @@ void GetMaxSteps(int ndim, double *MaxAmps, double *StepSize, double **SSM){
 	if(globaldims+epochdims+epochpriordims > 0){ 
 
 
-		double expansionfactor = 1;
+		double expansionfactor = 10000;
 		((MNStruct *)GHSglobalcontext)->PhasePrior = (1.0/sqrt(SSM[HessCount][epochpriordims+epochdims + (epochpriordims+epochdims)*(epochpriordims+epochdims+globaldims)]))*expansionfactor;
 		printf("using prior on phase: %g \n", ((MNStruct *)GHSglobalcontext)->PhasePrior);
 		SSM[HessCount][epochpriordims+epochdims + (epochpriordims+epochdims)*(epochpriordims+epochdims+globaldims)] += 1.0/(((MNStruct *)GHSglobalcontext)->PhasePrior*((MNStruct *)GHSglobalcontext)->PhasePrior);
@@ -4193,8 +4204,8 @@ void GetMaxSteps(int ndim, double *MaxAmps, double *StepSize, double **SSM){
 		//}
 
 
-		for(int j = 0; j < globaldims+epochdims+epochpriordims; j++){
-			for(int k = 0; k < globaldims+epochdims+epochpriordims; k++){
+		for(int j = 6; j < globaldims+epochdims+epochpriordims; j++){
+			for(int k = j; k < globaldims+epochdims+epochpriordims; k++){
 				printf("A[%i][%i] = %g \n", j-1,k-1, SSM[HessCount][j + k*(epochpriordims+epochdims+globaldims)]);	
 			}
 		}
@@ -4766,8 +4777,11 @@ void OutputMLFiles(int nParameters, double* pdParameterEstimates, double MLike, 
 		nofitpsum+=((MNStruct *)GHSglobalcontext)->numshapecoeff[p2]-skipone;
 	}
 
-	printf("B: %g \n", ((MNStruct *)GHSglobalcontext)->MeanProfileBeta);
-	profilefile << std::setprecision(10) << ((MNStruct *)GHSglobalcontext)->MeanProfileBeta <<"\n";
+	for(int c = 0; c < ((MNStruct *)GHSglobalcontext)->numProfComponents; c++){
+		printf("B: %g \n", ((MNStruct *)GHSglobalcontext)->MeanProfileBeta[c]);
+		profilefile << std::setprecision(10) << ((MNStruct *)GHSglobalcontext)->MeanProfileBeta[c] <<"\n";
+	}
+	
 	double **EvoCoeffs=new double*[((MNStruct *)GHSglobalcontext)->NProfileEvoPoly]; 
 	for(int i = 0; i < ((MNStruct *)GHSglobalcontext)->NProfileEvoPoly; i++){EvoCoeffs[i] = new double[((MNStruct *)GHSglobalcontext)->totalEvoCoeff];}
 

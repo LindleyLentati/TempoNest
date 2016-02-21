@@ -1,7 +1,7 @@
 import numpy as np
 import acor
 
-root="AT-EQ-P2-C07-"
+root="Sim1-2B-Time-"
 diag=np.loadtxt(root+'.diag.dat', delimiter=',')
 samps = np.float128((np.loadtxt(root+'.extract.dat').T)[:-1])
 grads = np.float128((np.loadtxt(root+'.gextract.dat').T)[:-1])
@@ -59,7 +59,7 @@ for p in range(len(samps)):
 	sum=0
 	for i in range(len(samps[index])-1):
     		sum=sum+np.abs(samps[index][i+1]-samps[index][i])
-	sum=sum/499
+	sum=sum/(NSamp-1)
 	print p, sum, np.std(samps[index]), sum/np.std(samps[index])
 
 

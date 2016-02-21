@@ -4,14 +4,12 @@ dgesvd.lo: dgesvd.cpp /usr/include/math.h /usr/include/features.h \
  /usr/include/bits/huge_val.h /usr/include/bits/huge_valf.h \
  /usr/include/bits/huge_vall.h /usr/include/bits/inf.h \
  /usr/include/bits/nan.h /usr/include/bits/mathdef.h \
- /usr/include/bits/mathcalls.h /usr/include/bits/mathinline.h \
- /usr/include/stdio.h \
+ /usr/include/bits/mathcalls.h /usr/include/stdio.h \
  /usr/local/Cluster-Apps/gcc/4.8.1/lib/gcc/x86_64-unknown-linux-gnu/4.8.1/include/stddef.h \
  /usr/include/bits/types.h /usr/include/bits/typesizes.h \
  /usr/include/libio.h /usr/include/_G_config.h /usr/include/wchar.h \
  /usr/local/Cluster-Apps/gcc/4.8.1/lib/gcc/x86_64-unknown-linux-gnu/4.8.1/include/stdarg.h \
  /usr/include/bits/stdio_lim.h /usr/include/bits/sys_errlist.h \
- /usr/include/bits/stdio.h \
  /usr/local/Cluster-Apps/gcc/4.8.1/include/c++/4.8.1/algorithm \
  /usr/local/Cluster-Apps/gcc/4.8.1/include/c++/4.8.1/utility \
  /usr/local/Cluster-Apps/gcc/4.8.1/include/c++/4.8.1/x86_64-unknown-linux-gnu/bits/c++config.h \
@@ -81,8 +79,6 @@ dgesvd.lo: dgesvd.cpp /usr/include/math.h /usr/include/features.h \
 
 /usr/include/bits/mathcalls.h:
 
-/usr/include/bits/mathinline.h:
-
 /usr/include/stdio.h:
 
 /usr/local/Cluster-Apps/gcc/4.8.1/lib/gcc/x86_64-unknown-linux-gnu/4.8.1/include/stddef.h:
@@ -102,8 +98,6 @@ dgesvd.lo: dgesvd.cpp /usr/include/math.h /usr/include/features.h \
 /usr/include/bits/stdio_lim.h:
 
 /usr/include/bits/sys_errlist.h:
-
-/usr/include/bits/stdio.h:
 
 /usr/local/Cluster-Apps/gcc/4.8.1/include/c++/4.8.1/algorithm:
 

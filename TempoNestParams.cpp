@@ -893,7 +893,7 @@ void GetGroupsToFit(int incGroupNoise, int **FitForGroup, int incBandNoise, int 
 
 
 
-void GetProfileFitInfo(int numProfComponents, int *numGPTAshapecoeff, int *numProfileFitCoeff, int *numEvoCoeff, int *numFitEvoCoeff, int *numGPTAstocshapecoeff, double *ProfCompSeps){
+void GetProfileFitInfo(int numProfComponents, int *numGPTAshapecoeff, int *numProfileFitCoeff, int *numEvoCoeff, int *numFitEvoCoeff, int *numGPTAstocshapecoeff, double *ProfCompSeps, double &TemplateChanWidth){
 
 //This function reads in the groups that will be fit as Group Noise terms
 
@@ -1031,6 +1031,17 @@ void GetProfileFitInfo(int numProfComponents, int *numGPTAshapecoeff, int *numPr
 	    } // try
 
 	}
+
+	try {
+		string strBuf;
+		strBuf = string("defaultparameters.conf");
+		ConfigFile parameters(strBuf);
+
+		parameters.readInto(TemplateChanWidth, "TemplateChanWidth", TemplateChanWidth);
+	} 
+	catch(ConfigFile::file_not_found oError) {
+			printf("WARNING: parameters file '%s' not found. Using defaults.\n", oError.filename.c_str());
+	} // try
 
 }
 
