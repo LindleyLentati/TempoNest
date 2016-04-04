@@ -6,7 +6,7 @@ ifdef MPI
 # Set a define flag for MPI
 FCFLAGS = -DMPI
 # Choose the mpi wrapper
-FC = mpif90 -fc=gfortran
+FC = mpif90 #-fc=gfortran
 # Define the files to be used 
 OBJECTS =                    \
 		  utils.o            \

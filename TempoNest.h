@@ -35,7 +35,8 @@ typedef struct {
 	int TimetoMargin;
 	int totRedShapeCoeff;
 	int totalsize;
-	
+
+	char *rootName;	
 	long double **LDpriors;
 	double **Dpriors;
 	double **DMatrix;
@@ -126,7 +127,11 @@ typedef struct {
 	double *StoredDMVals;
 	int *TimingGradientSigns;
 	int usecosiprior;
-
+	double *PreJumpVals;
+	int doMax;
+	int incExtraProfComp;
+	int incTimeCorrProfileNoise;
+	double *PrecAmps;
 	/*GPTA stuff*/
 
 	int incWideBandNoise;
@@ -139,9 +144,17 @@ typedef struct {
 	int InterpolateProfile;
 	int NumToInterpolate;
 	double InterpolatedTime;
+	double PrecN;
+	double *PrecD;
+	double *PrecBasis;
+	int FitPrecAmps;
+	double *DMatrixVec;
+
+
 	//double ***InterpolatedShapelets;
 	double **InterpolatedShapeletsVec;
 	double **InterpolatedJitterProfileVec;
+	double **InterpolatedWidthProfileVec;
 	double **InterpolatedMeanProfile;
 	double **InterpolatedJitterProfile;
 	double **InterpolatedWidthProfile;
@@ -174,6 +187,7 @@ typedef struct {
 	int FitLinearProfileWidth;
 	int numProfComponents;
 	int incWidthJitter;
+	int incWidthEvoTime;
 	int JitterProfComp;
 	int incProfileEnergyEvo;
 	int ProfileBaselineTerms;
@@ -187,7 +201,20 @@ typedef struct {
 	int diagonalGHS;
 	double PhasePrior;
 	int WriteNewML;
-	
+	int LargestNBins;
+	int FitProfParams;	
+	double ProfEvoTimeRef;
+	int NumExtraCompCoeffs;
+	int incPrecession;
+	int *numTimeCorrCoeff;
+	int totalTimeCorrCoeff;
+	double phasePriorExpansion;
+	int ProfileNoiseMethod;
+
+	int GHSperProfDims;
+	int GHSperEpochDims;
+	int GHSepochpriordims;
+	int GHSglobaldims;
 
 	/*Template Stuff*/
 
@@ -222,7 +249,7 @@ void assigncontext(void *context);
 void assignGPUcontext(void *context);
 void assignGHScontext(void *context);
 
-void callGHS();
+void callGHS(int NBurn, int NSamp, int GHSresume);
 
 double iter_factorial(unsigned int n);
 void store_factorial();
@@ -246,7 +273,7 @@ double AllTOAMarginStocProfLike(int &ndim, double *Cube, int &npars, double *Der
 double TemplateProfLike(int &ndim, double *Cube, int &npars, double *DerivedParams, void *context);
 void  WriteMaxTemplateProf(std::string longname, int &ndim);
 void  WriteSubIntStocProfLike(std::string longname, int &ndim);
-void PreComputeShapelets(double **StoredShapelet, double **StoredJitter, double **InterpolatedMeanProfile, double **InterpolatedJitterProfile, double **InterpolatedWidthProfile, long double finalInterpTime, int numtointerpolate, double *MeanBeta, double &MaxShapeAmp);
+void PreComputeShapelets(double **StoredShapelet, double **StoredJitter, double **StoredWidth, double **InterpolatedMeanProfile, double **InterpolatedJitterProfile, double **InterpolatedWidthProfile, long double finalInterpTime, int numtointerpolate, double *MeanBeta, double &MaxShapeAmp);
 void Tscrunch(void *globalcontext, double TemplateChanWidth);
 void getNumTempFreqs(int &NumFreqs, void *context, double TemplateChanWidth);
 
@@ -304,8 +331,8 @@ void OutputMLFiles(int nParameters, double* pdParameterEstimates, double MLike, 
 
 void readsummary(pulsar *psr, std::string longname, int ndim, void *context, long double *Tempo2Fit, int incRED, int ndims, int MarginTime, int MarginJumps, int doLinear);
 
-void setupMNparams(int &sampler, int &IS, int &modal, int &ceff, int &nlive, double &efr, int &sample, int &updInt, int &nClsPar, int &Nchords);
-void setupparams(int &useGPUS,
+void setupMNparams(char *ConfigFileName, int &sampler, int &IS, int &modal, int &ceff, int &nlive, double &efr, int &sample, int &updInt, int &nClsPar, int &Nchords , int &NBurn, int &NSamp, int &GHSresume);
+void setupparams(char *ConfigFileName, int &useGPUS,
 		char *root,
 		int &numTempo2its,
 		int &doLinearFit, 
@@ -422,10 +449,18 @@ void setupparams(int &useGPUS,
 		int &SubIntToFit,
 		int &ChannelToFit,
 		int &NProfileEvoPoly,
-		int &usecosiprior);
+		int &usecosiprior,
+		int &incWidthEvoTime,
+		int &incExtraProfComp,
+		int &removeBaseline,
+		int &incPrecession,
+		int &incTimeCorrProfileNoise,
+		double &phasePriorExpansion,
+		int &ProfileNoiseMethod,
+		int &FitPrecAmps);
 
-void setTNPriors(double **Dpriors, long double **TempoPriors, int TPsize, int DPsize);
-void setFrequencies(double *SampleFreq, int numRedfreqs, int numDMfreqs, int numRedLogFreqs, int numDMLogFreqs, double RedLowFreq, double DMLowFreq, double RedMidFreq, double DMMidFreq);
-void GetGroupsToFit(int incGroupNoise, int **FitForGroup, int incBandNoise, int **FitForBand);
-void setShapePriors(double **ShapePriors, double *BetaPrior, int numcoeff);
-void GetProfileFitInfo(int numProfComponents, int *numGPTAshapecoeff, int *numProfileFitCoeff, int *numEvoCoeff, int *numFitEvoCoeff, 	int *numGPTAstocshapecoeff, double *ProfCompSeps, double &TemplateChanWidth);
+void setTNPriors(char *ConfigFileName, double **Dpriors, long double **TempoPriors, int TPsize, int DPsize);
+void setFrequencies(char *ConfigFileName, double *SampleFreq, int numRedfreqs, int numDMfreqs, int numRedLogFreqs, int numDMLogFreqs, double RedLowFreq, double DMLowFreq, double RedMidFreq, double DMMidFreq);
+void GetGroupsToFit(char *ConfigFileName, int incGroupNoise, int **FitForGroup, int incBandNoise, int **FitForBand);
+void setShapePriors(char *ConfigFileName, double **ShapePriors, double **BetaPrior, int numcoeff, int numcomps);
+void GetProfileFitInfo(char *ConfigFileName, int numProfComponents, int *numGPTAshapecoeff, int *numProfileFitCoeff, int *numEvoCoeff, int *numFitEvoCoeff, 	int *numGPTAstocshapecoeff, double *ProfCompSeps, double &TemplateChanWidth, int *TimeCorrShapeCoeff);

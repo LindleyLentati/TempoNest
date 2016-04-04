@@ -31,7 +31,7 @@
 #include <math.h>
 #include "configfile.h"
 
-void setupparams(int &useGPUS,
+void setupparams(char *ConfigFileName, int &useGPUS,
 		char *root,
 		int &numTempo2its,
 		int &doLinearFit, 
@@ -148,7 +148,15 @@ void setupparams(int &useGPUS,
 		int &SubIntToFit,
 		int &ChannelToFit,
 		int &NProfileEvoPoly,
-		int &usecosiprior){
+		int &usecosiprior,
+		int &incWidthEvoTime,
+		int &incExtraProfComp,
+		int &removeBaseline,
+		int &incPrecession, 
+		int &incTimeCorrProfileNoise,
+		double &phasePriorExpansion,
+		int &ProfileNoiseMethod,
+		int &FitPrecAmps){
 
 	//General parameters:
 	//Use GPUs 0=No, 1=Yes
@@ -161,10 +169,14 @@ void setupparams(int &useGPUS,
 	numProfComponents = 0;
 	FixProfile = 0;	
 	FitTemplate = 0;
+	removeBaseline = 0;
 	ProfileBaselineTerms = 1;
 
 	InterpolateProfile = 0;
 	InterpolatedTime = 1; //in nanoseconds
+	phasePriorExpansion = 1;
+	ProfileNoiseMethod = 0;
+
 
 	StoreTMatrix = 1; // Recompute TMatrices when computing new bats - default is just precompute and use those
 
@@ -242,6 +254,8 @@ void setupparams(int &useGPUS,
 	LinearProfileWidthPrior[0] = -0.01;
 	LinearProfileWidthPrior[1] =  0.01;
 
+	incWidthEvoTime = 0;
+
 	incWidthJitter = 0;
 	WidthJitterPrior[0] =  -10;
 	WidthJitterPrior[1] =  -1;
@@ -252,7 +266,12 @@ void setupparams(int &useGPUS,
 	ProfileNoiseAmpPrior[1] = 0;
 	ProfileNoiseSpecPrior[0] = -7;
 	ProfileNoiseSpecPrior[1] = 7;
+	
+	incExtraProfComp = 0;
+	incPrecession = 0;
+	FitPrecAmps = -1;
 
+	incTimeCorrProfileNoise = 0;
 
     //Priors
 
@@ -402,7 +421,10 @@ void setupparams(int &useGPUS,
     // Use a configfile, if we can, to overwrite the defaults set in this file.
     try {
         string strBuf;
-        strBuf = string("defaultparameters.conf");
+	
+        strBuf = ConfigFileName;//string("defaultparameters.conf");
+	//string NewstrBuf = ConfigFileName;
+
         ConfigFile parameters(strBuf);
 
         /* We can check whether a value is not set in the file by doing
@@ -615,8 +637,21 @@ void setupparams(int &useGPUS,
 	parameters.readInto(NProfileEvoPoly, "NProfileEvoPoly", NProfileEvoPoly);
 
 	parameters.readInto(usecosiprior, "usecosiprior", usecosiprior);
+	parameters.readInto(incWidthEvoTime, "incWidthEvoTime", incWidthEvoTime);
+	parameters.readInto(incExtraProfComp, "incExtraProfComp", incExtraProfComp);
+
+        parameters.readInto(removeBaseline, "removeBaseline", removeBaseline);
 
 
+	parameters.readInto(incPrecession, "incPrecession", incPrecession);
+
+	parameters.readInto(incTimeCorrProfileNoise, "incTimeCorrProfileNoise", incTimeCorrProfileNoise);
+
+	parameters.readInto(phasePriorExpansion, "phasePriorExpansion", phasePriorExpansion);
+
+	parameters.readInto(ProfileNoiseMethod, "ProfileNoiseMethod", ProfileNoiseMethod);
+	
+	parameters.readInto(FitPrecAmps, "FitPrecAmps", FitPrecAmps);
 
 	
     } catch(ConfigFile::file_not_found oError) {
@@ -625,7 +660,7 @@ void setupparams(int &useGPUS,
 
 }
 
-void setTNPriors(double **Dpriors, long double **TempoPriors, int TPsize, int DPsize){
+void setTNPriors(char *ConfigFileName, double **Dpriors, long double **TempoPriors, int TPsize, int DPsize){
 
 //This function overwrites the default values for the priors sent to multinest, and the long double priors used by tempo2, you need to be aware of what dimension is what if you use this function.
 
@@ -642,7 +677,7 @@ void setTNPriors(double **Dpriors, long double **TempoPriors, int TPsize, int DP
 	    // Use a configfile, if we can, to overwrite the defaults set in this file.
 	    try {
 		string strBuf;
-		strBuf = string("defaultparameters.conf");
+		strBuf = ConfigFileName;//string("defaultparameters.conf");
 		ConfigFile parameters(strBuf);
 
 		/* We can check whether a value is not set in the file by doing
@@ -681,7 +716,7 @@ void setTNPriors(double **Dpriors, long double **TempoPriors, int TPsize, int DP
 	    // Use a configfile, if we can, to overwrite the defaults set in this file.
 	    try {
 		string strBuf;
-		strBuf = string("defaultparameters.conf");
+		strBuf = ConfigFileName;//string("defaultparameters.conf");
 		ConfigFile parameters(strBuf);
 
 		/* We can check whether a value is not set in the file by doing
@@ -712,7 +747,7 @@ void setTNPriors(double **Dpriors, long double **TempoPriors, int TPsize, int DP
 }
 
 
-void setFrequencies(double *SampleFreq, int numRedfreqs, int numDMfreqs, int numRedLogFreqs, int numDMLogFreqs, double RedLowFreq, double DMLowFreq, double RedMidFreq, double DMMidFreq){
+void setFrequencies(char *ConfigFileName, double *SampleFreq, int numRedfreqs, int numDMfreqs, int numRedLogFreqs, int numDMLogFreqs, double RedLowFreq, double DMLowFreq, double RedMidFreq, double DMMidFreq){
 
 //This function sets or overwrites the default values for the sampled frequencies sent to multinest
 
@@ -745,7 +780,7 @@ void setFrequencies(double *SampleFreq, int numRedfreqs, int numDMfreqs, int num
 	    // Use a configfile, if we can, to overwrite the defaults set in this file.
 	    try {
 		string strBuf;
-		strBuf = string("defaultparameters.conf");
+		strBuf = ConfigFileName;//string("defaultparameters.conf");
 		ConfigFile parameters(strBuf);
 
 		/* We can check whether a value is not set in the file by doing
@@ -777,7 +812,7 @@ void setFrequencies(double *SampleFreq, int numRedfreqs, int numDMfreqs, int num
 	    // Use a configfile, if we can, to overwrite the defaults set in this file.
 	    try {
 		string strBuf;
-		strBuf = string("defaultparameters.conf");
+		strBuf = ConfigFileName;//string("defaultparameters.conf");
 		ConfigFile parameters(strBuf);
 
 		/* We can check whether a value is not set in the file by doing
@@ -804,7 +839,7 @@ void setFrequencies(double *SampleFreq, int numRedfreqs, int numDMfreqs, int num
 
 
 
-void GetGroupsToFit(int incGroupNoise, int **FitForGroup, int incBandNoise, int **FitForBand){
+void GetGroupsToFit(char *ConfigFileName, int incGroupNoise, int **FitForGroup, int incBandNoise, int **FitForBand){
 
 //This function reads in the groups that will be fit as Group Noise terms
 
@@ -816,7 +851,7 @@ void GetGroupsToFit(int incGroupNoise, int **FitForGroup, int incBandNoise, int 
 		// Use a configfile, if we can, to overwrite the defaults set in this file.
 		try {
 			string strBuf;
-			strBuf = string("defaultparameters.conf");
+			strBuf = ConfigFileName;//string("defaultparameters.conf");
 			ConfigFile parameters(strBuf);
 
 			/* We can check whether a value is not set in the file by doing
@@ -859,7 +894,7 @@ void GetGroupsToFit(int incGroupNoise, int **FitForGroup, int incBandNoise, int 
 		// Use a configfile, if we can, to overwrite the defaults set in this file.
 		try {
 			string strBuf;
-			strBuf = string("defaultparameters.conf");
+			strBuf = ConfigFileName;//string("defaultparameters.conf");
 			ConfigFile parameters(strBuf);
 
 			/* We can check whether a value is not set in the file by doing
@@ -893,7 +928,7 @@ void GetGroupsToFit(int incGroupNoise, int **FitForGroup, int incBandNoise, int 
 
 
 
-void GetProfileFitInfo(int numProfComponents, int *numGPTAshapecoeff, int *numProfileFitCoeff, int *numEvoCoeff, int *numFitEvoCoeff, int *numGPTAstocshapecoeff, double *ProfCompSeps, double &TemplateChanWidth){
+void GetProfileFitInfo(char *ConfigFileName, int numProfComponents, int *numGPTAshapecoeff, int *numProfileFitCoeff, int *numEvoCoeff, int *numFitEvoCoeff, int *numGPTAstocshapecoeff, double *ProfCompSeps, double &TemplateChanWidth, int *numTimeCorrCoeff){
 
 //This function reads in the groups that will be fit as Group Noise terms
 
@@ -905,7 +940,7 @@ void GetProfileFitInfo(int numProfComponents, int *numGPTAshapecoeff, int *numPr
 		// Use a configfile, if we can, to overwrite the defaults set in this file.
 		try {
 			string strBuf;
-			strBuf = string("defaultparameters.conf");
+			strBuf = ConfigFileName;//string("defaultparameters.conf");
 			ConfigFile parameters(strBuf);
 
 			char buffer [50];
@@ -928,7 +963,7 @@ void GetProfileFitInfo(int numProfComponents, int *numGPTAshapecoeff, int *numPr
 		// Use a configfile, if we can, to overwrite the defaults set in this file.
 		try {
 			string strBuf;
-			strBuf = string("defaultparameters.conf");
+			strBuf = ConfigFileName;//string("defaultparameters.conf");
 			ConfigFile parameters(strBuf);
 
 			char buffer [50];
@@ -950,7 +985,7 @@ void GetProfileFitInfo(int numProfComponents, int *numGPTAshapecoeff, int *numPr
 		// Use a configfile, if we can, to overwrite the defaults set in this file.
 		try {
 			string strBuf;
-			strBuf = string("defaultparameters.conf");
+			strBuf = ConfigFileName;//string("defaultparameters.conf");
 			ConfigFile parameters(strBuf);
 
 			char buffer [50];
@@ -972,7 +1007,7 @@ void GetProfileFitInfo(int numProfComponents, int *numGPTAshapecoeff, int *numPr
 		// Use a configfile, if we can, to overwrite the defaults set in this file.
 		try {
 			string strBuf;
-			strBuf = string("defaultparameters.conf");
+			strBuf = ConfigFileName;//string("defaultparameters.conf");
 			ConfigFile parameters(strBuf);
 
 			char buffer [50];
@@ -994,7 +1029,7 @@ void GetProfileFitInfo(int numProfComponents, int *numGPTAshapecoeff, int *numPr
 		// Use a configfile, if we can, to overwrite the defaults set in this file.
 		try {
 			string strBuf;
-			strBuf = string("defaultparameters.conf");
+			strBuf = ConfigFileName;//string("defaultparameters.conf");
 			ConfigFile parameters(strBuf);
 
 			char buffer [50];
@@ -1016,7 +1051,7 @@ void GetProfileFitInfo(int numProfComponents, int *numGPTAshapecoeff, int *numPr
 		// Use a configfile, if we can, to overwrite the defaults set in this file.
 		try {
 			string strBuf;
-			strBuf = string("defaultparameters.conf");
+			strBuf = ConfigFileName;//string("defaultparameters.conf");
 			ConfigFile parameters(strBuf);
 
 			char buffer [50];
@@ -1034,7 +1069,7 @@ void GetProfileFitInfo(int numProfComponents, int *numGPTAshapecoeff, int *numPr
 
 	try {
 		string strBuf;
-		strBuf = string("defaultparameters.conf");
+		strBuf = ConfigFileName;//string("defaultparameters.conf");
 		ConfigFile parameters(strBuf);
 
 		parameters.readInto(TemplateChanWidth, "TemplateChanWidth", TemplateChanWidth);
@@ -1043,9 +1078,32 @@ void GetProfileFitInfo(int numProfComponents, int *numGPTAshapecoeff, int *numPr
 			printf("WARNING: parameters file '%s' not found. Using defaults.\n", oError.filename.c_str());
 	} // try
 
+
+	for(int i =0;i<numProfComponents; i++){	
+
+
+		// Use a configfile, if we can, to overwrite the defaults set in this file.
+		try {
+			string strBuf;
+			strBuf = ConfigFileName;//string("defaultparameters.conf");
+			ConfigFile parameters(strBuf);
+
+			char buffer [50];
+			int n;
+			n=sprintf (buffer, "numTimeCorrCoeff[%i]", i);
+			parameters.readInto(numTimeCorrCoeff[i], buffer, numTimeCorrCoeff[i]);
+
+
+		} 
+		catch(ConfigFile::file_not_found oError) {
+			printf("WARNING: parameters file '%s' not found. Using defaults.\n", oError.filename.c_str());
+	    } // try
+
+	}
+
 }
 
-void setShapePriors(double **ShapePriors, double *BetaPrior, int numcoeff){
+void setShapePriors(char *ConfigFileName, double **ShapePriors, double **BetaPrior, int numcoeff, int numcomps){
 
 
 	for(int i =0;i<numcoeff; i++){	
@@ -1054,19 +1112,8 @@ void setShapePriors(double **ShapePriors, double *BetaPrior, int numcoeff){
 	    // Use a configfile, if we can, to overwrite the defaults set in this file.
 	    try {
 		string strBuf;
-		strBuf = string("defaultparameters.conf");
+		strBuf = ConfigFileName;//string("defaultparameters.conf");
 		ConfigFile parameters(strBuf);
-
-		/* We can check whether a value is not set in the file by doing
-		 * if(! parameters.readInto(variable, "name", default)) {
-		 *   printf("WARNING");
-		 * }
-		 *
-		 * At the moment I was too lazy to print warning messages, and the
-		 * default value from this file is used in that case.
-		 *
-		 * Note: the timing model parameters are not done implemented yet
-		 */
 		char buffer [50];
 		int n;
 		
@@ -1085,28 +1132,25 @@ void setShapePriors(double **ShapePriors, double *BetaPrior, int numcoeff){
 
 
     // Use a configfile, if we can, to overwrite the defaults set in this file.
-    try {
-	string strBuf;
-	strBuf = string("defaultparameters.conf");
-	ConfigFile parameters(strBuf);
+    for(int i = 0; i < numcomps; i++){
+	    try {
+		string strBuf;
+		strBuf = ConfigFileName;//string("defaultparameters.conf");
+		ConfigFile parameters(strBuf);
 
-	/* We can check whether a value is not set in the file by doing
-	 * if(! parameters.readInto(variable, "name", default)) {
-	 *   printf("WARNING");
-	 * }
-	 *
-	 * At the moment I was too lazy to print warning messages, and the
-	 * default value from this file is used in that case.
-	 *
-	 * Note: the timing model parameters are not done implemented yet
-	 */
-        parameters.readInto(BetaPrior[0], "BetaPrior[0]", BetaPrior[0]);
-        parameters.readInto(BetaPrior[1], "BetaPrior[1]", BetaPrior[1]);
+		char buffer [50];
+                int n;
 
 
-    } catch(ConfigFile::file_not_found oError) {
-	printf("WARNING: parameters file '%s' not found. Using defaults.\n", oError.filename.c_str());
-    } // try
+		n=sprintf (buffer, "BetaPrior[%i][0]", i);
+		parameters.readInto(BetaPrior[i][0], buffer, BetaPrior[i][0]);
+		n=sprintf (buffer, "BetaPrior[%i][1]", i);
+		parameters.readInto(BetaPrior[i][1], buffer, BetaPrior[i][1]);
 
+
+	    } catch(ConfigFile::file_not_found oError) {
+		printf("WARNING: parameters file '%s' not found. Using defaults.\n", oError.filename.c_str());
+	    } // try
+	}
 
 }

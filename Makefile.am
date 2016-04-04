@@ -44,7 +44,7 @@ endif
 #
 ###
 LDFLAGS+= -shared -module -avoid-version -shrext .t2
-INCLUDES=-I@top_srcdir@/   #-I/home/ltl21/Code/HighPrecision/MLAPACK/MPackInstall/include -I/home/ltl21/Code/HighPrecision/QDInstall/include
+INCLUDES=-I@top_srcdir@/   -I/home/ltl21/PulsarCode/liblbfgs/INSTALLDIR/include
 
 
 

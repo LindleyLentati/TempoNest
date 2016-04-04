@@ -32,7 +32,7 @@
 */
 
 
-void setupMNparams(int &sampler, int &IS, int &modal, int &ceff, int &nlive, double &efr, int &sample, int &updInt, int &nClsPar, int &Nchords){
+void setupMNparams(char *ConfigFileName, int &sampler, int &IS, int &modal, int &ceff, int &nlive, double &efr, int &sample, int &updInt, int &nClsPar, int &Nchords, int &NBurn, int &NSamp, int &GHSresume){
 
 
 	//sampler flag chooses which sampler to use, 0 = MultiNest, 1 = PolyChord
@@ -78,10 +78,14 @@ void setupMNparams(int &sampler, int &IS, int &modal, int &ceff, int &nlive, dou
 
 	Nchords = 1;
 
+	NBurn = 100;
+	NSamp = 10000;
+	GHSresume = 0;
+
     // Use a configfile, if we can, to overwrite the defaults set in this file.
          try {
                  string strBuf;
-                 strBuf = string("defaultparameters.conf");
+                 strBuf = ConfigFileName;//string("defaultparameters.conf");
                  ConfigFile parameters(strBuf);
 
 		parameters.readInto(sampler, "sampler", sampler);
@@ -94,6 +98,10 @@ void setupMNparams(int &sampler, int &IS, int &modal, int &ceff, int &nlive, dou
  		parameters.readInto(updInt, "updInt", updInt);
  		parameters.readInto(nClsPar, "nClsPar", nClsPar);
 		parameters.readInto(Nchords, "Nchords", Nchords);
+		parameters.readInto(NBurn, "NBurn", NBurn);
+ 		parameters.readInto(NSamp, "NSamp", NSamp);
+		parameters.readInto(GHSresume, "GHSresume", GHSresume);
+
 	    } catch(ConfigFile::file_not_found oError) {
 		printf("WARNING: parameters file '%s' not found. Using defaults.\n", oError.filename.c_str());
 	    } // try
