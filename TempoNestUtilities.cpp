@@ -240,6 +240,115 @@ void readphyslive(std::string longname, int ndim, double **paramarray, int sampl
 
 }
 
+void read_ddgr(std::string longname, int ndim, int sampler,  void *context){
+
+        int number_of_lines = 0;
+
+        std::ifstream checkfile;
+        std::string checkname;
+	if(sampler == 0){
+                checkname = longname+"post_equal_weights.dat";
+        }
+        if(sampler == 1){
+                checkname = longname+"_phys_live.txt";
+        }
+        checkfile.open(checkname.c_str());
+        std::string line;
+        while (getline(checkfile, line))
+                ++number_of_lines;
+
+        checkfile.close();
+
+	std::ifstream summaryfile;
+	std::string fname;
+        if(sampler == 0){
+                fname = longname+"post_equal_weights.dat";
+        }
+        if(sampler == 1){
+                fname = longname+"_phys_live.txt";
+        }
+
+
+	summaryfile.open(fname.c_str());
+
+	double *TempCube = new double[ndim];
+
+
+//	printf("Getting ML \n");
+	double maxlike = -1.0*pow(10.0,10);
+	for(int i=0;i<number_of_lines;i++){
+
+		std::string line;
+		getline(summaryfile,line);
+		std::istringstream myStream( line );
+                std::istream_iterator< double > begin(myStream),eof;
+                std::vector<double> paramlist(begin,eof);
+
+		double like = paramlist[ndim];
+
+		 for(int i = 0; i < ndim; i++){
+			TempCube[i] = paramlist[i];
+
+		 }
+		long double LDparams[((MNStruct *)context)->numFitTiming + ((MNStruct *)context)->numFitJumps];
+		int fitcount = 0;
+		for(int p=0;p< ((MNStruct *)context)->numFitTiming + ((MNStruct *)context)->numFitJumps; p++){
+			if(((MNStruct *)context)->Dpriors[p][1] != ((MNStruct *)context)->Dpriors[p][0]){
+
+				double val = 0;
+				if((((MNStruct *)context)->LDpriors[p][3]) == 0){
+					val = TempCube[fitcount];
+				}
+				if((((MNStruct *)context)->LDpriors[p][3]) == 1){
+					val = pow(10.0,TempCube[fitcount]);
+				}
+				if((((MNStruct *)context)->LDpriors[p][3]) == 2){
+					val = pow(10.0,TempCube[fitcount]);
+				}
+				LDparams[p]=val*(((MNStruct *)context)->LDpriors[p][1]) + (((MNStruct *)context)->LDpriors[p][0]);
+				
+				if(((MNStruct *)context)->TempoFitNums[p][0] == param_sini && ((MNStruct *)context)->usecosiprior == 1){
+						val = TempCube[fitcount];
+						LDparams[p] = sqrt(1.0 - val*val);
+				}
+
+				fitcount++;
+
+			}
+			else if(((MNStruct *)context)->Dpriors[p][1] == ((MNStruct *)context)->Dpriors[p][0]){
+				LDparams[p]=((MNStruct *)context)->Dpriors[p][0]*(((MNStruct *)context)->LDpriors[p][1]) + (((MNStruct *)context)->LDpriors[p][0]);
+			}
+
+
+		}
+		int pcount=0;
+		pcount++;
+		for(int p=1;p<((MNStruct *)context)->numFitTiming;p++){
+			((MNStruct *)context)->pulse->param[((MNStruct *)context)->TempoFitNums[p][0]].val[((MNStruct *)context)->TempoFitNums[p][1]] = LDparams[pcount];	
+			pcount++;
+		}
+		for(int p=0;p<((MNStruct *)context)->numFitJumps;p++){
+			((MNStruct *)context)->pulse->jumpVal[((MNStruct *)context)->TempoJumpNums[p]]= LDparams[pcount];
+			pcount++;
+		}
+
+
+		fastformBatsAll(((MNStruct *)context)->pulse,((MNStruct *)context)->numberpulsars);       /* Form Barycentric arrival times */
+		formResiduals(((MNStruct *)context)->pulse,((MNStruct *)context)->numberpulsars,1);       /* Form residuals */
+		DDGRmodel(((MNStruct *)context)->pulse,  0, 0, -2);
+
+		printf("PBDot %.20Lg  OMDot %.20Lg Gamma %.20Lg \n", ((MNStruct *)context)->pulse->param[param_pbdot].val[0], ((MNStruct *)context)->pulse->param[param_omdot].val[0], ((MNStruct *)context)->pulse->param[param_gamma].val[0]);
+
+
+	}
+	summaryfile.close();
+
+	//void *tempcontext;
+	//double *DerivedParams=new double[1];
+	//int np = 1;
+	//double like = NewLRedMarginLogLike(ndim, TempCube, np, DerivedParams, tempcontext);
+
+}
 void readsummary(pulsar *psr, std::string longname, int ndim, void *context, long double *Tempo2Fit, int incRED, int ndims, int doTimeMargin, int doJumpMargin, int doLinear){
 
 	int pcount=0;
@@ -256,7 +365,7 @@ void readsummary(pulsar *psr, std::string longname, int ndim, void *context, lon
 
 	readtxtoutput(longname, ndim, paramarray);
 	readphyslive(longname, ndim, paramarray, ((MNStruct *)context)->sampler);
-
+//	read_ddgr( longname, ndim, ((MNStruct *)context)->sampler,  context);
 	int numlongparams=((MNStruct *)context)->numFitTiming+((MNStruct *)context)->numFitJumps;
 	long double *LDP = new long double[numlongparams];
 	pcount=0;
@@ -398,7 +507,7 @@ void readsummary(pulsar *psr, std::string longname, int ndim, void *context, lon
 	
 	
 	
-//	printf("finished output \n");
+	printf("finished output \n");
 
 }
 
@@ -899,25 +1008,73 @@ void getPhysDVector(void *context, double **TNDM, int Nobs, int *TimingGradientS
 	printf("do linear is: %i \n", ((MNStruct *)context)->doLinear);
 	if(((MNStruct *)context)->doLinear==2){
 
-		double *TempTNDM = new double[((MNStruct *)context)->pulse->nobs*(numToFit-1)]();
-
+		double *TempTNDM = new double[((MNStruct *)context)->pulse->nobs*numToFit]();
+		double *NU = new double[((MNStruct *)context)->pulse->nobs*(numToFit)]();
+		double *UU = new double[(numToFit)*(numToFit)];
 
 		for(int j=0;j<((MNStruct *)context)->pulse->nobs;j++){
-			for(int k=1;k<numToFit;k++){
-				TempTNDM[j + (k-1)*((MNStruct *)context)->pulse->nobs] = TNDM[j][k];
+			for(int k=0;k<numToFit;k++){
+			
+				if(k==0){TNDM[j][k] = ((MNStruct *)context)->ReferencePeriod;}
+				TempTNDM[j + k*((MNStruct *)context)->pulse->nobs] = TNDM[j][k];
 			}
 		}
 
-
-		vector_dgesvd(TempTNDM,((MNStruct *)context)->pulse->nobs, numToFit-1);
+	//	vector_dgesvd2(TempTNDM, ((MNStruct *)context)->pulse->nobs, numToFit-1, S, U, VT);
+		vector_dgesvd(TempTNDM,((MNStruct *)context)->pulse->nobs, numToFit);
 
 		for(int j=0;j<((MNStruct *)context)->pulse->nobs;j++){
-			for(int k=1;k<numToFit;k++){
-				printf("Lin2: %i %i %g %g\n", j, k, TNDM[j][k], TempTNDM[j + (k-1)*((MNStruct *)context)->pulse->nobs]);
-				TNDM[j][k]=TempTNDM[j + (k-1)*((MNStruct *)context)->pulse->nobs];
+			for(int k=0;k<numToFit;k++){
+				NU[j + k*((MNStruct *)context)->pulse->nobs] = TempTNDM[j + k*((MNStruct *)context)->pulse->nobs]/pow(((MNStruct *)context)->pulse->obsn[j].toaErr*pow(10.0,-6),2);
 			}
 		}
+
+		double *dNU= new double[numToFit];
+		double *ML= new double[numToFit];
+		double *residuals = new double[((MNStruct *)context)->pulse->nobs];
+
+		 for(int j=0;j<((MNStruct *)context)->pulse->nobs;j++){
+			residuals[j] = ((MNStruct *)context)->pulse->obsn[j].residual;
+		}
+
+		vector_dgemm(NU, TempTNDM, UU, ((MNStruct *)context)->pulse->nobs, numToFit, ((MNStruct *)context)->pulse->nobs, numToFit, 'T', 'N');
+		vector_dgemv(NU, residuals, dNU, ((MNStruct *)context)->pulse->nobs, numToFit, 'T');
+
+		double Margindet = 0;
+		int info = 0;
+	        vector_dpotrfInfo(UU, numToFit, Margindet, info);
+                vector_dpotri(UU,numToFit);
+
+		vector_dgemv(UU, dNU, ML, numToFit, numToFit, 'N');
+		vector_dgemv(TempTNDM, ML, residuals, ((MNStruct *)context)->pulse->nobs, numToFit, 'N');
+
+		for(int j=0;j<((MNStruct *)context)->pulse->nobs;j++){
+			 ((MNStruct *)context)->pulse->obsn[j].residual -= residuals[j];
+		}	
+
+		double *ErrScale = new double[numToFit];
+
+		for(int k=0;k<numToFit;k++){
+			printf("ErrScale: %i %g  %g %g \n", k, sqrt(UU[k + k*(numToFit)]), ML[k], ML[k]/sqrt(UU[k + k*(numToFit)]));
+			ErrScale[k] = sqrt(UU[k + k*(numToFit)]);
+		}
+
+		for(int j=0;j<((MNStruct *)context)->pulse->nobs;j++){
+			for(int k=0;k<numToFit;k++){
+				if(k==0)printf("Lin2: %i %i %g %g %g\n", j, k, TNDM[j][k], TempTNDM[j + k*((MNStruct *)context)->pulse->nobs], TempTNDM[j + k*((MNStruct *)context)->pulse->nobs]*ErrScale[k]);
+				TNDM[j][k]=TempTNDM[j + k*((MNStruct *)context)->pulse->nobs]*ErrScale[k];
+			}
+		}
+
+		for(int k=1;k<numToFit;k++){
+			double zeroval = TNDM[0][k];
+			for(int j=0;j<((MNStruct *)context)->pulse->nobs;j++){
+//				TNDM[j][k] -= zeroval;
+			}
+		}
+
 		delete[]TempTNDM;
+		delete[] ErrScale;
 	
 		
 	}

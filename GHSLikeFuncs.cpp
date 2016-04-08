@@ -54,6 +54,8 @@
 #include <sstream>
 #include <iterator>
 #include <cstring>
+#include <limits>
+#include <iostream>
 
 #ifdef HAVE_MLAPACK
 #include <mpack/mblas_qd.h>

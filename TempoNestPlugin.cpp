@@ -257,7 +257,7 @@ void SetNewAmps(Archive *archive){
 }
 #endif
 
-MNStruct* init_struct(pulsar *pulseval,	 long double **LDpriorsval, int numberpulsarsval,int numFitJumpsval,int numFitTimingval, int systemcountval, int numFitEFACval, int numFitEQUADval, int numFitRedCoeffval, int numFitDMCoeffval,int numFitRedPLval, int numFitDMPLval, int **TempoFitNumsval,int *TempoJumpNumsval, int *sysFlagsval, int numdimsval, int incREDval, int incDMval, int incFloatDMval, int incFloatRedval, int DMFloatstartval, int RedFloatstartval, int TimeMarginVal, int JumpMarginVal, int doLinearVal, double *SampleFreqsVal, int incStepVal, char *whiteflagval, int whitemodelval, int varyRedCoeffval, int varyDMCoeffval, int yearlyDMval, int incsinusoidval, int EPolTermsval, int incGWBval,int RedPriorType,int DMPriorType,int EQUADPriorType,int EFACPriorType,int useOriginalErrors, int incShannonJitter, int incDMEvent, int incDMShapeEvent, int numDMShapeCoeff, int incBandNoise, int numFitBandNoiseCoeff, int incRedShapeEvent, int numRedShapeCoeff, int MarginRedShapeCoeff, int incDMScatterShapeEvent, int numDMScatterShapeCoeff, int incNGJitter, int incGlitch, int incGlitchTerms, int incBreakingIndex, int FitLowFreqCutoff, int uselongdouble, int incGroupNoise, int numFitGroupNoiseCoeff, int **FitForGroup, int numGroupstoFit, int *GroupNoiseFlags, int FitSolarWind, int FitWhiteSolarWind, int interpolateProfile, double InterpolatedTime, int sampler, int *GPTAnumstoccoeff, int totalshapestoccoeff, int StoreFMatrices, int incHighFreqStoc, int numNGJitter, int **FitForBand, int incProfileEvo, double EvoRefFreq, int *numEvoFitCoeff, int incWideBandNoise, int incProfileFit, int *numProfileFitCoeff, int incDMEQUAD, int FitLinearProfileWidth, double offPulseLevel, double **GroupStartTimes, int FitEvoExponent, int numProfComponents, int totalEvoFitCoeff, int totalProfileFitCoeff, int *numEvoCoeff, int totalEvoCoeff, int incWidthJitter, int JitterProfComp, int incProfileEnergyEvo, int debug, int ProfileBaselineTerms, int incProfileNoise, int ProfileNoiseCoeff, int SubIntToFit, int ChannelToFit, int NProfileEvoPoly, double *ProfCompSeps, int usecosiprior, double *PreJumpVals, char *rootName, int doMax, int incWidthEvoTime, int incExtraProfComp, int incPrecession, int incTimeCorrProfileNoise, int *numTimeCorrCoeff, int totalTimeCorrCoeff, double phasePriorExpansion, int ProfileNoiseMethod, int FitPrecAmps)
+MNStruct* init_struct(pulsar *pulseval,	 long double **LDpriorsval, int numberpulsarsval,int numFitJumpsval,int numFitTimingval, int systemcountval, int numFitEFACval, int numFitEQUADval, int numFitRedCoeffval, int numFitDMCoeffval,int numFitRedPLval, int numFitDMPLval, int **TempoFitNumsval,int *TempoJumpNumsval, int *sysFlagsval, int numdimsval, int incREDval, int incDMval, int incFloatDMval, int incFloatRedval, int DMFloatstartval, int RedFloatstartval, int TimeMarginVal, int JumpMarginVal, int doLinearVal, double *SampleFreqsVal, int incStepVal, char *whiteflagval, int whitemodelval, int varyRedCoeffval, int varyDMCoeffval, int yearlyDMval, int incsinusoidval, int EPolTermsval, int incGWBval,int RedPriorType,int DMPriorType,int EQUADPriorType,int EFACPriorType,int useOriginalErrors, int incShannonJitter, int incDMEvent, int incDMShapeEvent, int numDMShapeCoeff, int incBandNoise, int numFitBandNoiseCoeff, int incRedShapeEvent, int numRedShapeCoeff, int MarginRedShapeCoeff, int incDMScatterShapeEvent, int numDMScatterShapeCoeff, int incNGJitter, int incGlitch, int incGlitchTerms, int incBreakingIndex, int FitLowFreqCutoff, int uselongdouble, int incGroupNoise, int numFitGroupNoiseCoeff, int **FitForGroup, int numGroupstoFit, int *GroupNoiseFlags, int FitSolarWind, int FitWhiteSolarWind, int interpolateProfile, double InterpolatedTime, int sampler, int *GPTAnumstoccoeff, int totalshapestoccoeff, int StoreFMatrices, int incHighFreqStoc, int numNGJitter, int **FitForBand, int incProfileEvo, double EvoRefFreq, int *numEvoFitCoeff, int incWideBandNoise, int incProfileFit, int *numProfileFitCoeff, int incDMEQUAD, int FitLinearProfileWidth, double offPulseLevel, double **GroupStartTimes, int FitEvoExponent, int numProfComponents, int totalEvoFitCoeff, int totalProfileFitCoeff, int *numEvoCoeff, int totalEvoCoeff, int incWidthJitter, int JitterProfComp, int incProfileEnergyEvo, int debug, int ProfileBaselineTerms, int incProfileNoise, int ProfileNoiseCoeff, int SubIntToFit, int ChannelToFit, int NProfileEvoPoly, double *ProfCompSeps, int usecosiprior, double *PreJumpVals, char *rootName, int doMax, int incWidthEvoTime, int incExtraProfComp, int incPrecession, int incTimeCorrProfileNoise, int *numTimeCorrCoeff, int totalTimeCorrCoeff, double phasePriorExpansion, int ProfileNoiseMethod, int FitPrecAmps, char *GroupNoiseName)
 {
     MNStruct* MNS = (MNStruct*)malloc(sizeof(MNStruct));
 
@@ -379,6 +379,7 @@ MNStruct* init_struct(pulsar *pulseval,	 long double **LDpriorsval, int numberpu
 	MNS->phasePriorExpansion = phasePriorExpansion;
 	MNS->ProfileNoiseMethod = ProfileNoiseMethod;
 	MNS->FitPrecAmps = FitPrecAmps;
+	MNS->GroupNoiseName= GroupNoiseName;
 
 	return MNS;
 }
@@ -2658,7 +2659,7 @@ extern "C" int graphicalInterface(int argc, char **argv,
 	char *chartroot = new char[longname.length() + 1];
         std::strcpy(chartroot , longname.c_str());
 
-	MNStruct *MNS = init_struct(psr,TempoPriors,npsr,numFitJumps,fitcount,systemcount,numEFAC,numEQUAD, int(numRedCoeff), int(numDMCoeff), numRedPL, numDMPL, TempoFitNums,TempoJumpNums,numFlags, ndims, incRED,incDM, incFloatDM,incFloatRed, FloatDMstart, FloatRedstart, doTimeMargin,doJumpMargin, doLinearFit, SampleFreq, numStep, wflag, whitemodel,varyRedCoeff, varyDMCoeff,yearlyDM, incsinusoid, numEPolTerms, incGWB,RedPriorType, DMPriorType, EQUADPriorType,EFACPriorType,useOriginalErrors,numSQUAD, incDMEvent, incDMShapeEvent, numDMShapeCoeff, incBandNoise, numBandNoiseCoeff, incRedShapeEvent, numRedShapeCoeff, MarginRedShapeCoeff, incDMScatterShapeEvent, numDMScatterShapeCoeff, incNGJitter, incGlitch, incGlitchTerms, incBreakingIndex, FitLowFreqCutoff, uselongdouble, incGroupNoise, numGroupCoeff, FitForGroup, numGroupstoFit,GroupNoiseSys, FitSolarWind, FitWhiteSolarWind, interpolateProfile, InterpolatedTime, sampler, GPTAnumstocshapecoeff, totalshapestoccoeff, StoreFMatrices, incHighFreqStoc, numNGJitter, FitForBand, incProfileEvo, EvoRefFreq, numEvoFitCoeff, incWideBandNoise, incProfileFit, numProfileFitCoeff, incDMEQUAD, FitLinearProfileWidth, offPulseLevel,GroupStartTimes, FitEvoExponent,numProfComponents, totalEvoFitCoeff, totalProfileFitCoeff, numEvoCoeff, totalEvoCoeff,incWidthJitter, JitterProfComp, incProfileEnergyEvo, debug, ProfileBaselineTerms, incProfileNoise, ProfileNoiseCoeff, SubIntToFit, ChannelToFit, NProfileEvoPoly, ProfCompSeps,usecosiprior, PreJumpVals, chartroot, doMax, incWidthEvoTime, incExtraProfComp, incPrecession, incTimeCorrProfileNoise, numTimeCorrCoeff, totalTimeCorrCoeff, phasePriorExpansion, ProfileNoiseMethod, FitPrecAmps);
+	MNStruct *MNS = init_struct(psr,TempoPriors,npsr,numFitJumps,fitcount,systemcount,numEFAC,numEQUAD, int(numRedCoeff), int(numDMCoeff), numRedPL, numDMPL, TempoFitNums,TempoJumpNums,numFlags, ndims, incRED,incDM, incFloatDM,incFloatRed, FloatDMstart, FloatRedstart, doTimeMargin,doJumpMargin, doLinearFit, SampleFreq, numStep, wflag, whitemodel,varyRedCoeff, varyDMCoeff,yearlyDM, incsinusoid, numEPolTerms, incGWB,RedPriorType, DMPriorType, EQUADPriorType,EFACPriorType,useOriginalErrors,numSQUAD, incDMEvent, incDMShapeEvent, numDMShapeCoeff, incBandNoise, numBandNoiseCoeff, incRedShapeEvent, numRedShapeCoeff, MarginRedShapeCoeff, incDMScatterShapeEvent, numDMScatterShapeCoeff, incNGJitter, incGlitch, incGlitchTerms, incBreakingIndex, FitLowFreqCutoff, uselongdouble, incGroupNoise, numGroupCoeff, FitForGroup, numGroupstoFit,GroupNoiseSys, FitSolarWind, FitWhiteSolarWind, interpolateProfile, InterpolatedTime, sampler, GPTAnumstocshapecoeff, totalshapestoccoeff, StoreFMatrices, incHighFreqStoc, numNGJitter, FitForBand, incProfileEvo, EvoRefFreq, numEvoFitCoeff, incWideBandNoise, incProfileFit, numProfileFitCoeff, incDMEQUAD, FitLinearProfileWidth, offPulseLevel,GroupStartTimes, FitEvoExponent,numProfComponents, totalEvoFitCoeff, totalProfileFitCoeff, numEvoCoeff, totalEvoCoeff,incWidthJitter, JitterProfComp, incProfileEnergyEvo, debug, ProfileBaselineTerms, incProfileNoise, ProfileNoiseCoeff, SubIntToFit, ChannelToFit, NProfileEvoPoly, ProfCompSeps,usecosiprior, PreJumpVals, chartroot, doMax, incWidthEvoTime, incExtraProfComp, incPrecession, incTimeCorrProfileNoise, numTimeCorrCoeff, totalTimeCorrCoeff, phasePriorExpansion, ProfileNoiseMethod, FitPrecAmps, GroupNoiseName);
 	
 	MNS->includeEQsys = includeEQsys;	
 
@@ -3867,7 +3868,7 @@ extern "C" int graphicalInterface(int argc, char **argv,
 		}
 		if(incProfileFit == 1){proffitdims = totalProfileFitCoeff;}
 
-		int NumExtraCompCoeffs = 1;
+		int NumExtraCompCoeffs = 3;
 
 		int ExtraCompDims = 0;
 		if(incExtraProfComp == 1){
@@ -4188,18 +4189,22 @@ extern "C" int graphicalInterface(int argc, char **argv,
 
 		if(incExtraProfComp == 1){
 			//Step Model, time, width, amp
-			PriorsArray[pcount] = 54900;
+			PriorsArray[pcount] = 57000;
 			PriorsArray[pcount+ndims] = 57300;
 			pcount++;
-			PriorsArray[pcount] = -0.05;
-                        PriorsArray[pcount+ndims] = 0.05;
-                        pcount++;
-			PriorsArray[pcount] = -4;
-                        PriorsArray[pcount+ndims] = -1;
+			PriorsArray[pcount] = -0.03;
+                        PriorsArray[pcount+ndims] = -0.01;
                         pcount++;
 			PriorsArray[pcount] = -3;
-                        PriorsArray[pcount+ndims] = -0.3;
+                        PriorsArray[pcount+ndims] = -2;
                         pcount++;
+
+			for(int i = 0; i < NumExtraCompCoeffs; i++){
+				PriorsArray[pcount] = -0.1;
+				PriorsArray[pcount+ndims] = 0.1;
+
+				pcount++;
+			}
 		
 		}
 		if(incExtraProfComp == 2){
@@ -4313,38 +4318,75 @@ extern "C" int graphicalInterface(int argc, char **argv,
 		if(incPrecession == 2){
 
 
-			for(int p2 = 0; p2 < numProfComponents; p2++){
-				PriorsArray[pcount] = -4;
-				PriorsArray[pcount+ndims] = -2;
+			double errscale = 1;
+			std::ifstream MeanProfileFile;
+			std::string MeanProfileFilename = "PrecParams2.dat";
+			MeanProfileFile.open(MeanProfileFilename.c_str());
 
-				if(p2==0){PriorsArray[pcount] = -2.597183908; PriorsArray[pcount+ndims] = -2.397183908;}
-				if(p2==1){PriorsArray[pcount] = -2.9177146; PriorsArray[pcount+ndims] = -2.7177146;}
-				if(p2==2){PriorsArray[pcount] = -3.15429354; PriorsArray[pcount+ndims] = -2.95429354;}
-				if(p2==3){PriorsArray[pcount] = -2.7976358; PriorsArray[pcount+ndims] = -2.5976358;}
-				if(p2==4){PriorsArray[pcount] = -2.81286493; PriorsArray[pcount+ndims] = -2.61286493;}
-				if(p2==5){PriorsArray[pcount] = -2.6433547396; PriorsArray[pcount+ndims] = -2.4433547396;}
-				if(p2==6){PriorsArray[pcount] = -2.829522; PriorsArray[pcount+ndims] = -2.629522;}
+			for(int p2 = 0; p2 < numProfComponents; p2++){
+//				PriorsArray[pcount] = -4;
+//				PriorsArray[pcount+ndims] = -2;
+
+				std::string line;
+				getline(MeanProfileFile,line);
+				std::istringstream myStream( line );
+                                std::istream_iterator< double > begin(myStream),eof;
+                                std::vector<double> ProfileVal(begin,eof);
+
+				PriorsArray[pcount] = ProfileVal[0] -0.1*errscale;
+				PriorsArray[pcount+ndims] = ProfileVal[0] +0.1*errscale;
+		
+
+//				if(p2==0){PriorsArray[pcount] = -2.55; PriorsArray[pcount+ndims] = -2.45;}
+//				if(p2==1){PriorsArray[pcount] = -2.85; PriorsArray[pcount+ndims] = -2.65;}
+//				if(p2==2){PriorsArray[pcount] = -3.15; PriorsArray[pcount+ndims] = -2.95;}
+//				if(p2==3){PriorsArray[pcount] = -2.9; PriorsArray[pcount+ndims] = -2.65;}
+//				if(p2==4){PriorsArray[pcount] = -2.8; PriorsArray[pcount+ndims] = -2.6;}
+//				if(p2==5){PriorsArray[pcount] = -2.64; PriorsArray[pcount+ndims] = -2.44;}
+//				if(p2==6){PriorsArray[pcount] = -2.82; PriorsArray[pcount+ndims] = -2.62;}
 
 				pcount++;
 			}
 			for(int p2 = 0; p2 < numProfComponents-1; p2++){
-                                PriorsArray[pcount] = -0.05;
-                                PriorsArray[pcount+ndims] = 0.05;
+                         //       PriorsArray[pcount] = -0.05;
+                           //     PriorsArray[pcount+ndims] = 0.05;
 
-				if(p2==0){PriorsArray[pcount] = 0.019; PriorsArray[pcount+ndims] = 0.023;}
-				if(p2==1){PriorsArray[pcount] = 0.023; PriorsArray[pcount+ndims] = 0.029;}
-				if(p2==2){PriorsArray[pcount] = 0.025; PriorsArray[pcount+ndims] = 0.029;}
-				if(p2==3){PriorsArray[pcount] = 0.012; PriorsArray[pcount+ndims] = 0.018;}
-				if(p2==4){PriorsArray[pcount] = 0.031; PriorsArray[pcount+ndims] = 0.038;}
-				if(p2==5){PriorsArray[pcount] = 0.0; PriorsArray[pcount+ndims] = 0.012;}
+			//	if(p2==0){PriorsArray[pcount] = 0.019; PriorsArray[pcount+ndims] = 0.023;}
+			//	if(p2==1){PriorsArray[pcount] = 0.01; PriorsArray[pcount+ndims] = 0.04;}
+			//	if(p2==2){PriorsArray[pcount] = 0.025; PriorsArray[pcount+ndims] = 0.029;}
+			//	if(p2==3){PriorsArray[pcount] = 0.012; PriorsArray[pcount+ndims] = 0.015;}
+			//	if(p2==4){PriorsArray[pcount] = 0.031; PriorsArray[pcount+ndims] = 0.038;}
+			//	if(p2==5){PriorsArray[pcount] = 0.0; PriorsArray[pcount+ndims] = 0.012;}
+
+
+				std::string line;
+                                getline(MeanProfileFile,line);
+                                std::istringstream myStream( line );
+                                std::istream_iterator< double > begin(myStream),eof;
+                                std::vector<double> ProfileVal(begin,eof);
+
+                                PriorsArray[pcount] = ProfileVal[0] -0.005*errscale;
+                                PriorsArray[pcount+ndims] = ProfileVal[0] +0.005*errscale;
 
 
                                 pcount++;
                         }
 			for(int a = 0; a <= FitPrecAmps; a++){ 
 				for(int p2 = 0; p2 < (numProfComponents-1); p2++){
-					PriorsArray[pcount] = -3;
-				        PriorsArray[pcount+ndims] = 2;
+			//		PriorsArray[pcount] = -3;
+			//	        PriorsArray[pcount+ndims] = 2;
+					std::string line;
+					getline(MeanProfileFile,line);
+					std::istringstream myStream( line );
+					std::istream_iterator< double > begin(myStream),eof;
+					std::vector<double> ProfileVal(begin,eof);
+
+					PriorsArray[pcount] = ProfileVal[0] -1;
+					PriorsArray[pcount+ndims] = ProfileVal[0] +1;
+
+					if(PriorsArray[pcount] < -3){PriorsArray[pcount] = -3;}
+					if(PriorsArray[pcount+ndims] < 0){PriorsArray[pcount+ndims] = 0;}
+
 				        pcount++;
 				}
 			}

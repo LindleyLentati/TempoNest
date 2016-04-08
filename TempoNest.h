@@ -83,6 +83,7 @@ typedef struct {
 	std::string *name;
 	int incStep;
 	char *whiteflag;
+	char *GroupNoiseName;
 	int whitemodel;
 	int varyRedCoeff;
 	int varyDMCoeff;

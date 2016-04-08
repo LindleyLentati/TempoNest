@@ -383,6 +383,32 @@ void TNtextOutput(pulsar *psr, int npsr, int newpar, long double *Tempo2Fit, voi
 
                                 }
                         }
+
+
+                std::vector<int>grouppos;
+                std::vector<int>groupflag;
+                std::vector<std::string>groupnames;
+
+               // if(((MNStruct *)context)->numFitEFAC > 1 || ((MNStruct *)context)->numFitEQUAD > 1){
+                        for(int o=0;o<((MNStruct *)context)->pulse[0].nobs;o++){
+                                int found=0;
+                                for (int f=0;f<((MNStruct *)context)->pulse[0].obsn[o].nFlags;f++){
+
+                                        if(strcasecmp(((MNStruct *)context)->pulse[0].obsn[o].flagID[f],((MNStruct *)context)->GroupNoiseName)==0){
+
+                                                if(std::find(groupnames.begin(), groupnames.end(), ((MNStruct *)context)->pulse[0].obsn[o].flagVal[f]) != groupnames.end()) {
+                                                } else {
+
+                                                        grouppos.push_back(o);
+                                                        groupflag.push_back(f);
+                                                        groupnames.push_back(((MNStruct *)context)->pulse[0].obsn[o].flagVal[f]);
+
+                                                }
+                                                found=1;
+                                        }
+
+                                }
+                        }
               //  }
 //        printf("fitcount %i %i\n", fitcount, whitefitcount);	
 	if(incRED != 0 || ((MNStruct *)context)->incDM !=0 ||((MNStruct *)context)->numFitEFAC > 0 || ((MNStruct *)context)->numFitEQUAD > 0){
@@ -1273,7 +1299,7 @@ void TNtextOutput(pulsar *psr, int npsr, int newpar, long double *Tempo2Fit, voi
 	      else if (strcasecmp(str1,"NAME")==0 || strcasecmp(str1,"TEL")==0 || str1[0]=='-')
 		fprintf(fout2,"JUMP %s %s %.14g %d\n",str1,str2,psr[p].jumpVal[i],psr[p].fitJump[i]);
 	    }	
-	printf("end of T2 parms %i \n", whitefitcount);	
+//	printf("end of T2 parms %i \n", whitefitcount);	
 
 	if(((MNStruct *)context)->incStep > 0){
 		for(int i =0; i < ((MNStruct *)context)->incStep; i++){
@@ -1385,7 +1411,7 @@ void TNtextOutput(pulsar *psr, int npsr, int newpar, long double *Tempo2Fit, voi
 		whitefitcount++;
 	  }
 
-	printf("end of White parms %i\n", whitefitcount);
+//	printf("end of White parms %i\n", whitefitcount);
 	if(((MNStruct *)context)->FitLowFreqCutoff > 0){
 		fprintf(fout2, "TNRedFLow %g\n", paramarray[whitefitcount][2]);
 		fprintf(fout2, "TNRedFMid %g\n", 2.0);
@@ -1486,7 +1512,6 @@ void TNtextOutput(pulsar *psr, int npsr, int newpar, long double *Tempo2Fit, voi
 
 
 	for(int g =0; g < ((MNStruct *)context)->incGroupNoise; g++){
-
 		int GrouptoFit = 0;
 		if(((MNStruct *)context)->FitForGroup[g][0] == -1){
 			printf("Result of group: %i %g %i \n", g, paramarray[whitefitcount][2], floor(paramarray[whitefitcount][2]));
@@ -1507,7 +1532,6 @@ void TNtextOutput(pulsar *psr, int npsr, int newpar, long double *Tempo2Fit, voi
 
                 }
 
-
 		double Amp = paramarray[whitefitcount][2];
                 tablefile <<  "Log$_{10}$[Group Noise Amp] \\dotfill & "<< paramarray[whitefitcount][0] <<" $\\pm$ "<< paramarray[whitefitcount][1] <<"  \\\\ \n";
                 whitefitcount++;
@@ -1515,10 +1539,8 @@ void TNtextOutput(pulsar *psr, int npsr, int newpar, long double *Tempo2Fit, voi
                 tablefile <<  "Group Noise Index \\dotfill & "<< paramarray[whitefitcount][0] <<" $\\pm$ "<< paramarray[whitefitcount][1] <<"  \\\\ \n";
                 whitefitcount++;
 		int NC = ((MNStruct *)context)->numFitGroupNoiseCoeff;
-		
-		fprintf(fout2, "TNGroupNoise %s %s %g %g %i\n", ((MNStruct *)context)->whiteflag, ((MNStruct *)context)->pulse[0].obsn[systempos[GrouptoFit]].flagVal[sysflag[GrouptoFit]], Amp, Spec, NC);
-
-
+		printf("TNGroupNoise %s %s %g %g %i\n", ((MNStruct *)context)->GroupNoiseName, ((MNStruct *)context)->pulse[0].obsn[grouppos[GrouptoFit]].flagVal[groupflag[GrouptoFit]], Amp, Spec, NC);	
+		fprintf(fout2, "TNGroupNoise %s %s %g %g %i\n", ((MNStruct *)context)->GroupNoiseName, ((MNStruct *)context)->pulse[0].obsn[grouppos[GrouptoFit]].flagVal[groupflag[GrouptoFit]], Amp, Spec, NC);
 
 
 
