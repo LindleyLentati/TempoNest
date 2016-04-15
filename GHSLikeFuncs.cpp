@@ -80,6 +80,7 @@ void GHSProfileDomainLike(int* ndim,double* x,double* v,double* g);
 void GHSProfileDomainLike2(int* ndim,double* x,double &v,double* g);
 void GetMaxAmps(int ndim, double *MaxAmps);
 void GetMaxSteps(int ndim, double *MaxAmps, double *StepSize, double **SSM);
+void GHSWriteProf(std::string ename);
 
 extern "C" void dsyevr_(char *JOBZ, char *RANGE, char *UPLO, int *N, double *A, int *LDA, double *VL, double *VU, int *IL, int *IU, double *ABSTOL, int *M, double *W, double *Z, int *LDZ, int *ISUPPZ, double *WORK, int *LWORK, int *IWORK, int *LIWORK, int *INFO);
 
@@ -122,6 +123,8 @@ double **GlobalHessian;
 double *GlobalParmSet;
 double *GlobalStepSize;
 
+
+void readextract(std::string ename);
 void assignGHScontext(void *context){
         GHSglobalcontext=context;
 }
@@ -521,7 +524,7 @@ void callGHS(int NBurn, int NSamp, int GHSresume){
 		test_gauss_outfile=fopen(ext_file_name,"w");
 		test_gauss_goutfile=fopen(gext_file_name,"w");
 	}
-	run_guided_hmc(ndim, PrincipalStartPoint, ScaleFactor, max_stp, StepSize, fl_pfx, seed, resume, fb_int, nlp, wrt_ext, nburn, nsamp);
+//	run_guided_hmc(ndim, PrincipalStartPoint, ScaleFactor, max_stp, StepSize, fl_pfx, seed, resume, fb_int, nlp, wrt_ext, nburn, nsamp);
 		
 	if(test_gauss_outfile) fclose(test_gauss_outfile);
 
@@ -535,7 +538,8 @@ void callGHS(int NBurn, int NSamp, int GHSresume){
 
 	
 
-	
+	readextract(ext_file_name);
+	GHSWriteProf(ext_file_name);
 	OutputMLFiles(ndim, GlobalMaxLikeVec, GlobalMaxLike, profdims+epochdims+epochpriordims);
 
 	delete[] StartPoint;
@@ -1576,18 +1580,40 @@ void GHSProfileDomainLike(int* ndim, double* PrinCube, double* likelihood, doubl
 			}
 
 
+			if(dotime == 2){
+				gettimeofday(&tval_after, NULL);
+				timersub(&tval_after, &tval_before, &tval_resultone);
+				printf("Time elapsed,  Up to LA: %ld.%06ld\n", (long int)tval_resultone.tv_sec, (long int)tval_resultone.tv_usec);
+				gettimeofday(&tval_before, NULL);
+			}
 			
+			double *SparseProfileModVec = new double[((MNStruct *)GHSglobalcontext)->SparseNBin];
+			double *SparseJitterProfileModVec = new double[((MNStruct *)GHSglobalcontext)->SparseNBin];
+
 
 			if(totalCoeffForMult > 0){
-				vector_dgemv(((MNStruct *)GHSglobalcontext)->InterpolatedShapeletsVec[InterpBin], ProfileModCoeffs,ProfileModVec,Nbins,totalCoeffForMult,'N');
-				vector_dgemv(((MNStruct *)GHSglobalcontext)->InterpolatedJitterProfileVec[InterpBin], ProfileModCoeffs,ProfileJitterModVec,Nbins,totalCoeffForMult,'N');         
+
+
+				//vector_dgemv(((MNStruct *)GHSglobalcontext)->InterpolatedShapeletsVec[InterpBin], ProfileModCoeffs,ProfileModVec,Nbins,totalCoeffForMult,'N');
+				//vector_dgemv(((MNStruct *)GHSglobalcontext)->InterpolatedJitterProfileVec[InterpBin], ProfileModCoeffs,ProfileJitterModVec,Nbins,totalCoeffForMult,'N');         
+
+				vector_dgemv(((MNStruct *)GHSglobalcontext)->SparseShapeletsVec[InterpBin], ProfileModCoeffs, SparseProfileModVec,((MNStruct *)GHSglobalcontext)->SparseNBin, totalCoeffForMult,'N');
+				vector_dgemv(((MNStruct *)GHSglobalcontext)->SparseJitterProfileVec[InterpBin], ProfileModCoeffs, SparseJitterProfileModVec,((MNStruct *)GHSglobalcontext)->SparseNBin, totalCoeffForMult,'N');
+
+				for(int i = 0; i < ((MNStruct *)GHSglobalcontext)->SparseNBin; i++){
+					ProfileModVec[ ((MNStruct *)GHSglobalcontext)->SparseMap[i]] = SparseProfileModVec[i];
+					ProfileJitterModVec[ ((MNStruct *)GHSglobalcontext)->SparseMap[i]] = SparseJitterProfileModVec[i];
+				}
+
 				if(((MNStruct *)GHSglobalcontext)->FitLinearProfileWidth == 1 || ((MNStruct *)GHSglobalcontext)->incWidthEvoTime > 0){
                                         vector_dgemv(((MNStruct *)GHSglobalcontext)->InterpolatedWidthProfileVec[InterpBin], ProfileModCoeffs,ProfileWidthModVec,Nbins,totalCoeffForMult,'N');
                                 }
-
+				
 
 			}
 
+			delete[] SparseProfileModVec;			
+			delete[] SparseJitterProfileModVec;
 
 	
 
@@ -1619,7 +1645,7 @@ void GHSProfileDomainLike(int* ndim, double* PrinCube, double* likelihood, doubl
 
 				
 
-				double widthTerm = (ProfileWidthModVec[Nj] + ((MNStruct *)GHSglobalcontext)->InterpolatedWidthProfile[InterpBin][Nj])*(LinearProfileWidth); 
+				double widthTerm = 0;//(ProfileWidthModVec[Nj] + ((MNStruct *)GHSglobalcontext)->InterpolatedWidthProfile[InterpBin][Nj])*(LinearProfileWidth); 
 
 				for(int ew = 0; ew < ((MNStruct *)GHSglobalcontext)->incWidthEvoTime; ew++){
 					widthTerm += (ProfileWidthModVec[Nj] + ((MNStruct *)GHSglobalcontext)->InterpolatedWidthProfile[InterpBin][Nj])*LinearWidthEvoTime[ew]*pow( (((MNStruct *)GHSglobalcontext)->pulse->obsn[nTOA].bat - ((MNStruct *)GHSglobalcontext)->ProfEvoTimeRef)/365.25, ew+1);
@@ -1627,10 +1653,10 @@ void GHSProfileDomainLike(int* ndim, double* PrinCube, double* likelihood, doubl
 
 
 
-				double evoWidthTerm = 0;//((MNStruct *)GHSglobalcontext)->InterpolatedWidthProfile[InterpBin][Nj]*EvoProfileWidth*freqscale;
-				double SNWidthTerm = 0;//((MNStruct *)GHSglobalcontext)->InterpolatedWidthProfile[InterpBin][Nj]*EvoEnergyProfileWidth*SNscale;
+			//	double evoWidthTerm = 0;//((MNStruct *)GHSglobalcontext)->InterpolatedWidthProfile[InterpBin][Nj]*EvoProfileWidth*freqscale;
+			//	double SNWidthTerm = 0;//((MNStruct *)GHSglobalcontext)->InterpolatedWidthProfile[InterpBin][Nj]*EvoEnergyProfileWidth*SNscale;
 
-				shapevec[j] = ((MNStruct *)GHSglobalcontext)->InterpolatedMeanProfile[InterpBin][Nj] + widthTerm + ProfileModVec[Nj] + evoWidthTerm + SNWidthTerm;
+				shapevec[j] = ((MNStruct *)GHSglobalcontext)->InterpolatedMeanProfile[InterpBin][Nj] + widthTerm + ProfileModVec[Nj];// + evoWidthTerm + SNWidthTerm;
 //				if(t==0 || t == 10 || t == 100 || t == 300){printf("Shape: %i %i %g\n", t, j, shapevec[j]);}
 
 			}
@@ -1641,17 +1667,17 @@ void GHSProfileDomainLike(int* ndim, double* PrinCube, double* likelihood, doubl
 				int Nj =  j-Nbins+ZeroWrap;
 
 
-				double widthTerm = (ProfileWidthModVec[Nj] + ((MNStruct *)GHSglobalcontext)->InterpolatedWidthProfile[InterpBin][Nj])*(LinearProfileWidth); 
+				double widthTerm = 0;//(ProfileWidthModVec[Nj] + ((MNStruct *)GHSglobalcontext)->InterpolatedWidthProfile[InterpBin][Nj])*(LinearProfileWidth); 
 
 				for(int ew = 0; ew < ((MNStruct *)GHSglobalcontext)->incWidthEvoTime; ew++){
 					widthTerm += (ProfileWidthModVec[Nj] + ((MNStruct *)GHSglobalcontext)->InterpolatedWidthProfile[InterpBin][Nj])*LinearWidthEvoTime[ew]*pow( (((MNStruct *)GHSglobalcontext)->pulse->obsn[nTOA].bat - ((MNStruct *)GHSglobalcontext)->ProfEvoTimeRef)/365.25, ew+1);
 				}
 
  
-				double evoWidthTerm = 0;// ((MNStruct *)GHSglobalcontext)->InterpolatedWidthProfile[InterpBin][Nj]*EvoProfileWidth*freqscale;
-				double SNWidthTerm = 0;//((MNStruct *)GHSglobalcontext)->InterpolatedWidthProfile[InterpBin][Nj]*EvoEnergyProfileWidth*SNscale;
+		//		double evoWidthTerm = 0;// ((MNStruct *)GHSglobalcontext)->InterpolatedWidthProfile[InterpBin][Nj]*EvoProfileWidth*freqscale;
+		//		double SNWidthTerm = 0;//((MNStruct *)GHSglobalcontext)->InterpolatedWidthProfile[InterpBin][Nj]*EvoEnergyProfileWidth*SNscale;
 
-				shapevec[j] = ((MNStruct *)GHSglobalcontext)->InterpolatedMeanProfile[InterpBin][Nj] + widthTerm + ProfileModVec[Nj] + evoWidthTerm + SNWidthTerm;
+				shapevec[j] = ((MNStruct *)GHSglobalcontext)->InterpolatedMeanProfile[InterpBin][Nj] + widthTerm + ProfileModVec[Nj];// + evoWidthTerm + SNWidthTerm;
 //				if(t==0 || t == 10 || t == 100 || t == 300){printf("Shape: %i %i %g\n", t, j, shapevec[j]);}
 
 			}
@@ -1672,7 +1698,7 @@ void GHSProfileDomainLike(int* ndim, double* PrinCube, double* likelihood, doubl
 
 			      
 			Chisq = 0;
-
+	
 
 			double noise = ProfileSigma*ProfileSigma;
 			double OffPulsedetN = log(noise);
@@ -1695,6 +1721,9 @@ void GHSProfileDomainLike(int* ndim, double* PrinCube, double* likelihood, doubl
 			}
 			
 
+			double BaseGrad = 0;
+			double AmpGrad = 0;
+	
 			int startpoint = 0;
 			int stoppoint = Nbins - ZeroWrap;
 
@@ -1713,12 +1742,12 @@ void GHSProfileDomainLike(int* ndim, double* PrinCube, double* likelihood, doubl
 				NResVec[i] = gres*noise;
 				Chisq +=  gres*NResVec[i];
 
+				BaseGrad -= gres*noise; //NResVec[i];
+				AmpGrad -= shapevec[Nj]*NResVec[i];
 
-				grad[nTOA*perProfDims + 0] +=   -NResVec[i]; //Baseline
-				grad[nTOA*perProfDims + 1] +=   -shapevec[Nj]*NResVec[i]; //Amp
-				grad[nTOA*perProfDims + 2] +=   -gres*NResVec[i]/ProfileSigma + 1.0/ProfileSigma;    //Sigma
-
-				//if(ProfNbins  == 256)printf("Make NRVec %i %i %i %i %i %i %.10g %.10g %.10g \n", startpoint+ZeroOffset, ZeroOffset, stoppoint, t, i, Nj, double(Nj)/BinRatio, (double)((MNStruct *)GHSglobalcontext)->ProfileData[nTOA][Nj/BinRatio][1], ProfileAmp*shapevec[Nj] + ProfileBaseline);
+			//	grad[nTOA*perProfDims + 0] +=   -NResVec[i]; //Baseline
+			//	grad[nTOA*perProfDims + 1] +=   -shapevec[Nj]*NResVec[i]; //Amp
+			//	grad[nTOA*perProfDims + 2] +=   -gres*NResVec[i]/ProfileSigma + 1.0/ProfileSigma;    //Sigma
 
 
 			}
@@ -1738,16 +1767,28 @@ void GHSProfileDomainLike(int* ndim, double* PrinCube, double* likelihood, doubl
 				NResVec[i] = gres*noise;
 				Chisq +=  gres*NResVec[i];
 
+				BaseGrad -= gres*noise; //NResVec[i];
+				AmpGrad -= shapevec[Nj]*NResVec[i];
 
-				grad[nTOA*perProfDims + 0] +=   -NResVec[i]; //Baseline
-				grad[nTOA*perProfDims + 1] +=   -shapevec[Nj]*NResVec[i]; //Amp
-				grad[nTOA*perProfDims + 2] +=   -gres*NResVec[i]/ProfileSigma + 1.0/ProfileSigma;    //Sigma
 
-				//if(ProfNbins == 256)printf("Make NRVec %i %i %i %i %i %i %.10g %.10g %.10g \n", startpoint, ZeroOffset, stoppoint, t, i, Nj, double(Nj)/BinRatio, (double)((MNStruct *)GHSglobalcontext)->ProfileData[nTOA][Nj/BinRatio][1], ProfileAmp*shapevec[Nj] + ProfileBaseline);
+			//	grad[nTOA*perProfDims + 0] +=   -NResVec[i]; //Baseline
+//				grad[nTOA*perProfDims + 1] +=   -shapevec[Nj]*NResVec[i]; //Amp
+//				grad[nTOA*perProfDims + 2] +=   -gres*NResVec[i]/ProfileSigma + 1.0/ProfileSigma;    //Sigma
+
 
 			}
+			double NoiseGrad = (-Chisq+ProfNbins)/ProfileSigma;
 
+			 grad[nTOA*perProfDims + 0] = BaseGrad;
+			 grad[nTOA*perProfDims + 1] = AmpGrad;
+			 grad[nTOA*perProfDims + 2] = NoiseGrad;
 
+			if(dotime == 2){
+				gettimeofday(&tval_after, NULL);
+				timersub(&tval_after, &tval_before, &tval_resultone);
+				printf("Time elapsed,  Have gres: %ld.%06ld %i %i %g %g %g %g\n", (long int)tval_resultone.tv_sec, (long int)tval_resultone.tv_usec, nTOA, ProfNbins, (-Chisq+ProfNbins)/ProfileSigma, BaseGrad, AmpGrad, Chisq);
+				gettimeofday(&tval_before, NULL);
+			}
 
 			///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 			//////////////////////////////////////////////////////Get EpochGrads///////////////////////////////////////////////////////////////////////////
@@ -1831,11 +1872,36 @@ void GHSProfileDomainLike(int* ndim, double* PrinCube, double* likelihood, doubl
 			}
 
 
+			if(dotime == 2){
+				gettimeofday(&tval_after, NULL);
+				timersub(&tval_after, &tval_before, &tval_resultone);
+				printf("Time elapsed,  UptoShape: %ld.%06ld\n", (long int)tval_resultone.tv_sec, (long int)tval_resultone.tv_usec);
+				gettimeofday(&tval_before, NULL);
+			}
 			if(totalCoeffForMult > 0){
 
-				double *GradResVec = new double[totalCoeffForMult];
+				double *SparseNResVec = new double[((MNStruct *)GHSglobalcontext)->SparseNBin];
 
-				vector_dgemv(((MNStruct *)GHSglobalcontext)->InterpolatedShapeletsVec[InterpBin], NResVec,GradResVec,Nbins,totalCoeffForMult,'T');
+				double *GradResVec = new double[totalCoeffForMult];
+				//double *TempGradResVec = new double[totalCoeffForMult];
+                                for(int i = 0; i < ((MNStruct *)GHSglobalcontext)->SparseNBin; i++){
+                                        SparseNResVec[i] = NResVec[((MNStruct *)GHSglobalcontext)->SparseMap[i]];
+                                }
+
+
+				vector_dgemv(((MNStruct *)GHSglobalcontext)->SparseShapeletsVec[InterpBin], SparseNResVec, GradResVec, ((MNStruct *)GHSglobalcontext)->SparseNBin, totalCoeffForMult,'T');
+
+
+
+
+				delete[] SparseNResVec;			
+
+		//		vector_dgemv(((MNStruct *)GHSglobalcontext)->InterpolatedShapeletsVec[InterpBin], NResVec,GradResVec,Nbins,totalCoeffForMult,'T');
+
+		//		for(int i = 0; i < totalCoeffForMult; i++){
+			//		printf("Grad comp: %i %g %g \n", i, TempGradResVec[i], GradResVec[i]);
+				//}
+				//delete[] TempGradResVec;
 
 				for(int p = 0; p < ((MNStruct *)GHSglobalcontext)->NProfileEvoPoly+1; p++){
 
@@ -1897,7 +1963,7 @@ void GHSProfileDomainLike(int* ndim, double* PrinCube, double* likelihood, doubl
 
 
 
-			if(dotime == 2){
+			if(dotime == 3){
 				gettimeofday(&tval_after, NULL);
 				timersub(&tval_after, &tval_before, &tval_resultone);
 				printf("Time elapsed,  Up to LA: %ld.%06ld\n", (long int)tval_resultone.tv_sec, (long int)tval_resultone.tv_usec);
@@ -7044,3 +7110,442 @@ void GHSProfileDomainLike2(int* ndim, double* PrinCube, double &likelihood, doub
 	
 }
 
+void readextract(std::string ename){
+
+        int number_of_lines = 0;
+
+        std::ifstream checkfile;
+        std::string checkname;
+        checkfile.open(ename.c_str());
+        std::string line;
+        while (getline(checkfile, line))
+                ++number_of_lines;
+
+        checkfile.close();
+
+	std::ifstream summaryfile;
+
+
+	summaryfile.open(ename.c_str());
+
+
+
+//	printf("Getting ML \n");
+	double maxlike = -1.0*pow(10.0,10);
+	for(int i=0;i<number_of_lines;i++){
+
+		std::string line;
+		getline(summaryfile,line);
+		std::istringstream myStream( line );
+                std::istream_iterator< double > begin(myStream),eof;
+                std::vector<double> paramlist(begin,eof);
+
+		int ndim=paramlist.size()-1;
+
+		double like = paramlist[ndim];
+		int start = 3*((MNStruct *)GHSglobalcontext)->TotalProfiles;
+		if(i > number_of_lines-100 && like > maxlike){
+			maxlike = like;
+			 for(int i = 0; i < ndim; i++){
+				GlobalMaxLikeVec[start+i] = paramlist[i];
+
+                	 }
+		}
+
+	}
+	summaryfile.close();
+
+}
+
+
+
+
+
+
+void GHSWriteProf(std::string ename){
+
+
+        int number_of_lines = 0;
+
+        std::ifstream checkfile;
+        std::string checkname;
+        checkfile.open(ename.c_str());
+        std::string line;
+        while (getline(checkfile, line))
+                ++number_of_lines;
+
+        checkfile.close();
+
+	std::ifstream summaryfile;
+
+
+	summaryfile.open(ename.c_str());
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////  
+/////////////////////////Get dimensionality//////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////
+
+
+        int perProfDims = ((MNStruct *)GHSglobalcontext)->GHSperProfDims;
+        int DimsPerEpoch = ((MNStruct *)GHSglobalcontext)->GHSperEpochDims;
+        int epochpriordims = ((MNStruct *)GHSglobalcontext)->GHSepochpriordims;
+        int globaldims = ((MNStruct *)GHSglobalcontext)->GHSglobaldims;
+
+
+	int profdims = ((MNStruct *)GHSglobalcontext)->TotalProfiles*perProfDims;	
+	int epochdims = ((MNStruct *)GHSglobalcontext)->numProfileEpochs*DimsPerEpoch;
+	
+	int globalparams = globaldims;
+
+/////////////////////////////////////////////////////////////////////////////////////////////  
+/////////////////////////Profile Params//////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////
+
+
+		double chanfreq[3];
+		chanfreq[0] = 700;
+		chanfreq[1] = 1400;
+		chanfreq[2] = 2800;
+
+	int NEpochs = ((MNStruct *)GHSglobalcontext)->numProfileEpochs;
+	int TotalProfs = 0;
+	for(int ep = 0; ep < NEpochs; ep++){ TotalProfs +=  ((MNStruct *)GHSglobalcontext)->numChanPerInt[ep]; }
+
+
+
+
+	int maxshapecoeff = 0;
+	int totshapecoeff = ((MNStruct *)GHSglobalcontext)->totshapecoeff; 
+
+	int *numcoeff= new int[((MNStruct *)GHSglobalcontext)->numProfComponents];
+	for(int i = 0; i < ((MNStruct *)GHSglobalcontext)->numProfComponents; i++){
+		numcoeff[i] =  ((MNStruct *)GHSglobalcontext)->numshapecoeff[i];
+	}
+
+	
+
+	int *numEvoCoeff = ((MNStruct *)GHSglobalcontext)->numEvoCoeff;
+	int totalEvoCoeff = ((MNStruct *)GHSglobalcontext)->totalEvoCoeff;
+
+	int *numEvoFitCoeff = ((MNStruct *)GHSglobalcontext)->numEvoFitCoeff;
+	int totalEvoFitCoeff = ((MNStruct *)GHSglobalcontext)->totalEvoFitCoeff;
+
+	int *numProfileFitCoeff = ((MNStruct *)GHSglobalcontext)->numProfileFitCoeff;
+	int totalProfileFitCoeff = ((MNStruct *)GHSglobalcontext)->totalProfileFitCoeff;
+
+
+
+	int totalCoeffForMult = 0;
+	int *NumCoeffForMult = new int[((MNStruct *)GHSglobalcontext)->numProfComponents];
+	for(int i = 0; i < ((MNStruct *)GHSglobalcontext)->numProfComponents; i++){
+		NumCoeffForMult[i] = 0;
+		if(numEvoCoeff[i] > NumCoeffForMult[i]){NumCoeffForMult[i]=numEvoCoeff[i];}
+		if(numProfileFitCoeff[i] > NumCoeffForMult[i]){NumCoeffForMult[i]=numProfileFitCoeff[i];}
+		totalCoeffForMult += NumCoeffForMult[i];
+	}
+
+
+	double **EvoCoeffs=new double*[((MNStruct *)GHSglobalcontext)->NProfileEvoPoly]; 
+	for(int i = 0; i < ((MNStruct *)GHSglobalcontext)->NProfileEvoPoly; i++){EvoCoeffs[i] = new double[totalEvoCoeff];}
+
+	double ProfileFitCoeffs[totalProfileFitCoeff];
+ 	double *ProfileModCoeffs = new double[totalCoeffForMult];
+	
+
+
+	int GlobalNBins = (int)((MNStruct *)GHSglobalcontext)->LargestNBins;
+	int Nbins = GlobalNBins;
+
+
+	double *shapevec  = new double[Nbins];
+	double *ProfileModVec = new double[Nbins]();
+
+	double **AverageProfile = new double*[3];
+	double **AverageErrs = new double*[3];
+
+	for(int i = 0; i < 3; i++){
+		AverageProfile[i]= new double[Nbins]();
+		AverageErrs[i] = new double[Nbins]();
+	}
+
+	for(int i=0;i<number_of_lines;i++){
+
+		std::string line;
+		getline(summaryfile,line);
+		std::istringstream myStream( line );
+                std::istream_iterator< double > begin(myStream),eof;
+                std::vector<double> Cube(begin,eof);
+
+		int ndim=Cube.size()-1;
+
+		int pcount = ((MNStruct *)GHSglobalcontext)->numFitTiming + ((MNStruct *)GHSglobalcontext)->numFitJumps;
+		for(int p = 0; p < ((MNStruct *)GHSglobalcontext)->NProfileEvoPoly; p++){	
+			for(int i =0; i < totalEvoCoeff; i++){
+				EvoCoeffs[p][i]=((MNStruct *)GHSglobalcontext)->MeanProfileEvo[p][i];
+				//printf("loaded evo coeff %i %g \n", i, EvoCoeffs[i]);
+			}
+		}
+
+
+		for(int i =0; i < totalProfileFitCoeff; i++){
+			
+			ProfileFitCoeffs[i]= Cube[pcount];
+			pcount++;
+		}
+
+
+		for(int p = 0; p < ((MNStruct *)GHSglobalcontext)->NProfileEvoPoly; p++){	
+			int cpos = 0;
+			for(int c = 0; c < ((MNStruct *)GHSglobalcontext)->numProfComponents; c++){
+				for(int i =0; i < numEvoFitCoeff[c]; i++){
+					//printf("Evo: %i %g %g \n", i, EvoCoeffs[p][i+cpos] ,Cube[pcount]);
+					EvoCoeffs[p][i+cpos] += Cube[pcount];
+					pcount++;
+				}
+				cpos += numEvoCoeff[c];
+			
+			}
+		}
+
+
+		///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+		//////////////////////////////////////////////////////Add in any Profile Changes///////////////////////////////////////////////////////////////
+		///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+		for(int f = 0; f< 3; f++){
+
+			double reffreq = ((MNStruct *)GHSglobalcontext)->EvoRefFreq;
+			double freqdiff =  (chanfreq[f] - reffreq)/1000.0;
+			double freqscale = freqdiff;
+
+			for(int i =0; i < totalCoeffForMult; i++){
+				ProfileModCoeffs[i]=0;	
+			}				
+
+			int cpos = 0;
+			int epos = 0;
+			int fpos = 0;
+			int spos = 0;
+			for(int c = 0; c < ((MNStruct *)GHSglobalcontext)->numProfComponents; c++){
+				
+				for(int i =0; i < numProfileFitCoeff[c]; i++){
+					ProfileModCoeffs[i+cpos] += ProfileFitCoeffs[i+fpos];
+
+				}
+				for(int p = 0; p < ((MNStruct *)GHSglobalcontext)->NProfileEvoPoly; p++){	
+					for(int i =0; i < numEvoCoeff[c]; i++){
+						ProfileModCoeffs[i+cpos] += EvoCoeffs[p][i+epos]*pow(freqscale, p+1);						
+					}
+				}
+
+
+				cpos += NumCoeffForMult[c];
+				epos += numEvoCoeff[c];
+				fpos += numProfileFitCoeff[c];	
+			}
+			
+
+
+
+
+			vector_dgemv(((MNStruct *)GHSglobalcontext)->InterpolatedShapeletsVec[0], ProfileModCoeffs,ProfileModVec,Nbins,totalCoeffForMult,'N');
+				
+
+
+			///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+			//////////////////////////////////////////////////////Fill Arrays with interpolated state//////////////////////////////////////////////////////
+			///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+			int NumWholeBinInterpOffset = Nbins/2;	
+			int ZeroWrap = GHSWrap(0 + NumWholeBinInterpOffset, 0, Nbins-1);
+
+
+
+			for(int j =0; j < Nbins-ZeroWrap; j++){
+
+				double NewIndex = (j + NumWholeBinInterpOffset);
+				int Nj =  ZeroWrap+j;
+
+
+				shapevec[j] = ((MNStruct *)GHSglobalcontext)->InterpolatedMeanProfile[0][Nj] + ProfileModVec[Nj];// + evoWidthTerm + SNWidthTerm;
+
+			}
+
+			for(int j = Nbins-ZeroWrap; j < Nbins; j++){
+
+				double NewIndex = (j + NumWholeBinInterpOffset);
+				int Nj =  j-Nbins+ZeroWrap;
+
+				shapevec[j] = ((MNStruct *)GHSglobalcontext)->InterpolatedMeanProfile[0][Nj] + ProfileModVec[Nj];// + evoWidthTerm + SNWidthTerm;
+
+			}
+
+			for(int j = 0; j < Nbins; j++){
+				AverageProfile[f][j] += shapevec[j];
+			}
+	
+		}
+	}
+
+	for(int f = 0; f < 3; f++){
+		for(int j = 0; j < Nbins; j++){
+			AverageProfile[f][j] /= number_of_lines;
+
+			printf("Mean: %i %i %g \n", f, j, AverageProfile[f][j]);
+		}
+	}
+
+	summaryfile.close();
+	summaryfile.open(ename.c_str());
+
+	for(int i=0;i<number_of_lines;i++){
+
+		std::string line;
+		getline(summaryfile,line);
+		std::istringstream myStream( line );
+                std::istream_iterator< double > begin(myStream),eof;
+                std::vector<double> Cube(begin,eof);
+
+		int ndim=Cube.size()-1;
+
+		int pcount = ((MNStruct *)GHSglobalcontext)->numFitTiming + ((MNStruct *)GHSglobalcontext)->numFitJumps;
+		for(int p = 0; p < ((MNStruct *)GHSglobalcontext)->NProfileEvoPoly; p++){	
+			for(int i =0; i < totalEvoCoeff; i++){
+				EvoCoeffs[p][i]=((MNStruct *)GHSglobalcontext)->MeanProfileEvo[p][i];
+				//printf("loaded evo coeff %i %g \n", i, EvoCoeffs[i]);
+			}
+		}
+
+
+		for(int i =0; i < totalProfileFitCoeff; i++){
+			
+			ProfileFitCoeffs[i]= Cube[pcount];
+			pcount++;
+		}
+
+
+		for(int p = 0; p < ((MNStruct *)GHSglobalcontext)->NProfileEvoPoly; p++){	
+			int cpos = 0;
+			for(int c = 0; c < ((MNStruct *)GHSglobalcontext)->numProfComponents; c++){
+				for(int i =0; i < numEvoFitCoeff[c]; i++){
+					//printf("Evo: %i %g %g \n", i, EvoCoeffs[p][i+cpos] ,Cube[pcount]);
+					EvoCoeffs[p][i+cpos] += Cube[pcount];
+					pcount++;
+				}
+				cpos += numEvoCoeff[c];
+			
+			}
+		}
+
+
+		///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+		//////////////////////////////////////////////////////Add in any Profile Changes///////////////////////////////////////////////////////////////
+		///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+		for(int f = 0; f< 3; f++){
+
+			double reffreq = ((MNStruct *)GHSglobalcontext)->EvoRefFreq;
+			double freqdiff =  (chanfreq[f] - reffreq)/1000.0;
+			double freqscale = freqdiff;
+
+			for(int i =0; i < totalCoeffForMult; i++){
+				ProfileModCoeffs[i]=0;	
+			}				
+
+			int cpos = 0;
+			int epos = 0;
+			int fpos = 0;
+			int spos = 0;
+			for(int c = 0; c < ((MNStruct *)GHSglobalcontext)->numProfComponents; c++){
+				
+				for(int i =0; i < numProfileFitCoeff[c]; i++){
+					ProfileModCoeffs[i+cpos] += ProfileFitCoeffs[i+fpos];
+
+				}
+				for(int p = 0; p < ((MNStruct *)GHSglobalcontext)->NProfileEvoPoly; p++){	
+					for(int i =0; i < numEvoCoeff[c]; i++){
+						ProfileModCoeffs[i+cpos] += EvoCoeffs[p][i+epos]*pow(freqscale, p+1);						
+					}
+				}
+
+
+				cpos += NumCoeffForMult[c];
+				epos += numEvoCoeff[c];
+				fpos += numProfileFitCoeff[c];	
+			}
+			
+
+
+
+
+			vector_dgemv(((MNStruct *)GHSglobalcontext)->InterpolatedShapeletsVec[0], ProfileModCoeffs,ProfileModVec,Nbins,totalCoeffForMult,'N');
+				
+
+
+			///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+			//////////////////////////////////////////////////////Fill Arrays with interpolated state//////////////////////////////////////////////////////
+			///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+			int NumWholeBinInterpOffset = Nbins/2;	
+			int ZeroWrap = GHSWrap(0 + NumWholeBinInterpOffset, 0, Nbins-1);
+
+
+
+			for(int j =0; j < Nbins-ZeroWrap; j++){
+
+				double NewIndex = (j + NumWholeBinInterpOffset);
+				int Nj =  ZeroWrap+j;
+
+
+				shapevec[j] = ((MNStruct *)GHSglobalcontext)->InterpolatedMeanProfile[0][Nj] + ProfileModVec[Nj];// + evoWidthTerm + SNWidthTerm;
+
+			}
+
+			for(int j = Nbins-ZeroWrap; j < Nbins; j++){
+
+				double NewIndex = (j + NumWholeBinInterpOffset);
+				int Nj =  j-Nbins+ZeroWrap;
+
+				shapevec[j] = ((MNStruct *)GHSglobalcontext)->InterpolatedMeanProfile[0][Nj] + ProfileModVec[Nj];// + evoWidthTerm + SNWidthTerm;
+
+			}
+
+			for(int j = 0; j < Nbins; j++){
+				AverageErrs[f][j] += pow(shapevec[j]-AverageProfile[f][j],2);
+			}
+	
+		}
+	}
+
+	for(int f = 0; f < 3; f++){
+		for(int j = 0; j < Nbins; j++){
+			AverageErrs[f][j] = sqrt(AverageErrs[f][j]/number_of_lines);
+
+			printf("Mean: %i %i %g %g\n", f, j, AverageProfile[f][j], AverageErrs[f][j]);
+		}
+	}
+
+
+	for(int f = 0; f < 3; f++){
+		double max = 0;
+		for(int j = 0; j < Nbins; j++){
+			if(AverageProfile[f][j] > max){max = AverageProfile[f][j];}
+		}
+		for(int j = 0; j < Nbins; j++){
+			AverageErrs[f][j] /= max;
+			AverageProfile[f][j] /= max;
+		}
+
+	}
+	for(int f = 0; f < 3; f++){
+		for(int j = 0; j < Nbins; j++){
+
+			printf("Mean: %i %i %g %g\n", f, j, AverageProfile[f][j], AverageErrs[f][j]);
+		}
+	}
+}

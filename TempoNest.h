@@ -153,6 +153,10 @@ typedef struct {
 
 
 	//double ***InterpolatedShapelets;
+	int SparseNBin;
+	int *SparseMap;
+	double **SparseShapeletsVec;
+	double **SparseJitterProfileVec;
 	double **InterpolatedShapeletsVec;
 	double **InterpolatedJitterProfileVec;
 	double **InterpolatedWidthProfileVec;
@@ -262,6 +266,7 @@ void outputProfile(int ndim);
 
 void TNtextOutput(pulsar *psr, int npsr, int newpar, long double *Tempo2Fit, void *context, int incRED, int ndims, std::vector<double> paramlist, double Evidence, int MarginTime, int MarginJumps, int doLinear, std::string longname, double **paramarray);
 void getmaxlikeDM(pulsar *pulse,std::string longname, int ndim, void *context, double **paramsarray);
+void getProfileNoiseLevels(void *context);
 
 
 double  AllTOALike(int &ndim, double *Cube, int &npars, double *DerivedParams, void *context);

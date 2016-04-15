@@ -960,7 +960,7 @@ void getPhysDVector(void *context, double **TNDM, int Nobs, int *TimingGradientS
 		double average = 0;
 		double sign2 = 0;
 		for(int i=0; i < ((MNStruct *)context)->pulse->nobs; i++) {	
-			if(i<5){printf("Vecs: %i %i %.16g %.16g %.16g\n", p, i, (double)((MNStruct *)context)->pulse->obsn[i].bat, (double)((MNStruct *)context)->pulse->obsn[i].residual-oldRes[i],TNDM[i][p]);}
+			//if(i<1000000000){printf("Vecs: %i %i %.16g %.16g %.16g\n", p, i, (double)((MNStruct *)context)->pulse->obsn[i].bat, (double)((MNStruct *)context)->pulse->obsn[i].residual-oldRes[i],TNDM[i][p]);}
 			sign2 += double(((MNStruct *)context)->pulse->obsn[i].residual-oldRes[i])*(TNDM[i][p]-(TNDM[0][p]));
 			withbatsSTD1 += (((MNStruct *)context)->pulse->obsn[i].residual-oldRes[i])*(((MNStruct *)context)->pulse->obsn[i].residual-oldRes[i]);
 			withbatsSTD2 += TNDM[i][p]*TNDM[i][p];
@@ -1061,7 +1061,7 @@ void getPhysDVector(void *context, double **TNDM, int Nobs, int *TimingGradientS
 
 		for(int j=0;j<((MNStruct *)context)->pulse->nobs;j++){
 			for(int k=0;k<numToFit;k++){
-				if(k==0)printf("Lin2: %i %i %g %g %g\n", j, k, TNDM[j][k], TempTNDM[j + k*((MNStruct *)context)->pulse->nobs], TempTNDM[j + k*((MNStruct *)context)->pulse->nobs]*ErrScale[k]);
+//				if(k==0)printf("Lin2: %i %i %g %g %g\n", j, k, TNDM[j][k], TempTNDM[j + k*((MNStruct *)context)->pulse->nobs], TempTNDM[j + k*((MNStruct *)context)->pulse->nobs]*ErrScale[k]);
 				TNDM[j][k]=TempTNDM[j + k*((MNStruct *)context)->pulse->nobs]*ErrScale[k];
 			}
 		}
@@ -2417,4 +2417,86 @@ void Tscrunch(void *globalcontext, double TemplateChanWidth){
 }
 
 
+void getProfileNoiseLevels(void *context){
 
+
+	for(int i = 0; i < ((MNStruct *)context)->pulse->nobs; i++){
+
+		int ProfNbins = (int)((MNStruct *)context)->ProfileInfo[i][1];
+		int NoiseBins = 100;
+	
+
+		double minnoise = pow(10,100);	
+		for(int j = 0; j < ProfNbins-NoiseBins; j++){
+			double meannoise=0;
+			for(int k = 0; k < NoiseBins; k++){
+				meannoise += (double)((MNStruct *)context)->ProfileData[i][j+k][1];
+			}
+			meannoise /= NoiseBins;
+
+			double stdnoise = 0;
+			for(int k = 0; k < NoiseBins; k++){
+                                stdnoise += pow((double)((MNStruct *)context)->ProfileData[i][j+k][1]-meannoise, 2);
+                        }
+
+			stdnoise = sqrt(stdnoise/NoiseBins);
+			if(stdnoise < minnoise){minnoise = stdnoise;}
+		}
+
+	//	printf("min noise for obs %i is %g \n", i, minnoise);
+
+
+		std::vector<double> noiselevels;
+		std::vector<double> meanlevels;
+                for(int j = 0; j < ProfNbins-NoiseBins; j++){
+                        double meannoise=0;
+                        for(int k = 0; k < NoiseBins; k++){
+                                meannoise += (double)((MNStruct *)context)->ProfileData[i][j+k][1];
+                        }
+                        meannoise /= NoiseBins;
+
+                        double stdnoise = 0;
+                        for(int k = 0; k < NoiseBins; k++){
+                                stdnoise += pow((double)((MNStruct *)context)->ProfileData[i][j+k][1]-meannoise, 2);
+                        }
+
+                        stdnoise = sqrt(stdnoise/NoiseBins);
+                        if(stdnoise < minnoise*3){noiselevels.push_back(stdnoise); meanlevels.push_back(meannoise);}
+                }
+
+
+		sort(noiselevels.begin(), noiselevels.end());
+		sort(meanlevels.begin(), meanlevels.end());
+
+		double mediannoise = 0;
+
+		  if(noiselevels.size()  % 2 == 0){
+		      mediannoise = (noiselevels[noiselevels.size() / 2 - 1] + noiselevels[noiselevels.size() / 2]) / 2;
+		  }
+		  else{
+		      mediannoise = noiselevels[noiselevels.size() / 2];
+		  }
+	
+		double medianmean = 0;
+
+		  if(meanlevels.size()  % 2 == 0){
+		      medianmean = (meanlevels[meanlevels.size() / 2 - 1] + meanlevels[meanlevels.size() / 2]) / 2;
+		  }
+		  else{
+		      medianmean = meanlevels[meanlevels.size() / 2];
+		  }	
+//		printf("median noise for obs %i is %g %g %g\n", i, mediannoise, ((MNStruct *)context)->pulse->obsn[i].snr, medianmean);
+//		if(((MNStruct *)context)->pulse->obsn[i].pnoise == 0){
+			((MNStruct *)context)->pulse->obsn[i].pnoise = mediannoise;
+			((MNStruct *)context)->pulse->obsn[i].bline = medianmean;
+//		}
+
+		double Chisq = 0;
+		for(int j = 0; j < ProfNbins; j++){
+			Chisq += pow((double)((MNStruct *)context)->ProfileData[i][j][1],2);
+		}
+		((MNStruct *)context)->pulse->obsn[i].chisq = Chisq;
+
+
+	}
+}

@@ -2387,7 +2387,7 @@ extern "C" int graphicalInterface(int argc, char **argv,
 			}
 
 			if(found==0 ){
-				printf("Observation %i is missing the %s flag, please check before continuing\n",o,GroupNoiseSysFlag);return 0;
+				printf("Observation %i %s is missing the %s flag, please check before continuing\n",o,psr[0].obsn[o].fname, GroupNoiseSysFlag);return 0;
 			}
 		}
 
@@ -3015,8 +3015,8 @@ extern "C" int graphicalInterface(int argc, char **argv,
 
 		for(int i =0; i < 2*numRedCoeff;i++){
 			//printf("Red C %i %g \n", i, psr[0].TNRedCoeffs[i+100]);
-			Dpriors[pcount][0]=-500*pow(10.0,-9);
-			Dpriors[pcount][1]=500*pow(10.0,-9);;
+			Dpriors[pcount][0]=-10;
+			Dpriors[pcount][1]=10;
 			pcount++;
 		}
 
@@ -4333,8 +4333,8 @@ extern "C" int graphicalInterface(int argc, char **argv,
                                 std::istream_iterator< double > begin(myStream),eof;
                                 std::vector<double> ProfileVal(begin,eof);
 
-				PriorsArray[pcount] = ProfileVal[0] -0.1*errscale;
-				PriorsArray[pcount+ndims] = ProfileVal[0] +0.1*errscale;
+				PriorsArray[pcount] = ProfileVal[0];
+				PriorsArray[pcount+ndims] = ProfileVal[1];
 		
 
 //				if(p2==0){PriorsArray[pcount] = -2.55; PriorsArray[pcount+ndims] = -2.45;}
@@ -4365,8 +4365,8 @@ extern "C" int graphicalInterface(int argc, char **argv,
                                 std::istream_iterator< double > begin(myStream),eof;
                                 std::vector<double> ProfileVal(begin,eof);
 
-                                PriorsArray[pcount] = ProfileVal[0] -0.005*errscale;
-                                PriorsArray[pcount+ndims] = ProfileVal[0] +0.005*errscale;
+                                PriorsArray[pcount] = ProfileVal[0];
+                                PriorsArray[pcount+ndims] = ProfileVal[1];
 
 
                                 pcount++;
@@ -4381,11 +4381,11 @@ extern "C" int graphicalInterface(int argc, char **argv,
 					std::istream_iterator< double > begin(myStream),eof;
 					std::vector<double> ProfileVal(begin,eof);
 
-					PriorsArray[pcount] = ProfileVal[0] -1;
-					PriorsArray[pcount+ndims] = ProfileVal[0] +1;
+					PriorsArray[pcount] = ProfileVal[0];
+					PriorsArray[pcount+ndims] = ProfileVal[1];
 
-					if(PriorsArray[pcount] < -3){PriorsArray[pcount] = -3;}
-					if(PriorsArray[pcount+ndims] < 0){PriorsArray[pcount+ndims] = 0;}
+//	//				if(errscale != 0 && PriorsArray[pcount] < -3){PriorsArray[pcount] = -3;}
+	//				if(errscale != 0 && PriorsArray[pcount+ndims] < 0){PriorsArray[pcount+ndims] = 0;}
 
 				        pcount++;
 				}
@@ -4414,7 +4414,7 @@ extern "C" int graphicalInterface(int argc, char **argv,
 		}
 
 		printf("do linear: %i \n", ((MNStruct *)context)->doLinear);;
-		if(((MNStruct *)context)->doLinear > 0){
+		if(((MNStruct *)context)->doLinear > 0 && sampler != 2){
 
 			int TimingDims = ((MNStruct *)context)->numFitTiming + ((MNStruct *)context)->numFitJumps;
 			double **PhysDMatrix = new double*[((MNStruct *)context)->pulse->nobs];
@@ -4535,6 +4535,58 @@ extern "C" int graphicalInterface(int argc, char **argv,
 			double MaxShapeAmp = 0;
 			PreComputeShapelets(StoredShapeletsVec, StoredShapeletsJitterVec, StoredShapeletsWidthVec, InterpolatedMeanProfile, InterpolatedJitterProfile, InterpolatedWidthProfile, finalInterpTime, numtointerpolate, MeanBeta, MaxShapeAmp);
 
+			int sparsecount=0;
+			int minIndex = 0;
+			for(int j = 0; j < Nbin; j++){
+				sparsecount++;
+				if(InterpolatedMeanProfile[numtointerpolate-1][j] < MaxShapeAmp*0.0001){
+					minIndex=j;
+					break;
+				}
+
+			}
+
+			int maxIndex = 0;
+
+			for(int j = Nbin-1; j >= 0; j--){
+				sparsecount++;
+				if(InterpolatedMeanProfile[0][j] < MaxShapeAmp*0.0001){
+					maxIndex=j;
+					break;
+				}
+
+			}
+
+			printf("minmax: %i %i %i\n", minIndex, maxIndex, sparsecount);
+
+			int *SparseMap = new int[sparsecount];
+			double **SparseStoredShapeletsVec = new double*[numtointerpolate];
+			double **SparseJitterProfileVec = new double*[numtointerpolate];
+
+			for(int i = 0; i < numtointerpolate; i++){
+				SparseStoredShapeletsVec[i] = new double[sparsecount*totalShapeToSave];
+				SparseJitterProfileVec[i] = new double[sparsecount*totalShapeToSave];
+				for(int c = 0; c < totalShapeToSave; c++){
+					int tempcount = 0;
+					for(int j = 0; j <= minIndex; j++){
+						SparseStoredShapeletsVec[i][tempcount+c*sparsecount] = StoredShapeletsVec[i][j+c*Nbin];
+						SparseJitterProfileVec[i][tempcount+c*sparsecount] =  StoredShapeletsJitterVec[i][j+c*Nbin];
+						SparseMap[tempcount] = j;
+						tempcount++;
+
+					}
+
+					for(int j = maxIndex; j < Nbin; j++){
+						SparseStoredShapeletsVec[i][tempcount+c*sparsecount] = StoredShapeletsVec[i][j+c*Nbin];
+						SparseJitterProfileVec[i][tempcount+c*sparsecount] =  StoredShapeletsJitterVec[i][j+c*Nbin];
+						SparseMap[tempcount] = j;
+						tempcount++;
+
+					}
+			//		printf("count: %i %i %i \n", c, tempcount, sparsecount);
+				}
+			}
+
 			//for(int i = 0; i < numtointerpolate; i++){
 			//	for(int j = 0; j < Nbin; j++){
 				//	for(int k = 0; k < numShapeToSave; k++){	
@@ -4542,7 +4594,10 @@ extern "C" int graphicalInterface(int argc, char **argv,
 					//}
 				//}
 			//}
-
+			((MNStruct *)context)->SparseMap = SparseMap;
+			((MNStruct *)context)->SparseNBin = sparsecount;
+			((MNStruct *)context)->SparseShapeletsVec = SparseStoredShapeletsVec;
+			((MNStruct *)context)->SparseJitterProfileVec = SparseJitterProfileVec;
 			((MNStruct *)context)->InterpolatedShapeletsVec = StoredShapeletsVec;
 			((MNStruct *)context)->InterpolatedJitterProfileVec = StoredShapeletsJitterVec;
 			((MNStruct *)context)->InterpolatedWidthProfileVec = StoredShapeletsWidthVec;
@@ -4625,6 +4680,9 @@ extern "C" int graphicalInterface(int argc, char **argv,
 //		((MNStruct *)context)->StoredDMVals = StoredDMVals;
 
 		assigncontext(context);
+
+		getProfileNoiseLevels(context);
+
 
 		if(doMax == 1){
 			NelderMeadOptimum(ndims);
