@@ -44,7 +44,7 @@ endif
 #
 ###
 LDFLAGS+= -shared -module -avoid-version -shrext .t2
-INCLUDES=-I@top_srcdir@/   -I/home/ltl21/PulsarCode/liblbfgs/INSTALLDIR/include
+INCLUDES=-I@top_srcdir@/   -I/mnt/home/llentati/PulsarCode/TempoNest/lbfgs/INSTALLDIR/include  -I/nfs/cluster/pulsar/psrhome/opt/gsl-1.15/include/
 
 
 

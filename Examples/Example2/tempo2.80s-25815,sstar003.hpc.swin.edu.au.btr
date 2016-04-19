@@ -1,0 +1,7 @@
+
+tempo2:25815 terminated with signal 11 at PC=319f52ceb4 SP=7ffd2baa0fd8.  Backtrace:
+/lib64/libc.so.6[0x319f52ceb4]
+/mnt/home/llentati/PulsarCode/T2Runtime/plugins//temponest_linux_64_plug.t2(graphicalInterface+0x2086)[0x7f1eac737356]
+/mnt/home/llentati/PulsarCode/T2Runtime/bin/tempo2[0x40275a]
+/lib64/libc.so.6(__libc_start_main+0xfd)[0x319f41ed5d]
+/mnt/home/llentati/PulsarCode/T2Runtime/bin/tempo2[0x401d39]

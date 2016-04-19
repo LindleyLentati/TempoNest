@@ -1,0 +1,14 @@
+
+tempo2:9292 terminated with signal 6 at PC=312ec32625 SP=7ffe798ea338.  Backtrace:
+/lib64/libc.so.6(gsignal+0x35)[0x312ec32625]
+/lib64/libc.so.6(abort+0x175)[0x312ec33e05]
+/usr/local/x86_64/gnu/gcc-4.8.2/lib64/libstdc++.so.6(_ZN9__gnu_cxx27__verbose_terminate_handlerEv+0x155)[0x7fae8c5baa95]
+/usr/local/x86_64/gnu/gcc-4.8.2/lib64/libstdc++.so.6(+0x5dc06)[0x7fae8c5b8c06]
+/usr/local/x86_64/gnu/gcc-4.8.2/lib64/libstdc++.so.6(+0x5dc33)[0x7fae8c5b8c33]
+/usr/local/x86_64/gnu/gcc-4.8.2/lib64/libstdc++.so.6(+0x5de5e)[0x7fae8c5b8e5e]
+/usr/local/x86_64/gnu/gcc-4.8.2/lib64/libstdc++.so.6(_Znwm+0x7d)[0x7fae8c5b935d]
+/usr/local/x86_64/gnu/gcc-4.8.2/lib64/libstdc++.so.6(_Znam+0x9)[0x7fae8c5b93f9]
+/mnt/home/llentati/PulsarCode/T2Runtime/plugins//temponest_linux_64_plug.t2(graphicalInterface+0x1370)[0x7fad9c045640]
+tempo2[0x402661]
+/lib64/libc.so.6(__libc_start_main+0xfd)[0x312ec1ed5d]
+tempo2[0x401ac9]

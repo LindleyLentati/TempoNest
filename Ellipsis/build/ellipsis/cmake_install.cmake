@@ -1,4 +1,4 @@
-# Install script for directory: /home/ltl21/PulsarCode/Ellipsis/ellipsis
+# Install script for directory: /home/llentati/PulsarCode/TempoNest/Ellipsis/ellipsis
 
 # Set the install prefix
 IF(NOT DEFINED CMAKE_INSTALL_PREFIX)

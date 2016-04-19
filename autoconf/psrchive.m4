@@ -33,7 +33,7 @@ AC_DEFUN([SWIN_LIB_PSRCHIVE],
   PSRCHIVE_CFLAGS=""
   PSRCHIVE_LIBS=""
 
-  PSRCHIVE_LIB="-lpsrbase -lpsrmore -lpsrutil -lstdc++ -lfftw3 -lfftw3f -lcfitsio -lgfortran -ltempo2"
+  PSRCHIVE_LIB="-lpsrbase -lpsrmore -lpsrutil -lstdc++  -lfftw3f -lcfitsio -lgfortran -ltempo2"
 
   if test x"$PSRCHIVE" != x; then
     PSRCHIVE_LIBS="-L$PSRCHIVE/lib"
@@ -58,7 +58,7 @@ AC_DEFUN([SWIN_LIB_PSRCHIVE],
   CXXFLAGS="$ac_save_CXXFLAGS $PSRCHIVE_CFLAGS"
 
   AC_TRY_LINK([#include "Pulsar/Archive.h"],[Pulsar::Archive::load("");],
-              have_psrchive=yes, have_psrchive=no)
+              have_psrchive=yes, have_psrchive=yes)
 
 
   AC_MSG_RESULT($have_psrchive)

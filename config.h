@@ -66,7 +66,7 @@
 #define HAVE_MEMORY_H 1
 
 /* Define to 1 if you have the MLAPACK library */
-#define HAVE_MLAPACK 1
+/* #undef HAVE_MLAPACK */
 
 /* Define to 1 if you have the MULTINEST library */
 #define HAVE_MULTINEST 1
@@ -75,7 +75,7 @@
 #define HAVE_PSRCHIVE 1
 
 /* Define to 1 if you have the QDINSTALL library */
-#define HAVE_QDINSTALL 1
+/* #undef HAVE_QDINSTALL */
 
 /* Define if you have the shl_load function. */
 /* #undef HAVE_SHL_LOAD */
@@ -133,7 +133,7 @@
 #define STDC_HEADERS 1
 
 /* "Tempo2 ARCH variable" */
-#define TEMPO2_ARCH "linux-gnu"
+#define TEMPO2_ARCH "linux_64"
 
 /* "Tempo2 plugin path" */
 /* #undef TEMPO2_CONFIGURE_PLUG */
