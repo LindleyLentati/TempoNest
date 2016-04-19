@@ -12882,7 +12882,7 @@ double  ProfileDomainLike(int &ndim, double *Cube, int &npars, double *DerivedPa
 						long double timediff=(bintime-CompPos)*SECDAY;
 
 						double Betatime = timediff/CompWidth;
-	//						if(j < 10){printf("Beta time 0 %i %g %g \n", j, Betatime, exp(-0.5*Betatime*Betatime)*(1.0/sqrt(CompWidth))/sqrt(sqrt(M_PI)));}
+						//	if(nTOA > 400){printf("Beta time 0 %i %g %g \n", j, Betatime, exp(-0.5*Betatime*Betatime)*(1.0/sqrt(CompWidth))/sqrt(sqrt(M_PI)));}
 
 						if(Betatime*Betatime < 25){
 							Bconst= (1.0/sqrt(CompWidth))/rootrootpi;
@@ -12939,7 +12939,9 @@ double  ProfileDomainLike(int &ndim, double *Cube, int &npars, double *DerivedPa
 							}
 
 //							PrecBasis[j + c*ProfNbins] = OneCompSignal;
-							M[j + (1+c)*ProfNbins] = OneCompSignal;
+							for(int k = 0; k < numProfileStocCoeff[c]; k++){
+								M[j + (1+c)*ProfNbins] = OneCompSignal;
+							}
 
 						}
 	//						if(j < 10){printf("comp: %i %i %g %g \n", t, j, CompSignal, shapevec[j]);}
@@ -13279,11 +13281,11 @@ else{
 			Chisq = ((MNStruct *)globalcontext)->pulse->obsn[nTOA].chisq*noise;
 			for(int i =0; i < ProfNbins; i++){
 				NDiffVec[i] = ((MNStruct *)globalcontext)->ProfileData[nTOA][i][1]*noise;
-
-			//	for(int j = 0; j < Msize; j++){
-
+				//if(nTOA> 400){printf("NDiff: %i %i %g %g \n", nTOA, i, (double)((MNStruct *)globalcontext)->ProfileData[nTOA][i][1], noise);}
+				//for(int j = 0; j < Msize; j++){
+				//	if(nTOA> 400){printf("NDiff: %i %i %i %g \n", nTOA, i, j, M[i + j*ProfNbins]);}
 			//		NM[i + j*ProfNbins] = M[i + j*ProfNbins]*noise;
-			//	}
+				//}
 
 			}
 
@@ -13292,6 +13294,7 @@ else{
 
 
 			for(int i = 0; i < Msize*Msize; i++){
+//				if(nTOA> 400){printf("NDiff: %i %i %g \n", nTOA, i,MNM[i]);}
 				MNM[i] *= noise;
 
 			}
@@ -13455,6 +13458,7 @@ else{
 
 				 	Marginlike = 0;
 					for(int i =0; i < Msize; i++){
+//					if(nTOA > 400){printf("TdNM: %i %i %g %g \n", nTOA, i, dNM[i], TempdNM[i]);}
 						Marginlike += TempdNM[i]*dNM[i];
 					}
 
@@ -13686,7 +13690,7 @@ else{
 
 	lnew += uniformpriorterm - 0.5*(FreqLike + FreqDet) + JDet;
 	//printf("Cube: %g %g %g %g %g \n", lnew, FreqLike, FreqDet, Cube[1], Cube[0]);
-	if(debug == 1)printf("End Like: %.10g \n", lnew);
+	if(debug == 0)printf("End Like: %.10g \n", lnew);
 	//printf("End Like: %.10g \n", lnew);
 	//}
 
@@ -15740,7 +15744,7 @@ else{
 					for(int i =0; i < ProfNbins; i++){
 						StocSN += StocVec[i]*StocVec[i]/MLSigma/MLSigma;
 					}
-					if(debug == 0)printf("StocSN %i %s %.15Lg %g \n", nTOA, ((MNStruct *)globalcontext)->pulse->obsn[nTOA].fname,  ((MNStruct *)globalcontext)->pulse->obsn[nTOA].sat, sqrt(StocSN));
+					if(debug == 1)printf("StocSN %i %s %.15Lg %g \n", nTOA, ((MNStruct *)globalcontext)->pulse->obsn[nTOA].fname,  ((MNStruct *)globalcontext)->pulse->obsn[nTOA].sat, sqrt(StocSN));
 
 					for(int i =0; i < Nbins; i+=BinRatio){
 

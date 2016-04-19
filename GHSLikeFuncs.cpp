@@ -524,7 +524,7 @@ void callGHS(int NBurn, int NSamp, int GHSresume){
 		test_gauss_outfile=fopen(ext_file_name,"w");
 		test_gauss_goutfile=fopen(gext_file_name,"w");
 	}
-//	run_guided_hmc(ndim, PrincipalStartPoint, ScaleFactor, max_stp, StepSize, fl_pfx, seed, resume, fb_int, nlp, wrt_ext, nburn, nsamp);
+	run_guided_hmc(ndim, PrincipalStartPoint, ScaleFactor, max_stp, StepSize, fl_pfx, seed, resume, fb_int, nlp, wrt_ext, nburn, nsamp);
 		
 	if(test_gauss_outfile) fclose(test_gauss_outfile);
 

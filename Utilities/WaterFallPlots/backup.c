@@ -156,8 +156,6 @@ void waterfall_plot(char *proflist, char *outname, float pmin, float pmax)
 	float *EpochAveragedModel = (float *) malloc(NumEpochs*nbin*sizeof(float));
 	float *EpochAveragedRes = (float *) malloc(NumEpochs*nbin*sizeof(float));
 	float *EpochWeights = (float *) malloc(NumEpochs*sizeof(float));
-	float *EpochMJDs = (float *) malloc(NumEpochs*sizeof(float));
-
 
 	for(iprof=0;iprof<NumEpochs*nbin;iprof++){
 		EpochAveragedData[iprof] = 0;
@@ -176,7 +174,7 @@ void waterfall_plot(char *proflist, char *outname, float pmin, float pmax)
 			prevbin = mjdbin;
 			realmjdbin++;
 		}
-//		printf("weight: %i %i %i %g \n", iprof, mjdbin, realmjdbin, 1.0/noise[iprof]/noise[iprof]);
+		printf("weight: %i %i %i %g \n", iprof, mjdbin, realmjdbin, 1.0/noise[iprof]/noise[iprof]);
 		for(ibin=0;ibin<nbin;ibin++){
 			EpochAveragedData[ibin+nbin*realmjdbin] += prof[ibin+nbin*iprof]/noise[iprof]/noise[iprof];
 			EpochAveragedModel[ibin+nbin*realmjdbin] += model[ibin+nbin*iprof]/noise[iprof]/noise[iprof];
@@ -184,7 +182,6 @@ void waterfall_plot(char *proflist, char *outname, float pmin, float pmax)
 			
 		}
 		EpochWeights[realmjdbin] += 1.0/noise[iprof]/noise[iprof];
-		EpochMJDs[realmjdbin] = mjd[iprof];
 	}
 
 	for(iprof=0;iprof<NumEpochs; iprof++){
@@ -193,7 +190,6 @@ void waterfall_plot(char *proflist, char *outname, float pmin, float pmax)
 			EpochAveragedData[ibin+nbin*iprof] /= EpochWeights[iprof];
 			EpochAveragedModel[ibin+nbin*iprof] /= EpochWeights[iprof];
 			EpochAveragedRes[ibin+nbin*iprof] /= EpochWeights[iprof];
-			printf("%g %i %g %g %g \n",  EpochMJDs[iprof], ibin, EpochAveragedData[ibin+nbin*iprof], EpochAveragedModel[ibin+nbin*iprof] , EpochAveragedRes[ibin+nbin*iprof]);
 		}
 	}
 
@@ -219,13 +215,13 @@ void waterfall_plot(char *proflist, char *outname, float pmin, float pmax)
   
 
   
-  for(iprof=0;iprof<NumEpochs;iprof++)
+  for(iprof=0;iprof<nprof;iprof++)
     {
       
       if(iprof==0)
 	{
-	  tr[0]=0.25*(3.*mjdmin-3+2*EpochMJDs[iprof]-EpochMJDs[iprof+1]);
-	  tr[1]=0.5*(EpochMJDs[iprof+1]-mjdmin+1);  
+	  tr[0]=0.25*(3.*mjdmin-3+2*mjd[iprof]-mjd[iprof+1]);
+	  tr[1]=0.5*(mjd[iprof+1]-mjdmin+1);  
       //	tr[0]=mjd[iprof-1];
       //tr[1]=(mjd[iprof+1]-mjd[iprof-1]);
       //tr[0]=0.5*(mjd[iprof-1]+mjd[iprof]);
@@ -235,10 +231,10 @@ void waterfall_plot(char *proflist, char *outname, float pmin, float pmax)
 	  tr[4]=0;
 	  tr[5]=1./nbin;
 	}
-      else if(iprof == NumEpochs-1)
+      else if(iprof == nprof-1)
 	{
-	  tr[0]=0.25*(3.*EpochMJDs[iprof-1]+2*EpochMJDs[iprof]-mjdmax);
-	  tr[1]=0.5*(mjdmax+1-EpochMJDs[iprof-1]+1);  
+	  tr[0]=0.25*(3.*mjd[iprof-1]+2*mjd[iprof]-mjdmax);
+	  tr[1]=0.5*(mjdmax+1-mjd[iprof-1]+1);  
 	  //	tr[0]=mjd[iprof-1];
 	  //tr[1]=(mjd[iprof+1]-mjd[iprof-1]);
 	  //tr[0]=0.5*(mjd[iprof-1]+mjd[iprof]);
@@ -251,8 +247,8 @@ void waterfall_plot(char *proflist, char *outname, float pmin, float pmax)
       else
 	{
 
-	  tr[0]=0.25*(3.*EpochMJDs[iprof-1]+2*EpochMJDs[iprof]-EpochMJDs[iprof+1]-0.03);
-	  tr[1]=0.5*(EpochMJDs[iprof+1]-EpochMJDs[iprof-1]+0.01);  
+	  tr[0]=0.25*(3.*mjd[iprof-1]+2*mjd[iprof]-mjd[iprof+1]-0.03);
+	  tr[1]=0.5*(mjd[iprof+1]-mjd[iprof-1]+0.01);  
 	  //	tr[0]=mjd[iprof-1];
 	  //tr[1]=(mjd[iprof+1]-mjd[iprof-1]);
 	  //tr[0]=0.5*(mjd[iprof-1]+mjd[iprof]);
@@ -263,7 +259,7 @@ void waterfall_plot(char *proflist, char *outname, float pmin, float pmax)
 	  tr[5]=1./nbin;
 	}
       // 
-      cpggray(&EpochAveragedData[nbin*iprof], 1, nbin, 1,1, 1,nbin,profmax, profmin, &tr[0]);
+      cpggray(&prof[nbin*iprof], 1, nbin, 1,1, 1,nbin,profmax, profmin, &tr[0]);
 
 
     }
@@ -274,13 +270,13 @@ void waterfall_plot(char *proflist, char *outname, float pmin, float pmax)
   cpgslw(2);
   cpgswin(mjdmin, mjdmax, pmin, pmax);
 
-  for(iprof=0;iprof<NumEpochs;iprof++)
+  for(iprof=0;iprof<nprof;iprof++)
     {
 
         if(iprof==0)
 	{
-	  tr[0]=0.25*(3.*mjdmin-3+2*EpochMJDs[iprof]-EpochMJDs[iprof+1]);
-	  tr[1]=0.5*(EpochMJDs[iprof+1]-mjdmin+1);  
+	  tr[0]=0.25*(3.*mjdmin-3+2*mjd[iprof]-mjd[iprof+1]);
+	  tr[1]=0.5*(mjd[iprof+1]-mjdmin+1);  
       //	tr[0]=mjd[iprof-1];
       //tr[1]=(mjd[iprof+1]-mjd[iprof-1]);
       //tr[0]=0.5*(mjd[iprof-1]+mjd[iprof]);
@@ -290,10 +286,10 @@ void waterfall_plot(char *proflist, char *outname, float pmin, float pmax)
 	  tr[4]=0;
 	  tr[5]=1./nbin;
 	}
-      else if(iprof == NumEpochs-1)
+      else if(iprof == nprof-1)
 	{
-	  tr[0]=0.25*(3.*EpochMJDs[iprof-1]+2*EpochMJDs[iprof]-mjdmax);
-	  tr[1]=0.5*(mjdmax+1-EpochMJDs[iprof-1]);  
+	  tr[0]=0.25*(3.*mjd[iprof-1]+2*mjd[iprof]-mjdmax);
+	  tr[1]=0.5*(mjdmax+1-mjd[iprof-1]);  
 	  //	tr[0]=mjd[iprof-1];
 	  //tr[1]=(mjd[iprof+1]-mjd[iprof-1]);
 	  //tr[0]=0.5*(mjd[iprof-1]+mjd[iprof]);
@@ -306,8 +302,8 @@ void waterfall_plot(char *proflist, char *outname, float pmin, float pmax)
       else
 	{
 
-	  tr[0]=0.25*(3.*EpochMJDs[iprof-1]+2*EpochMJDs[iprof]-EpochMJDs[iprof+1]-0.03);
-	  tr[1]=0.5*(EpochMJDs[iprof+1]-EpochMJDs[iprof-1]+0.01);  
+	  tr[0]=0.25*(3.*mjd[iprof-1]+2*mjd[iprof]-mjd[iprof+1]-0.03);
+	  tr[1]=0.5*(mjd[iprof+1]-mjd[iprof-1]+0.01);  
 	  //	tr[0]=mjd[iprof-1];
 	  //tr[1]=(mjd[iprof+1]-mjd[iprof-1]);
 	  //tr[0]=0.5*(mjd[iprof-1]+mjd[iprof]);
@@ -321,7 +317,7 @@ void waterfall_plot(char *proflist, char *outname, float pmin, float pmax)
     ;
 
       // 
-	cpggray(&EpochAveragedRes[nbin*iprof], 1, nbin, 1,1, 1,nbin,resmax, resmin, &tr[0]);
+	cpggray(&resid[nbin*iprof], 1, nbin, 1,1, 1,nbin,resmax, resmin, &tr[0]);
 
 
     }
@@ -333,6 +329,13 @@ void waterfall_plot(char *proflist, char *outname, float pmin, float pmax)
 
   cpgend();
 
+  for(iprof=0;iprof<nprof;iprof++)
+    {
+      for(ibin=0;ibin<nbin;ibin++)
+  	{
+  	//  fprintf(stdout, "%d %d %.3e %.3e %.3e\n", iprof, ibin,   prof[ibin+nbin*iprof],  model[ibin+nbin*iprof], resid[ibin+nbin*iprof]);
+  	}
+   }
   
 
   free(mjd);

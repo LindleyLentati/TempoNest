@@ -4536,6 +4536,14 @@ extern "C" int graphicalInterface(int argc, char **argv,
 			PreComputeShapelets(StoredShapeletsVec, StoredShapeletsJitterVec, StoredShapeletsWidthVec, InterpolatedMeanProfile, InterpolatedJitterProfile, InterpolatedWidthProfile, finalInterpTime, numtointerpolate, MeanBeta, MaxShapeAmp);
 
 			int sparsecount=0;
+
+			for(int j = 0; j < Nbin; j++){
+				if(InterpolatedMeanProfile[numtointerpolate-1][j] > MaxShapeAmp*0.0001){
+					sparsecount++;
+					//printf("in: %i %g \n", j, InterpolatedMeanProfile[numtointerpolate-1][j]);
+				}
+			}
+/*
 			int minIndex = 0;
 			for(int j = 0; j < Nbin; j++){
 				sparsecount++;
@@ -4558,7 +4566,7 @@ extern "C" int graphicalInterface(int argc, char **argv,
 			}
 
 			printf("minmax: %i %i %i\n", minIndex, maxIndex, sparsecount);
-
+*/
 			int *SparseMap = new int[sparsecount];
 			double **SparseStoredShapeletsVec = new double*[numtointerpolate];
 			double **SparseJitterProfileVec = new double*[numtointerpolate];
@@ -4567,6 +4575,21 @@ extern "C" int graphicalInterface(int argc, char **argv,
 				SparseStoredShapeletsVec[i] = new double[sparsecount*totalShapeToSave];
 				SparseJitterProfileVec[i] = new double[sparsecount*totalShapeToSave];
 				for(int c = 0; c < totalShapeToSave; c++){
+
+					int tempcount = 0;
+					for(int j = 0; j < Nbin; j++){
+        		                        if(InterpolatedMeanProfile[numtointerpolate-1][j] > MaxShapeAmp*0.0001){
+							SparseStoredShapeletsVec[i][tempcount+c*sparsecount] = StoredShapeletsVec[i][j+c*Nbin];
+                        	                        SparseJitterProfileVec[i][tempcount+c*sparsecount] =  StoredShapeletsJitterVec[i][j+c*Nbin];
+                	                                SparseMap[tempcount] = j;
+        	                                        tempcount++;
+	
+	                                        }
+					}
+		
+						
+/*
+	
 					int tempcount = 0;
 					for(int j = 0; j <= minIndex; j++){
 						SparseStoredShapeletsVec[i][tempcount+c*sparsecount] = StoredShapeletsVec[i][j+c*Nbin];
@@ -4583,10 +4606,14 @@ extern "C" int graphicalInterface(int argc, char **argv,
 						tempcount++;
 
 					}
+
+		
+
+*/
 			//		printf("count: %i %i %i \n", c, tempcount, sparsecount);
 				}
 			}
-
+			//return 0;
 			//for(int i = 0; i < numtointerpolate; i++){
 			//	for(int j = 0; j < Nbin; j++){
 				//	for(int k = 0; k < numShapeToSave; k++){	
