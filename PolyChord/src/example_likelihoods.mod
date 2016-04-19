@@ -1,5 +1,5 @@
 GFORTRAN module version '10' created from likelihoods.F90
-MD5:d013bc1da8e67b03abf9640ad4ad59ca -- If you edit this, you'll get what you deserve.
+MD5:81a516738173d45fb35e865b76fe68fd -- If you edit this, you'll get what you deserve.
 
 (() () () () () () () () () () () () () () () () () () () () () () ()
 () () () ())
@@ -1007,7 +1007,7 @@ UNKNOWN-PROC UNKNOWN IMPLICIT-SAVE 0 0) (INTEGER 4 0 0 0 INTEGER ()) 0 0
 () (CONSTANT (INTEGER 4 0 0 0 INTEGER ()) 0 '8') () 0 () () () 0 0)
 366 'ompi_release_version' 'mpi_module' '' 1 ((PARAMETER UNKNOWN-INTENT
 UNKNOWN-PROC UNKNOWN IMPLICIT-SAVE 0 0) (INTEGER 4 0 0 0 INTEGER ()) 0 0
-() (CONSTANT (INTEGER 4 0 0 0 INTEGER ()) 0 '2') () 0 () () () 0 0)
+() (CONSTANT (INTEGER 4 0 0 0 INTEGER ()) 0 '3') () 0 () () () 0 0)
 367 'planck_loglikelihood' 'example_likelihoods' '' 1 ((PROCEDURE
 UNKNOWN-INTENT MODULE-PROC DECL UNKNOWN 0 0 FUNCTION ALWAYS_EXPLICIT) (
 REAL 8 0 0 0 REAL ()) 368 0 (369 370 371) () 367 () () () 0 0)

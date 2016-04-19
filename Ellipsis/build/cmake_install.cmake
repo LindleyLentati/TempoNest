@@ -1,4 +1,4 @@
-# Install script for directory: /home/ltl21/PulsarCode/Ellipsis
+# Install script for directory: /home/llentati/PulsarCode/TempoNest/Ellipsis
 
 # Set the install prefix
 IF(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -34,8 +34,8 @@ ENDIF(NOT DEFINED CMAKE_INSTALL_SO_NO_EXE)
 
 IF(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for each subdirectory.
-  INCLUDE("/home/ltl21/PulsarCode/Ellipsis/build/ellipsis/cmake_install.cmake")
-  INCLUDE("/home/ltl21/PulsarCode/Ellipsis/build/examples/cmake_install.cmake")
+  INCLUDE("/home/llentati/PulsarCode/TempoNest/Ellipsis/build/ellipsis/cmake_install.cmake")
+  INCLUDE("/home/llentati/PulsarCode/TempoNest/Ellipsis/build/examples/cmake_install.cmake")
 
 ENDIF(NOT CMAKE_INSTALL_LOCAL_ONLY)
 
@@ -45,7 +45,7 @@ ELSE(CMAKE_INSTALL_COMPONENT)
   SET(CMAKE_INSTALL_MANIFEST "install_manifest.txt")
 ENDIF(CMAKE_INSTALL_COMPONENT)
 
-FILE(WRITE "/home/ltl21/PulsarCode/Ellipsis/build/${CMAKE_INSTALL_MANIFEST}" "")
+FILE(WRITE "/home/llentati/PulsarCode/TempoNest/Ellipsis/build/${CMAKE_INSTALL_MANIFEST}" "")
 FOREACH(file ${CMAKE_INSTALL_MANIFEST_FILES})
-  FILE(APPEND "/home/ltl21/PulsarCode/Ellipsis/build/${CMAKE_INSTALL_MANIFEST}" "${file}\n")
+  FILE(APPEND "/home/llentati/PulsarCode/TempoNest/Ellipsis/build/${CMAKE_INSTALL_MANIFEST}" "${file}\n")
 ENDFOREACH(file)

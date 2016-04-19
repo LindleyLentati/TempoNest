@@ -34,7 +34,6 @@
 #include <time.h>
 #include <stdio.h>
 #include <vector>
-#include <gsl/gsl_sf_gamma.h>
 #include <gsl/gsl_multimin.h>
 #include "dgemm.h"
 #include "dgemv.h"
@@ -12694,7 +12693,7 @@ double  ProfileDomainLike(int &ndim, double *Cube, int &npars, double *DerivedPa
 
 								if(((MNStruct *)globalcontext)->FitPrecAmps >= 0){
 									double FitAmp = 0;
-									double refMJD = 54250;
+									double refMJD = 53900;
 									double MJD = ((MNStruct *)globalcontext)->pulse->obsn[nTOA].sat;
 
 									for(int a = 0; a <= ((MNStruct *)globalcontext)->FitPrecAmps; a++){
@@ -12902,6 +12901,7 @@ double  ProfileDomainLike(int &ndim, double *Cube, int &npars, double *DerivedPa
 							CompPos = binpos+PrecessionParams[((MNStruct *)globalcontext)->numProfComponents+c-1];
 							CompAmp = 1;
 							double OneCompSignal = 0;
+							double CompSignalNoAmp = 0;
 
 							timediff=(bintime-CompPos)*SECDAY;
 							Betatime = timediff/CompWidth;
@@ -12910,7 +12910,7 @@ double  ProfileDomainLike(int &ndim, double *Cube, int &npars, double *DerivedPa
 
 				//				if(((MNStruct *)globalcontext)->FitPrecAmps >= 0){
 								//double refMJD = 54250;
-								double MJD = (54250 - ((MNStruct *)globalcontext)->pulse->obsn[nTOA].sat)/365.25;
+								double MJD = (53900 - ((MNStruct *)globalcontext)->pulse->obsn[nTOA].sat)/365.25;
 								double powMJD = MJD;
 								//get 0th Amp term first
 								double logAmp = PrecessionParams[((MNStruct *)globalcontext)->numProfComponents+(((MNStruct *)globalcontext)->numProfComponents-1)+(((MNStruct *)globalcontext)->FitPrecAmps+1)*(c-1)+0];
@@ -12919,8 +12919,11 @@ double  ProfileDomainLike(int &ndim, double *Cube, int &npars, double *DerivedPa
 								for(int a = 1; a <= ((MNStruct *)globalcontext)->FitPrecAmps; a++){
 									logAmp = PrecessionParams[((MNStruct *)globalcontext)->numProfComponents+(((MNStruct *)globalcontext)->numProfComponents-1)+(((MNStruct *)globalcontext)->FitPrecAmps+1)*(c-1)+a];
 
-									powMJD *= MJD;
 									FitAmp +=  logAmp*powMJD;
+//
+//									if(t==0){printf("Amps: %i %i %i %g %g %g %g \n", c, j, a, pow((53900-((MNStruct *)globalcontext)->pulse->obsn[nTOA].sat)/365.25, a), powMJD, logAmp, FitAmp);}
+			
+									powMJD *= MJD;
 
 								}
 
@@ -12928,19 +12931,20 @@ double  ProfileDomainLike(int &ndim, double *Cube, int &npars, double *DerivedPa
 								CompAmp = FitAmp;
 				//				}
 								Bconst= (1.0/sqrt(CompWidth))/rootrootpi;
-								OneCompSignal = CompAmp*exp(-0.5*Betatime*Betatime)*Bconst;
+								CompSignalNoAmp = exp(-0.5*Betatime*Betatime)*Bconst;
+								OneCompSignal = CompAmp*CompSignalNoAmp;
 
 //								if(j < 10){printf("Beta time %i %i %g %g\n", c, j, Betatime, OneCompSignal);}
 								CompSignal += OneCompSignal;
-
+//								if(t==0){printf("One COpm: %i %i %g %g %g \n", c, j, CompAmp, OneCompSignal, Bconst);}
 								//JitterBconst= (1.0/sqrt(CompWidth))/sqrt(2.0*sqrt(M_PI));
 								//JitterBasis = 2*Betatime*JitterBconst*exp(-0.5*Betatime*Betatime);
 								//JitterSignal += CompAmp*(1.0/sqrt(2.0))*(-1.0*JitterBasis)/CompWidth;
 							}
 
 //							PrecBasis[j + c*ProfNbins] = OneCompSignal;
-							for(int k = 0; k < numProfileStocCoeff[c]; k++){
-								M[j + (1+c)*ProfNbins] = OneCompSignal;
+							for(int k = 0; k < numProfileStocCoeff[c]; k++){							
+								M[j + (1+c)*ProfNbins] = CompSignalNoAmp;
 							}
 
 						}
@@ -12952,6 +12956,8 @@ double  ProfileDomainLike(int &ndim, double *Cube, int &npars, double *DerivedPa
 //						Mcounter++;
 					
 						M[j + ProfNbins] = CompSignal;
+
+//						if(t==0){printf("Sig: %i %g \n", j, CompSignal);}
 						if(CompSignal > maxshape){ maxshape = CompSignal;}
 						
 						//Mcounter++;
@@ -13172,8 +13178,9 @@ else{
 							dataflux +=((double)((MNStruct *)globalcontext)->ProfileData[nTOA][j][1]-((MNStruct *)globalcontext)->pulse->obsn[nTOA].bline)*double((ProfileBats[t][1] - ProfileBats[t][0])/(ProfNbins-1))*60*60*24;
 					//	}
 					}
+					M[j/BinRatio + ProfileBaselineTerms*ProfNbins] /= maxshape;
 				}
-				maxamp = dataflux/ModModelFlux;
+				maxamp = dataflux/(ModModelFlux/maxshape);
 
 				if(debug == 1)printf("noise %g, dataflux %g, modelflux %g, maxamp %g \n", MLSigma, dataflux, ModModelFlux, maxamp);
 
@@ -13433,7 +13440,7 @@ else{
 				}
 
 				int info = 0;
-				int robust = 3;
+				int robust = 2;
 
 
 				info=0;
@@ -14054,6 +14061,96 @@ void  WriteProfileDomainLike(std::string longname, int &ndim){
 	double JDet = 0;
 	double FreqLike = 0;
 	int startpos = 0;
+
+
+	double *RedSignalVec;
+
+	if(((MNStruct *)globalcontext)->incRED > 4){
+
+		int FitRedCoeff = 2*((MNStruct *)globalcontext)->numFitRedCoeff;
+		double *SignalCoeff = new double[FitRedCoeff];
+		for(int i = 0; i < FitRedCoeff; i++){
+			SignalCoeff[i] = Cube[pcount];
+			//printf("coeffs %i %g \n", i, SignalCoeff[i]);
+			pcount++;
+		}
+			
+		
+
+		double Tspan = ((MNStruct *)globalcontext)->Tspan;
+		double f1yr = 1.0/3.16e7;
+
+
+		if(((MNStruct *)globalcontext)->incRED==5){
+
+			double Redamp=Cube[pcount];
+			pcount++;
+			double Redindex=Cube[pcount];
+			pcount++;
+
+			
+			Redamp=pow(10.0, Redamp);
+			if(((MNStruct *)globalcontext)->RedPriorType == 1) { uniformpriorterm +=log(Redamp); }
+
+
+
+			for (int i=0; i< FitRedCoeff/2; i++){
+				
+				double freq = ((double)(i+1.0))/Tspan;
+				
+				double rho = (Redamp*Redamp/(12*M_PI*M_PI))*pow(f1yr,(-3)) * pow(freq*365.25,(-Redindex))/(Tspan*24*60*60);
+				SignalCoeff[i] = SignalCoeff[i]*sqrt(rho);
+				SignalCoeff[i+FitRedCoeff/2] = SignalCoeff[i+FitRedCoeff/2]*sqrt(rho);  
+				//FreqDet += 2*log(rho);	
+				//JDet += 2*log(sqrt(rho));
+				FreqLike += SignalCoeff[i]*SignalCoeff[i]/rho + SignalCoeff[i+FitRedCoeff/2]*SignalCoeff[i+FitRedCoeff/2]/rho;
+			}
+		}
+
+
+		if(((MNStruct *)globalcontext)->incRED==6){
+
+
+
+
+			for (int i=0; i< FitRedCoeff/2; i++){
+			
+
+				double RedAmp = pow(10.0, Cube[pcount]);	
+				double freq = ((double)(i+1.0))/Tspan;
+				
+				if(((MNStruct *)globalcontext)->RedPriorType == 1) { uniformpriorterm +=log(RedAmp); }
+				double rho = (RedAmp*RedAmp);
+				SignalCoeff[i] = SignalCoeff[i]*sqrt(rho);
+				SignalCoeff[i+FitRedCoeff/2] = SignalCoeff[i+FitRedCoeff/2]*sqrt(rho);  
+				FreqLike += SignalCoeff[i]*SignalCoeff[i]/rho + SignalCoeff[i+FitRedCoeff/2]*SignalCoeff[i+FitRedCoeff/2]/rho;
+				pcount++;
+			}
+		}
+
+		double *FMatrix = new double[FitRedCoeff*((MNStruct *)globalcontext)->numProfileEpochs];
+		for(int i=0;i< FitRedCoeff/2;i++){
+			int DMt = 0;
+			for(int k=0;k<((MNStruct *)globalcontext)->numProfileEpochs;k++){
+				double time=(double)((MNStruct *)globalcontext)->pulse->obsn[DMt].bat;
+	
+				FMatrix[k + (i+startpos)*((MNStruct *)globalcontext)->numProfileEpochs]=cos(2*M_PI*(double(i+1)/Tspan)*time);
+				FMatrix[k + (i+FitRedCoeff/2+startpos)*((MNStruct *)globalcontext)->numProfileEpochs] = sin(2*M_PI*(double(i+1)/Tspan)*time);
+				DMt += ((MNStruct *)globalcontext)->numChanPerInt[k];
+
+			}
+		}
+
+		RedSignalVec = new double[((MNStruct *)globalcontext)->numProfileEpochs];
+		vector_dgemv(FMatrix,SignalCoeff,RedSignalVec,((MNStruct *)globalcontext)->numProfileEpochs, FitRedCoeff,'N');
+		startpos=FitRedCoeff;
+		delete[] FMatrix;	
+		delete[] SignalCoeff;
+		
+
+    	}
+
+
 	if(((MNStruct *)globalcontext)->incDM > 4){
 
 		int FitDMCoeff = 2*((MNStruct *)globalcontext)->numFitDMCoeff;
@@ -14678,6 +14775,15 @@ void  WriteProfileDomainLike(std::string longname, int &ndim){
 
 		    
 			long double binpos = ModelBats[nTOA]; 
+
+
+			if(((MNStruct *)globalcontext)->incRED > 4){
+				long double Redshift = (long double)RedSignalVec[ep];
+
+				
+		 		binpos+=Redshift/SECDAY;
+
+			}
 			//binpos += (long double)(((MNStruct *)globalcontext)->StoredDMVals[ep]/SECDAY);
 			if(((MNStruct *)globalcontext)->incDM > 4 || ((MNStruct *)globalcontext)->yearlyDM == 1){
 	                	double DMKappa = 2.410*pow(10.0,-16);
@@ -15045,13 +15151,13 @@ void  WriteProfileDomainLike(std::string longname, int &ndim){
 							if(((MNStruct *)globalcontext)->FitPrecAmps >= 0){
 
 								double FitAmp = 0;
-								double refMJD = 54250;
+								double refMJD = 53900;
 								double MJD = ((MNStruct *)globalcontext)->pulse->obsn[nTOA].sat;
 
 								for(int a = 0; a <= ((MNStruct *)globalcontext)->FitPrecAmps; a++){
 									double logAmp = PrecessionParams[((MNStruct *)globalcontext)->numProfComponents+(((MNStruct *)globalcontext)->numProfComponents-1)+(((MNStruct *)globalcontext)->FitPrecAmps+1)*(c-1)+a];
 									FitAmp +=  logAmp*pow((refMJD-MJD)/365.25, a);
-
+								//	if(t==0){printf("Amps: %i %i %i %g %g %g \n", c, j, a, pow((refMJD-MJD)/365.25, a), logAmp, FitAmp);}
 								}
 
 								FitAmp = pow(10.0, FitAmp);
@@ -15084,14 +15190,16 @@ void  WriteProfileDomainLike(std::string longname, int &ndim){
 							double Bconst=(1.0/sqrt(CompWidth))/sqrt(sqrt(M_PI));
 							CompSignal += CompAmp*exp(-0.5*Betatime*Betatime)*Bconst;
 							FinalPrecAmps[t*(((MNStruct *)globalcontext)->numProfComponents-1) + c-1] = CompAmp;
-							PrecBasis[j + c*ProfNbins] = CompAmp*exp(-0.5*Betatime*Betatime)*Bconst;
+							PrecBasis[j + c*ProfNbins] = exp(-0.5*Betatime*Betatime)*Bconst;
 
+								//if(t==0){printf("One COpm: %i %i %g %g %g \n", c, j, CompAmp, CompAmp*exp(-0.5*Betatime*Betatime)*Bconst, Bconst);}
 							PrecSignalVec[j + c*ProfNbins] = CompAmp*exp(-0.5*Betatime*Betatime)*Bconst;
 //							if(t==3){printf("Basis: %i %i %g %g\n", c, j , PrecBasis[j + c*ProfNbins], Betatime);}
 						}
 
 						shapevec[j] = CompSignal;
 
+					//	if(t==0){printf("Sig: %i %g \n", j, CompSignal);}
 
 						if(CompSignal > maxshape){ maxshape = CompSignal;}
 					}
@@ -15418,6 +15526,7 @@ else{
 							dataflux +=((double)((MNStruct *)globalcontext)->ProfileData[nTOA][j][1]-((MNStruct *)globalcontext)->pulse->obsn[nTOA].bline)*double((ProfileBats[t][1] - ProfileBats[t][0])/(ProfNbins-1))*60*60*24;
 					//	}
 					}
+					M[j/BinRatio + ProfileBaselineTerms*ProfNbins] /= maxshape;
 				}
 
 /*
@@ -15430,7 +15539,7 @@ else{
 					}
 				}
 */
-				maxamp = dataflux/ModModelFlux;
+				maxamp = dataflux/(ModModelFlux/maxshape);
 
 				if(debug == 1)printf("noise %g, dataflux %g, modelflux %g, maxamp %g \n", MLSigma, dataflux, ModModelFlux, maxamp);
 
@@ -15744,7 +15853,7 @@ else{
 					for(int i =0; i < ProfNbins; i++){
 						StocSN += StocVec[i]*StocVec[i]/MLSigma/MLSigma;
 					}
-					if(debug == 1)printf("StocSN %i %s %.15Lg %g \n", nTOA, ((MNStruct *)globalcontext)->pulse->obsn[nTOA].fname,  ((MNStruct *)globalcontext)->pulse->obsn[nTOA].sat, sqrt(StocSN));
+					//if(debug == 0)printf("StocSN %i %s %.15Lg %g \n", nTOA, ((MNStruct *)globalcontext)->pulse->obsn[nTOA].fname,  ((MNStruct *)globalcontext)->pulse->obsn[nTOA].sat, sqrt(StocSN));
 
 					for(int i =0; i < Nbins; i+=BinRatio){
 

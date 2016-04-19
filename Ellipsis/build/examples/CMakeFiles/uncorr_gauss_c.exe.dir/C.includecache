@@ -8,7 +8,7 @@
 
 ../ellipsis/guided_hmc.h
 
-/home/ltl21/PulsarCode/Ellipsis/examples/uncorr_gauss_c.c
+/home/llentati/PulsarCode/TempoNest/Ellipsis/examples/uncorr_gauss_c.c
 stdlib.h
 -
 string.h

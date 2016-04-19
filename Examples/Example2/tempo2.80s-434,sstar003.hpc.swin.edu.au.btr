@@ -1,0 +1,7 @@
+
+tempo2:434 terminated with signal 11 at PC=7f6257112248 SP=7ffe8c6ab300.  Backtrace:
+/mnt/home/llentati/PulsarCode/T2Runtime/plugins//plk_linux_64_plug.t2(_Z6doPlotP6pulsariPcdPA500_cS3_ffffiiiiPS1_iS1_iiS1_S1_i+0x768)[0x7f6257112248]
+/mnt/home/llentati/PulsarCode/T2Runtime/plugins//plk_linux_64_plug.t2(graphicalInterface+0x51c)[0x7f625711a4ac]
+/mnt/home/llentati/PulsarCode/T2Runtime/bin/tempo2[0x40275a]
+/lib64/libc.so.6(__libc_start_main+0xfd)[0x319f41ed5d]
+/mnt/home/llentati/PulsarCode/T2Runtime/bin/tempo2[0x401d39]

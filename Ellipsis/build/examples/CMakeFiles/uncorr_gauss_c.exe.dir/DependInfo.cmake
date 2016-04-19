@@ -4,13 +4,13 @@ SET(CMAKE_DEPENDS_LANGUAGES
   )
 # The set of files for implicit dependencies of each language:
 SET(CMAKE_DEPENDS_CHECK_C
-  "/home/ltl21/PulsarCode/Ellipsis/examples/uncorr_gauss_c.c" "/home/ltl21/PulsarCode/Ellipsis/build/examples/CMakeFiles/uncorr_gauss_c.exe.dir/uncorr_gauss_c.c.o"
+  "/home/llentati/PulsarCode/TempoNest/Ellipsis/examples/uncorr_gauss_c.c" "/home/llentati/PulsarCode/TempoNest/Ellipsis/build/examples/CMakeFiles/uncorr_gauss_c.exe.dir/uncorr_gauss_c.c.o"
   )
 SET(CMAKE_C_COMPILER_ID "GNU")
 
 # Targets to which this target links.
 SET(CMAKE_TARGET_LINKED_INFO_FILES
-  "/home/ltl21/PulsarCode/Ellipsis/build/ellipsis/CMakeFiles/ellipsis.dir/DependInfo.cmake"
+  "/home/llentati/PulsarCode/TempoNest/Ellipsis/build/ellipsis/CMakeFiles/ellipsis.dir/DependInfo.cmake"
   )
 
 # The include file search paths:

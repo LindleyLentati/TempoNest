@@ -27003,13 +27003,13 @@ $as_echo_n "checking for CUDA/CULA installation... " >&6; }
   CULA_CFLAGS=""
   CULA_LIBS=""
 
-  #CULA_LIB="-lcula_lapack -lcuda"
+  #CULA_LIB="-lcula_lapack -lcudart"
 
   if test x"$CULA_LIB_PATH_64" != x; then
-    CULA_LIBS="-L$CULA_LIB_PATH_64 -lcula_lapack -lcuda"
+    CULA_LIBS="-L$CULA_LIB_PATH_64 -lcula_lapack -lcudart"
   else
     if test x"$CULA_LIB_PATH_32" != x; then
-      CULA_LIBS="-L$CULA_LIB_PATH_32 -lcula_lapack -lcuda"
+      CULA_LIBS="-L$CULA_LIB_PATH_32 -lcula_lapack -lcudart"
     fi
   fi
 
@@ -27367,7 +27367,7 @@ $as_echo_n "checking for PSRCHIVE installation... " >&6; }
   PSRCHIVE_CFLAGS=""
   PSRCHIVE_LIBS=""
 
-  PSRCHIVE_LIB="-lpsrbase -lpsrmore -lpsrutil -lstdc++ -lfftw3 -lfftw3f -lcfitsio -lgfortran -ltempo2"
+  PSRCHIVE_LIB="-lpsrbase -lpsrmore -lpsrutil -lstdc++  -lfftw3f -lcfitsio -lgfortran -ltempo2"
 
   if test x"$PSRCHIVE" != x; then
     PSRCHIVE_LIBS="-L$PSRCHIVE/lib"
@@ -27453,7 +27453,7 @@ else
   $as_echo "$as_me: failed program was:" >&5
 sed 's/^/| /' conftest.$ac_ext >&5
 
-	have_psrchive=no
+	have_psrchive=yes
 fi
 
 rm -rf conftest.dSYM
