@@ -1870,6 +1870,11 @@ extern "C" int graphicalInterface(int argc, char **argv,
 	int *numTimeCorrCoeff;
 	double *ProfCompSeps;
 
+	double **FitForExtraComp = new double*[incExtraProfComp];
+	for(int i = 0; i < incExtraProfComp; i++){
+		FitForExtraComp[i] = new double[3]();
+	}
+
 	int totalEvoCoeff = 0;
 	int totalEvoFitCoeff = 0;
 	int totalProfileFitCoeff = 0;
@@ -1897,7 +1902,7 @@ extern "C" int graphicalInterface(int argc, char **argv,
 		}
 
 
-		GetProfileFitInfo(ConfigFileName, numProfComponents, GPTAnumshapecoeff, numProfileFitCoeff, numEvoCoeff, numEvoFitCoeff, GPTAnumstocshapecoeff, ProfCompSeps, TemplateChanWidth, numTimeCorrCoeff);
+		GetProfileFitInfo(ConfigFileName, numProfComponents, GPTAnumshapecoeff, numProfileFitCoeff, numEvoCoeff, numEvoFitCoeff, GPTAnumstocshapecoeff, ProfCompSeps, TemplateChanWidth, numTimeCorrCoeff, incExtraProfComp, FitForExtraComp);
 
 		for(int i = 0; i < numProfComponents; i++){
 			totalEvoFitCoeff +=  numEvoFitCoeff[i];
@@ -3868,27 +3873,24 @@ extern "C" int graphicalInterface(int argc, char **argv,
 		}
 		if(incProfileFit == 1){proffitdims = totalProfileFitCoeff;}
 
-		int NumExtraCompCoeffs = 3;
+		int NumExtraCompCoeffs = 2;
 
 		int ExtraCompDims = 0;
-		if(incExtraProfComp == 1){
-			//Step Model, time, width, amp
-			ExtraCompDims = 3+NumExtraCompCoeffs;
-		}
-		if(incExtraProfComp == 2){
-			//Gaussian decay model: time, comp width, max comp amp, decay width
-			ExtraCompDims = 4+NumExtraCompCoeffs;
-		}
-		if(incExtraProfComp == 3){
-			//exponential decay: time, comp width, max comp amp, decay timescale
-			ExtraCompDims = 5+NumExtraCompCoeffs;
 
-		}
-
-		if(incExtraProfComp == 4){
-			//exponential decay: time, comp width, max comp amp, decay timescale
-			ExtraCompDims = 5+2;
-
+		for(int i = 0; i < incExtraProfComp; i++){
+			if(FitForExtraComp[i][0] == 1){
+				ExtraCompDims += 3+FitForExtraComp[i][1];
+			}
+			if(FitForExtraComp[i][0] == 2){
+				ExtraCompDims += 4+FitForExtraComp[i][1];
+			}
+			if(FitForExtraComp[i][0] == 3){
+				ExtraCompDims += 4+FitForExtraComp[i][1];
+			}
+			
+			if(FitForExtraComp[i][2] == 1){
+				ExtraCompDims++;
+			}
 		}
 
 		int PrecDims = 0;
@@ -4104,7 +4106,7 @@ extern "C" int graphicalInterface(int argc, char **argv,
 			printf("Shape Power Prior %i %i %i %.10g %.10g \n", p,pcount, totalshapestoccoeff, shapecoeffprior[totshapecoeff+p][0], shapecoeffprior[totshapecoeff+p][1]);
 
                         PriorsArray[pcount]=-5;//shapecoeffprior[totshapecoeff+p][0];
-                        PriorsArray[pcount+ndims]= 0;//shapecoeffprior[totshapecoeff+p][1];
+                        PriorsArray[pcount+ndims]= -0.2;//shapecoeffprior[totshapecoeff+p][1];
 
 			//if(p==0){
 	                    //    PriorsArray[pcount] = -10;
@@ -4186,90 +4188,99 @@ extern "C" int graphicalInterface(int argc, char **argv,
 		}
 
 
-
-		if(incExtraProfComp == 1){
-			//Step Model, time, width, amp
-			PriorsArray[pcount] = 57000;
-			PriorsArray[pcount+ndims] = 57300;
-			pcount++;
-			PriorsArray[pcount] = -0.03;
-                        PriorsArray[pcount+ndims] = -0.01;
-                        pcount++;
-			PriorsArray[pcount] = -3;
-                        PriorsArray[pcount+ndims] = -2;
-                        pcount++;
-
-			for(int i = 0; i < NumExtraCompCoeffs; i++){
-				PriorsArray[pcount] = -0.1;
-				PriorsArray[pcount+ndims] = 0.1;
-
+		for(int i = 0; i < incExtraProfComp; i++){
+			if(FitForExtraComp[i][0] == 1){
+				//Step Model, time, width, amp
+				PriorsArray[pcount] = 57050;
+				PriorsArray[pcount+ndims] = 57420;
 				pcount++;
-			}
-		
-		}
-		if(incExtraProfComp == 2){
-			//Gaussian decay model: time, comp width, max comp amp, log decay width
-			PriorsArray[pcount] = 56900;
-                        PriorsArray[pcount+ndims] = 57300;
-                        pcount++;
-                        PriorsArray[pcount] = 0.03;
-                        PriorsArray[pcount+ndims] = 0.07;
-                        pcount++;
-                        PriorsArray[pcount] = -4;
-                        PriorsArray[pcount+ndims] = -1;
-                        pcount++;
-                        PriorsArray[pcount] = -3;
-                        PriorsArray[pcount+ndims] = -0.3;
-                        pcount++;
-			PriorsArray[pcount] = 1;
-                        PriorsArray[pcount+ndims] = 3;
-                        pcount++;
-
-		}
-
-		if(incExtraProfComp == 3){
-			//exponential decay: time, comp width, max comp amp, log decay timescale
-			PriorsArray[pcount] = 57000;// 57050;
-                        PriorsArray[pcount+ndims] = 57150;//57100;
-                        pcount++;
-                        PriorsArray[pcount] =  -0.1;
-                        PriorsArray[pcount+ndims] = 0.1;
-                        pcount++;
-                        PriorsArray[pcount] = -3;
-                        PriorsArray[pcount+ndims] = -1;
-                        pcount++;
-			for(int i = 0; i < NumExtraCompCoeffs; i++){
-				PriorsArray[pcount] = -1.0;
-				PriorsArray[pcount+ndims] = 1.0;
-
-				if(i==4 || i==3 || i ==2){PriorsArray[pcount] = 0; PriorsArray[pcount+ndims] = 0;}
+				PriorsArray[pcount] =  0.06;
+				PriorsArray[pcount+ndims] = 0.07;
 				pcount++;
-			}
-                        PriorsArray[pcount] = 1;
-                        PriorsArray[pcount+ndims] = 3;
-                        pcount++;
-			PriorsArray[pcount] = 0;//-4*pow(10.0, -5);
-                        PriorsArray[pcount+ndims] = 0;//4*pow(10.0, -5);
-                        pcount++;
+				PriorsArray[pcount] = -3;
+				PriorsArray[pcount+ndims] = -1;
+				pcount++;
 
-
-		}
-
-		if(incExtraProfComp == 4){
-			PriorsArray[pcount] = 57000;
-                        PriorsArray[pcount+ndims] = 57150;
-                        pcount++;
-                        PriorsArray[pcount] = 1;
-                        PriorsArray[pcount+ndims] = 3;
-                        pcount++;
-			for(int i = 0; i < 5; i++){
-				PriorsArray[pcount] = -0.5;
-	                        PriorsArray[pcount+ndims] = 0.5;
-	                        pcount++;
+				for(int c = 0; c < FitForExtraComp[i][1]; c++){
+					PriorsArray[pcount] = -1;
+					PriorsArray[pcount+ndims] = 1;
+					pcount++;
+				}
 				
+				if(FitForExtraComp[i][2] == 1){
+					PriorsArray[pcount] = -pow(10.0, -5);
+                                        PriorsArray[pcount+ndims] = pow(10.0, -5);
+                                        pcount++;
+
+				}
+			
+			}
+			if(FitForExtraComp[i][0] == 2){
+				//Gaussian decay model: time, comp width, max comp amp, log decay width
+				PriorsArray[pcount] = 56900;
+				PriorsArray[pcount+ndims] = 57300;
+				pcount++;
+				PriorsArray[pcount] = 0.03;
+				PriorsArray[pcount+ndims] = 0.07;
+				pcount++;
+				PriorsArray[pcount] = -4;
+				PriorsArray[pcount+ndims] = -1;
+				pcount++;
+				PriorsArray[pcount] = -3;
+				PriorsArray[pcount+ndims] = -0.3;
+				pcount++;
+				PriorsArray[pcount] = 1;
+				PriorsArray[pcount+ndims] = 3;
+				pcount++;
+
 			}
 
+			if(FitForExtraComp[i][0] == 3){
+				//exponential decay: time, comp width, max comp amp, log decay timescale
+				PriorsArray[pcount] = 57050;// 57050;
+				PriorsArray[pcount+ndims] = 57100;//57100;
+				pcount++;
+				PriorsArray[pcount] =    0.06;
+				PriorsArray[pcount+ndims] = 0.07;
+				pcount++;
+				PriorsArray[pcount] = -3;
+				PriorsArray[pcount+ndims] = -1;
+				pcount++;
+				for(int c = 0; c < FitForExtraComp[i][1]; c++){
+					PriorsArray[pcount] = -1.0;
+					PriorsArray[pcount+ndims] = 1.0;
 
+				//	if(c==3){PriorsArray[pcount] = 0; PriorsArray[pcount+ndims] = 0;}
+					pcount++;
+				}
+				PriorsArray[pcount] = 1;
+				PriorsArray[pcount+ndims] = 3;
+				pcount++;
+				if(FitForExtraComp[i][2] == 1){
+					PriorsArray[pcount] = -4*pow(10.0, -5);
+					PriorsArray[pcount+ndims] = 4*pow(10.0, -5);
+					pcount++;
+				}
+
+
+			}
+
+			if(FitForExtraComp[i][0] == 4){
+				PriorsArray[pcount] = 57000;
+				PriorsArray[pcount+ndims] = 57150;
+				pcount++;
+				PriorsArray[pcount] = 1;
+				PriorsArray[pcount+ndims] = 3;
+				pcount++;
+				for(int c = 0; c < 5; c++){
+					PriorsArray[pcount] = -0.5;
+					PriorsArray[pcount+ndims] = 0.5;
+					pcount++;
+					
+				}
+
+
+			}
 		}
 
 		if(incPrecession == 1){
@@ -4317,6 +4328,16 @@ extern "C" int graphicalInterface(int argc, char **argv,
 
 		if(incPrecession == 2){
 
+			double *PrecRefMJDs = new double[numProfComponents]();
+			PrecRefMJDs[0] = 53900;
+			PrecRefMJDs[1] = 53900;
+			PrecRefMJDs[2] = 51600;
+			PrecRefMJDs[3] = 53900;
+			PrecRefMJDs[4] = 53900;
+			PrecRefMJDs[5] = 53900;
+			PrecRefMJDs[6] = 53900;
+			
+			((MNStruct *)context)->PrecRefMJDs = PrecRefMJDs;
 
 			double errscale = 1;
 			std::ifstream MeanProfileFile;
@@ -4450,6 +4471,7 @@ extern "C" int graphicalInterface(int argc, char **argv,
 		((MNStruct *)context)->MeanProfileEvo = MeanProfileEvo;	
 		((MNStruct *)context)->MeanProfileBeta = MeanBeta;
 		((MNStruct *)context)->MeanProfileStoc = MeanProfileStoc;
+		((MNStruct *)context)->FitForExtraComp =  FitForExtraComp;
 		//outputProfile(ndims);
 		//return 0;
 

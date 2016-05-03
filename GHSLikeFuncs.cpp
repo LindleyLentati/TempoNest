@@ -6240,10 +6240,16 @@ void GHSProfileDomainLike2(int* ndim, double* PrinCube, double &likelihood, doub
 		
 		EPriorcount++;
 	}
-
 	for(int i =0; i < totalProfileFitCoeff; i++){
 		
 		ProfileFitCoeffs[i]= Cube[pcount];
+		double TotalAmp = Cube[pcount]+shapecoeff[i+1];
+		double CoeffPrior = 0.1;
+		priorterm += TotalAmp*TotalAmp/CoeffPrior/CoeffPrior;
+		for(int j = 0; j < threads; j++){
+			threadgrads[((MNStruct *)GHSglobalcontext)->numFitTiming + ((MNStruct *)GHSglobalcontext)->numFitJumps + i][j] += TotalAmp/CoeffPrior/CoeffPrior/threads;	
+		}
+		//printf("Amps: %i %g %g %g %g\n", i, TotalAmp, CoeffPrior, TotalAmp*TotalAmp/CoeffPrior/CoeffPrior, TotalAmp/CoeffPrior/CoeffPrior);
 		pcount++;
 	}
 	double LinearProfileWidth=0;
@@ -7204,9 +7210,9 @@ void GHSWriteProf(std::string ename){
 
 
 		double chanfreq[3];
-		chanfreq[0] = 700;
-		chanfreq[1] = 1400;
-		chanfreq[2] = 2800;
+		chanfreq[0] = 120;
+		chanfreq[1] = 150;
+		chanfreq[2] = 180;
 
 	int NEpochs = ((MNStruct *)GHSglobalcontext)->numProfileEpochs;
 	int TotalProfs = 0;

@@ -928,7 +928,7 @@ void GetGroupsToFit(char *ConfigFileName, int incGroupNoise, int **FitForGroup, 
 
 
 
-void GetProfileFitInfo(char *ConfigFileName, int numProfComponents, int *numGPTAshapecoeff, int *numProfileFitCoeff, int *numEvoCoeff, int *numFitEvoCoeff, int *numGPTAstocshapecoeff, double *ProfCompSeps, double &TemplateChanWidth, int *numTimeCorrCoeff){
+void GetProfileFitInfo(char *ConfigFileName, int numProfComponents, int *numGPTAshapecoeff, int *numProfileFitCoeff, int *numEvoCoeff, int *numFitEvoCoeff, int *numGPTAstocshapecoeff, double *ProfCompSeps, double &TemplateChanWidth, int *numTimeCorrCoeff, int incExtraComp, double **FitForExtraComp){
 
 //This function reads in the groups that will be fit as Group Noise terms
 
@@ -1093,6 +1093,44 @@ void GetProfileFitInfo(char *ConfigFileName, int numProfComponents, int *numGPTA
 			n=sprintf (buffer, "numTimeCorrCoeff[%i]", i);
 			parameters.readInto(numTimeCorrCoeff[i], buffer, numTimeCorrCoeff[i]);
 
+
+		} 
+		catch(ConfigFile::file_not_found oError) {
+			printf("WARNING: parameters file '%s' not found. Using defaults.\n", oError.filename.c_str());
+	    } // try
+
+	}
+
+
+	for(int i =0;i<incExtraComp; i++){	
+
+
+		// Use a configfile, if we can, to overwrite the defaults set in this file.
+		try {
+			string strBuf;
+			strBuf = ConfigFileName;//string("defaultparameters.conf");
+			ConfigFile parameters(strBuf);
+
+			/* We can check whether a value is not set in the file by doing
+			* if(! parameters.readInto(variable, "name", default)) {
+			*   printf("WARNING");
+			* }
+			*
+			* At the moment I was too lazy to print warning messages, and the
+			* default value from this file is used in that case.
+			*
+			* Note: the timing model parameters are not done implemented yet
+			*/
+			char buffer [50];
+			int n;
+			n=sprintf (buffer, "FitForExtraComp[%i][0]", i);
+			parameters.readInto(FitForExtraComp[i][0], buffer, FitForExtraComp[i][0]);   //Comp Type
+                        n=sprintf (buffer, "FitForExtraComp[%i][1]", i);
+                        parameters.readInto(FitForExtraComp[i][1], buffer, FitForExtraComp[i][1]);  //NumCoeff
+                        n=sprintf (buffer, "FitForExtraComp[%i][2]", i);
+                        parameters.readInto(FitForExtraComp[i][2], buffer, FitForExtraComp[i][2]);  //Include Phase Equivalent
+//                        n=sprintf (buffer, "FitForBand[%i][3]", i);
+  //                      parameters.readInto(FitForBand[i][3], buffer, FitForBand[i][3]);
 
 		} 
 		catch(ConfigFile::file_not_found oError) {

@@ -11985,91 +11985,98 @@ double  ProfileDomainLike(int &ndim, double *Cube, int &npars, double *DerivedPa
 
 
 
-	double *ExtraCompProps;	
-	double *ExtraCompBasis;
+	double **ExtraCompProps=new double*[((MNStruct *)globalcontext)->incExtraProfComp];	
+	double **ExtraCompBasis=new double*[((MNStruct *)globalcontext)->incExtraProfComp];
 	int incExtraProfComp = ((MNStruct *)globalcontext)->incExtraProfComp;
-	
-	if(incExtraProfComp == 1){
-		//Step Model, time, width, amp
-		ExtraCompProps = new double[3+((MNStruct *)globalcontext)->NumExtraCompCoeffs];
-		ExtraCompBasis = new double[((MNStruct *)globalcontext)->NumExtraCompCoeffs];
+
+
+	for(int i = 0; i < incExtraProfComp; i++){	
+		if((int)((MNStruct *)globalcontext)->FitForExtraComp[i][0] == 1){
+			//Step Model, time, width, amp
+			ExtraCompProps[i] = new double[4+(int)((MNStruct *)globalcontext)->FitForExtraComp[i][1]];
+			ExtraCompBasis[i] = new double[(int)((MNStruct *)globalcontext)->FitForExtraComp[i][1]];
+			
+			ExtraCompProps[i][0] = Cube[pcount]; //Position in time
+			pcount++;
+			ExtraCompProps[i][1] = Cube[pcount]; // position in phase
+			pcount++;
+			ExtraCompProps[i][2] = pow(10.0, Cube[pcount])*((MNStruct *)globalcontext)->ReferencePeriod; // comp width
+			pcount++;
+
+			for(int c = 0; c < (int)((MNStruct *)globalcontext)->FitForExtraComp[i][1]; c++){
+	//			printf("Amps: %i %g \n", pcount,  Cube[pcount]);
+
+				ExtraCompProps[i][3+c] = Cube[pcount]; //amp
+				pcount++;
+			}
+
+			if((int)((MNStruct *)globalcontext)->FitForExtraComp[i][2] == 1){
+				ExtraCompProps[i][3+(int)((MNStruct *)globalcontext)->FitForExtraComp[i][1]] = Cube[pcount]; // shift
+                                pcount++;
+                        }
+
 		
-		ExtraCompProps[0] = Cube[pcount]; //Position in time
-		pcount++;
-		ExtraCompProps[1] = Cube[pcount]; // position in phase
-		pcount++;
-		ExtraCompProps[2] = pow(10.0, Cube[pcount])*((MNStruct *)globalcontext)->ReferencePeriod; // comp width
-		pcount++;
-
-		for(int i = 0; i < ((MNStruct *)globalcontext)->NumExtraCompCoeffs; i++){
-//			printf("Amps: %i %g \n", pcount,  Cube[pcount]);
-
-			ExtraCompProps[3+i] = Cube[pcount]; //amp
-			pcount++;
 		}
-//		ExtraCompProps[3] = pow(10.0, Cube[pcount]); //amp
-//		pcount++;
-	
-	}
-	if(incExtraProfComp == 2){
-		//Gaussian decay model: time, comp width, max comp amp, log decay width
-                ExtraCompProps = new double[5];
+/*		if(incExtraProfComp == 2){
+			//Gaussian decay model: time, comp width, max comp amp, log decay width
+			ExtraCompProps = new double[5];
 
-                ExtraCompProps[0] = Cube[pcount]; //Position
-                pcount++;
-		ExtraCompProps[1] = Cube[pcount]; // position in phase
-                pcount++;
-                ExtraCompProps[2] = pow(10.0, Cube[pcount])*((MNStruct *)globalcontext)->ReferencePeriod; // comp width
-                pcount++;
-                ExtraCompProps[3] = pow(10.0, Cube[pcount]); //amp
-                pcount++;
-		ExtraCompProps[4] = pow(10.0, Cube[pcount]); //Event width
-		pcount++;
-
-	}
-//	printf("details: %i %i \n", incExtraProfComp, ((MNStruct *)globalcontext)->NumExtraCompCoeffs);
-	if(incExtraProfComp == 3){
-		//exponential decay: time, comp width, max comp amp, log decay timescale
-
-                ExtraCompProps = new double[5+((MNStruct *)globalcontext)->NumExtraCompCoeffs];
-		ExtraCompBasis = new double[((MNStruct *)globalcontext)->NumExtraCompCoeffs];
-
-                ExtraCompProps[0] = Cube[pcount]; //Position
-                pcount++;
-                ExtraCompProps[1] = Cube[pcount]; // position in phase
-                pcount++;
-                ExtraCompProps[2] = pow(10.0, Cube[pcount])*((MNStruct *)globalcontext)->ReferencePeriod; // comp width
-                pcount++;
-		for(int i = 0; i < ((MNStruct *)globalcontext)->NumExtraCompCoeffs; i++){
-//			printf("Amps: %i %g \n", pcount,  Cube[pcount]);
-
-			ExtraCompProps[3+i] = Cube[pcount]; //amp
+			ExtraCompProps[0] = Cube[pcount]; //Position
 			pcount++;
-		}
-		ExtraCompProps[3+((MNStruct *)globalcontext)->NumExtraCompCoeffs] = pow(10.0, Cube[pcount]); //Event width
-		pcount++;
-		ExtraCompProps[4+((MNStruct *)globalcontext)->NumExtraCompCoeffs] = Cube[pcount];
-                pcount++;
-
-
-	}
-//	sleep(5);
-	if(incExtraProfComp == 4){
-		ExtraCompProps = new double[5+2];
-		ExtraCompProps[0] = Cube[pcount]; //Position
-		pcount++;
-		ExtraCompProps[1] = pow(10.0, Cube[pcount]); //Event width
-		pcount++;
-		for(int i = 0; i < 5; i++){
-//			printf("Amps: %i %g \n", pcount,  Cube[pcount]);
-			ExtraCompProps[2+i] = Cube[pcount]; // Coeff Amp
+			ExtraCompProps[1] = Cube[pcount]; // position in phase
+			pcount++;
+			ExtraCompProps[2] = pow(10.0, Cube[pcount])*((MNStruct *)globalcontext)->ReferencePeriod; // comp width
+			pcount++;
+			ExtraCompProps[3] = pow(10.0, Cube[pcount]); //amp
+			pcount++;
+			ExtraCompProps[4] = pow(10.0, Cube[pcount]); //Event width
 			pcount++;
 
+		}*/
+	//	printf("details: %i %i \n", incExtraProfComp, ((MNStruct *)globalcontext)->NumExtraCompCoeffs);
+		if((int)((MNStruct *)globalcontext)->FitForExtraComp[i][0] == 3){
+			//exponential decay: time, comp width, max comp amp, log decay timescale
+
+			ExtraCompProps[i] = new double[5+(int)((MNStruct *)globalcontext)->FitForExtraComp[i][1]];
+			ExtraCompBasis[i] = new double[(int)((MNStruct *)globalcontext)->FitForExtraComp[i][1]];
+
+			ExtraCompProps[i][0] = Cube[pcount]; //Position
+			pcount++;
+			ExtraCompProps[i][1] = Cube[pcount]; // position in phase
+			pcount++;
+			ExtraCompProps[i][2] = pow(10.0, Cube[pcount])*((MNStruct *)globalcontext)->ReferencePeriod; // comp width
+			pcount++;
+			for(int c = 0; c < (int)((MNStruct *)globalcontext)->FitForExtraComp[i][1]; c++){
+	//			printf("Amps: %i %g \n", pcount,  Cube[pcount]);
+
+				ExtraCompProps[i][3+c] = Cube[pcount]; //amp
+				pcount++;
+			}
+			ExtraCompProps[i][3+(int)((MNStruct *)globalcontext)->FitForExtraComp[i][1]] = pow(10.0, Cube[pcount]); //Event width
+			pcount++;
+
+			if((int)((MNStruct *)globalcontext)->FitForExtraComp[i][2] == 1){
+				ExtraCompProps[i][4+(int)((MNStruct *)globalcontext)->FitForExtraComp[i][1]] = Cube[pcount];
+				pcount++;
+			}
 		}
+	//	sleep(5);
+/*		if(incExtraProfComp == 4){
+			ExtraCompProps[i] = new double[5+2];
+			ExtraCompProps[0] = Cube[pcount]; //Position
+			pcount++;
+			ExtraCompProps[1] = pow(10.0, Cube[pcount]); //Event width
+			pcount++;
+			for(int c = 0; c < 5; c++){
+	//			printf("Amps: %i %g \n", pcount,  Cube[pcount]);
+				ExtraCompProps[2+c] = Cube[pcount]; // Coeff Amp
+				pcount++;
+
+			}
 
 
+		}*/
 	}
-
 
 	double *PrecessionParams;
 	int incPrecession = ((MNStruct *)globalcontext)->incPrecession;
@@ -12104,12 +12111,15 @@ double  ProfileDomainLike(int &ndim, double *Cube, int &npars, double *DerivedPa
 			preccount++;
 
 		}
-		for(int p2 = 0; p2 < (((MNStruct *)globalcontext)->numProfComponents-1)*(((MNStruct *)globalcontext)->FitPrecAmps+1); p2++){
-			PrecessionParams[preccount] =Cube[pcount];
+		for(int p2 = 0; p2 < (((MNStruct *)globalcontext)->numProfComponents-1); p2++){
+			for(int p3 = 0; p3 < (((MNStruct *)globalcontext)->FitPrecAmps+1); p3++){
+				PrecessionParams[preccount] =Cube[pcount];
 
-			if(((MNStruct *)globalcontext)->doMax == 1){uniformpriorterm += log(pow(10.0, PrecessionParams[preccount]));}
-			preccount++;
-			pcount++;
+				if(p3==0){uniformpriorterm += log(pow(10.0, PrecessionParams[preccount]));}
+				if(((MNStruct *)globalcontext)->doMax == 1){uniformpriorterm += log(pow(10.0, PrecessionParams[preccount]));}
+				preccount++;
+				pcount++;
+			}
 		}
 
 	}
@@ -12332,17 +12342,30 @@ double  ProfileDomainLike(int &ndim, double *Cube, int &npars, double *DerivedPa
 		 		binpos+=DMshift/SECDAY;
 
 			}
-			if(incExtraProfComp == 3){
-				double ExtraCompDecayScale = 0;
-				if(((MNStruct *)globalcontext)->pulse->obsn[t].bat < ExtraCompProps[0]){
-                                                   ExtraCompDecayScale = 0;
-				}
-				else{
-					ExtraCompDecayScale = exp((ExtraCompProps[0]-((MNStruct *)globalcontext)->pulse->obsn[t].bat)/ExtraCompProps[3+((MNStruct *)globalcontext)->NumExtraCompCoeffs]);
-				}
+			for(int ev = 0; ev < incExtraProfComp; ev++){
+				if((int)((MNStruct *)globalcontext)->FitForExtraComp[ev][2] == 1){
 
-				long double TimeDelay = (long double) ExtraCompDecayScale*ExtraCompProps[4+((MNStruct *)globalcontext)->NumExtraCompCoeffs];
-				 binpos+=TimeDelay/SECDAY;
+					if((int)((MNStruct *)globalcontext)->FitForExtraComp[ev][0] == 1){
+						if(((MNStruct *)globalcontext)->pulse->obsn[t].bat >= ExtraCompProps[ev][0]){
+							   long double TimeDelay = (long double) ExtraCompProps[ev][3+(int)((MNStruct *)globalcontext)->FitForExtraComp[ev][1]];
+							   binpos+=TimeDelay/SECDAY;
+
+						}
+					}
+
+					if((int)((MNStruct *)globalcontext)->FitForExtraComp[ev][0] == 3){
+						double ExtraCompDecayScale = 0;
+						if(((MNStruct *)globalcontext)->pulse->obsn[t].bat < ExtraCompProps[ev][0]){
+								   ExtraCompDecayScale = 0;
+						}
+						else{
+							ExtraCompDecayScale = exp((ExtraCompProps[ev][0]-((MNStruct *)globalcontext)->pulse->obsn[t].bat)/ExtraCompProps[ev][3+(int)((MNStruct *)globalcontext)->FitForExtraComp[ev][1]]);
+						}
+
+						long double TimeDelay = (long double) ExtraCompDecayScale*ExtraCompProps[ev][4+(int)((MNStruct *)globalcontext)->FitForExtraComp[ev][1]];
+						 binpos+=TimeDelay/SECDAY;
+					}
+				}
 			}
 
 			if(((MNStruct *)globalcontext)->incDMShapeEvent != 0){
@@ -12725,10 +12748,10 @@ double  ProfileDomainLike(int &ndim, double *Cube, int &npars, double *DerivedPa
 
 					}
 
-					if(incExtraProfComp > 0 && incExtraProfComp < 4){
+					for(int ev = 0; ev < incExtraProfComp; ev++){
 
-							if(debug == 1){printf("EC: %i %g %g %g %g \n", incExtraProfComp, ExtraCompProps[0], ExtraCompProps[1], ExtraCompProps[2], ExtraCompProps[3]);}
-							long double ExtraCompPos = binpos+ExtraCompProps[1]*((MNStruct *)globalcontext)->ReferencePeriod/SECDAY;
+							if(debug == 1){printf("EC: %i %g %g %g %g \n", incExtraProfComp, ExtraCompProps[ev][0], ExtraCompProps[ev][1], ExtraCompProps[ev][2], ExtraCompProps[ev][3]);}
+							long double ExtraCompPos = binpos+ExtraCompProps[ev][1]*((MNStruct *)globalcontext)->ReferencePeriod/SECDAY;
 							long double timediff = 0;
 							long double bintime = ProfileBats[t][0] + j*(ProfileBats[t][1] - ProfileBats[t][0])/(ProfNbins-1);
 							if(bintime  >= minpos && bintime <= maxpos){
@@ -12743,35 +12766,33 @@ double  ProfileDomainLike(int &ndim, double *Cube, int &npars, double *DerivedPa
 
 							timediff=timediff*SECDAY;
 
-							double Betatime = timediff/ExtraCompProps[2];
+							double Betatime = timediff/ExtraCompProps[ev][2];
 							
 							double ExtraCompDecayScale = 1;
 
-                                                        if(incExtraProfComp == 1){
-								if(((MNStruct *)globalcontext)->pulse->obsn[t].bat < ExtraCompProps[0]){
+                                                        if((int)((MNStruct *)globalcontext)->FitForExtraComp[ev][0] == 1){
+								if(((MNStruct *)globalcontext)->pulse->obsn[t].bat < ExtraCompProps[ev][0]){
 	                                                                ExtraCompDecayScale = 0;
 								}
                                                         }
 
-							if(incExtraProfComp == 2){
-								ExtraCompDecayScale = exp(-0.5*pow((ExtraCompProps[0]-((MNStruct *)globalcontext)->pulse->obsn[t].bat)/ExtraCompProps[4],2));
-							}
-							if(incExtraProfComp == 3){
-								if(((MNStruct *)globalcontext)->pulse->obsn[t].bat < ExtraCompProps[0]){
+//
+							if((int)((MNStruct *)globalcontext)->FitForExtraComp[ev][0] == 3){
+								if(((MNStruct *)globalcontext)->pulse->obsn[t].bat < ExtraCompProps[ev][0]){
                                                                         ExtraCompDecayScale = 0;
                                                                 }
                                                                 else{
-									ExtraCompDecayScale = exp((ExtraCompProps[0]-((MNStruct *)globalcontext)->pulse->obsn[t].bat)/ExtraCompProps[3+((MNStruct *)globalcontext)->NumExtraCompCoeffs]);
+									ExtraCompDecayScale = exp((ExtraCompProps[ev][0]-((MNStruct *)globalcontext)->pulse->obsn[t].bat)/ExtraCompProps[ev][3+(int)((MNStruct *)globalcontext)->FitForExtraComp[ev][1]]);
 								}
                                                         }
 							
-							TNothpl(((MNStruct *)globalcontext)->NumExtraCompCoeffs, Betatime, ExtraCompBasis);
+							TNothpl(((MNStruct *)globalcontext)->FitForExtraComp[ev][1], Betatime, ExtraCompBasis[ev]);
 
 
 							double ExtraCompAmp = 0;
-							for(int k =0; k < ((MNStruct *)globalcontext)->NumExtraCompCoeffs; k++){
+							for(int k =0; k < (int)((MNStruct *)globalcontext)->FitForExtraComp[ev][1]; k++){
 								double Bconst=(1.0/sqrt(betas[0]))/sqrt(pow(2.0,k)*sqrt(M_PI));
-								ExtraCompAmp += ExtraCompBasis[k]*Bconst*ExtraCompProps[3+k];
+								ExtraCompAmp += ExtraCompBasis[ev][k]*Bconst*ExtraCompProps[ev][3+k];
 
 							
 							}
@@ -12910,7 +12931,7 @@ double  ProfileDomainLike(int &ndim, double *Cube, int &npars, double *DerivedPa
 
 				//				if(((MNStruct *)globalcontext)->FitPrecAmps >= 0){
 								//double refMJD = 54250;
-								double MJD = (53900 - ((MNStruct *)globalcontext)->pulse->obsn[nTOA].sat)/365.25;
+								double MJD = (((MNStruct *)globalcontext)->PrecRefMJDs[c] - ((MNStruct *)globalcontext)->pulse->obsn[nTOA].sat)/365.25;
 								double powMJD = MJD;
 								//get 0th Amp term first
 								double logAmp = PrecessionParams[((MNStruct *)globalcontext)->numProfComponents+(((MNStruct *)globalcontext)->numProfComponents-1)+(((MNStruct *)globalcontext)->FitPrecAmps+1)*(c-1)+0];
@@ -13682,8 +13703,12 @@ else{
 	if(((MNStruct *)globalcontext)->incDMShapeEvent != 0){
 	delete[] DMShapeCoeffParams;	
 	}
+	for(int ev = 0; ev < incExtraProfComp; ev++){
+                delete[] ExtraCompProps[ev];
+		delete[] ExtraCompBasis[ev];
+	}
 	if(incExtraProfComp > 0){
-                delete[] ExtraCompProps;
+		delete[] ExtraCompProps;
 		delete[] ExtraCompBasis;
 	}
 
@@ -13697,7 +13722,7 @@ else{
 
 	lnew += uniformpriorterm - 0.5*(FreqLike + FreqDet) + JDet;
 	//printf("Cube: %g %g %g %g %g \n", lnew, FreqLike, FreqDet, Cube[1], Cube[0]);
-	if(debug == 0)printf("End Like: %.10g \n", lnew);
+	if(debug == 1)printf("End Like: %.10g \n", lnew);
 	//printf("End Like: %.10g \n", lnew);
 	//}
 
@@ -15151,7 +15176,8 @@ void  WriteProfileDomainLike(std::string longname, int &ndim){
 							if(((MNStruct *)globalcontext)->FitPrecAmps >= 0){
 
 								double FitAmp = 0;
-								double refMJD = 53900;
+								double refMJD = ((MNStruct *)globalcontext)->PrecRefMJDs[c];
+//								double refMJD = 53900;
 								double MJD = ((MNStruct *)globalcontext)->pulse->obsn[nTOA].sat;
 
 								for(int a = 0; a <= ((MNStruct *)globalcontext)->FitPrecAmps; a++){
@@ -15199,7 +15225,7 @@ void  WriteProfileDomainLike(std::string longname, int &ndim){
 
 						shapevec[j] = CompSignal;
 
-					//	if(t==0){printf("Sig: %i %g \n", j, CompSignal);}
+//						if(t==246){printf("Sig: %i %g \n", j, CompSignal);}
 
 						if(CompSignal > maxshape){ maxshape = CompSignal;}
 					}
@@ -15820,11 +15846,13 @@ else{
 				double *Jittervec = new double[ProfNbins];
 				double *MLShapeVec  = new double[ProfNbins];
 
-//				for(int i =0; i < ProfNbins; i++){
-//					if(((MNStruct *)globalcontext)->numFitEQUAD > 0)Jittervec[i] = M[i + (1+ProfileBaselineTerms)*ProfNbins];
-//					if(((MNStruct *)globalcontext)->numFitEQUAD == 0)Jittervec[i] = pow(10.0, -5)*MLJitterVec[i*BinRatio]*dataflux/ModModelFlux;
-//				}
-				
+				if(t==500){
+					for(int i =0; i < ProfNbins; i++){
+				//		printf("Shapevec: %i %g %g %g\n", i, shapevec[i], TempdNM[1]*shapevec[i], (double)((MNStruct *)globalcontext)->ProfileData[nTOA][i/BinRatio][1]-TempdNM[0]);
+	//					if(((MNStruct *)globalcontext)->numFitEQUAD > 0)Jittervec[i] = M[i + (1+ProfileBaselineTerms)*ProfNbins];
+	//					if(((MNStruct *)globalcontext)->numFitEQUAD == 0)Jittervec[i] = pow(10.0, -5)*MLJitterVec[i*BinRatio]*dataflux/ModModelFlux;
+					}
+				}
 				if(((MNStruct *)globalcontext)->numFitEQUAD > 0){TempdNM[1+ProfileBaselineTerms] = 0;}
 				vector_dgemv(M,TempdNM,MLShapeVec,ProfNbins,Msize,'N');
 
@@ -15834,6 +15862,10 @@ else{
 				}
 				if(((MNStruct *)globalcontext)->numFitEQUAD > 0)TempdNM[1+ProfileBaselineTerms] = 0;
 				//printf("Stoc SIG: %i %g %g %g %g %g %g %g\n", t, (double)((MNStruct *)globalcontext)->pulse->obsn[t].sat, finalamp*(TempdNM[1+ProfileBaselineTerms]/FinalPrecAmps[t*(((MNStruct *)globalcontext)->numProfComponents-1) + 0]+FinalPrecAmps[t*(((MNStruct *)globalcontext)->numProfComponents-1) + 0])/dataflux, finalamp*(TempdNM[2+ProfileBaselineTerms]/FinalPrecAmps[t*(((MNStruct *)globalcontext)->numProfComponents-1) + 1]+FinalPrecAmps[t*(((MNStruct *)globalcontext)->numProfComponents-1) + 1])/dataflux,finalamp*(TempdNM[3+ProfileBaselineTerms]/FinalPrecAmps[t*(((MNStruct *)globalcontext)->numProfComponents-1) + 2]+FinalPrecAmps[t*(((MNStruct *)globalcontext)->numProfComponents-1) + 2])/dataflux, finalamp*(TempdNM[4+ProfileBaselineTerms]/FinalPrecAmps[t*(((MNStruct *)globalcontext)->numProfComponents-1) + 3]+FinalPrecAmps[t*(((MNStruct *)globalcontext)->numProfComponents-1) + 3])/dataflux, finalamp*(TempdNM[5+ProfileBaselineTerms]/FinalPrecAmps[t*(((MNStruct *)globalcontext)->numProfComponents-1) + 4]+FinalPrecAmps[t*(((MNStruct *)globalcontext)->numProfComponents-1) + 4])/dataflux, finalamp*(TempdNM[6+ProfileBaselineTerms]/FinalPrecAmps[t*(((MNStruct *)globalcontext)->numProfComponents-1) + 5]+FinalPrecAmps[t*(((MNStruct *)globalcontext)->numProfComponents-1) + 5])/dataflux);	
+
+				if(incPrecession == 2){printf("Prec Amps: %i  %g %g %g %g %g %g %g %g\n", t, (double)((MNStruct *)globalcontext)->pulse->obsn[t].sat, finalamp/maxshape, finalamp*FinalPrecAmps[t*(((MNStruct *)globalcontext)->numProfComponents-1) + 0]/maxshape, finalamp*FinalPrecAmps[t*(((MNStruct *)globalcontext)->numProfComponents-1) + 1]/maxshape, finalamp*FinalPrecAmps[t*(((MNStruct *)globalcontext)->numProfComponents-1) + 2]/maxshape, finalamp*FinalPrecAmps[t*(((MNStruct *)globalcontext)->numProfComponents-1) + 3]/maxshape, finalamp*FinalPrecAmps[t*(((MNStruct *)globalcontext)->numProfComponents-1) + 4]/maxshape, finalamp*FinalPrecAmps[t*(((MNStruct *)globalcontext)->numProfComponents-1) + 5]/maxshape);}
+
+
 
 				vector_dgemv(M,TempdNM,StocVec,ProfNbins,Msize,'N');
 
@@ -15862,7 +15894,7 @@ else{
 						//MLChisq += pow(((double)((MNStruct *)globalcontext)->ProfileData[nTOA][i/BinRatio][1] - MLShapeVec[i/BinRatio])/profilenoise[i/BinRatio], 2);
 
 
-						profilefile << Nj << " " << std::setprecision(10) << ((double)((MNStruct *)globalcontext)->ProfileData[nTOA][i/BinRatio][1]-finaloffset)/finalamp << " " << (MLShapeVec[i/BinRatio]-finaloffset)/finalamp << " " << MLSigma/finalamp << " " << StocVec[i/BinRatio]/finalamp; //profilenoise[i/BinRatio] << " " << finaloffset+finalamp*M[i/BinRatio + ProfileBaselineTerms*ProfNbins] << " " << Jittervec[i/BinRatio] << " " << finaloffset << " " << StocVec[i/BinRatio] << " " << M[i/BinRatio + ProfileBaselineTerms*ProfNbins];
+						profilefile << Nj << " " << std::setprecision(10) << ((double)((MNStruct *)globalcontext)->ProfileData[nTOA][i/BinRatio][1]-finaloffset)/finalamp << " " << (MLShapeVec[i/BinRatio]-finaloffset)/finalamp << " " << MLSigma/finalamp << " " << StocVec[i/BinRatio]/finalamp << " " << shapevec[i/BinRatio]/maxshape; //profilenoise[i/BinRatio] << " " << finaloffset+finalamp*M[i/BinRatio + ProfileBaselineTerms*ProfNbins] << " " << Jittervec[i/BinRatio] << " " << finaloffset << " " << StocVec[i/BinRatio] << " " << M[i/BinRatio + ProfileBaselineTerms*ProfNbins];
 
 						if(incExtraProfComp > 0){
 							//profilefile << " " << 	finaloffset+finalamp*ExtraCompSignalVec[i] << " " << sqrt(MNM2[ProfileBaselineTerms + Msize*(ProfileBaselineTerms)]);
@@ -15870,7 +15902,7 @@ else{
 
 						if(incPrecession == 2){
 							for(int c = 0; c < ((MNStruct *)globalcontext)->numProfComponents; c++){
-								profilefile << " " << PrecSignalVec[c*Nbins+i];
+								profilefile << " " << PrecSignalVec[c*Nbins+i]/maxshape;
 							}
 						}
 
@@ -20745,8 +20777,10 @@ double  Template2DProfLike(int &ndim, double *Cube, int &npars, double *DerivedP
 
 	dgemm(M, M , MNM, Nbins, Msize,Nbins, Msize, 'T', 'N');
 
+	double priorval = 1.0;
+
 	for(int j = 1; j < Msize; j++){
-		MNM[j][j] += pow(10.0,-14);
+		MNM[j][j] += 1.0/(priorval*priorval);
 
 	}
 
@@ -21140,9 +21174,12 @@ void WriteTemplate2DProfLike(std::string longname, int &ndim){
 
 	dgemm(M, M , MNM, Nbins, Msize,Nbins, Msize, 'T', 'N');
 
-	for(int j = 1; j < Msize; j++){
-		MNM[j][j] += pow(10.0,-14);
-	}
+        double priorval = 1.0;
+
+        for(int j = 1; j < Msize; j++){
+                MNM[j][j] += 1.0/(priorval*priorval);
+
+        }
 
 	double Chisq=0;
 	double detN = 0;
@@ -21243,7 +21280,7 @@ void WriteTemplate2DProfLike(std::string longname, int &ndim){
 
 
 		for(int j = 0; j < Msize-1; j++){
-			printf("Coeff %i %i %g %g %g %g \n", fc, j, ((MNStruct *)globalcontext)->TemplateFreqs[fc], TempdNM[j+1], TempdNM[j+1]/TempdNM[1], sqrt(TempMNM[j+1][j+1]*rms*rms)/TempdNM[1]);
+			printf("Coeff %i %i %g %g %g \n", fc, j, ((MNStruct *)globalcontext)->TemplateFreqs[fc], TempdNM[j+1]/TempdNM[1], sqrt(TempMNM[j+1][j+1]*rms*rms)/TempdNM[1]);
 		}
 		
 		std::ofstream profilefile;
