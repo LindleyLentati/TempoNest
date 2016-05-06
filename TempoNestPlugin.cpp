@@ -1940,7 +1940,9 @@ extern "C" int graphicalInterface(int argc, char **argv,
 
 
 		if(incProfileEvo != 1){
-			NProfileEvoPoly = 0;
+			if(FitTemplate == 0){
+				NProfileEvoPoly = 0;
+			}
 			for(int i = 0; i < numProfComponents; i++){
 				numEvoFitCoeff[i]=0;
 			}
@@ -3020,8 +3022,8 @@ extern "C" int graphicalInterface(int argc, char **argv,
 
 		for(int i =0; i < 2*numRedCoeff;i++){
 			//printf("Red C %i %g \n", i, psr[0].TNRedCoeffs[i+100]);
-			Dpriors[pcount][0]=-10;
-			Dpriors[pcount][1]=10;
+			Dpriors[pcount][0]=-6;
+			Dpriors[pcount][1]= 6;
 			pcount++;
 		}
 
@@ -3311,7 +3313,7 @@ extern "C" int graphicalInterface(int argc, char **argv,
 
 
 		getArraySizeInfo(context);
-		printf("Pre-Computing Matrices\n");
+		printf("Pre-Computing Matrices: totalsize = %i\n", ((MNStruct *)context)->totalsize);
 	
 	
 		for(int p=1;p<((MNStruct *)context)->numFitTiming;p++){
@@ -4338,6 +4340,16 @@ extern "C" int graphicalInterface(int argc, char **argv,
 			PrecRefMJDs[6] = 53900;
 			
 			((MNStruct *)context)->PrecRefMJDs = PrecRefMJDs;
+
+			int *PrecNPoly = new int[numProfComponents]();
+			PrecNPoly[0] = 0;
+			PrecNPoly[1] = 4;
+			PrecNPoly[2] = 4;
+			PrecNPoly[3] = 4;
+			PrecNPoly[4] = 4;
+			PrecNPoly[5] = 4;
+			PrecNPoly[6] = 4;
+
 
 			double errscale = 1;
 			std::ifstream MeanProfileFile;

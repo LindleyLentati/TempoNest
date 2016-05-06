@@ -35,6 +35,7 @@
 #include <stdio.h>
 #include <vector>
 #include <gsl/gsl_multimin.h>
+#include <gsl/gsl_multifit.h>
 #include "dgemm.h"
 #include "dgemv.h"
 #include "dpotri.h"
@@ -20777,7 +20778,7 @@ double  Template2DProfLike(int &ndim, double *Cube, int &npars, double *DerivedP
 
 	dgemm(M, M , MNM, Nbins, Msize,Nbins, Msize, 'T', 'N');
 
-	double priorval = 1.0;
+	double priorval = 0.2;
 
 	for(int j = 1; j < Msize; j++){
 		MNM[j][j] += 1.0/(priorval*priorval);
@@ -20788,6 +20789,8 @@ double  Template2DProfLike(int &ndim, double *Cube, int &npars, double *DerivedP
 	double detN = 0;
 
 	if(debug ==1){printf("Calculating Like \n");}
+
+	double ampsum=0;
 
 	for(int fc=0; fc < ((MNStruct *)globalcontext)->numTempFreqs; fc++){
 	
@@ -20823,7 +20826,7 @@ double  Template2DProfLike(int &ndim, double *Cube, int &npars, double *DerivedP
 		}
 
 		for(int i =0; i < Msize-1; i++){	
-
+			ampsum += fabs(shapecoeff[i]);
 			PDet += shapecoeff[i]*shapecoeff[i];
 		}
 
@@ -20866,7 +20869,7 @@ double  Template2DProfLike(int &ndim, double *Cube, int &npars, double *DerivedP
 	}
 
 
-	profilelike = -0.5*(Chisq+detN);//-PDet;/
+	profilelike = -0.5*(Chisq+detN)-ampsum;//-PDet;/
 	lnew += profilelike;
 
 
@@ -21174,7 +21177,7 @@ void WriteTemplate2DProfLike(std::string longname, int &ndim){
 
 	dgemm(M, M , MNM, Nbins, Msize,Nbins, Msize, 'T', 'N');
 
-        double priorval = 1.0;
+        double priorval = 0.2;
 
         for(int j = 1; j < Msize; j++){
                 MNM[j][j] += 1.0/(priorval*priorval);
@@ -21183,6 +21186,11 @@ void WriteTemplate2DProfLike(std::string longname, int &ndim){
 
 	double Chisq=0;
 	double detN = 0;
+
+	double **CoeffData = new double *[totalProfCoeff];
+	for(int fc=0; fc < totalProfCoeff; fc++){
+		CoeffData[fc] = new double[3*((MNStruct *)globalcontext)->numTempFreqs]();
+	}
 
 	for(int fc=0; fc < ((MNStruct *)globalcontext)->numTempFreqs; fc++){
 	
@@ -21280,7 +21288,12 @@ void WriteTemplate2DProfLike(std::string longname, int &ndim){
 
 
 		for(int j = 0; j < Msize-1; j++){
-			printf("Coeff %i %i %g %g %g \n", fc, j, ((MNStruct *)globalcontext)->TemplateFreqs[fc], TempdNM[j+1]/TempdNM[1], sqrt(TempMNM[j+1][j+1]*rms*rms)/TempdNM[1]);
+//			printf("Coeff %i %i %g %g %g \n", fc, j, ((MNStruct *)globalcontext)->TemplateFreqs[fc], TempdNM[j+1]/TempdNM[1], sqrt(TempMNM[j+1][j+1]*rms*rms)/TempdNM[1]);
+
+			CoeffData[j][3*fc + 0] = ((MNStruct *)globalcontext)->TemplateFreqs[fc];
+			CoeffData[j][3*fc + 1] = TempdNM[j+1]/TempdNM[1];
+			CoeffData[j][3*fc + 2] = sqrt(TempMNM[j+1][j+1]*rms*rms)/TempdNM[1];
+
 		}
 		
 		std::ofstream profilefile;
@@ -21327,7 +21340,117 @@ void WriteTemplate2DProfLike(std::string longname, int &ndim){
 
 	}
 
-	printf("End Like0: %.10g %g %g\n", lnew, detN, Chisq);
+
+
+	std::ofstream ProfilePolyFile;
+	std::string Polyname = longname+"PolyFit.dat";
+
+	ProfilePolyFile.open(Polyname.c_str());
+
+ 	int npoly = ((MNStruct *)globalcontext)->NProfileEvoPoly+1;
+	double EvoRefFreq = ((MNStruct *)globalcontext)->EvoRefFreq;
+
+	printf("Fitting polynomial using %i components with %g as ref freq \n", npoly, EvoRefFreq);
+
+
+	gsl_matrix *X = gsl_matrix_alloc(((MNStruct *)globalcontext)->numTempFreqs, npoly);
+	gsl_vector *y = gsl_vector_alloc(((MNStruct *)globalcontext)->numTempFreqs);
+	gsl_vector *w = gsl_vector_alloc(((MNStruct *)globalcontext)->numTempFreqs);
+
+	gsl_vector *c = gsl_vector_alloc(npoly);
+	gsl_matrix *cov = gsl_matrix_alloc(npoly, npoly);
+
+	double *PolyResults = new double[npoly*totalProfCoeff]();
+
+	for(int coeff = 0; coeff < totalProfCoeff; coeff++){
+
+		for (int i = 0; i < ((MNStruct *)globalcontext)->numTempFreqs; i++){
+	      
+			double freq = (CoeffData[coeff][i*3+0] - EvoRefFreq)/1000.0;
+			for(int q = 0; q <  npoly; q++){
+				gsl_matrix_set(X, i, q, pow(freq,q));
+			}
+
+			gsl_vector_set(y, i, CoeffData[coeff][i*3+1]);
+			gsl_vector_set(w, i, 1.0/(CoeffData[coeff][i*3+2]*CoeffData[coeff][i*3+2]));
+
+			if(fabs(freq) < 0.01/1000.0){
+//				printf("This is the ref freq: %i %g %g \n", i, freq, EvoRefFreq);
+				gsl_vector_set(w, i, pow(10.0,10));
+			}
+		}
+
+		double gslchisq = 0;
+		gsl_multifit_linear_workspace *work  = gsl_multifit_linear_alloc (((MNStruct *)globalcontext)->numTempFreqs, npoly);
+		gsl_multifit_wlinear (X, w, y, c, cov, &gslchisq, work);
+		gsl_multifit_linear_free (work);
+
+#define COV(i,j) (gsl_matrix_get(cov,(i),(j)))
+
+//	    printf ("# best fit: Y = %g + %g X + %g X^2\n", gsl_vector_get(c,(0)), gsl_vector_get(c,(1)), gsl_vector_get(c,(2)));
+
+		for(int q = 0; q < npoly; q++){
+			PolyResults[q*totalProfCoeff + coeff] = gsl_vector_get(c,(q));
+		}
+
+		for (int i = 0; i < ((MNStruct *)globalcontext)->numTempFreqs; i++){
+			double freq = (CoeffData[coeff][i*3+0] - EvoRefFreq)/1000;
+			double Signal=0;
+			for(int q = 0; q < npoly; q++){
+				Signal += gsl_vector_get(c,(q))*pow(freq,q);
+//				gsl_vector_get(c,(0)) + gsl_vector_get(c,(1))*freq + gsl_vector_get(c,(2))*freq*freq;
+			}
+			ProfilePolyFile << freq << " " << CoeffData[coeff][i*3+1] << " " << 1.0/sqrt(gsl_vector_get(w,(i))) << " " << Signal << "\n";
+	//		printf("Signal: %i %g %g %g %g \n", i, freq, CoeffData[coeff][i*3+1], 1.0/sqrt(gsl_vector_get(w,(i))), Signal);
+		}
+		ProfilePolyFile << "\n";
+/*
+	    printf ("# covariance matrix:\n");
+	    printf ("[ %+.5e, %+.5e, %+.5e  \n",
+		       COV(0,0), COV(0,1), COV(0,2));
+	    printf ("  %+.5e, %+.5e, %+.5e  \n", 
+		       COV(1,0), COV(1,1), COV(1,2));
+	    printf ("  %+.5e, %+.5e, %+.5e ]\n", 
+		       COV(2,0), COV(2,1), COV(2,2));
+	    printf ("# chisq = %g\n", gslchisq);*/
+
+	}
+
+	gsl_matrix_free (X);
+	gsl_vector_free (y);
+	gsl_vector_free (w);
+	gsl_vector_free (c);
+	gsl_matrix_free (cov);
+	ProfilePolyFile.close();
+
+
+	std::ofstream ProfileTemplateFile;
+	std::string PolyTemplatename = longname+"ProfInfo.Template.dat";
+
+	ProfileTemplateFile.open(PolyTemplatename.c_str());
+	int EvoCoeffToWrite = 0;
+	if(npoly > 0){ EvoCoeffToWrite = totalProfCoeff - 1;}
+
+	ProfileTemplateFile << totalProfCoeff << " " << EvoCoeffToWrite << "\n";
+	for(int c = 0; c < totalProfCoeff; c++){
+		ProfileTemplateFile << PolyResults[c] << "\n";
+	}
+
+	for(int i = 0; i < ((MNStruct *)globalcontext)->numProfComponents; i++){
+                ProfileTemplateFile << betas[i]/((MNStruct *)globalcontext)->ReferencePeriod << "\n";
+        }
+
+	for(int q = 1; q < npoly; q++){
+		for(int c = 1; c < totalProfCoeff; c++){
+			ProfileTemplateFile << PolyResults[q*totalProfCoeff + c] << "\n";
+		}
+	}
+
+	ProfileTemplateFile.close();
+
+	delete[] PolyResults;
+
+//	printf("End Like0: %.10g %g %g\n", lnew, detN, Chisq);
 	profilelike = -0.5*(Chisq+detN);
 	lnew += profilelike;
 
@@ -21345,7 +21468,7 @@ void WriteTemplate2DProfLike(std::string longname, int &ndim){
 	delete[] AllHermiteBasis;
 	delete[] JitterBasis;
 */
-	printf("End Like0.5: %.10g %g %g\n", lnew, detN, Chisq);
+//	printf("End Like0.5: %.10g %g %g\n", lnew, detN, Chisq);
 
 	for (int j = 0; j < Msize; j++){
 		delete[] MNM[j];
@@ -21356,7 +21479,7 @@ void WriteTemplate2DProfLike(std::string longname, int &ndim){
 	
 	
 	 
-	 printf("End Like1: %.10g %g %g\n", lnew, detN, Chisq);
+	// printf("End Like1: %.10g %g %g\n", lnew, detN, Chisq);
 	 
 	 
 

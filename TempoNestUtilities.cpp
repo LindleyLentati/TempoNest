@@ -793,6 +793,7 @@ void getCustomDMatrix(pulsar *pulse, int *MarginList, int **TempoFitNums, int *T
 			}
 			pcount++;
 		}
+
 	
 	
 //		for(int i=0; i < pulse->nobs; i++) {
@@ -1678,9 +1679,10 @@ void StoreTMatrix(double *TotalMatrix, void *context){
 //////////////////////////////////////////////////////////////////////////////////////////  
 
 	int TimetoMargin=((MNStruct *)context)->TimetoMargin;
-
-	getCustomDVectorLike(context, TotalMatrix, ((MNStruct *)context)->pulse->nobs, TimetoMargin, totalsize);
-	vector_dgesvd(TotalMatrix,((MNStruct *)context)->pulse->nobs, TimetoMargin);
+	if(TimetoMargin > 0){
+		getCustomDVectorLike(context, TotalMatrix, ((MNStruct *)context)->pulse->nobs, TimetoMargin, totalsize);
+		vector_dgesvd(TotalMatrix,((MNStruct *)context)->pulse->nobs, TimetoMargin);
+	}
 		
 
 

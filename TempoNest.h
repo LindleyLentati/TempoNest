@@ -135,6 +135,7 @@ typedef struct {
 	int incTimeCorrProfileNoise;
 	double *PrecAmps;
 	double *PrecRefMJDs;
+	int *PrecNPoly;
 	/*GPTA stuff*/
 
 	int incWideBandNoise;
