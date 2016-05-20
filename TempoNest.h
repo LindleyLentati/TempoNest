@@ -136,7 +136,15 @@ typedef struct {
 	double *PrecAmps;
 	double *PrecRefMJDs;
 	int *PrecNPoly;
+	int *TimeEpochIndex;
+	double *TimeEpochs;
+	int NumTimeEvoEpochs;
+	int HighSNEQUAD;
+	int *HighSNStocProfPriors;
 	/*GPTA stuff*/
+
+	int incProfileScatter;
+	int ScatterPBF;
 
 	int incWideBandNoise;
 	int *numshapecoeff;
@@ -205,6 +213,8 @@ typedef struct {
 	int ChannelToFit;
 	double **MLProfileNoise;
 	int NProfileEvoPoly;
+	int NProfileTimePoly;
+	int ProfTimeEvoDims;
 	double *ProfCompSeps;
 	int diagonalGHS;
 	double PhasePrior;
@@ -466,7 +476,9 @@ void setupparams(char *ConfigFileName, int &useGPUS,
 		int &incTimeCorrProfileNoise,
 		double &phasePriorExpansion,
 		int &ProfileNoiseMethod,
-		int &FitPrecAmps);
+		int &FitPrecAmps,
+		int &NProfileTimePoly,
+		int &incProfileScatter);
 
 void setTNPriors(char *ConfigFileName, double **Dpriors, long double **TempoPriors, int TPsize, int DPsize);
 void setFrequencies(char *ConfigFileName, double *SampleFreq, int numRedfreqs, int numDMfreqs, int numRedLogFreqs, int numDMLogFreqs, double RedLowFreq, double DMLowFreq, double RedMidFreq, double DMMidFreq);

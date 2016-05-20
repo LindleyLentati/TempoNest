@@ -156,7 +156,9 @@ void setupparams(char *ConfigFileName, int &useGPUS,
 		int &incTimeCorrProfileNoise,
 		double &phasePriorExpansion,
 		int &ProfileNoiseMethod,
-		int &FitPrecAmps){
+		int &FitPrecAmps,
+		int &NProfileTimePoly,
+		int &incProfileScatter){
 
 	//General parameters:
 	//Use GPUs 0=No, 1=Yes
@@ -245,6 +247,8 @@ void setupparams(char *ConfigFileName, int &useGPUS,
 	ProfileEnergyEvoPrior[0] = -1;
 	ProfileEnergyEvoPrior[1] =  1;
 
+	NProfileTimePoly = 0;
+
 	incProfileFit = 0;
 	
 	ProfileFitPrior[0] = -1;
@@ -272,6 +276,8 @@ void setupparams(char *ConfigFileName, int &useGPUS,
 	FitPrecAmps = -1;
 
 	incTimeCorrProfileNoise = 0;
+
+	incProfileScatter = 0;
 
     //Priors
 
@@ -653,6 +659,11 @@ void setupparams(char *ConfigFileName, int &useGPUS,
 	
 	parameters.readInto(FitPrecAmps, "FitPrecAmps", FitPrecAmps);
 
+	parameters.readInto(NProfileTimePoly, "NProfileTimePoly", NProfileTimePoly);
+
+
+
+	parameters.readInto(incProfileScatter, "incProfileScatter", incProfileScatter);
 	
     } catch(ConfigFile::file_not_found oError) {
         printf("WARNING: parameters file '%s' not found. Using defaults.\n", oError.filename.c_str());

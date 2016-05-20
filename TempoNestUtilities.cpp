@@ -2036,6 +2036,7 @@ void getNumTempFreqs(int &NumFreqs, void *globalcontext, double TemplateChanWidt
 			else{
 				((MNStruct *)globalcontext)->TemplateFreqs[int(freqs.size())] = freq;
 				freqs.push_back(freq);
+				printf("Using Freq: %.16g \n", freq);
 				
 			}
 		}
