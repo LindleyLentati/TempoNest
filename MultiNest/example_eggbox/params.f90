@@ -7,14 +7,14 @@ implicit none
 
 	!dimensionality
       	integer sdim
-      	parameter(sdim=2)
+      	parameter(sdim=1)
       
       	!priors on the parameters
       	!uniform priors (0, 10\pi) are used for all dimensions & are set in main.f90
       	double precision spriorran(sdim,2)
       
-
-
+        double precision, allocatable, dimension(:) :: datvec
+        double precision pi
 ! Parameters for Nested Sampler
 	
       	!whether to do use Nested Importance Sampling
@@ -31,7 +31,7 @@ implicit none
 	
       	!max no. of live points
       	integer nest_nlive
-	parameter(nest_nlive=2000)
+	parameter(nest_nlive=200)
       
       	!tot no. of parameters, should be sdim in most cases but if you need to
       	!store some additional parameters with the actual parameters then
@@ -53,7 +53,7 @@ implicit none
       
       	!root for saving posterior files
       	character*100 nest_root
-	parameter(nest_root='results2/17D-')
+	parameter(nest_root='results2/LowSN-Gauss-')
 	
 	!after how many iterations feedback is required & the output files should be updated
 	!note: posterior files are updated & dumper routine is called after every updInt*10 iterations
@@ -70,7 +70,7 @@ implicit none
       
       	!no. of parameters to cluster (for mode detection)
       	integer nest_nClsPar
-      	parameter(nest_nClsPar=2)
+      	parameter(nest_nClsPar=1)
       
       	!whether to resume from a previous run
       	logical nest_resume

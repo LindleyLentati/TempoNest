@@ -1,1 +1,0 @@
-/usr/local/x86_64/gnu/gcc-4.8.2/bin/gfortran      -std=f95 -pedantic -Wall -Wextra  -Wfatal-errors -O3 CMakeFiles/gauss_f.exe.dir/lin_alg.f90.o CMakeFiles/gauss_f.exe.dir/gauss_f_mod.f90.o CMakeFiles/gauss_f.exe.dir/gauss_f.f90.o  -o gauss_f.exe -rdynamic ../ellipsis/libellipsis.a /usr/lib64/liblapack.so /usr/lib64/libblas.so -lpthread 

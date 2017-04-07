@@ -9,7 +9,7 @@ sampler = 0;
 
 
 # Root of the results files,relative to the directory in which TempoNest is run. This will be followed by the pulsar name, and then the individual output file extensions.
-root = results/Example-Red-
+root = results/Example-Red-4-
 
 # numTempo2its - sets the number of iterations Tempo2 should do before setting the priors.  Should only be set to 0 if all the priors are set in setTNPriors
 numTempo2its = 2;
@@ -80,8 +80,8 @@ AlphaPrior[1] = 7;
 AmpPrior[0] = -20;
 AmpPrior[1] = -8;
 
-numRedCoeff = 60;
-numDMCoeff = 60;
+numRedCoeff = 120;
+numDMCoeff = 120;
 
 
 CoeffPrior[0] = -10;
@@ -123,7 +123,7 @@ FitForBand[1][3] = 0;
 
 
 
-numGroupCoeff = 180;
+numGroupCoeff = 120;
 GroupNoiseFlag = -rnoise
 GroupNoiseAmpPrior[0] = -20;
 GroupNoiseAmpPrior[1] = -10;
@@ -163,4 +163,4 @@ DMEventLengthPrior[1] = 365.25;
 IS = 1;
 ceff = 0;
 efr = 0.3;
-nlive = 1000;
+nlive = 500;

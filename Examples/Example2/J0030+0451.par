@@ -13,3 +13,7 @@ EPHVER         5
 CLK            UNCORR
 MODE 1
 EPHEM          DE414
+#TNRedAmp -13.2704
+#TNRedGam 4.65145
+#TNRedC 15
+

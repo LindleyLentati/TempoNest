@@ -145,6 +145,7 @@ typedef struct {
 
 	int incProfileScatter;
 	int ScatterPBF;
+	int *ScatterIndex;
 
 	int incWideBandNoise;
 	int *numshapecoeff;
@@ -174,6 +175,10 @@ typedef struct {
 	double **InterpolatedMeanProfile;
 	double **InterpolatedJitterProfile;
 	double **InterpolatedWidthProfile;
+	double **InterpolatedFBasis;
+	double **InterpolatedFJitterBasis;
+	int NFBasis;
+	double **FourierProfileData;
 	int *numChanPerInt;
 	int numProfileEpochs;
 	int TotalProfiles;
@@ -181,6 +186,7 @@ typedef struct {
 	double **MeanProfileEvo;
 	double *MeanProfileStoc;
 	double *MeanProfileBeta;
+	double MeanScatter;
 	long double **ProfileInfo;
 	long double ***ProfileData;
 	long double ReferencePeriod;
@@ -228,6 +234,12 @@ typedef struct {
 	int totalTimeCorrCoeff;
 	double phasePriorExpansion;
 	int ProfileNoiseMethod;
+	int *FitCompWidths;
+	int *FitCompPos;
+	int NumFitCompWidths;
+	int NumFitCompPos;
+	int NumCompswithWidth;
+	int NumCompswithPos;
 
 	int GHSperProfDims;
 	int GHSperEpochDims;
@@ -239,6 +251,7 @@ typedef struct {
 	int numTempFreqs;
 	double *TemplateFreqs;
 	double *TemplateChans;
+	double *TemplateNoise;
 
 	/*Grade Stuff: Need to track Grades and store previous likelihood things for hierarchial evaluation*/
 
@@ -268,6 +281,7 @@ void assignGPUcontext(void *context);
 void assignGHScontext(void *context);
 
 void callGHS(int NBurn, int NSamp, int GHSresume);
+void callFourierDomainGHS(int NBurn, int NSamp, int GHSresume);
 
 double iter_factorial(unsigned int n);
 void store_factorial();
@@ -294,7 +308,10 @@ void  WriteMaxTemplateProf(std::string longname, int &ndim);
 void  WriteSubIntStocProfLike(std::string longname, int &ndim);
 void PreComputeShapelets(double **StoredShapelet, double **StoredJitter, double **StoredWidth, double **InterpolatedMeanProfile, double **InterpolatedJitterProfile, double **InterpolatedWidthProfile, long double finalInterpTime, int numtointerpolate, double *MeanBeta, double &MaxShapeAmp);
 void Tscrunch(void *globalcontext, double TemplateChanWidth);
+void Tscrunch2(void *globalcontext, double TemplateChanWidth);
 void getNumTempFreqs(int &NumFreqs, void *context, double TemplateChanWidth);
+//void FFTProfileData(double **StoredFourierShapelets, double **StoredFourierJitterShapelets, int &NFBasis, int FindThreshold, double **FourierProfileData, void *context); 
+
 
 double ProfileDomainLike(int &ndim, double *Cube, int &npars, double *DerivedParams, void *context);
 void ProfileDomainLikeMNWrap(double *Cube, int &ndim, int &npars, double &lnew, void *context);
@@ -306,6 +323,9 @@ void Template2DProfLikeMNWrap(double *Cube, int &ndim, int &npars, double &lnew,
 void WriteTemplate2DProfLike(std::string longname, int &ndim);
 void  WriteDMSignal(std::string longname, int &ndim);
 void TemplateProfLikeMNWrap(double *Cube, int &ndim, int &npars, double &lnew, void *context);
+double FitPhase();
+void GetInterpVectors(void *context);
+
 double SubIntStocProfLike(int &ndim, double *Cube, int &npars, double *DerivedParams, void *context);
 void SubIntStocProfLikeMNWrap(double *Cube, int &ndim, int &npars, double &lnew, void *context);
 //non linear timing model likelihood functions
@@ -478,10 +498,11 @@ void setupparams(char *ConfigFileName, int &useGPUS,
 		int &ProfileNoiseMethod,
 		int &FitPrecAmps,
 		int &NProfileTimePoly,
-		int &incProfileScatter);
+		int &incProfileScatter,
+		int &ScatterPBF);
 
 void setTNPriors(char *ConfigFileName, double **Dpriors, long double **TempoPriors, int TPsize, int DPsize);
 void setFrequencies(char *ConfigFileName, double *SampleFreq, int numRedfreqs, int numDMfreqs, int numRedLogFreqs, int numDMLogFreqs, double RedLowFreq, double DMLowFreq, double RedMidFreq, double DMMidFreq);
 void GetGroupsToFit(char *ConfigFileName, int incGroupNoise, int **FitForGroup, int incBandNoise, int **FitForBand);
 void setShapePriors(char *ConfigFileName, double **ShapePriors, double **BetaPrior, int numcoeff, int numcomps);
-void GetProfileFitInfo(char *ConfigFileName, int numProfComponents, int *numGPTAshapecoeff, int *numProfileFitCoeff, int *numEvoCoeff, int *numFitEvoCoeff, 	int *numGPTAstocshapecoeff, double *ProfCompSeps, double &TemplateChanWidth, int *TimeCorrShapeCoeff, int incExtraComp,  double **FitForExtraComp);
+void GetProfileFitInfo(char *ConfigFileName, int numProfComponents, int *numGPTAshapecoeff, int *numProfileFitCoeff, int *numEvoCoeff, int *numFitEvoCoeff, 	int *numGPTAstocshapecoeff, double *ProfCompSeps, double &TemplateChanWidth, int *TimeCorrShapeCoeff, int incExtraComp,  double **FitForExtraComp, int *FitCompWidths, int *FitCompPos);

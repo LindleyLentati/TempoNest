@@ -12,29 +12,24 @@ subroutine slikelihood(Cube,slhood)
          
 	implicit none
       
-	double precision Cube(nest_nPar),slhood, Datavector(21)
+	double precision Cube(nest_nPar),slhood, Datavector(21), Amp, prior
 	integer i, minE, maxE
 	
 	slhood = 0d0
-
-        minE = 3
-        maxE = 20
 	
-        Cube(1) = floor((maxE - minE)*Cube(1)+minE)
-        Cube(2) = 10d0*Cube(2)
+        !Cube(1) = -10*Cube(1)+5
+        !Amp = 10d0**Cube(1)	
+        
 
-        Datavector = 0
-        Datavector(11) = 8
-
-	do i = 1, 20
-                if(i .ne. Cube(1))then
-		        slhood = slhood + 0.5d0*(Datavector(i))**2
-                else if (i .eq. Cube(1))then
-                         slhood = slhood + 0.5d0*(Datavector(i) - Cube(2))**2
-                end if
+        Cube(1) = 1000*Cube(1)
+        Amp = Cube(1)	
+        
+        prior = 0.5*(9.5-Amp)**2/5**2
+        do i = 1, 100
+                         slhood = slhood + 0.5d0*(datvec(i) - Amp*sin(2*pi*i/100.0))**2/(100.0*100.0)
 	enddo
 
-        slhood=-slhood
+        slhood=-slhood-prior
 	
 
 end subroutine slikelihood

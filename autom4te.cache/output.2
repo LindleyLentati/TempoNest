@@ -824,8 +824,6 @@ am__isrc
 T2ARCH
 HAVE_TEMPO2_FALSE
 HAVE_TEMPO2_TRUE
-TEMPO2_INCDIR
-TEMPO2_LIBDIR
 TEMPO2_LIBS
 TEMPO2_CFLAGS
 HAVE_CULA_FALSE
@@ -26993,13 +26991,13 @@ $as_echo_n "checking for CUDA/CULA installation... " >&6; }
   CULA_CFLAGS=""
   CULA_LIBS=""
 
-  #CULA_LIB="-lcula_lapack -lcuda"
+  #CULA_LIB="-lcula_lapack -lcudart"
 
   if test x"$CULA_LIB_PATH_64" != x; then
-    CULA_LIBS="-L$CULA_LIB_PATH_64"
+    CULA_LIBS="-L$CULA_LIB_PATH_64 -lcula_lapack -lcudart"
   else
     if test x"$CULA_LIB_PATH_32" != x; then
-      CULA_LIBS="-L$CULA_LIB_PATH_32"
+      CULA_LIBS="-L$CULA_LIB_PATH_32 -lcula_lapack -lcudart"
     fi
   fi
 
@@ -27202,34 +27200,40 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
   
 
-  { $as_echo "$as_me:$LINENO: checking for Tempo2 installation" >&5
-$as_echo_n "checking for Tempo2 installation... " >&6; }
+  { $as_echo "$as_me:$LINENO: checking for TEMPO2 installation" >&5
+$as_echo_n "checking for TEMPO2 installation... " >&6; }
 
   TEMPO2_CFLAGS=""
   TEMPO2_LIBS=""
 
-  if test x"$TEMPO2_INC" != x; then
-    TEMPO2_CFLAGS="-I$TEMPO2_INC"
-    TEMPO2_INCDIR="$TEMPO2_INC"
-  else
+  TEMPO2_LIB=""
+
+  if test x"$TEMPO2" != x; then
+    TEMPO2_LIBS="-L$TEMPO2/lib -ltempo2"
+  fi
+
+  if test x"$TEMPO2" != x; then
     TEMPO2_CFLAGS="-I$TEMPO2/include"
-    TEMPO2_INCDIR="$TEMPO2/include"
   fi
 
-  if test x"$TEMPO2_LIB" != x; then
-    TEMPO2_LIBS="-L$TEMPO2_LIB"
-    TEMPO2_LIBDIR="$TEMPO2_LIB"
-  else
-    TEMPO2_LIBS="-L$TEMPO2/lib"
-    TEMPO2_LIBDIR="$TEMPO2/lib"
-  fi
-
-  TEMPO2_LIBS="$TEMPO2_LIBS -ltempo2"
+  TEMPO2_LIBS="$TEMPO2_LIBS $TEMPO2_LIB"
 
   ac_save_CFLAGS="$CFLAGS"
   ac_save_LIBS="$LIBS"
   LIBS="$ac_save_LIBS $TEMPO2_LIBS"
   CFLAGS="$ac_save_CFLAGS $TEMPO2_CFLAGS"
+
+  ac_ext=cpp
+ac_cpp='$CXXCPP $CPPFLAGS'
+ac_compile='$CXX -c $CXXFLAGS $CPPFLAGS conftest.$ac_ext >&5'
+ac_link='$CXX -o conftest$ac_exeext $CXXFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
+
+  # test compilation of simple program
+  ac_save_CXXFLAGS="$CXXFLAGS"
+  ac_save_LIBS="$LIBS"
+  LIBS="$ac_save_LIBS $TEMPO2_LIBS"
+  CXXFLAGS="$ac_save_CXXFLAGS $TEMPO2_CFLAGS"
 
   cat >conftest.$ac_ext <<_ACEOF
 /* confdefs.h.  */
@@ -27237,7 +27241,7 @@ _ACEOF
 cat confdefs.h >>conftest.$ac_ext
 cat >>conftest.$ac_ext <<_ACEOF
 /* end confdefs.h.  */
-#include <stdio.h>
+#include "tempo2.h"
 #ifdef F77_DUMMY_MAIN
 
 #  ifdef __cplusplus
@@ -27277,7 +27281,7 @@ $as_echo "$ac_try_echo") >&5
   cat conftest.err >&5
   $as_echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } && {
-	 test -z "$ac_c_werror_flag" ||
+	 test -z "$ac_cxx_werror_flag" ||
 	 test ! -s conftest.err
        } && test -s conftest$ac_exeext && {
 	 test "$cross_compiling" = yes ||
@@ -27288,12 +27292,13 @@ else
   $as_echo "$as_me: failed program was:" >&5
 sed 's/^/| /' conftest.$ac_ext >&5
 
-	have_tempo2=no
+	have_tempo2=yes
 fi
 
 rm -rf conftest.dSYM
 rm -f core conftest.err conftest.$ac_objext conftest_ipa8_conftest.oo \
       conftest$ac_exeext conftest.$ac_ext
+
 
   { $as_echo "$as_me:$LINENO: result: $have_tempo2" >&5
 $as_echo "$have_tempo2" >&6; }
@@ -27309,244 +27314,17 @@ _ACEOF
 
     
   else
-    { $as_echo "$as_me:$LINENO: WARNING: TEMPO2 code will not be compiled" >&5
-$as_echo "$as_me: WARNING: TEMPO2 code will not be compiled" >&2;}
-    if test x"$TEMPO2_LIB" = x; then
-      { $as_echo "$as_me:$LINENO: WARNING: Please set the TEMPO2_LIB environment variable" >&5
-$as_echo "$as_me: WARNING: Please set the TEMPO2_LIB environment variable" >&2;}
-    fi
-    if test x"$TEMPO2_INC" = x; then
-      { $as_echo "$as_me:$LINENO: WARNING: Please set the TEMPO2_INC environment variable" >&5
-$as_echo "$as_me: WARNING: Please set the TEMPO2_INC environment variable" >&2;}
+    { $as_echo "$as_me:$LINENO: WARNING: Will compile without TEMPO2 code" >&5
+$as_echo "$as_me: WARNING: Will compile without TEMPO2 code" >&2;}
+    if test x"$TEMPO2" = x; then
+      { $as_echo "$as_me:$LINENO: WARNING: Please set the TEMPO2 environment variable" >&5
+$as_echo "$as_me: WARNING: Please set the TEMPO2 environment variable" >&2;}
     fi
     TEMPO2_CFLAGS=""
     TEMPO2_LIBS=""
-    TEMPO2_LIBDIR=""
-    TEMPO2_INCDIR=""
     
   fi
 
-  if test x"$have_tempo2" = xyes; then
-    CFLAGS="$CFLAGS $TEMPO2_CFLAGS"
-    LDFLAGS="$LDFLAGS $TEMPO2_LIBS"
-
-                        { $as_echo "$as_me:$LINENO: checking For for compatible tempo2.h" >&5
-$as_echo_n "checking For for compatible tempo2.h... " >&6; }
-    if test "$cross_compiling" = yes; then
-  { { $as_echo "$as_me:$LINENO: error: in \`$ac_pwd':" >&5
-$as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
-{ { $as_echo "$as_me:$LINENO: error: cannot run test program while cross compiling
-See \`config.log' for more details." >&5
-$as_echo "$as_me: error: cannot run test program while cross compiling
-See \`config.log' for more details." >&2;}
-   { (exit 1); exit 1; }; }; }
-else
-  cat >conftest.$ac_ext <<_ACEOF
-/* confdefs.h.  */
-_ACEOF
-cat confdefs.h >>conftest.$ac_ext
-cat >>conftest.$ac_ext <<_ACEOF
-/* end confdefs.h.  */
-$ac_includes_default
-#include <tempo2.h>
-#include <stdlib.h>
-          
-#ifdef F77_DUMMY_MAIN
-
-#  ifdef __cplusplus
-     extern "C"
-#  endif
-   int F77_DUMMY_MAIN() { return 1; }
-
-#endif
-#ifdef FC_DUMMY_MAIN
-#ifndef FC_DUMMY_MAIN_EQ_F77
-#  ifdef __cplusplus
-     extern "C"
-#  endif
-   int FC_DUMMY_MAIN() { return 1; }
-#endif
-#endif
-int
-main ()
-{
- #ifdef TEMPO2_h_VER
-            if(atof(TEMPO2_h_VER+11) >= 1.65) {
-                return 0;
-            } else {
-                return -1;
-            }
-          #else
-            return -1;
-          #endif
-        
-  ;
-  return 0;
-}
-      
-_ACEOF
-rm -f conftest$ac_exeext
-if { (ac_try="$ac_link"
-case "(($ac_try" in
-  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
-  *) ac_try_echo=$ac_try;;
-esac
-eval ac_try_echo="\"\$as_me:$LINENO: $ac_try_echo\""
-$as_echo "$ac_try_echo") >&5
-  (eval "$ac_link") 2>&5
-  ac_status=$?
-  $as_echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); } && { ac_try='./conftest$ac_exeext'
-  { (case "(($ac_try" in
-  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
-  *) ac_try_echo=$ac_try;;
-esac
-eval ac_try_echo="\"\$as_me:$LINENO: $ac_try_echo\""
-$as_echo "$ac_try_echo") >&5
-  (eval "$ac_try") 2>&5
-  ac_status=$?
-  $as_echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); }; }; then
-  
-        { $as_echo "$as_me:$LINENO: result: yes" >&5
-$as_echo "yes" >&6; }
-      
-else
-  $as_echo "$as_me: program exited with status $ac_status" >&5
-$as_echo "$as_me: failed program was:" >&5
-sed 's/^/| /' conftest.$ac_ext >&5
-
-( exit $ac_status )
-
-
-        if test "$cross_compiling" = yes; then
-  { { $as_echo "$as_me:$LINENO: error: in \`$ac_pwd':" >&5
-$as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
-{ { $as_echo "$as_me:$LINENO: error: cannot run test program while cross compiling
-See \`config.log' for more details." >&5
-$as_echo "$as_me: error: cannot run test program while cross compiling
-See \`config.log' for more details." >&2;}
-   { (exit 1); exit 1; }; }; }
-else
-  cat >conftest.$ac_ext <<_ACEOF
-/* confdefs.h.  */
-_ACEOF
-cat confdefs.h >>conftest.$ac_ext
-cat >>conftest.$ac_ext <<_ACEOF
-/* end confdefs.h.  */
-$ac_includes_default
-#include <tempo2.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stdio.h>
-              
-#ifdef F77_DUMMY_MAIN
-
-#  ifdef __cplusplus
-     extern "C"
-#  endif
-   int F77_DUMMY_MAIN() { return 1; }
-
-#endif
-#ifdef FC_DUMMY_MAIN
-#ifndef FC_DUMMY_MAIN_EQ_F77
-#  ifdef __cplusplus
-     extern "C"
-#  endif
-   int FC_DUMMY_MAIN() { return 1; }
-#endif
-#endif
-int
-main ()
-{
- #ifdef TEMPO2_h_VER
-                if(strncmp(TEMPO2_h_VER, "$Revision$", 10) == 0) {
-                    return 0;
-                } else {
-                    return 0;
-                }
-              #else
-                return -1;
-              #endif
-            
-  ;
-  return 0;
-}
-          
-_ACEOF
-rm -f conftest$ac_exeext
-if { (ac_try="$ac_link"
-case "(($ac_try" in
-  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
-  *) ac_try_echo=$ac_try;;
-esac
-eval ac_try_echo="\"\$as_me:$LINENO: $ac_try_echo\""
-$as_echo "$ac_try_echo") >&5
-  (eval "$ac_link") 2>&5
-  ac_status=$?
-  $as_echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); } && { ac_try='./conftest$ac_exeext'
-  { (case "(($ac_try" in
-  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
-  *) ac_try_echo=$ac_try;;
-esac
-eval ac_try_echo="\"\$as_me:$LINENO: $ac_try_echo\""
-$as_echo "$ac_try_echo") >&5
-  (eval "$ac_try") 2>&5
-  ac_status=$?
-  $as_echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); }; }; then
-  
-            { $as_echo "$as_me:$LINENO: result: cvs version" >&5
-$as_echo "cvs version" >&6; }
-            { $as_echo "$as_me:$LINENO: WARNING: 
-========================================================================
-CVS version of tempo2 detected. The tempo2 version cannot be reliably
-determined from a CVS build. A tempo2 version >= 1.65 is required. If
-the build does not succeed, please update tempo2.
-========================================================================" >&5
-$as_echo "$as_me: WARNING: 
-========================================================================
-CVS version of tempo2 detected. The tempo2 version cannot be reliably
-determined from a CVS build. A tempo2 version >= 1.65 is required. If
-the build does not succeed, please update tempo2.
-========================================================================" >&2;}
-          
-else
-  $as_echo "$as_me: program exited with status $ac_status" >&5
-$as_echo "$as_me: failed program was:" >&5
-sed 's/^/| /' conftest.$ac_ext >&5
-
-( exit $ac_status )
-
-
-            { $as_echo "$as_me:$LINENO: result: not found or version too old (requires >= 1.65)" >&5
-$as_echo "not found or version too old (requires >= 1.65)" >&6; }
-            { $as_echo "$as_me:$LINENO: WARNING: Please install a more recent version of Tempo2" >&5
-$as_echo "$as_me: WARNING: Please install a more recent version of Tempo2" >&2;}
-            have_tempo2=no
-            TEMPO2_CFLAGS=""
-            TEMPO2_LIBS=""
-            TEMPO2_LIBDIR=""
-            TEMPO2_INCDIR=""
-          
-fi
-rm -rf conftest.dSYM
-rm -f core *.core core.conftest.* gmon.out bb.out conftest$ac_exeext conftest.$ac_objext conftest.$ac_ext
-fi
-
-
-      
-fi
-rm -rf conftest.dSYM
-rm -f core *.core core.conftest.* gmon.out bb.out conftest$ac_exeext conftest.$ac_objext conftest.$ac_ext
-fi
-
-
-  fi
-
-  
-  
   
   
    if test x"$have_tempo2" = xyes; then
@@ -27558,8 +27336,16 @@ else
 fi
 
 
+  ac_ext=c
+ac_cpp='$CPP $CPPFLAGS'
+ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
+ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
+#SWIN_LIB_PSRCHIVE
+#SWIN_LIB_QDINSTALL
+#SWIN_LIB_MLAPACK
 
 { $as_echo "$as_me:$LINENO: checking for LOGIN_ARCH variable" >&5
 $as_echo_n "checking for LOGIN_ARCH variable... " >&6; }
@@ -31494,6 +31280,26 @@ $as_echo "$as_me: TempoNest will be built with CUDA/CULA GPU support" >&6;}
 $as_echo "$as_me: TempoNest will be built without GPU support" >&6;}
     fi
 fi
+
+if test X$have_psrchive = Xyes; then
+	{ $as_echo "$as_me:$LINENO: Using PSRCHIVE library" >&5
+$as_echo "$as_me: Using PSRCHIVE library" >&6;}
+else
+	{ $as_echo "$as_me:$LINENO: PSRCHIVE library not found" >&5
+$as_echo "$as_me: PSRCHIVE library not found" >&will not compile ToA estimation part of TempoNest;}	
+fi
+
+#if test X$have_qdinstall = Xyes; then
+#        AC_MSG_NOTICE(Using QD library)
+#	if test X$have_mlapack = Xyes; then
+#		AC_MSG_NOTICE(Using MLAPACK library)
+#	else
+#		AC_MSG_NOTICE(MLAPACK library not found, will not compile high precision part of TempoNest)
+#	fi
+#else
+#        AC_MSG_NOTICE(QD library not found, will not compile high precision part of TempoNest)
+#fi
+
 
 { $as_echo "$as_me:$LINENO: Tempo2 includes: $TEMPO2_CFLAGS" >&5
 $as_echo "$as_me: Tempo2 includes: $TEMPO2_CFLAGS" >&6;}

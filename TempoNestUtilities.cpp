@@ -47,7 +47,7 @@
 #include <sstream>
 #include <iomanip>
 #include <gsl/gsl_sf_gamma.h>
-
+#include "T2toolkit.h"
 #ifdef HAVE_PSRCHIVE
 // psrchive stuff
 #include "Pulsar/Archive.h"
@@ -814,7 +814,7 @@ void getCustomDMatrix(pulsar *pulse, int *MarginList, int **TempoFitNums, int *T
 			pulse[0].fitJump[TempoJumpNums[i]]=1;
 		}
 }
-
+/*
 void getPhysDVector(void *context, double **TNDM, int Nobs, int *TimingGradientSigns){
 	
 	double pdParamDeriv[MAX_PARAMS], dMultiplication;
@@ -826,8 +826,8 @@ void getPhysDVector(void *context, double **TNDM, int Nobs, int *TimingGradientS
 	//long double newF0 = 3.5*(((MNStruct *)context)->LDpriors[1][1]) + (((MNStruct *)context)->LDpriors[1][0]);
 	//((MNStruct *)context)->pulse->param[((MNStruct *)context)->TempoFitNums[1][0]].val[((MNStruct *)context)->TempoFitNums[1][1]] = newF0;
 
-	fastformBatsAll(((MNStruct *)context)->pulse,((MNStruct *)context)->numberpulsars);       /* Form Barycentric arrival times */
-	formResiduals(((MNStruct *)context)->pulse,((MNStruct *)context)->numberpulsars,0);       /* Form residuals */
+	fastformBatsAll(((MNStruct *)context)->pulse,((MNStruct *)context)->numberpulsars);       
+	formResiduals(((MNStruct *)context)->pulse,((MNStruct *)context)->numberpulsars,0);       
 
 
 
@@ -919,8 +919,8 @@ void getPhysDVector(void *context, double **TNDM, int Nobs, int *TimingGradientS
 
 	for(int p= 1; p < ((MNStruct *)context)->numFitTiming; p++){
 
-		fastformBatsAll(((MNStruct *)context)->pulse,((MNStruct *)context)->numberpulsars);       /* Form Barycentric arrival times */
-		formResiduals(((MNStruct *)context)->pulse,((MNStruct *)context)->numberpulsars,0);       /* Form residuals */
+		fastformBatsAll(((MNStruct *)context)->pulse,((MNStruct *)context)->numberpulsars);       
+		formResiduals(((MNStruct *)context)->pulse,((MNStruct *)context)->numberpulsars,0);       
 
 
 		double nobatsSTD1 = 0;
@@ -931,8 +931,8 @@ void getPhysDVector(void *context, double **TNDM, int Nobs, int *TimingGradientS
 		((MNStruct *)context)->pulse->param[((MNStruct *)context)->TempoFitNums[p][0]].val[((MNStruct *)context)->TempoFitNums[p][1]] = newVal;
 
 
-//		fastformBatsAll(((MNStruct *)context)->pulse,((MNStruct *)context)->numberpulsars);       /* Form Barycentric arrival times */
-		formResiduals(((MNStruct *)context)->pulse,((MNStruct *)context)->numberpulsars,0);       /* Form residuals */
+//		fastformBatsAll(((MNStruct *)context)->pulse,((MNStruct *)context)->numberpulsars);      
+		formResiduals(((MNStruct *)context)->pulse,((MNStruct *)context)->numberpulsars,0);      
 		double sign = 0;
 		double DMSub = 0;
 		if(strcasecmp(((MNStruct *)context)->pulse[0].param[p].shortlabel[0],"DM")!=0 || strcasecmp(((MNStruct *)context)->pulse[0].param[p].shortlabel[0],"DMX_001")!=0){
@@ -940,11 +940,10 @@ void getPhysDVector(void *context, double **TNDM, int Nobs, int *TimingGradientS
 			//DMSub = averageDMDelay;
 		}
 		double zeroval= TNDM[0][p];
-
+		printf("paramter %i \n", p);
 		for(int i=0; i < ((MNStruct *)context)->pulse->nobs; i++) {	
 			double PriorFac = (double)((MNStruct *)context)->LDpriors[p][1];
 			TNDM[i][p] = ((TNDM[i][p]-zeroval)/newVals[p])*PriorFac;
-			//if(p < 20){printf("Vecs: %i %i %.16g %.16g %.16g %.16g\n", p, i, (double)((MNStruct *)context)->pulse->obsn[i].bat, (double)((MNStruct *)context)->pulse->obsn[i].residual-oldRes[i],TNDM[i][p], (TNDM[i][p]-(TNDM[0][p])));}
 			sign += double(((MNStruct *)context)->pulse->obsn[i].residual-oldRes[i])*(TNDM[i][p]-(TNDM[0][p]));
 
 			nobatsSTD1 += (((MNStruct *)context)->pulse->obsn[i].residual-oldRes[i])*(((MNStruct *)context)->pulse->obsn[i].residual-oldRes[i]);
@@ -955,12 +954,16 @@ void getPhysDVector(void *context, double **TNDM, int Nobs, int *TimingGradientS
                 double withbatsSTD1 = 0;
                 double withbatsSTD2 = 0;
 
-		fastformBatsAll(((MNStruct *)context)->pulse,((MNStruct *)context)->numberpulsars);       /* Form Barycentric arrival times */
-		formResiduals(((MNStruct *)context)->pulse,((MNStruct *)context)->numberpulsars,0);       /* Form residuals */
+		fastformBatsAll(((MNStruct *)context)->pulse,((MNStruct *)context)->numberpulsars);       
+		formResiduals(((MNStruct *)context)->pulse,((MNStruct *)context)->numberpulsars,0);       
 
 		double average = 0;
 		double sign2 = 0;
-		for(int i=0; i < ((MNStruct *)context)->pulse->nobs; i++) {	
+		for(int i=0; i < ((MNStruct *)context)->pulse->nobs; i++) {
+
+			if(p == 1 || p == 2){printf("Vecs: %i %i %.16g %.16g %.16g %.16g %.16g\n", p, i, (double)((MNStruct *)context)->pulse->obsn[i].bat, (double)((MNStruct *)context)->pulse->obsn[i].residual-oldRes[i], (double)((MNStruct *)context)->pulse->obsn[i].toaErr, TNDM[i][p], (TNDM[i][p]-(TNDM[0][p])));}
+
+	
 			//if(i<1000000000){printf("Vecs: %i %i %.16g %.16g %.16g\n", p, i, (double)((MNStruct *)context)->pulse->obsn[i].bat, (double)((MNStruct *)context)->pulse->obsn[i].residual-oldRes[i],TNDM[i][p]);}
 			sign2 += double(((MNStruct *)context)->pulse->obsn[i].residual-oldRes[i])*(TNDM[i][p]-(TNDM[0][p]));
 			withbatsSTD1 += (((MNStruct *)context)->pulse->obsn[i].residual-oldRes[i])*(((MNStruct *)context)->pulse->obsn[i].residual-oldRes[i]);
@@ -1099,8 +1102,8 @@ void getPhysDVector(void *context, double **TNDM, int Nobs, int *TimingGradientS
 	delete[] oldErrs;
 	delete[] oldRes;
 }
-
-
+*/
+/*
 void UpdatePhysDVector(void *context, double **TNDM, int Nobs){
 	
 	double pdParamDeriv[MAX_PARAMS], dMultiplication;
@@ -1174,8 +1177,75 @@ void UpdatePhysDVector(void *context, double **TNDM, int Nobs){
 
 }
 
+*/
+
+void getCustomDVectorLike(void *context, double *TNDM, int Nobs, int TimeToMargin, int TotalSize){
+
+    int pcount=0;
+    int imargin=0;
+
+    pulsar* psr = ((MNStruct *)context)->pulse;
+    FitInfo* fitinfo = &(psr->fitinfo);
+
+    for (int iparam = 0; iparam < fitinfo->nParams; ++iparam){
+	// this is something we want to marginalise over
+	param_label p = fitinfo->paramIndex[iparam];
+	 // skip over parameters that are part of the TN model
+	if (p==param_red_sin) continue;
+        if (p==param_red_cos) continue;
+        if (p==param_jitter) continue;
+        if (p==param_red_dm_sin) continue;
+        if (p==param_red_dm_cos) continue;
+
+        if (p==param_JUMP) continue;
+
+        if(((MNStruct *)context)->LDpriors[pcount][2]==1){
+
+            const int k=fitinfo->paramCounters[iparam];
+            for (int iobs = 0; iobs < psr->nobs; ++iobs){
+                const double x = psr->obsn[iobs].bat - psr->param[param_pepoch].val[0];
+
+                TNDM[iobs + imargin*((MNStruct *)context)->pulse->nobs]=fitinfo->paramDerivs[iparam](psr,0,x,iobs,p,k);
+		printf("TNDM: %i %i %i %g \n", iobs, imargin, iobs+imargin*((MNStruct *)context)->pulse->nobs, fitinfo->paramDerivs[iparam](psr,0,x,iobs,p,k));
+            }
+            ++imargin;
+        }
+        ++pcount;
+    }
+
+    pcount=0;
+
+    for (int iparam = 0; iparam < fitinfo->nParams; ++iparam){
+        param_label p = fitinfo->paramIndex[iparam];
+        if (p==param_red_sin) continue;
+        if (p==param_red_cos) continue;
+        if (p==param_jitter) continue;
+        if (p==param_red_dm_sin) continue;
+        if (p==param_red_dm_cos) continue;
+
+        if(((MNStruct *)context)->LDpriors[pcount][2]==1){
+            if (p==param_JUMP) {
+
+		
+                const int k=fitinfo->paramCounters[iparam];
+                for (int iobs = 0; iobs < psr->nobs; ++iobs){
+                    const double x = psr->obsn[iobs].bat - psr->param[param_pepoch].val[0];
+
+                    TNDM[iobs + imargin*((MNStruct *)context)->pulse->nobs]=fitinfo->paramDerivs[iparam](psr,0,x,iobs,p,k);
+                }
+
+                ++imargin;
+            }
+        }
+        ++pcount;
+    }
 
 
+
+
+}
+
+/*
 void getCustomDVectorLike(void *context, double *TNDM, int Nobs, int TimeToMargin, int TotalSize){
 	
 	double pdParamDeriv[MAX_PARAMS], dMultiplication;
@@ -1230,6 +1300,10 @@ void getCustomDVectorLike(void *context, double *TNDM, int Nobs, int TimeToMargi
 		//printf("compare: %i %i \n", numToMargin, TimeToMargin);
 	
 }
+
+*/
+
+/*
 void getCustomDMatrixLike(void *context, double **TNDM){
 	
 	double pdParamDeriv[MAX_PARAMS], dMultiplication;
@@ -1283,7 +1357,7 @@ void getCustomDMatrixLike(void *context, double **TNDM){
 	
 }
 
-
+*/
 /*
 
 void getDMatrix(pulsar *pulse, int TimetoFit, int JumptoFit, int numToMargin, int **TempoFitNums, int *TempoJumpNums, double **Dpriors, int doJumpMargin, int doTimeMargin, double **TNDM){
@@ -2049,6 +2123,67 @@ void getNumTempFreqs(int &NumFreqs, void *globalcontext, double TemplateChanWidt
 }
 
 
+
+double getProfileNoiseLevel(double *profile, int ProfNbins, int NoiseBins){
+
+
+
+
+	double minnoise = pow(10,100);	
+	for(int j = 0; j < ProfNbins-NoiseBins; j++){
+		double meannoise=0;
+		for(int k = 0; k < NoiseBins; k++){
+			meannoise += profile[j+k];
+		}
+		meannoise /= NoiseBins;
+
+		double stdnoise = 0;
+		for(int k = 0; k < NoiseBins; k++){
+                        stdnoise += pow(profile[j+k]-meannoise, 2);
+                }
+
+		stdnoise = sqrt(stdnoise/NoiseBins);
+		if(stdnoise < minnoise){minnoise = stdnoise;}
+	}
+
+
+
+	std::vector<double> noiselevels;
+	std::vector<double> meanlevels;
+        for(int j = 0; j < ProfNbins-NoiseBins; j++){
+                double meannoise=0;
+                for(int k = 0; k < NoiseBins; k++){
+                        meannoise += profile[j+k];
+                }
+                meannoise /= NoiseBins;
+
+                double stdnoise = 0;
+                for(int k = 0; k < NoiseBins; k++){
+                        stdnoise += pow(profile[j+k]-meannoise, 2);
+                }
+
+                stdnoise = sqrt(stdnoise/NoiseBins);
+                if(stdnoise < minnoise*3){noiselevels.push_back(stdnoise); meanlevels.push_back(meannoise);}
+        }
+
+
+	sort(noiselevels.begin(), noiselevels.end());
+	sort(meanlevels.begin(), meanlevels.end());
+
+	double mediannoise = 0;
+
+	  if(noiselevels.size()  % 2 == 0){
+	      mediannoise = (noiselevels[noiselevels.size() / 2 - 1] + noiselevels[noiselevels.size() / 2]) / 2;
+	  }
+	  else{
+	      mediannoise = noiselevels[noiselevels.size() / 2];
+	  }
+
+
+	return mediannoise;
+}
+
+
 void Tscrunch(void *globalcontext, double TemplateChanWidth){
 
 
@@ -2069,7 +2204,9 @@ void Tscrunch(void *globalcontext, double TemplateChanWidth){
 
 	int numfreqs = ((MNStruct *)globalcontext)->numTempFreqs;
 	double *freqs = ((MNStruct *)globalcontext)->TemplateFreqs;
+	double *Wfreqs = new double[numfreqs]();
 	double *fweights = new double[numfreqs]();
+	double *TemplateNoise = new double[numfreqs]();
 
 /////////////////////////////////////////////////////////////////////////////////////////////  
 /////////////////////////Timing Model////////////////////////////////////////////////////////
@@ -2308,6 +2445,10 @@ void Tscrunch(void *globalcontext, double TemplateChanWidth){
 				}
 			}
 
+			
+
+
+			
 
 			if(debug == 1)printf("noise mean %g num off pulse %i\n", MLnoisemean, numoffpulse);
 
@@ -2319,6 +2460,8 @@ void Tscrunch(void *globalcontext, double TemplateChanWidth){
 			for(int f = 0; f < numfreqs; f++){
 				if(fabs(cfreq -freqs[f]) < 0.01){freqpos=f;}
 			}
+
+			MinSigma = (double)((MNStruct *)globalcontext)->pulse->obsn[t].toaErr;
 				
 			for(int i =0; i < Nbins; i++){
 				int Nj =  UtWrap(i+Nbins/2 + NumWholeBinInterpOffset, 0, Nbins-1);
@@ -2334,6 +2477,7 @@ void Tscrunch(void *globalcontext, double TemplateChanWidth){
 			}
 
 			fweights[freqpos] += (1.0/(MinSigma*MinSigma));
+			Wfreqs[freqpos] += ((MNStruct *)globalcontext)->pulse->obsn[t].freq/(MinSigma*MinSigma);
 			t++;
 		
 		}		
@@ -2341,19 +2485,36 @@ void Tscrunch(void *globalcontext, double TemplateChanWidth){
 	}
 
 	for(int f = 0; f < numfreqs; f++){
+
+
+		 Wfreqs[f]/= fweights[f];
+		 printf("Weighted Freqs: %i %g %g \n", f, Wfreqs[f], freqs[f]);
+
 		 for(int i =0; i < GlobalNBins; i++){
 
                         TScrunched[f*GlobalNBins + i] /= fweights[f];
                 }
 
-		double minval=pow(10.0, 100);
+		double Max = -1000.0;
 		for(int i =0; i < GlobalNBins; i++){
-			if(TScrunched[f*GlobalNBins + i] < minval){minval=TScrunched[f*GlobalNBins + i];}
-		}
-		for(int i =0; i < GlobalNBins; i++){
-			((MNStruct *)globalcontext)->TemplateChans[f*GlobalNBins + i] = TScrunched[f*GlobalNBins + i]-minval;
-                        //if(f==5){printf("Tscrunched: %i %i %.10g\n", i, f, TScrunched[f*GlobalNBins + i]-minval);}
+			((MNStruct *)globalcontext)->TemplateChans[f*GlobalNBins + i] = TScrunched[f*GlobalNBins + i];
+
+			if(((MNStruct *)globalcontext)->TemplateChans[f*GlobalNBins + i] > Max){
+				Max = ((MNStruct *)globalcontext)->TemplateChans[f*GlobalNBins + i];
+			}
                 }
+
+		for(int i =0; i < GlobalNBins; i++){
+			((MNStruct *)globalcontext)->TemplateChans[f*GlobalNBins + i] /= Max;
+		}
+
+		double *OneDProf = new double[GlobalNBins];
+		for(int i =0; i < GlobalNBins; i++){
+			OneDProf[i] = ((MNStruct *)globalcontext)->TemplateChans[f*GlobalNBins + i];
+		}
+		double TestNoise =  getProfileNoiseLevel(OneDProf, GlobalNBins, 100);
+		TemplateNoise[f] = TestNoise;
+		delete[] OneDProf;
 
 		for(int ifac = 0; ifac < interpFactor; ifac++){
 
@@ -2407,13 +2568,143 @@ void Tscrunch(void *globalcontext, double TemplateChanWidth){
 		        }
 		}
 
+		((MNStruct *)globalcontext)->TemplateFreqs[f] = Wfreqs[f];
+		((MNStruct *)globalcontext)->TemplateNoise[f] = TemplateNoise[f];
+
+		printf("Template: %i %g %g \n", f,  ((MNStruct *)globalcontext)->TemplateNoise[f],((MNStruct *)globalcontext)->TemplateFreqs[f]);
+
 	}
+
+		
 
 	printf("made TScrunched Data \n");
 
 	delete[] TScrunched;	
 	delete[] interpTScrunched;
-	delete[] interpWeights;
+	delete[] interpWeights;	
+	delete[] Wfreqs;
+
+
+	printf("done \n");
+}
+
+
+void Tscrunch2(void *globalcontext, double TemplateChanWidth){
+
+
+	double chanwidth  = TemplateChanWidth;
+	double minfreq=pow(10.0, 100);
+
+	for(int p=0;p< ((MNStruct *)globalcontext)->pulse->nobs; p++){
+		double freq = floor(((MNStruct *)globalcontext)->pulse->obsn[p].freq);
+		if(freq < minfreq){minfreq=freq;}
+	}
+
+
+        long double LDparams[((MNStruct *)globalcontext)->numFitTiming + ((MNStruct *)globalcontext)->numFitJumps];
+	int pcount = 0;
+	int fitcount=0;
+
+	int debug = 0;
+
+	int numfreqs = ((MNStruct *)globalcontext)->numTempFreqs;
+	double *freqs = ((MNStruct *)globalcontext)->TemplateFreqs;
+	double *Wfreqs = new double[numfreqs]();
+	double *fweights = new double[numfreqs]();
+	double *TemplateNoise = new double[numfreqs]();
+
+
+	int GlobalNBins = (int)((MNStruct *)globalcontext)->ProfileInfo[0][1];
+	int interpFactor = 1;
+	int interpNBins = GlobalNBins*interpFactor;
+
+	double *TScrunched = new double[numfreqs*GlobalNBins]();
+
+	int t = 0;
+	int nTOA = 0;
+
+	double WeightSum = 0.0;
+	
+	for(int ep = 0; ep < ((MNStruct *)globalcontext)->numProfileEpochs; ep++){
+	
+		int NChanInEpoch = ((MNStruct *)globalcontext)->numChanPerInt[ep];
+
+		for(int ch = 0; ch < NChanInEpoch; ch++){
+
+
+			nTOA = t;
+
+			double cfreq = floor(((MNStruct *)globalcontext)->pulse->obsn[t].freq);
+			cfreq = floor((cfreq-minfreq)/chanwidth)*chanwidth + minfreq;
+			int freqpos = 0;
+
+			for(int f = 0; f < numfreqs; f++){
+				if(fabs(cfreq -freqs[f]) < 0.01){freqpos=f;}
+			}
+
+			double MinSigma = (double)((MNStruct *)globalcontext)->pulse->obsn[t].toaErr;
+				
+			for(int i =0; i < GlobalNBins; i++){
+
+				TScrunched[freqpos*GlobalNBins + i] += (double)((MNStruct *)globalcontext)->ProfileData[nTOA][i][1]*(1.0/(MinSigma*MinSigma));
+
+			}
+
+			fweights[freqpos] += (1.0/(MinSigma*MinSigma));
+			Wfreqs[freqpos] += ((MNStruct *)globalcontext)->pulse->obsn[t].freq/(MinSigma*MinSigma);
+			t++;
+		
+		}		
+
+	}
+
+	for(int f = 0; f < numfreqs; f++){
+
+
+		 Wfreqs[f]/= fweights[f];
+		 printf("Weighted Freqs: %i %g %g \n", f, Wfreqs[f], freqs[f]);
+
+		 for(int i =0; i < GlobalNBins; i++){
+
+                        TScrunched[f*GlobalNBins + i] /= fweights[f];
+                }
+
+
+		double Max = -1000.0;
+		for(int i =0; i < GlobalNBins; i++){
+			((MNStruct *)globalcontext)->TemplateChans[f*GlobalNBins + i] = TScrunched[f*GlobalNBins + i];
+
+			if(((MNStruct *)globalcontext)->TemplateChans[f*GlobalNBins + i] > Max){
+				Max = ((MNStruct *)globalcontext)->TemplateChans[f*GlobalNBins + i];
+			}
+                }
+
+		for(int i =0; i < GlobalNBins; i++){
+			((MNStruct *)globalcontext)->TemplateChans[f*GlobalNBins + i] /= Max;
+		}
+
+		double *OneDProf = new double[GlobalNBins];
+		for(int i =0; i < GlobalNBins; i++){
+			OneDProf[i] = ((MNStruct *)globalcontext)->TemplateChans[f*GlobalNBins + i];
+		}
+		double TestNoise =  getProfileNoiseLevel(OneDProf, GlobalNBins, 100);
+		TemplateNoise[f] = TestNoise;
+		delete[] OneDProf;
+
+	
+		((MNStruct *)globalcontext)->TemplateFreqs[f] = Wfreqs[f];
+		((MNStruct *)globalcontext)->TemplateNoise[f] = TemplateNoise[f];
+
+		printf("Template: %i %g %g \n", f,  ((MNStruct *)globalcontext)->TemplateNoise[f],((MNStruct *)globalcontext)->TemplateFreqs[f]);
+
+	}
+
+		
+
+	printf("made TScrunched Data \n");
+
+	delete[] TScrunched;	
+	delete[] Wfreqs;
 
 
 	printf("done \n");
@@ -2422,6 +2713,8 @@ void Tscrunch(void *globalcontext, double TemplateChanWidth){
 
 void getProfileNoiseLevels(void *context){
 
+	double MultiplyNoise = 1;
+	long seed = TKsetSeed();
 
 	for(int i = 0; i < ((MNStruct *)context)->pulse->nobs; i++){
 
@@ -2494,6 +2787,20 @@ void getProfileNoiseLevels(void *context){
 			((MNStruct *)context)->pulse->obsn[i].bline = medianmean;
 //		}
 
+
+		if(MultiplyNoise > 1){
+			double newnoise = MultiplyNoise*mediannoise;
+			
+			for(int j = 0; j < ProfNbins; j++){
+				
+				double ran =  TKgaussDev(&seed)*newnoise;
+				if(j==1)printf("new noise: %i %i %g %g %g \n", i,j,(double)((MNStruct *)context)->ProfileData[i][j][1], ran,mediannoise);
+				((MNStruct *)context)->ProfileData[i][j][1] += ran;
+				
+			}
+			((MNStruct *)context)->pulse->obsn[i].pnoise = sqrt(mediannoise*mediannoise + newnoise*newnoise);
+		}
+
 		double Chisq = 0;
 		for(int j = 0; j < ProfNbins; j++){
 			Chisq += pow((double)((MNStruct *)context)->ProfileData[i][j][1],2);
@@ -2503,3 +2810,75 @@ void getProfileNoiseLevels(void *context){
 
 	}
 }
+
+
+
+/*
+void GetInterpVectors(void *context){
+
+
+	
+	int Nbin = ((MNStruct *)context)->LargestNBins;
+	long double finalInterpTime = ((MNStruct *)context)->InterpolatedTime;
+	int numtointerpolate = ((MNStruct *)context)->NumToInterpolate;
+
+
+	int *numShapeToSave = new int[((MNStruct *)context)->numProfComponents];
+	int totalShapeToSave = 0;
+	for(int i = 0; i < ((MNStruct *)context)->numProfComponents; i++){
+		totalShapeToSave += ((MNStruct *)context)->numshapecoeff[i];
+	}
+
+	printf("Details: %i %i %.10g %g\n", (int)((MNStruct *)context)->LargestNBins, totalShapeToSave, (double)((MNStruct *)context)->InterpolatedTime, (double)((MNStruct *)context)->ReferencePeriod);
+
+
+
+
+//	((MNStruct *)context)->InterpolatedShapeletsVec = StoredShapeletsVec;
+//	((MNStruct *)context)->InterpolatedJitterProfileVec = StoredShapeletsJitterVec;
+//	((MNStruct *)context)->InterpolatedWidthProfileVec = StoredShapeletsWidthVec;
+	((MNStruct *)context)->NumToInterpolate = numtointerpolate;
+
+	double **FourierProfileData = new double*[((MNStruct *)context)->pulse->nobs];
+	for(int i = 0; i < ((MNStruct *)context)->pulse->nobs; i++){
+		FourierProfileData[i] = new double[((int)((MNStruct *)context)->ProfileInfo[i][1]/2 + 1)*2]();
+	}
+
+	double **StoredFourierShapeletsVec = new double*[numtointerpolate];
+        double **StoredFourierJitterVec = new double*[numtointerpolate];
+
+	int NFBasis = 0;
+	int FindThreshold = 1;
+	FFTProfileData(StoredFourierShapeletsVec, StoredFourierJitterVec, NFBasis, FindThreshold, FourierProfileData, context);
+	
+
+	printf("Using NFBASIS: %i \n", NFBasis);
+//	double **StoredFourierShapeletsVec = new double*[numtointerpolate];
+//	double **StoredFourierJitterVec = new double*[numtointerpolate];
+
+
+	for(int i = 0; i < numtointerpolate; i++){
+		StoredFourierJitterVec[i] = new double[2*NFBasis*totalShapeToSave]();
+		StoredFourierShapeletsVec[i] = new double[2*NFBasis*totalShapeToSave]();
+	}
+
+
+	FindThreshold = 0;
+	FFTProfileData(StoredFourierShapeletsVec, StoredFourierJitterVec, NFBasis, FindThreshold, FourierProfileData, context);
+
+	((MNStruct *)context)->InterpolatedFBasis = StoredFourierShapeletsVec;
+	((MNStruct *)context)->InterpolatedFJitterBasis = StoredFourierJitterVec;
+	((MNStruct *)context)->FourierProfileData = FourierProfileData;
+	((MNStruct *)context)->NFBasis = NFBasis;
+
+
+//	((MNStruct *)context)->InterpolatedMeanProfile = InterpolatedMeanProfile;
+//	((MNStruct *)context)->InterpolatedJitterProfile = InterpolatedJitterProfile;
+//	((MNStruct *)context)->InterpolatedWidthProfile = InterpolatedWidthProfile;
+	
+//	((MNStruct *)context)->MaxShapeAmp = MaxShapeAmp;
+
+		
+}
+
+*/

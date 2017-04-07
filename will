@@ -1,8 +1,8 @@
-configure: QD library not found
+configure: PSRCHIVE library not found
 not
 compile
-high
-precision
+ToA
+estimation
 part
 of
 TempoNest

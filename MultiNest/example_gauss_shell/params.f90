@@ -7,7 +7,7 @@ implicit none
 
 	!dimensionality
       	integer sdim
-      	parameter(sdim=10)
+      	parameter(sdim=2)
       
       	!no. of modes to generate
       	integer sModes 
@@ -49,7 +49,7 @@ implicit none
 	
       	!max no. of live points
       	integer nest_nlive
-	parameter(nest_nlive=300)
+	parameter(nest_nlive=10000)
       
       	!tot no. of parameters, should be sdim in most cases but if you need to
       	!store some additional parameters with the actual parameters then

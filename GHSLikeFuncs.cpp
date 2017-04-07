@@ -66,7 +66,7 @@
 
 #include <guided_hmc.h>
 # include <omp.h>
-
+#include <fftw3.h>
 
 FILE* test_gauss_outfile;
 FILE* test_gauss_goutfile;
@@ -77,6 +77,7 @@ void write_gauss_ghs_extract_with_logpostval_and_grad(int* ndim,double* x,double
 void nd_uncorr_gauss_neg_log_post(int* ndim,double* x,double* v,double* g);
 
 void GHSProfileDomainLike(int* ndim,double* x,double* v,double* g);
+void NewGHSProfileDomainLike(int* ndim,double* x,double* v,double* g);
 void GHSProfileDomainLike2(int* ndim,double* x,double &v,double* g);
 void GetMaxAmps(int ndim, double *MaxAmps);
 void GetMaxSteps(int ndim, double *MaxAmps, double *StepSize, double **SSM);
@@ -231,16 +232,19 @@ void callGHS(int NBurn, int NSamp, int GHSresume){
 		globaldims += ((MNStruct *)GHSglobalcontext)->ProfTimeEvoDims;
 	}
 
+	if(((MNStruct *)GHSglobalcontext)->incProfileScatter == 1){
+		globaldims += ((MNStruct *)GHSglobalcontext)->pulse->nSx;
+	}
+
 	int *HighSNStocProfPriors = new int[((MNStruct *)GHSglobalcontext)->totalshapestoccoeff]();
 	
-	HighSNStocProfPriors[0] = 1;
+	//HighSNStocProfPriors[0] = 1;
+	//HighSNStocProfPriors[1] = 1;
+	//HighSNStocProfPriors[2] = 1;
 
-	HighSNStocProfPriors[1] = 1;
-	HighSNStocProfPriors[2] = 1;
-
-	HighSNStocProfPriors[3] = 1;
-	HighSNStocProfPriors[4] = 1;
-	HighSNStocProfPriors[5] = 1;
+//	HighSNStocProfPriors[3] = 1;
+//	HighSNStocProfPriors[4] = 1;
+//	HighSNStocProfPriors[5] = 1;
 
 	((MNStruct *)GHSglobalcontext)->HighSNStocProfPriors = HighSNStocProfPriors;
 
@@ -323,12 +327,12 @@ void callGHS(int NBurn, int NSamp, int GHSresume){
 			GlobalParmSet[1+i]  = 100.0/323;// ; 2785;*4589.0;
 		}
 	}
-	GlobalParmSet[0]  = (1.0/pow(0.023,2))/525;//72;
+//	GlobalParmSet[0]  = (1.0/pow(0.023,2))/525;//72;
 
-	GlobalParmSet[1]  = (1.0/pow(0.033,2))/525;
-	GlobalParmSet[2]  = (1.0/pow(0.033,2))/525; //(1.0/pow(0.3,2))/525;
-	GlobalParmSet[3]  = (1.0/pow(0.3,2))/525;
-	GlobalParmSet[4]  = (1.0/pow(0.04,2))/525;
+	//GlobalParmSet[1]  = (1.0/pow(0.02,2))/2449;
+	//GlobalParmSet[2]  = (1.0/pow(0.033,2))/2449; //(1.0/pow(0.3,2))/525;
+	//GlobalParmSet[3]  = (1.0/pow(0.3,2))/2449;
+/*	GlobalParmSet[4]  = (1.0/pow(0.04,2))/525;
 	GlobalParmSet[5]  = (1.0/pow(0.016,2))/525;
 	GlobalParmSet[6]  = (1.0/pow(0.03,2))/525;
 
@@ -337,7 +341,7 @@ void callGHS(int NBurn, int NSamp, int GHSresume){
 	GlobalParmSet[3]  = (1.0/pow(0.03,2))/72;
 	GlobalParmSet[4]  = (1.0/pow(0.03,2))/72;
 	GlobalParmSet[5]  = (1.0/pow(0.03,2))/72;
-	GlobalParmSet[6]  = (1.0/pow(0.03,2))/72;
+	GlobalParmSet[6]  = (1.0/pow(0.03,2))/72; */
 
 /*	GlobalParmSet[13]  = GPSval;
 	GlobalParmSet[14]  = GPSval;
@@ -456,7 +460,9 @@ void callGHS(int NBurn, int NSamp, int GHSresume){
 */
 	
 	
-	nlp=&GHSProfileDomainLike;
+	nlp=&NewGHSProfileDomainLike;
+	//nlp=&GHSProfileDomainLike;
+
 	/*wrt_ext=&write_gauss_ghs_extract;*/
 	wrt_ext=&write_gauss_ghs_extract_with_logpostval_and_grad; 
 	
@@ -794,8 +800,8 @@ void GHSProfileDomainLike(int* ndim, double* PrinCube, double* likelihood, doubl
 	
 	int globalparams = globaldims;
 
-	for(int i = 0; i < profdims; i++){
-//		Cube[i]=GlobalStartPoint[i];
+	for(int i = 0; i < profdims+1; i++){
+	//	Cube[i]=GlobalStartPoint[i];
 	}
 
 
@@ -1110,7 +1116,7 @@ void GHSProfileDomainLike(int* ndim, double* PrinCube, double* likelihood, doubl
 
 	      
 	      ModelBats[i] = ((MNStruct *)GHSglobalcontext)->ProfileInfo[i][5]+((MNStruct *)GHSglobalcontext)->pulse->obsn[i].batCorr - phase - ((MNStruct *)GHSglobalcontext)->pulse->obsn[i].residual/SECDAY;
-	//	printf("MBat %i %.15Lg \n", i, ModelBats[i]);
+		//printf("MBat %i %.15Lg %.15Lg \n", i, ModelBats[i], phase);
 
 		//printf("res: %i %g \n", i, (double)((MNStruct *)GHSglobalcontext)->pulse->obsn[i].residual);
 	 }
@@ -1337,6 +1343,23 @@ void GHSProfileDomainLike(int* ndim, double* PrinCube, double* likelihood, doubl
 			}
 		}
 	}
+
+	double *ProfileScatter;
+	if(((MNStruct *)GHSglobalcontext)->incProfileScatter == 1){
+		ProfileScatter =  new double[((MNStruct *)GHSglobalcontext)->pulse->nSx];
+		for(int i = 0; i < ((MNStruct *)GHSglobalcontext)->pulse->nSx; i++){
+			ProfileScatter[i] =  pow(10.0, Cube[pcount]); 
+			//ProfileScatter[i] =  pow(10.0, ((MNStruct *)GHSglobalcontext)->pulse->param[param_sx].val[i]); 
+			//printf("Scatter param: %g \n", ProfileScatter);
+
+			if(Cube[pcount] < -3){ 
+				priorterm -= 2*log(10.0)*(Cube[pcount]+3); 
+	
+			}
+
+			pcount++;
+		}
+	}
 		
 
 	if(totshapecoeff+1>=totalshapestoccoeff+1){
@@ -1513,7 +1536,7 @@ void GHSProfileDomainLike(int* ndim, double* PrinCube, double* likelihood, doubl
 			/////////////////////////////////////////////////////////////////////////////////////////////
 		    
 			long double binpos = ModelBats[nTOA]; 
-
+			//printf("MBats: %i %.15Lg \n", t, ModelBats[nTOA]);
 
 			if(((MNStruct *)GHSglobalcontext)->numFitEQUAD > 0){
 				binpos += (long double) EQUADSignal/SECDAY;
@@ -1726,6 +1749,9 @@ void GHSProfileDomainLike(int* ndim, double* PrinCube, double* likelihood, doubl
 
 
 
+
+
+
 			///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 			//////////////////////////////////////////////////////Fill Arrays with interpolated state//////////////////////////////////////////////////////
 			///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1789,8 +1815,136 @@ void GHSProfileDomainLike(int* ndim, double* PrinCube, double* likelihood, doubl
 				gettimeofday(&tval_before, NULL);
 			}
 
+			for(int j = 0; j < Nbins; j++){
+				ProfileJitterModVec[j] += ((MNStruct *)GHSglobalcontext)->InterpolatedJitterProfile[InterpBin][j];				
+			}
 
+
+			double *pbfgrad;
+			double ScatterMax = 0;
+			if(((MNStruct *)GHSglobalcontext)->incProfileScatter == 1){
+
+
+				int Sindex = ((MNStruct *)GHSglobalcontext)->ScatterIndex[nTOA];
+
+				fftw_plan plan;
+
+				fftw_complex *cp;
+				fftw_complex *cpbf;
+				fftw_complex *cgrad;
+				fftw_complex *cpbfgrad;
+
+				double *pbf = new double[Nbins]();
+				pbfgrad = new double[Nbins]();
+
+				double ScatterScale = pow( ((MNStruct *)GHSglobalcontext)->pulse->obsn[t].freqSSB, 4)/pow(10.0, 9.0*4.0);
+				double STime = ProfileScatter[Sindex]/ScatterScale;
+
+				//printf("Scatter: %i %g %g %g %g\n", t, (double)((MNStruct *)GHSglobalcontext)->pulse->obsn[t].freqSSB, ProfileScatter, ScatterScale, STime);
 			
+				for (int i = 0; i < Nbins; i++ ){
+					//printf("before: %i %i %g \n", t, i, shapevec[i]);
+					pbf[i] = exp(-(1.0*i)/Nbins/STime); 	
+					pbfgrad[i] = log(10.0)*((1.0*i)/Nbins/STime)*pbf[i]; 	
+				}
+
+
+				cp = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * Nbins);
+				cpbf = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * Nbins);
+				cgrad = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * Nbins);
+				cpbfgrad = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * Nbins);
+
+				plan = fftw_plan_dft_r2c_1d(Nbins, shapevec, cp, FFTW_ESTIMATE); 
+				fftw_execute(plan);
+				fftw_destroy_plan ( plan );
+
+
+				plan = fftw_plan_dft_r2c_1d(Nbins, pbf, cpbf, FFTW_ESTIMATE); 
+				fftw_execute(plan);
+				fftw_destroy_plan ( plan );
+
+
+				plan = fftw_plan_dft_r2c_1d(Nbins, ProfileJitterModVec, cgrad, FFTW_ESTIMATE); 
+				fftw_execute(plan);
+				fftw_destroy_plan ( plan );
+
+				plan = fftw_plan_dft_r2c_1d(Nbins, pbfgrad, cpbfgrad, FFTW_ESTIMATE); 
+				fftw_execute(plan);
+				fftw_destroy_plan ( plan );
+
+				for (int i = 0; i < Nbins; i++ ){
+
+					double real =  cp[i][0]*cpbfgrad[i][0] - cp[i][1]*cpbfgrad[i][1];
+					double imag =  cp[i][0]*cpbfgrad[i][1] + cp[i][1]*cpbfgrad[i][0];
+
+					cpbfgrad[i][0] =  real;
+					cpbfgrad[i][1] =  imag;
+				
+					real =  cp[i][0]*cpbf[i][0] - cp[i][1]*cpbf[i][1];
+					imag =  cp[i][0]*cpbf[i][1] + cp[i][1]*cpbf[i][0];
+
+					cp[i][0] =  real;
+					cp[i][1] =  imag;
+
+					real =  cgrad[i][0]*cpbf[i][0] - cgrad[i][1]*cpbf[i][1];
+					imag =  cgrad[i][0]*cpbf[i][1] + cgrad[i][1]*cpbf[i][0];
+
+					cgrad[i][0] =  real;
+					cgrad[i][1] =  imag;
+
+
+
+				}
+
+
+
+				fftw_plan plan_back;
+				plan_back  = fftw_plan_dft_c2r_1d(Nbins, cp, shapevec, FFTW_ESTIMATE);
+				fftw_execute ( plan_back );
+				fftw_destroy_plan ( plan_back );
+
+
+				plan_back = fftw_plan_dft_c2r_1d(Nbins, cgrad, ProfileJitterModVec, FFTW_ESTIMATE);
+				fftw_execute ( plan_back );
+				fftw_destroy_plan ( plan_back );
+
+
+				plan_back = fftw_plan_dft_c2r_1d(Nbins, cpbfgrad, pbfgrad, FFTW_ESTIMATE);
+				fftw_execute ( plan_back );
+				fftw_destroy_plan ( plan_back );
+
+				double newmax = 0;
+				
+				for (int i = 0; i < Nbins; i++ ){
+					if(shapevec[i] > newmax)newmax = shapevec[i];
+					
+				}
+
+				for (int i = 0; i < Nbins; i++ ){
+
+
+					//printf("Scatter: %i %i %g %g %g \n", t, i, STime, shapevec[i]/Nbins, pbfgrad[i]/Nbins);
+					shapevec[i] = shapevec[i]/newmax;
+					ProfileJitterModVec[i] = ProfileJitterModVec[i]/newmax;
+					pbfgrad[i] = pbfgrad[i]/newmax;
+
+					//printf("Prof: %i %i %g %g %g \n", t, i, shapevec[i], ProfileJitterModVec[i], pbfgrad[i]);
+				}
+
+//				fftw_destroy_plan ( plan );
+//				fftw_destroy_plan ( plan_back );
+
+				fftw_free ( cp );
+				fftw_free ( cpbf );
+				fftw_free ( cgrad );
+				fftw_free (cpbfgrad);
+
+				delete[] pbf;
+
+				ScatterMax = newmax;
+
+				fftw_cleanup();
+			}
 
 
 		///////////////////////////////////////////Marginalise over arbitrary offset and absolute amplitude////////////////////////////////////////////////////////////
@@ -1896,7 +2050,7 @@ void GHSProfileDomainLike(int* ndim, double* PrinCube, double* likelihood, doubl
 			int B2C = 0;
 			double PhaseGrad = 0;
 			for(int j = 0; j < Nbins; j++){
-				ProfileJitterModVec[j] += ((MNStruct *)GHSglobalcontext)->InterpolatedJitterProfile[InterpBin][j];
+			//	ProfileJitterModVec[j] += ((MNStruct *)GHSglobalcontext)->InterpolatedJitterProfile[InterpBin][j];
 //				PhaseGrad += -1*NResVec[j]*(((MNStruct *)GHSglobalcontext)->InterpolatedJitterProfile[InterpBin][j] + ProfileJitterModVec[j])*ProfileAmp;
 				PhaseGrad += -1*NResVec[j]*ProfileJitterModVec[j]*ProfileAmp;
 				
@@ -1985,21 +2139,103 @@ void GHSProfileDomainLike(int* ndim, double* PrinCube, double* likelihood, doubl
 			}
 			if(totalCoeffForMult > 0){
 
-				double *SparseNResVec = new double[((MNStruct *)GHSglobalcontext)->SparseNBin];
+				
 
 				double *GradResVec = new double[totalCoeffForMult];
 				//double *TempGradResVec = new double[totalCoeffForMult];
-                                for(int i = 0; i < ((MNStruct *)GHSglobalcontext)->SparseNBin; i++){
-                                        SparseNResVec[i] = NResVec[((MNStruct *)GHSglobalcontext)->SparseMap[i]];
-                                }
 
 
-				vector_dgemv(((MNStruct *)GHSglobalcontext)->SparseShapeletsVec[InterpBin], SparseNResVec, GradResVec, ((MNStruct *)GHSglobalcontext)->SparseNBin, totalCoeffForMult,'T');
+				if(((MNStruct *)GHSglobalcontext)->incProfileScatter == 1){
+
+					int Sindex = ((MNStruct *)GHSglobalcontext)->ScatterIndex[nTOA];
+
+					double *pbf = new double[Nbins]();
+
+					fftw_complex *cpbf = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * Nbins);
+
+						
+					double ScatterScale = pow( ((MNStruct *)GHSglobalcontext)->pulse->obsn[t].freqSSB, 4)/pow(10.0, 9.0*4.0);
+					double STime = ProfileScatter[Sindex]/ScatterScale;
+
+
+					for (int i = 0; i < Nbins; i++ ){
+						pbf[i] = exp(-(1.0*i)/Nbins/STime); 	
+					}
+
+					fftw_plan plan;
+					fftw_plan plan_back;
+
+
+
+					plan = fftw_plan_dft_r2c_1d(Nbins, pbf, cpbf, FFTW_ESTIMATE); 
+					fftw_execute(plan);
+					fftw_destroy_plan ( plan );
+
+					double *ConvolvedBasis = new double[Nbins];  
+					fftw_complex *cp = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * Nbins);
+
+					for(int c = 0; c < totalCoeffForMult; c++){
+
+						for(int b = 0; b < Nbins; b++){
+							ConvolvedBasis[b] = ((MNStruct *)GHSglobalcontext)->InterpolatedShapeletsVec[InterpBin][b + c*Nbins];
+						}
+						
+						plan = fftw_plan_dft_r2c_1d(Nbins, ConvolvedBasis, cp, FFTW_ESTIMATE); 
+						fftw_execute(plan);
+						fftw_destroy_plan ( plan );
+
+						for (int i = 0; i < Nbins; i++ ){
+				
+							double real =  cp[i][0]*cpbf[i][0] - cp[i][1]*cpbf[i][1];
+							double imag =  cp[i][0]*cpbf[i][1] + cp[i][1]*cpbf[i][0];
+
+							cp[i][0] =  real;
+							cp[i][1] =  imag;
+
+						}
+
+
+						plan_back = fftw_plan_dft_c2r_1d(Nbins, cp, ConvolvedBasis, FFTW_ESTIMATE);
+						fftw_execute ( plan_back );
+						fftw_destroy_plan ( plan_back );
+
+
+						double grad = 0;
+						for (int i = 0; i < Nbins; i++ ){
+
+							grad += ConvolvedBasis[i]*NResVec[i];
+
+						}
+
+						GradResVec[c] = grad/ScatterMax;
+					}
+
+
+
+					fftw_free ( cp );
+					fftw_free ( cpbf );
+
+					delete[] pbf;
+					delete[] ConvolvedBasis;
+
+
+
+				}
+				if(((MNStruct *)GHSglobalcontext)->incProfileScatter == 0){
+
+					double *SparseNResVec = new double[((MNStruct *)GHSglobalcontext)->SparseNBin];
+		                        for(int i = 0; i < ((MNStruct *)GHSglobalcontext)->SparseNBin; i++){
+		                                SparseNResVec[i] = NResVec[((MNStruct *)GHSglobalcontext)->SparseMap[i]];
+		                        }
+
+					vector_dgemv(((MNStruct *)GHSglobalcontext)->SparseShapeletsVec[InterpBin], SparseNResVec, GradResVec, ((MNStruct *)GHSglobalcontext)->SparseNBin, totalCoeffForMult,'T');
 
 
 
 
-				delete[] SparseNResVec;			
+					delete[] SparseNResVec;			
+				}
+
 
 		//		vector_dgemv(((MNStruct *)GHSglobalcontext)->InterpolatedShapeletsVec[InterpBin], NResVec,GradResVec,Nbins,totalCoeffForMult,'T');
 
@@ -2105,6 +2341,46 @@ void GHSProfileDomainLike(int* ndim, double* PrinCube, double* likelihood, doubl
 				}
 			}
 
+			if(((MNStruct *)GHSglobalcontext)->incProfileScatter == 1){
+			
+				int Sindex = ((MNStruct *)GHSglobalcontext)->ScatterIndex[nTOA];
+
+				double ScatterGrad = 0;
+
+
+				int startpoint = 0;
+				int stoppoint = Nbins - ZeroWrap;
+
+				for(int i = startpoint+ZeroOffset; i < stoppoint; i+=BinRatio){
+
+					int Nj = ZeroWrap+i;
+					printf("ScatterGrad: %i %i %i %g %g %g %g\n", t, i, Nj, ProfileAmp*pbfgrad[Nj], shapevec[Nj], NResVec[i], (double)((MNStruct *)GHSglobalcontext)->ProfileData[nTOA][Nj/BinRatio][1] );
+					ScatterGrad += ProfileAmp*pbfgrad[Nj]*NResVec[i];
+				}
+
+				startpoint = Nbins-ZeroWrap; 
+				stoppoint = Nbins;
+
+				for(int i = startpoint; i < stoppoint; i+=BinRatio){
+		
+					int Nj = ZeroWrap+i-Nbins;
+					printf("ScatterGrad: %i %i %i %g %g %g %g \n", t, i, Nj, ProfileAmp*pbfgrad[Nj], shapevec[Nj], NResVec[i], (double)((MNStruct *)GHSglobalcontext)->ProfileData[nTOA][Nj/BinRatio][1] );
+					ScatterGrad += ProfileAmp*pbfgrad[Nj]*NResVec[i];
+
+				}
+
+
+				threadgrads[B2C+Sindex][thisthread] +=	-ScatterGrad;
+
+				if(log10(ProfileScatter[Sindex]) < -3){ 
+					threadgrads[B2C+Sindex][thisthread] -= log(10.0)/threads;	
+				}
+
+
+				//printf("%g %g \n", log10(ProfileScatter), ScatterGrad);
+				B2C += ((MNStruct *)GHSglobalcontext)->pulse->nSx;
+			}
+	
 
 
 
@@ -2133,6 +2409,10 @@ void GHSProfileDomainLike(int* ndim, double* PrinCube, double* likelihood, doubl
 			delete[] ProfileModVec;
 			delete[] ProfileJitterModVec;
 			delete[] ProfileWidthModVec;
+
+			if(((MNStruct *)GHSglobalcontext)->incProfileScatter == 1){
+				delete[] pbfgrad;
+			}
 			
 			delete[] NResVec;
 
@@ -2183,10 +2463,10 @@ void GHSProfileDomainLike(int* ndim, double* PrinCube, double* likelihood, doubl
 		for(int j = 0; j < threads; j++){
 			gsum += threadgrads[i][j];
 		}
-	//	printf("global grad: %i %g \n", i, gsum);
+	 	 printf("global grad: %i %g %g \n", i, Cube[phaseDim+i], gsum);
 		 grad[profdims + epochdims + epochpriordims + i] = gsum;
 	}
-	//sleep(1);
+	
 
 	grad[profdims + epochdims + epochpriordims]+=phasePriorGrad;
 	///printf("phase prior grad %g \n", phasePriorGrad);
@@ -2254,15 +2534,16 @@ void GHSProfileDomainLike(int* ndim, double* PrinCube, double* likelihood, doubl
 		if(debug == 1)printf("Written new ML file\n");
 	
 	}
+	printf("Like: %.16g \n", -1*finallikelihood);
 	//sleep(5);
 
 	if(debug == 0){
-		for(int i =profdims; i < profdims+1; i++){
-		//	printf("Parameters and Grads: %i %g %g %.10g \n", i, Cube[i], grad[i], omplnew-phasePriorTerm-0.5*priorterm);
-		}
+		//for(int i =profdims+1; i < profdims+2; i++){
+		//	printf("Parameters and Grads: %i %g %g %.10g \n", i, Cube[i], grad[i], finallikelihood);
+		//}
 	}
 
-	for(int i = 0; i < profdims; i++){
+	for(int i = 0; i < profdims+1; i++){
 	//	grad[i]=0;
 	}
 
@@ -2309,6 +2590,10 @@ void GHSProfileDomainLike(int* ndim, double* PrinCube, double* likelihood, doubl
 		delete[] FMatrix;
 		delete[] PowerSpec;
 		delete[] SignalVec;
+	}
+
+	if(((MNStruct *)GHSglobalcontext)->incProfileScatter == 1){
+		delete[] ProfileScatter;
 	}
 
 	
@@ -2723,6 +3008,14 @@ void GetMaxAmps(int ndim, double *MaxAmps){
 		MeanProfileFile.close();
 	}
 
+	double *ProfileScatter;
+	if(((MNStruct *)GHSglobalcontext)->incProfileScatter == 1){
+		ProfileScatter =  new double[((MNStruct *)GHSglobalcontext)->pulse->nSx];
+		for(int i = 0; i < ((MNStruct *)GHSglobalcontext)->pulse->nSx; i++){
+			ProfileScatter[i] =  pow(10.0, ((MNStruct *)GHSglobalcontext)->pulse->param[param_sx].val[i]); 
+		}
+	}
+
 
 
 	int cpos = 0;
@@ -3009,7 +3302,7 @@ void GetMaxAmps(int ndim, double *MaxAmps){
 					for(int i =0; i < numTimeEvoCoeff[c]; i++){
 
 
-						printf("adding: %i %i %i %i %g %g \n", nTOA, c, p, ((MNStruct *)GHSglobalcontext)->TimeEpochIndex[nTOA], time,  ProfTimeEvoPoly[((MNStruct *)GHSglobalcontext)->TimeEpochIndex[nTOA]][(c-1)*NProfileTimePoly + p]*pow(time, p));
+						//printf("adding: %i %i %i %i %g %g \n", nTOA, c, p, ((MNStruct *)GHSglobalcontext)->TimeEpochIndex[nTOA], time,  ProfTimeEvoPoly[((MNStruct *)GHSglobalcontext)->TimeEpochIndex[nTOA]][(c-1)*NProfileTimePoly + p]*pow(time, p));
 						ProfileModCoeffs[i+cpos] += ProfTimeEvoPoly[((MNStruct *)GHSglobalcontext)->TimeEpochIndex[nTOA]][(c-1)*NProfileTimePoly + p]*pow(time, p);
 					}
 				}
@@ -3062,6 +3355,117 @@ void GetMaxAmps(int ndim, double *MaxAmps){
 				printf("Time elapsed,  Filled Arrays: %ld.%06ld\n", (long int)tval_resultone.tv_sec, (long int)tval_resultone.tv_usec);
 				gettimeofday(&tval_before, NULL);
 			}
+
+
+
+
+			for(int j = 0; j < Nbins; j++){
+				ProfileJitterModVec[j] += ((MNStruct *)GHSglobalcontext)->InterpolatedJitterProfile[InterpBin][j];				
+			}
+
+
+			
+			if(((MNStruct *)GHSglobalcontext)->incProfileScatter == 1){
+
+
+				int Sindex = ((MNStruct *)GHSglobalcontext)->ScatterIndex[nTOA];
+
+				fftw_plan plan;
+
+				fftw_complex *cp;
+				fftw_complex *cpbf;
+				fftw_complex *cgrad;
+				fftw_complex *cpbfgrad;
+
+				double *pbf = new double[Nbins]();
+				double *pbfgrad = new double[Nbins]();
+
+				double ScatterScale = pow( ((MNStruct *)GHSglobalcontext)->pulse->obsn[t].freqSSB, 4)/pow(10.0, 9.0*4.0);
+				double STime = ProfileScatter[Sindex]/ScatterScale;
+
+				//printf("Scatter: %i %g %g %g %g\n", t, (double)((MNStruct *)GHSglobalcontext)->pulse->obsn[t].freqSSB, ProfileScatter, ScatterScale, STime);
+			
+				for (int i = 0; i < Nbins; i++ ){
+					pbf[i] = exp(-(1.0*i)/Nbins/STime); 	
+					pbfgrad[i] = log(10.0)*((1.0*i)/Nbins/STime)*pbf[i]; 	
+				}
+
+
+				cp = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * Nbins);
+				cpbf = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * Nbins);
+				cgrad = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * Nbins);
+				cpbfgrad = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * Nbins);
+
+				plan = fftw_plan_dft_r2c_1d(Nbins, shapevec, cp, FFTW_ESTIMATE); 
+				fftw_execute(plan);
+
+				plan = fftw_plan_dft_r2c_1d(Nbins, pbf, cpbf, FFTW_ESTIMATE); 
+				fftw_execute(plan);
+
+				plan = fftw_plan_dft_r2c_1d(Nbins, ProfileJitterModVec, cgrad, FFTW_ESTIMATE); 
+				fftw_execute(plan);
+
+				plan = fftw_plan_dft_r2c_1d(Nbins, pbfgrad, cpbfgrad, FFTW_ESTIMATE); 
+				fftw_execute(plan);
+
+				for (int i = 0; i < Nbins; i++ ){
+				
+					double real =  cp[i][0]*cpbf[i][0] - cp[i][1]*cpbf[i][1];
+					double imag =  cp[i][0]*cpbf[i][1] + cp[i][1]*cpbf[i][0];
+
+					cp[i][0] =  real;
+					cp[i][1] =  imag;
+
+					real =  cgrad[i][0]*cpbf[i][0] - cgrad[i][1]*cpbf[i][1];
+					imag =  cgrad[i][0]*cpbf[i][1] + cgrad[i][1]*cpbf[i][0];
+
+					cgrad[i][0] =  real;
+					cgrad[i][1] =  imag;
+
+					real =  cp[i][0]*cpbfgrad[i][0] - cp[i][1]*cpbfgrad[i][1];
+					imag =  cp[i][0]*cpbfgrad[i][1] + cp[i][1]*cpbfgrad[i][0];
+
+					cpbfgrad[i][0] =  real;
+					cpbfgrad[i][1] =  imag;
+
+				}
+
+
+
+				fftw_plan plan_back = fftw_plan_dft_c2r_1d(Nbins, cp, shapevec, FFTW_ESTIMATE);
+				fftw_execute ( plan_back );
+
+				plan_back = fftw_plan_dft_c2r_1d(Nbins, cgrad, ProfileJitterModVec, FFTW_ESTIMATE);
+				fftw_execute ( plan_back );
+
+				plan_back = fftw_plan_dft_c2r_1d(Nbins, cpbfgrad, pbfgrad, FFTW_ESTIMATE);
+				fftw_execute ( plan_back );
+
+				double newmax = 0;
+				
+				for (int i = 0; i < Nbins; i++ ){
+					if(shapevec[i] > newmax)newmax = shapevec[i];
+					
+				}
+
+				for (int i = 0; i < Nbins; i++ ){
+
+					shapevec[i] = shapevec[i]/newmax;
+					ProfileJitterModVec[i] = ProfileJitterModVec[i]/newmax;
+					pbfgrad[i] = pbfgrad[i]/newmax;
+				}
+
+				fftw_destroy_plan ( plan );
+				fftw_destroy_plan ( plan_back );
+
+				fftw_free ( cp );
+				fftw_free ( cpbf );
+				fftw_free ( cgrad );
+				fftw_free (cpbfgrad);
+
+
+			}
+
 
 		///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		///////////////////////////////////////////Get ML Amps and Baselines and Noise/////////////////////////////////////////////////////////////////////////////////
@@ -3160,7 +3564,7 @@ void GetMaxAmps(int ndim, double *MaxAmps){
 
 		double *NGRes = new double[Nbins]();
 		for(int i =ZeroOffset; i < Nbins; i+=BinRatio){
-			ProfileJitterModVec[i] += ((MNStruct *)GHSglobalcontext)->InterpolatedJitterProfile[InterpBin][i];
+			//ProfileJitterModVec[i] += ((MNStruct *)GHSglobalcontext)->InterpolatedJitterProfile[InterpBin][i];
 //			OnePhaseHess += PhaseScale*PhaseScale*((MNStruct *)GHSglobalcontext)->InterpolatedJitterProfile[InterpBin][i]*((MNStruct *)GHSglobalcontext)->InterpolatedJitterProfile[InterpBin][i];
 			OnePhaseHess += PhaseScale*PhaseScale*ProfileJitterModVec[i]*ProfileJitterModVec[i];
 
@@ -3573,12 +3977,12 @@ void GetMaxAmps(int ndim, double *MaxAmps){
 				if(((MNStruct *)GHSglobalcontext)->HighSNEQUAD == 0){
 	
 					MaxAmps[dimCount + i*perEpochDims + EDimAmpCount] = MaxAmps[dimCount + i*perEpochDims + EDimAmpCount]/pow(10.0, MaxAmps[profdims+EDimPCount+EQIndex]);
-					printf("Signal %i %s %g %i %g %g %g \n", i, ((MNStruct *)GHSglobalcontext)->pulse->obsn[epT].fname, (double) ((MNStruct *)GHSglobalcontext)->pulse->obsn[epT].sat, EDimAmpCount,  MaxAmps[profdims+EDimPCount+EQIndex], MaxAmps[dimCount + i*perEpochDims + EDimAmpCount], MaxAmps[dimCount + i*perEpochDims + EDimAmpCount]/pow(10.0, MaxAmps[profdims+EDimPCount+EQIndex]));
+			//		printf("Signal %i %s %g %i %g %g %g \n", i, ((MNStruct *)GHSglobalcontext)->pulse->obsn[epT].fname, (double) ((MNStruct *)GHSglobalcontext)->pulse->obsn[epT].sat, EDimAmpCount,  MaxAmps[profdims+EDimPCount+EQIndex], MaxAmps[dimCount + i*perEpochDims + EDimAmpCount], MaxAmps[dimCount + i*perEpochDims + EDimAmpCount]/pow(10.0, MaxAmps[profdims+EDimPCount+EQIndex]));
 
 				}
 				else{
 
-                                        printf("Signal %i %s %g %i %g %g %g \n", i, ((MNStruct *)GHSglobalcontext)->pulse->obsn[epT].fname, (double) ((MNStruct *)GHSglobalcontext)->pulse->obsn[epT].sat, EDimAmpCount,  MaxAmps[profdims+EDimPCount+EQIndex], MaxAmps[dimCount + i*perEpochDims + EDimAmpCount], MaxAmps[dimCount + i*perEpochDims + EDimAmpCount]/pow(10.0, MaxAmps[profdims+EDimPCount+EQIndex]));
+                          //              printf("Signal %i %s %g %i %g %g %g \n", i, ((MNStruct *)GHSglobalcontext)->pulse->obsn[epT].fname, (double) ((MNStruct *)GHSglobalcontext)->pulse->obsn[epT].sat, EDimAmpCount,  MaxAmps[profdims+EDimPCount+EQIndex], MaxAmps[dimCount + i*perEpochDims + EDimAmpCount], MaxAmps[dimCount + i*perEpochDims + EDimAmpCount]/pow(10.0, MaxAmps[profdims+EDimPCount+EQIndex]));
 				}
 
 
@@ -3666,6 +4070,14 @@ void GetMaxAmps(int ndim, double *MaxAmps){
 
 	}
 
+	if(((MNStruct *)GHSglobalcontext)->incProfileScatter == 1){
+		for(int i = 0; i < ((MNStruct *)GHSglobalcontext)->pulse->nSx; i++){
+			MaxAmps[dimCount] =   ((MNStruct *)GHSglobalcontext)->pulse->param[param_sx].val[i];
+			dimCount++;
+		}
+	}
+	
+
 
 	if(((MNStruct *)GHSglobalcontext)->incDM > 4){
 
@@ -3682,6 +4094,11 @@ void GetMaxAmps(int ndim, double *MaxAmps){
 		}
 		delete[] ProfTimeEvoPoly;
 	}
+
+	if(((MNStruct *)GHSglobalcontext)->incProfileScatter == 1){
+		delete[] ProfileScatter;
+	}
+
 	
 
 }
@@ -4113,7 +4530,15 @@ void GetMaxSteps(int ndim, double *MaxAmps, double *StepSize, double **SSM){
 	}
 
 
-
+	double *ProfileScatter;
+	if(((MNStruct *)GHSglobalcontext)->incProfileScatter == 1){
+		ProfileScatter =  new double[((MNStruct *)GHSglobalcontext)->pulse->nSx];
+		for(int i = 0; i < ((MNStruct *)GHSglobalcontext)->pulse->nSx; i++){
+			ProfileScatter[i] =  pow(10.0, MaxAmps[pcount]); 
+			pcount++;
+		}
+	}
+		
 
 
 	int  EvoFreqExponent = 1;	
@@ -4483,6 +4908,139 @@ void GetMaxSteps(int ndim, double *MaxAmps, double *StepSize, double **SSM){
 				gettimeofday(&tval_before, NULL);
 			}
 
+
+
+
+			for(int j = 0; j < Nbins; j++){
+				ProfileJitterModVec[j] += ((MNStruct *)GHSglobalcontext)->InterpolatedJitterProfile[InterpBin][j];				
+			}
+
+
+			double *pbfgrad;
+			double *pbfDgrad;
+			double ScatterMax = 0;
+			if(((MNStruct *)GHSglobalcontext)->incProfileScatter == 1){
+
+				int Sindex = ((MNStruct *)GHSglobalcontext)->ScatterIndex[nTOA];
+				fftw_plan plan;
+
+				fftw_complex *cp;
+				fftw_complex *cpbf;
+				fftw_complex *cgrad;
+				fftw_complex *cpbfgrad;
+				fftw_complex *cpbfDgrad;
+
+				double *pbf = new double[Nbins]();
+				pbfgrad = new double[Nbins]();
+				pbfDgrad = new double[Nbins]();
+
+				double ScatterScale = pow( ((MNStruct *)GHSglobalcontext)->pulse->obsn[t].freqSSB, 4)/pow(10.0, 9.0*4.0);
+				double STime = ProfileScatter[Sindex]/ScatterScale;
+
+				//printf("Scatter: %i %g %g %g %g\n", t, (double)((MNStruct *)GHSglobalcontext)->pulse->obsn[t].freqSSB, ProfileScatter, ScatterScale, STime);
+			
+				for (int i = 0; i < Nbins; i++ ){
+					pbf[i] = exp(-(1.0*i)/Nbins/STime); 	
+					pbfgrad[i] = log(10.0)*((1.0*i)/Nbins/STime)*pbf[i]; 	
+					pbfDgrad[i] = ((log(10.0)*((1.0*i)/Nbins/STime))*(log(10.0)*((1.0*i)/Nbins/STime)) - log(10.0)*log(10.0)*((1.0*i)/Nbins/STime))*pbf[i]; 		
+				}
+
+
+				cp = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * Nbins);
+				cpbf = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * Nbins);
+				cgrad = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * Nbins);
+				cpbfgrad = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * Nbins);
+				cpbfDgrad = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * Nbins);
+
+				plan = fftw_plan_dft_r2c_1d(Nbins, shapevec, cp, FFTW_ESTIMATE); 
+				fftw_execute(plan);
+
+				plan = fftw_plan_dft_r2c_1d(Nbins, pbf, cpbf, FFTW_ESTIMATE); 
+				fftw_execute(plan);
+
+				plan = fftw_plan_dft_r2c_1d(Nbins, ProfileJitterModVec, cgrad, FFTW_ESTIMATE); 
+				fftw_execute(plan);
+
+				plan = fftw_plan_dft_r2c_1d(Nbins, pbfgrad, cpbfgrad, FFTW_ESTIMATE); 
+				fftw_execute(plan);
+
+				plan = fftw_plan_dft_r2c_1d(Nbins, pbfDgrad, cpbfDgrad, FFTW_ESTIMATE); 
+				fftw_execute(plan);
+
+				for (int i = 0; i < Nbins; i++ ){
+
+					double real =  cp[i][0]*cpbfgrad[i][0] - cp[i][1]*cpbfgrad[i][1];
+					double imag =  cp[i][0]*cpbfgrad[i][1] + cp[i][1]*cpbfgrad[i][0];
+
+					cpbfgrad[i][0] =  real;
+					cpbfgrad[i][1] =  imag;
+
+					real =  cp[i][0]*cpbfDgrad[i][0] - cp[i][1]*cpbfDgrad[i][1];
+					imag =  cp[i][0]*cpbfDgrad[i][1] + cp[i][1]*cpbfDgrad[i][0];
+
+					cpbfDgrad[i][0] =  real;
+					cpbfDgrad[i][1] =  imag;
+				
+					real =  cp[i][0]*cpbf[i][0] - cp[i][1]*cpbf[i][1];
+					imag =  cp[i][0]*cpbf[i][1] + cp[i][1]*cpbf[i][0];
+
+					cp[i][0] =  real;
+					cp[i][1] =  imag;
+
+					real =  cgrad[i][0]*cpbf[i][0] - cgrad[i][1]*cpbf[i][1];
+					imag =  cgrad[i][0]*cpbf[i][1] + cgrad[i][1]*cpbf[i][0];
+
+					cgrad[i][0] =  real;
+					cgrad[i][1] =  imag;
+
+
+
+				}
+
+
+
+				fftw_plan plan_back = fftw_plan_dft_c2r_1d(Nbins, cp, shapevec, FFTW_ESTIMATE);
+				fftw_execute ( plan_back );
+
+				plan_back = fftw_plan_dft_c2r_1d(Nbins, cgrad, ProfileJitterModVec, FFTW_ESTIMATE);
+				fftw_execute ( plan_back );
+
+				plan_back = fftw_plan_dft_c2r_1d(Nbins, cpbfgrad, pbfgrad, FFTW_ESTIMATE);
+				fftw_execute ( plan_back );
+
+				plan_back = fftw_plan_dft_c2r_1d(Nbins, cpbfDgrad, pbfDgrad, FFTW_ESTIMATE);
+				fftw_execute ( plan_back );
+
+				double newmax = 0;
+				
+				for (int i = 0; i < Nbins; i++ ){
+					if(shapevec[i] > newmax)newmax = shapevec[i];
+					
+				}
+
+				for (int i = 0; i < Nbins; i++ ){
+
+					shapevec[i] = shapevec[i]/newmax;
+					ProfileJitterModVec[i] = ProfileJitterModVec[i]/newmax;
+					pbfgrad[i] = pbfgrad[i]/newmax;
+					pbfDgrad[i] = pbfDgrad[i]/newmax;
+				}
+
+				fftw_destroy_plan ( plan );
+				fftw_destroy_plan ( plan_back );
+
+				fftw_free ( cp );
+				fftw_free ( cpbf );
+				fftw_free ( cgrad );
+				fftw_free (cpbfgrad);
+				fftw_free (cpbfDgrad);
+
+				delete[] pbf;
+				ScatterMax = newmax;
+
+			}
+
+
 		///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		///////////////////////////////////////////Get ML Amps and Baselines and Noise/////////////////////////////////////////////////////////////////////////////////
 		///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -4555,9 +5113,9 @@ void GetMaxSteps(int ndim, double *MaxAmps, double *StepSize, double **SSM){
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-			for(int i = 0; i < Nbins; i++){
-				ProfileJitterModVec[i] += ((MNStruct *)GHSglobalcontext)->InterpolatedJitterProfile[InterpBin][i];
-			}
+		//	for(int i = 0; i < Nbins; i++){
+			//	ProfileJitterModVec[i] += ((MNStruct *)GHSglobalcontext)->InterpolatedJitterProfile[InterpBin][i];
+			//}
 
 			if(debug == 1){printf("Forming Epoch Matrix in MaxSteps\n");}
 			int ZeroWrap = Nbins-GHSWrap((Nbins - NumWholeBinInterpOffset), 0, Nbins-1);
@@ -4673,30 +5231,118 @@ void GetMaxSteps(int ndim, double *MaxAmps, double *StepSize, double **SSM){
 
 				}
 
-				
-				for(int p = 0; p < 1+((MNStruct *)GHSglobalcontext)->NProfileEvoPoly; p++){
+				if(((MNStruct *)GHSglobalcontext)->incProfileScatter == 0){	
+					for(int p = 0; p < 1+((MNStruct *)GHSglobalcontext)->NProfileEvoPoly; p++){
 
-					double fval = pow(freqscale, p);
-					int cpos = 0;
-					int fpos = 0;
+						double fval = pow(freqscale, p);
+						int cpos = 0;
+						int fpos = 0;
 
-					for(int c = 0; c < ((MNStruct *)GHSglobalcontext)->numProfComponents; c++){
-						for(int k = 0; k < numProfileFitCoeff[c]; k++){
-							if(((MNStruct *)GHSglobalcontext)->NProfileTimePoly == 0){
-								for(int i = ZeroOffset; i < Nbins; i+=BinRatio){
-									EpochMMatrix[i + EpochCount*Nbins] =  fval*((MNStruct *)GHSglobalcontext)->InterpolatedShapeletsVec[InterpBin][i+(k+cpos)*Nbins]*MLAmp/MLSigma;
+						for(int c = 0; c < ((MNStruct *)GHSglobalcontext)->numProfComponents; c++){
+							for(int k = 0; k < numProfileFitCoeff[c]; k++){
+								if(((MNStruct *)GHSglobalcontext)->NProfileTimePoly == 0){
+									for(int i = ZeroOffset; i < Nbins; i+=BinRatio){
+										EpochMMatrix[i + EpochCount*Nbins] =  fval*((MNStruct *)GHSglobalcontext)->InterpolatedShapeletsVec[InterpBin][i+(k+cpos)*Nbins]*MLAmp/MLSigma;
 
+									}
 								}
+								EpochCount++;	
 							}
-							EpochCount++;	
-						}
-						cpos += NumCoeffForMult[c];
-						fpos +=	numProfileFitCoeff[c];	
+							cpos += NumCoeffForMult[c];
+							fpos +=	numProfileFitCoeff[c];	
+							
+						}	
 						
-					}	
-					
+					}
 				}
+				if(((MNStruct *)GHSglobalcontext)->incProfileScatter == 1){
 
+
+					int Sindex = ((MNStruct *)GHSglobalcontext)->ScatterIndex[nTOA];
+					double *pbf = new double[Nbins]();
+
+					fftw_complex *cpbf = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * Nbins);
+
+						
+					double ScatterScale = pow( ((MNStruct *)GHSglobalcontext)->pulse->obsn[t].freqSSB, 4)/pow(10.0, 9.0*4.0);
+					double STime = ProfileScatter[Sindex]/ScatterScale;
+
+
+					for (int i = 0; i < Nbins; i++ ){
+						pbf[i] = exp(-(1.0*i)/Nbins/STime); 	
+					}
+
+					fftw_plan plan;
+					fftw_plan plan_back;
+
+
+
+					plan = fftw_plan_dft_r2c_1d(Nbins, pbf, cpbf, FFTW_ESTIMATE); 
+					fftw_execute(plan);
+					fftw_destroy_plan ( plan );
+
+					double *ConvolvedBasis = new double[Nbins];  
+					fftw_complex *cp = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * Nbins);
+
+					for(int p = 0; p < 1+((MNStruct *)GHSglobalcontext)->NProfileEvoPoly; p++){
+
+						double fval = pow(freqscale, p);
+						int cpos = 0;
+						int fpos = 0;
+
+						for(int c = 0; c < ((MNStruct *)GHSglobalcontext)->numProfComponents; c++){
+							for(int k = 0; k < numProfileFitCoeff[c]; k++){
+								if(((MNStruct *)GHSglobalcontext)->NProfileTimePoly == 0){
+
+
+									for(int b = 0; b < Nbins; b++){
+										ConvolvedBasis[b] = ((MNStruct *)GHSglobalcontext)->InterpolatedShapeletsVec[InterpBin][b+(k+cpos)*Nbins];
+									}
+									
+									plan = fftw_plan_dft_r2c_1d(Nbins, ConvolvedBasis, cp, FFTW_ESTIMATE); 
+									fftw_execute(plan);
+									fftw_destroy_plan ( plan );
+
+									for (int i = 0; i < Nbins; i++ ){
+							
+										double real =  cp[i][0]*cpbf[i][0] - cp[i][1]*cpbf[i][1];
+										double imag =  cp[i][0]*cpbf[i][1] + cp[i][1]*cpbf[i][0];
+
+										cp[i][0] =  real;
+										cp[i][1] =  imag;
+
+									}
+
+
+									plan_back = fftw_plan_dft_c2r_1d(Nbins, cp, ConvolvedBasis, FFTW_ESTIMATE);
+									fftw_execute ( plan_back );
+									fftw_destroy_plan ( plan_back );
+
+									for(int i = ZeroOffset; i < Nbins; i+=BinRatio){
+										EpochMMatrix[i + EpochCount*Nbins] =  fval*ConvolvedBasis[i]*MLAmp/MLSigma/ScatterMax;
+
+									}
+								}
+								EpochCount++;	
+							}
+							cpos += NumCoeffForMult[c];
+							fpos +=	numProfileFitCoeff[c];	
+							
+						}	
+						
+					}
+
+
+
+					fftw_free ( cp );
+					fftw_free ( cpbf );
+
+					delete[] pbf;
+					delete[] ConvolvedBasis;
+
+
+
+				}
 				if(((MNStruct *)GHSglobalcontext)->FitLinearProfileWidth == 1){
 					for(int i = ZeroOffset; i < Nbins; i+=BinRatio){
 						EpochMMatrix[i + EpochCount*Nbins] = (ProfileWidthModVec[i] + ((MNStruct *)GHSglobalcontext)->InterpolatedWidthProfile[InterpBin][i])*MLAmp/MLSigma;
@@ -4851,6 +5497,17 @@ void GetMaxSteps(int ndim, double *MaxAmps, double *StepSize, double **SSM){
 						}	
 					
 					}
+				}
+
+				EpochCount += ((MNStruct *)GHSglobalcontext)->totalProfileFitCoeff*(1+((MNStruct *)GHSglobalcontext)->NProfileEvoPoly);
+
+				if(((MNStruct *)GHSglobalcontext)->incProfileScatter == 1){
+
+					int Sindex = ((MNStruct *)GHSglobalcontext)->ScatterIndex[nTOA];
+					printf("Scatter Err: %i %i %g \n", t, Sindex, (double)((MNStruct *)GHSglobalcontext)->pulse->param[param_sxer].val[Sindex]);
+					EpochMNMHess[EpochCount+Sindex + (EpochCount+Sindex)*EpochMsize] =  (1.0/4)/(pow(((MNStruct *)GHSglobalcontext)->pulse->param[param_sxer].val[Sindex],2));
+					EpochCount += ((MNStruct *)GHSglobalcontext)->pulse->nSx;	
+					
 				}
 
 //				for(int test=0; test< EpochMsize; test++){
@@ -5227,6 +5884,43 @@ void GetMaxSteps(int ndim, double *MaxAmps, double *StepSize, double **SSM){
 		}
 
 
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////Hessian for Scattering Terms//////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+			if(((MNStruct *)GHSglobalcontext)->incProfileScatter == 1){
+
+				double ScatterHess = 0;
+				double S1 = 0;
+				double S2 = 0;
+
+				for(int i =ZeroOffset; i < Nbins; i+=BinRatio){
+		
+					double res = ((MNStruct *)GHSglobalcontext)->ProfileData[nTOA][i/BinRatio][1] - MLAmp*shapevec[i] - noisemean;
+					double nres = res/MLSigma/MLSigma;
+		
+					ScatterHess += (1.0/MLSigma/MLSigma)*MLAmp*pbfgrad[i]*MLAmp*pbfgrad[i] - nres*MLAmp*pbfDgrad[i];
+//					printf("Deriv: %i %i %g %g \n", nTOA, i, nres*MLAmp*pbfDgrad[i],(1.0/MLSigma/MLSigma)*MLAmp*pbfgrad[i]*MLAmp*pbfgrad[i] );
+					S1 += (1.0/MLSigma/MLSigma)*MLAmp*pbfgrad[i]*MLAmp*pbfgrad[i] ;
+					S2 += nres*MLAmp*pbfDgrad[i];
+
+				}
+
+				printf("Scatter Hess is: %i %g %g %g\n", nTOA, ScatterHess, S1, S2);
+	
+
+			}
+
+
+
+
+
+
+
 			profilelike = -0.5*(detN + Chisq);
 
 			if(debug == 1)printf("Like: %i %.15g %.15g %.15g \n", nTOA, lnew, detN, Chisq);
@@ -5248,6 +5942,11 @@ void GetMaxSteps(int ndim, double *MaxAmps, double *StepSize, double **SSM){
 			delete[] ProfileJitterModVec;
 			delete[] ProfileWidthModVec;
 			delete[] NGRes;
+
+			if(((MNStruct *)GHSglobalcontext)->incProfileScatter == 1){
+				delete[] pbfgrad;
+				delete[] pbfDgrad;
+			}
 
 			if(dotime == 1){
 				gettimeofday(&tval_after, NULL);
@@ -5295,6 +5994,11 @@ void GetMaxSteps(int ndim, double *MaxAmps, double *StepSize, double **SSM){
 	}
 	delete[] EvoCoeffs;
 	delete[] betas;
+
+	if(((MNStruct *)GHSglobalcontext)->incProfileScatter == 1){
+		delete[] ProfileScatter;
+	}
+
 	if(((MNStruct *)GHSglobalcontext)->numFitEQUAD > 0){ delete[] EQUAD; }
 
 	if(debug == 1)printf("End Like: %.10g \n", lnew);
@@ -5328,7 +6032,7 @@ void GetMaxSteps(int ndim, double *MaxAmps, double *StepSize, double **SSM){
 ///////////////////////////////////////////////////////// Get Epoch Prior EVDs///////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	
-
+	
 	if(globaldims+epochdims+epochpriordims > 0){ 
 
 
@@ -5989,6 +6693,17 @@ void OutputMLFiles(int nParameters, double* pdParameterEstimates, double MLike, 
 					pcount++;
 				}
 			}
+		}
+	}
+
+
+	double *ProfileScatter;
+	if(((MNStruct *)GHSglobalcontext)->incProfileScatter == 1){
+		ProfileScatter =  new double[((MNStruct *)GHSglobalcontext)->pulse->nSx];
+		for(int i = 0; i < ((MNStruct *)GHSglobalcontext)->pulse->nSx; i++){
+			ProfileScatter[i] = pdParameterEstimates[pcount]; 
+			((MNStruct *)GHSglobalcontext)->pulse->param[param_sx].val[i] = ProfileScatter[i];
+			pcount++;
 		}
 	}
 
@@ -7628,10 +8343,10 @@ void GHSWriteProf(std::string ename){
 /////////////////////////////////////////////////////////////////////////////////////////////
 
 
-		double chanfreq[3];
-		chanfreq[0] = 120;
-		chanfreq[1] = 150;
-		chanfreq[2] = 180;
+	double chanfreq[3];
+	chanfreq[0] = 1400;
+	chanfreq[1] = 2800;
+	chanfreq[2] = 3500;
 
 	int NEpochs = ((MNStruct *)GHSglobalcontext)->numProfileEpochs;
 	int TotalProfs = 0;
@@ -9124,3 +9839,587 @@ void WriteGHSProfileDomainLike(std::string longname, int ndim, double* Cube){
 
 	
 }
+
+
+
+void NewGHSProfileDomainLike(int* ndim, double* PrinCube, double* likelihood, double* PrinGrad){
+
+
+	int debug = ((MNStruct *)GHSglobalcontext)->debug; 
+	int threads = omp_get_max_threads();
+
+
+	
+	if(debug == 1)printf("In like \n");
+
+	double *grad = new double[*ndim]();
+	double *Cube = new double[*ndim];
+
+	if(((MNStruct *)GHSglobalcontext)->diagonalGHS == 0){
+		rotate2Physical(PrinCube, Cube);
+	}
+	else{
+		for(int i = 0; i < *ndim; i++){
+			Cube[i] = PrinCube[i];
+		}
+	}
+
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////  
+/////////////////////////Get dimensionality//////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////
+
+
+        int perProfDims = ((MNStruct *)GHSglobalcontext)->GHSperProfDims;
+        int DimsPerEpoch = ((MNStruct *)GHSglobalcontext)->GHSperEpochDims;
+        int epochpriordims = ((MNStruct *)GHSglobalcontext)->GHSepochpriordims;
+        int globaldims = ((MNStruct *)GHSglobalcontext)->GHSglobaldims;
+
+
+	int profdims = ((MNStruct *)GHSglobalcontext)->TotalProfiles*perProfDims;	
+	int epochdims = ((MNStruct *)GHSglobalcontext)->numProfileEpochs*DimsPerEpoch;
+	
+	int globalparams = globaldims;
+
+
+	double **threadgrads = new double*[globalparams];
+	for(int i = 0; i < globalparams; i++){ threadgrads[i] = new double[threads]();}
+
+
+	double **PriorThreadGrads = new double*[epochpriordims];
+	for(int i = 0; i < epochpriordims; i++){ PriorThreadGrads[i] = new double[threads]();}
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////  
+/////////////////////////Form the BATS///////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////
+
+
+	int NEpochs = ((MNStruct *)GHSglobalcontext)->numProfileEpochs;
+	int TotalProfs = 0;
+	for(int ep = 0; ep < NEpochs; ep++){ TotalProfs +=  ((MNStruct *)GHSglobalcontext)->numChanPerInt[ep]; }
+
+
+
+	 long double **ProfileBats=new long double*[((MNStruct *)GHSglobalcontext)->pulse->nobs];
+	 long double *ModelBats = new long double[((MNStruct *)GHSglobalcontext)->pulse->nobs];
+	 for(int i = 0; i < ((MNStruct *)GHSglobalcontext)->pulse->nobs; i++){
+
+	        int ProfNbin  = (int)((MNStruct *)GHSglobalcontext)->ProfileInfo[i][1];
+
+		ProfileBats[i] = new long double[2];
+
+		ProfileBats[i][0] = ((MNStruct *)GHSglobalcontext)->ProfileData[i][0][0] + ((MNStruct *)GHSglobalcontext)->pulse->obsn[i].batCorr;
+		ProfileBats[i][1] = ((MNStruct *)GHSglobalcontext)->ProfileData[i][ProfNbin-1][0] + ((MNStruct *)GHSglobalcontext)->pulse->obsn[i].batCorr;
+
+	      
+	      ModelBats[i] = ((MNStruct *)GHSglobalcontext)->ProfileInfo[i][5]+((MNStruct *)GHSglobalcontext)->pulse->obsn[i].batCorr - ((MNStruct *)GHSglobalcontext)->pulse->obsn[i].residual/SECDAY;
+
+	 }
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////  
+/////////////////////////Timing Model////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+	int pcount = profdims+epochdims+epochpriordims;
+	int phaseDim = profdims+epochdims+epochpriordims;
+
+	long double phase = Cube[pcount]*(((MNStruct *)GHSglobalcontext)->LDpriors[0][1]) + (((MNStruct *)GHSglobalcontext)->LDpriors[0][0]);	
+	phase = phase*((MNStruct *)GHSglobalcontext)->ReferencePeriod/SECDAY;
+	pcount++;
+
+	double PhasePrior = ((MNStruct *)GHSglobalcontext)->PhasePrior;
+	double phasePriorTerm = 0.5*Cube[phaseDim]*Cube[phaseDim]/(PhasePrior*PhasePrior);
+	double phasePriorGrad = Cube[phaseDim]/(PhasePrior*PhasePrior);
+
+
+
+	double *TimingParams = new double[((MNStruct *)GHSglobalcontext)->numFitTiming+((MNStruct *)GHSglobalcontext)->numFitJumps]();
+	double *TimingSignal = new double[((MNStruct *)GHSglobalcontext)->pulse->nobs];
+
+	int fitcount = 1;
+	for(int i = phaseDim+1; i < phaseDim+((MNStruct *)GHSglobalcontext)->numFitTiming+((MNStruct *)GHSglobalcontext)->numFitJumps; i++){
+		TimingParams[fitcount] = Cube[i];
+		fitcount++;
+		pcount++;
+	}
+
+	vector_dgemv(GlobalDMatrixVec, TimingParams,TimingSignal,((MNStruct *)GHSglobalcontext)->pulse->nobs,((MNStruct *)GHSglobalcontext)->numFitTiming+((MNStruct *)GHSglobalcontext)->numFitJumps,'N');
+
+	for(int i = 0; i < ((MNStruct *)GHSglobalcontext)->pulse->nobs; i++){
+     		 ModelBats[i] -=  (long double) TimingSignal[i]/SECDAY + phase;
+
+		//printf("MBat %i %.15Lg %.15Lg \n", i, ModelBats[i], phase);
+
+
+	}	
+
+	delete[] TimingSignal;
+	delete[] TimingParams;	
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////  
+/////////////////////////Get Profile Parameters//////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+	int totshapecoeff = ((MNStruct *)GHSglobalcontext)->totshapecoeff; 
+
+	int *numcoeff= new int[((MNStruct *)GHSglobalcontext)->numProfComponents];
+	for(int i = 0; i < ((MNStruct *)GHSglobalcontext)->numProfComponents; i++){
+		numcoeff[i] =  ((MNStruct *)GHSglobalcontext)->numshapecoeff[i];
+	}
+
+	int *numEvoCoeff = ((MNStruct *)GHSglobalcontext)->numEvoCoeff;
+	int totalEvoCoeff = ((MNStruct *)GHSglobalcontext)->totalEvoCoeff;
+
+	int *numEvoFitCoeff = ((MNStruct *)GHSglobalcontext)->numEvoFitCoeff;
+	int totalEvoFitCoeff = ((MNStruct *)GHSglobalcontext)->totalEvoFitCoeff;
+
+	int *numProfileFitCoeff = ((MNStruct *)GHSglobalcontext)->numProfileFitCoeff;
+	int totalProfileFitCoeff = ((MNStruct *)GHSglobalcontext)->totalProfileFitCoeff;
+
+
+
+	int totalCoeffForMult = 0;
+	int *NumCoeffForMult = new int[((MNStruct *)GHSglobalcontext)->numProfComponents]();
+	for(int i = 0; i < ((MNStruct *)GHSglobalcontext)->numProfComponents; i++){
+
+		if(numEvoCoeff[i] > NumCoeffForMult[i]){NumCoeffForMult[i]=numEvoCoeff[i];}
+		if(numProfileFitCoeff[i] > NumCoeffForMult[i]){NumCoeffForMult[i]=numProfileFitCoeff[i];}
+
+		totalCoeffForMult += NumCoeffForMult[i];
+
+	}
+
+
+	double ProfileFitCoeffs[totalProfileFitCoeff];
+	for(int i =0; i < totalProfileFitCoeff; i++){
+		
+		ProfileFitCoeffs[i] = Cube[pcount];
+		pcount++;
+	}
+
+
+	double **EvoCoeffs=new double*[((MNStruct *)GHSglobalcontext)->NProfileEvoPoly]; 
+	for(int i = 0; i < ((MNStruct *)GHSglobalcontext)->NProfileEvoPoly; i++){EvoCoeffs[i] = new double[totalEvoCoeff];}
+
+	for(int p = 0; p < ((MNStruct *)GHSglobalcontext)->NProfileEvoPoly; p++){	
+		for(int i =0; i < totalEvoCoeff; i++){
+			EvoCoeffs[p][i]=((MNStruct *)GHSglobalcontext)->MeanProfileEvo[p][i];
+		}
+	}
+	
+	for(int p = 0; p < ((MNStruct *)GHSglobalcontext)->NProfileEvoPoly; p++){	
+		int cpos = 0;
+		for(int c = 0; c < ((MNStruct *)GHSglobalcontext)->numProfComponents; c++){
+			for(int i =0; i < numEvoFitCoeff[c]; i++){
+				EvoCoeffs[p][i+cpos] += Cube[pcount];
+				pcount++;
+			}
+			cpos += numEvoCoeff[c];
+		
+		}
+	}
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////  
+/////////////////////////Profiles////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+	double lnew = 0;
+	int GlobalNBins = (int)((MNStruct *)GHSglobalcontext)->LargestNBins;
+	int ProfileBaselineTerms = ((MNStruct *)GHSglobalcontext)->ProfileBaselineTerms;
+
+
+	int minep = 0;
+	int maxep = ((MNStruct *)GHSglobalcontext)->numProfileEpochs;
+
+	
+	double *eplikes = new double[((MNStruct *)GHSglobalcontext)->numProfileEpochs]();
+
+	#pragma omp parallel for 
+	for(int ep = minep; ep < maxep; ep++){
+
+		double *ProfileModCoeffs = new double[totalCoeffForMult];
+
+		int thisthread = omp_get_thread_num();
+	
+		int t = 0;
+
+		for(int sep = 0; sep < ep; sep++){	
+			t += ((MNStruct *)GHSglobalcontext)->numChanPerInt[sep];
+		}
+		
+
+
+		int NChanInEpoch = ((MNStruct *)GHSglobalcontext)->numChanPerInt[ep];
+		int NEpochBins = NChanInEpoch*GlobalNBins;
+
+
+		double EpochChisq = 0;	
+		double EpochdetN = 0;
+		double EpochLike = 0;
+
+
+		int EDimcount = profdims + epochpriordims + ep*DimsPerEpoch;
+		int OriginalEDimCount = EDimcount;
+
+
+
+
+		for(int ch = 0; ch < NChanInEpoch; ch++){
+
+			EDimcount = OriginalEDimCount;
+
+
+			int nTOA = t;
+
+
+			double ProfileBaseline = Cube[nTOA*perProfDims + 0];
+			double ProfileAmp = Cube[nTOA*perProfDims + 1];
+			double ProfileSigma = Cube[nTOA*perProfDims + 2];
+
+			double detN  = 0;
+			double Chisq  = 0;
+  
+
+			double profilelike=0;
+
+			long double FoldingPeriod = ((MNStruct *)GHSglobalcontext)->ProfileInfo[nTOA][0];
+			long double FoldingPeriodDays = FoldingPeriod/SECDAY;
+
+			int Nbins = GlobalNBins;
+			int ProfNbins = (int)((MNStruct *)GHSglobalcontext)->ProfileInfo[nTOA][1];
+			int BinRatio = Nbins/ProfNbins;
+
+
+			long double ReferencePeriod = ((MNStruct *)GHSglobalcontext)->ReferencePeriod;
+
+
+			double *shapevec  = new double[Nbins]();
+			double *ProfileModVec = new double[Nbins]();
+			double *ProfileJitterModVec = new double[Nbins]();
+
+
+
+			/////////////////////////////////////////////////////////////////////////////////////////////  
+			/////////////////////////Get and modify binpos///////////////////////////////////////////////
+			/////////////////////////////////////////////////////////////////////////////////////////////
+		    
+			long double binpos = ModelBats[nTOA]; 
+
+
+			long double binposSec = (ProfileBats[t][0] - ModelBats[nTOA])*SECDAY;
+			double DFP = double(FoldingPeriod);
+			long double WrapBinPos = -FoldingPeriod/2 + fmod(FoldingPeriod + fmod(binposSec+FoldingPeriod/2, FoldingPeriod), FoldingPeriod);
+
+			long double maxbinvalue = (FoldingPeriod/Nbins);
+			double DNewInterpBin = double(fmod(maxbinvalue + fmod(-WrapBinPos, maxbinvalue), maxbinvalue)/((MNStruct *)GHSglobalcontext)->InterpolatedTime);
+			int InterpBin = floor(DNewInterpBin+0.5);
+			InterpBin = InterpBin%((MNStruct *)GHSglobalcontext)->NumToInterpolate;
+
+			long double NewWholeBinTime = -WrapBinPos-InterpBin*((MNStruct *)GHSglobalcontext)->InterpolatedTime;
+			int RollBin = int(round(NewWholeBinTime/maxbinvalue));
+			int WrapRollBin = ((Nbins) + RollBin % (Nbins)) % (Nbins);
+
+
+			///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+			//////////////////////////////////////////////////////Add in any Profile Changes///////////////////////////////////////////////////////////////
+			///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+			double reffreq = ((MNStruct *)GHSglobalcontext)->EvoRefFreq;
+			double freqdiff =  (((MNStruct *)GHSglobalcontext)->pulse->obsn[t].freq - reffreq)/1000.0;
+
+
+			for(int i =0; i < totalCoeffForMult; i++){
+				ProfileModCoeffs[i]=0;	
+			}				
+
+			int cpos = 0;
+			int epos = 0;
+			int fpos = 0;
+
+			for(int c = 0; c < ((MNStruct *)GHSglobalcontext)->numProfComponents; c++){
+				
+				for(int i =0; i < numProfileFitCoeff[c]; i++){
+					ProfileModCoeffs[i+cpos] += ProfileFitCoeffs[i+fpos];				
+
+				}
+				for(int p = 0; p < ((MNStruct *)GHSglobalcontext)->NProfileEvoPoly; p++){	
+					for(int i =0; i < numEvoCoeff[c]; i++){
+						ProfileModCoeffs[i+cpos] += EvoCoeffs[p][i+epos]*pow(freqdiff, p+1);						
+					}
+				}
+
+
+
+
+				cpos += NumCoeffForMult[c];
+				epos += numEvoCoeff[c];
+				fpos += numProfileFitCoeff[c];	
+			}
+
+
+
+
+			vector_dgemv(((MNStruct *)GHSglobalcontext)->InterpolatedShapeletsVec[InterpBin], ProfileModCoeffs,ProfileModVec,Nbins,totalCoeffForMult,'N');
+			vector_dgemv(((MNStruct *)GHSglobalcontext)->InterpolatedJitterProfileVec[InterpBin], ProfileModCoeffs,ProfileJitterModVec,Nbins,totalCoeffForMult,'N');         
+
+	
+
+
+			///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+			//////////////////////////////////////////////////////Fill Arrays with interpolated state//////////////////////////////////////////////////////
+			///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+			for(int j = WrapRollBin; j < Nbins; j++){
+				shapevec[j] = ((MNStruct *)GHSglobalcontext)->InterpolatedMeanProfile[InterpBin][j-WrapRollBin] + ProfileModVec[j-WrapRollBin];
+			}
+
+			for(int j = 0; j < WrapRollBin; j++){
+				shapevec[j] = ((MNStruct *)GHSglobalcontext)->InterpolatedMeanProfile[InterpBin][Nbins-WrapRollBin+j] + ProfileModVec[Nbins-WrapRollBin+j];
+			}
+
+
+			for(int j = 0; j < Nbins; j++){
+				ProfileJitterModVec[j]  += ((MNStruct *)GHSglobalcontext)->InterpolatedJitterProfile[InterpBin][j];
+			}
+
+
+
+		///////////////////////////////////////////Marginalise over arbitrary offset and absolute amplitude////////////////////////////////////////////////////////////
+
+			      
+			Chisq = 0;
+	
+
+			double noise = ProfileSigma*ProfileSigma;
+			double OffPulsedetN = log(noise);
+			detN = ProfNbins*OffPulsedetN;
+			noise=1.0/noise;
+
+			double *NResVec = new double[Nbins]();
+		
+
+			double BaseGrad = 0;
+			double AmpGrad = 0;
+	
+			for(int j = WrapRollBin; j < Nbins; j++){
+
+				double gres = ((MNStruct *)GHSglobalcontext)->ProfileData[nTOA][j][1] - ProfileAmp*shapevec[j] - ProfileBaseline;
+
+				NResVec[j-WrapRollBin] = gres*noise;
+				Chisq +=  gres*NResVec[j-WrapRollBin];
+
+				BaseGrad -= gres*noise;
+				AmpGrad -= shapevec[j]*NResVec[j-WrapRollBin];
+
+			}
+
+			for(int j = 0; j < WrapRollBin; j++){
+
+				double gres = ((MNStruct *)GHSglobalcontext)->ProfileData[nTOA][j][1] - ProfileAmp*shapevec[j] - ProfileBaseline;
+
+				NResVec[Nbins-WrapRollBin+j] = gres*noise;
+				Chisq +=  gres*NResVec[Nbins-WrapRollBin+j];
+
+				BaseGrad -= gres*noise;
+				AmpGrad -= shapevec[j]*NResVec[Nbins-WrapRollBin+j];
+
+			}
+
+
+			double NoiseGrad = (-Chisq+ProfNbins)/ProfileSigma;
+
+			 grad[nTOA*perProfDims + 0] = BaseGrad;
+			 grad[nTOA*perProfDims + 1] = AmpGrad;
+			 grad[nTOA*perProfDims + 2] = NoiseGrad;
+
+
+
+			///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+			//////////////////////////////////////////////////////Get EpochGrads///////////////////////////////////////////////////////////////////////////
+			///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+			int B2C = 0;
+			double PhaseGrad = 0;
+			for(int j = 0; j < Nbins; j++){
+				PhaseGrad += -1*NResVec[j]*ProfileJitterModVec[j]*ProfileAmp;		
+			}
+			
+	
+			threadgrads[B2C][thisthread] += double(((MNStruct *)GHSglobalcontext)->ReferencePeriod)*PhaseGrad;
+			B2C++;
+
+
+			for(int j = 1; j < ((MNStruct *)GHSglobalcontext)->numFitTiming + ((MNStruct *)GHSglobalcontext)->numFitJumps; j++){	
+				threadgrads[B2C][thisthread] += GlobalDMatrix[nTOA][j]*PhaseGrad;
+				B2C++;
+
+			}
+
+
+			double *GradResVec = new double[totalCoeffForMult];
+
+			vector_dgemv(((MNStruct *)GHSglobalcontext)->InterpolatedShapeletsVec[InterpBin], NResVec, GradResVec, Nbins, totalCoeffForMult,'T');
+
+			for(int p = 0; p < ((MNStruct *)GHSglobalcontext)->NProfileEvoPoly+1; p++){
+
+				double fval = -1*ProfileAmp*pow(freqdiff, p);
+		
+				int cpos = 0;
+				int fpos = 0;
+				for(int c = 0; c < ((MNStruct *)GHSglobalcontext)->numProfComponents; c++){
+					for(int i = 0; i < numProfileFitCoeff[c]; i++){
+		
+						threadgrads[B2C + p*totalProfileFitCoeff + fpos + i][thisthread] += fval*GradResVec[i+cpos];
+					}
+					fpos += numProfileFitCoeff[c];	
+					cpos += NumCoeffForMult[c];
+				}
+			}
+			B2C += (((MNStruct *)GHSglobalcontext)->NProfileEvoPoly+1)*totalProfileFitCoeff;		
+
+			delete[] GradResVec;
+
+		
+
+			profilelike = -0.5*(detN + Chisq);
+
+
+
+			EpochChisq+=Chisq;
+			EpochdetN+=detN;
+			EpochLike+=profilelike;
+
+			delete[] shapevec;
+			delete[] ProfileModVec;
+			delete[] ProfileJitterModVec;
+			delete[] NResVec;
+
+
+
+			t++;
+		}
+
+
+
+///////////////////////////////////////////
+
+
+		if(((MNStruct *)GHSglobalcontext)->incWideBandNoise == 0){
+			eplikes[ep] += EpochLike;
+			lnew += EpochLike;
+		}
+		delete[] ProfileModCoeffs;
+
+////////////////////////////////////////////
+	
+	}
+
+
+
+
+	double omplnew = 0;
+	for(int ep = minep; ep < maxep; ep++){
+		omplnew += eplikes[ep];
+	}
+
+	for(int i = 0; i < epochpriordims; i++){
+		double gsum = 0;
+                for(int j = 0; j < threads; j++){
+                        gsum += PriorThreadGrads[i][j];
+                }
+		 grad[profdims + i] = gsum;
+	}
+
+	for(int i = 0; i < globalparams; i++){
+		double gsum = 0;
+		for(int j = 0; j < threads; j++){
+			gsum += threadgrads[i][j];
+		}
+	 	// printf("global grad: %i %g %g \n", i, Cube[phaseDim+i], gsum);
+		 grad[profdims + epochdims + epochpriordims + i] = gsum;
+	}
+
+
+	grad[profdims + epochdims + epochpriordims]+=phasePriorGrad;
+
+	
+	for(int j =0; j< ((MNStruct *)GHSglobalcontext)->pulse->nobs; j++){
+	    delete[] ProfileBats[j];
+	}
+	delete[] ProfileBats;
+	delete[] ModelBats;
+	delete[] NumCoeffForMult;
+
+
+	for(int j =0; j< ((MNStruct *)GHSglobalcontext)->NProfileEvoPoly; j++){
+	    delete[] EvoCoeffs[j];
+	}
+	delete[] EvoCoeffs;
+	delete[] eplikes;
+
+
+	for(int i = 0; i < globalparams; i++){
+		delete[] threadgrads[i];
+	}
+	delete[] threadgrads;
+
+
+	for(int i = 0; i < epochpriordims; i++){
+		delete[] PriorThreadGrads[i];
+	}
+	delete[] PriorThreadGrads;
+
+
+
+
+	
+
+	double finallikelihood = -1*omplnew + phasePriorTerm;
+	*likelihood=finallikelihood;
+
+	if(-1*finallikelihood > GlobalMaxLike && ((MNStruct *)GHSglobalcontext)->WriteNewML == 1){
+		GlobalMaxLike = -1*finallikelihood;
+		printf("Like: %.16g \n", -1*finallikelihood);
+		write_newMLLike(*ndim, Cube, GlobalMaxLike);
+		if(debug == 1)printf("Written new ML file\n");
+	
+	}
+	//printf("Like: %.16g \n", -1*finallikelihood);
+	//sleep(5);
+	
+	if(((MNStruct *)GHSglobalcontext)->diagonalGHS == 0){
+		rotate2Principal(PrinGrad, grad);
+	}
+	else{
+		for(int i = 0; i < *ndim; i++){
+			PrinGrad[i] = grad[i];
+		}
+	}
+	
+
+	delete[] Cube;
+	delete[] grad;
+
+
+
+
+
+
+	
+}
+
+
+

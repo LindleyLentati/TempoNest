@@ -158,7 +158,8 @@ void setupparams(char *ConfigFileName, int &useGPUS,
 		int &ProfileNoiseMethod,
 		int &FitPrecAmps,
 		int &NProfileTimePoly,
-		int &incProfileScatter){
+		int &incProfileScatter,
+		int &ScatterPBF){
 
 	//General parameters:
 	//Use GPUs 0=No, 1=Yes
@@ -278,6 +279,7 @@ void setupparams(char *ConfigFileName, int &useGPUS,
 	incTimeCorrProfileNoise = 0;
 
 	incProfileScatter = 0;
+	ScatterPBF = 1;
 
     //Priors
 
@@ -367,7 +369,7 @@ void setupparams(char *ConfigFileName, int &useGPUS,
 
 	incGWB=0;
 	GWBAmpPrior[0] = -20;
-	GWBAmpPrior[1] = -10;
+	GWBAmpPrior[1] = -12;
 
 
 	incDMEvent = 0;
@@ -663,7 +665,8 @@ void setupparams(char *ConfigFileName, int &useGPUS,
 
 
 
-	parameters.readInto(incProfileScatter, "incProfileScatter", incProfileScatter);
+	parameters.readInto(incProfileScatter, "incProfileScatter", incProfileScatter);	
+	parameters.readInto(ScatterPBF, "ScatterPBF", ScatterPBF);
 	
     } catch(ConfigFile::file_not_found oError) {
         printf("WARNING: parameters file '%s' not found. Using defaults.\n", oError.filename.c_str());
@@ -939,7 +942,7 @@ void GetGroupsToFit(char *ConfigFileName, int incGroupNoise, int **FitForGroup, 
 
 
 
-void GetProfileFitInfo(char *ConfigFileName, int numProfComponents, int *numGPTAshapecoeff, int *numProfileFitCoeff, int *numEvoCoeff, int *numFitEvoCoeff, int *numGPTAstocshapecoeff, double *ProfCompSeps, double &TemplateChanWidth, int *numTimeCorrCoeff, int incExtraComp, double **FitForExtraComp){
+void GetProfileFitInfo(char *ConfigFileName, int numProfComponents, int *numGPTAshapecoeff, int *numProfileFitCoeff, int *numEvoCoeff, int *numFitEvoCoeff, int *numGPTAstocshapecoeff, double *ProfCompSeps, double &TemplateChanWidth, int *numTimeCorrCoeff, int incExtraComp, double **FitForExtraComp, int *FitCompWidths, int *FitCompPos){
 
 //This function reads in the groups that will be fit as Group Noise terms
 
@@ -1104,6 +1107,13 @@ void GetProfileFitInfo(char *ConfigFileName, int numProfComponents, int *numGPTA
 			n=sprintf (buffer, "numTimeCorrCoeff[%i]", i);
 			parameters.readInto(numTimeCorrCoeff[i], buffer, numTimeCorrCoeff[i]);
 
+			n=sprintf (buffer, "FitCompWidths[%i]", i);
+			parameters.readInto(FitCompWidths[i], buffer, FitCompWidths[i]);
+
+			n=sprintf (buffer, "FitCompPos[%i]", i);
+			parameters.readInto(FitCompPos[i], buffer, FitCompPos[i]);
+
+
 
 		} 
 		catch(ConfigFile::file_not_found oError) {
@@ -1201,5 +1211,9 @@ void setShapePriors(char *ConfigFileName, double **ShapePriors, double **BetaPri
 		printf("WARNING: parameters file '%s' not found. Using defaults.\n", oError.filename.c_str());
 	    } // try
 	}
+
+
+
+
 
 }

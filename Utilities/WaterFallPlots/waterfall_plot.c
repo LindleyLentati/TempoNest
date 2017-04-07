@@ -178,6 +178,7 @@ void waterfall_plot(char *proflist, char *outname, float pmin, float pmax)
 		}
 //		printf("weight: %i %i %i %g \n", iprof, mjdbin, realmjdbin, 1.0/noise[iprof]/noise[iprof]);
 		for(ibin=0;ibin<nbin;ibin++){
+			//if(model[ibin+nbin*iprof] > 0.9)printf("model: %i %i %g \n", iprof, ibin,  model[ibin+nbin*iprof]);
 			EpochAveragedData[ibin+nbin*realmjdbin] += prof[ibin+nbin*iprof]/noise[iprof]/noise[iprof];
 			EpochAveragedModel[ibin+nbin*realmjdbin] += model[ibin+nbin*iprof]/noise[iprof]/noise[iprof];
 			EpochAveragedRes[ibin+nbin*realmjdbin] += resid[ibin+nbin*iprof]/noise[iprof]/noise[iprof];
@@ -193,7 +194,7 @@ void waterfall_plot(char *proflist, char *outname, float pmin, float pmax)
 			EpochAveragedData[ibin+nbin*iprof] /= EpochWeights[iprof];
 			EpochAveragedModel[ibin+nbin*iprof] /= EpochWeights[iprof];
 			EpochAveragedRes[ibin+nbin*iprof] /= EpochWeights[iprof];
-			printf("%g %i %g %g %g \n",  EpochMJDs[iprof], ibin, EpochAveragedData[ibin+nbin*iprof], EpochAveragedModel[ibin+nbin*iprof] , EpochAveragedRes[ibin+nbin*iprof]);
+			printf("%g %i %g %g %g %g \n",  EpochMJDs[iprof], ibin, EpochAveragedData[ibin+nbin*iprof], EpochAveragedModel[ibin+nbin*iprof] , EpochAveragedRes[ibin+nbin*iprof], 1.0/sqrt(EpochWeights[iprof]));
 		}
 	}
 

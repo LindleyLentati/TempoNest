@@ -13,3 +13,5 @@ EPHVER         5
 CLK            UNCORR
 MODE 1
 EPHEM          DE414
+JUMP -lflag 1 0 0
+JUMP -lflag 2 0 1

@@ -1,1 +1,0 @@
-/usr/local/x86_64/gnu/gcc-4.8.2/bin/gfortran      -std=f95 -pedantic -Wall -Wextra  -Wfatal-errors -O3 CMakeFiles/uncorr_gauss_f.exe.dir/uncorr_gauss_f.f90.o  -o uncorr_gauss_f.exe -rdynamic ../ellipsis/libellipsis.a -lpthread 

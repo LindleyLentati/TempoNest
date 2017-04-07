@@ -57,11 +57,8 @@ am__aclocal_m4_deps = $(top_srcdir)/autoconf/ax_gsl.m4 \
 	$(top_srcdir)/autoconf/ltversion.m4 \
 	$(top_srcdir)/autoconf/lt~obsolete.m4 \
 	$(top_srcdir)/autoconf/mjk_fortran_test.m4 \
-	$(top_srcdir)/autoconf/mlapack.m4 \
 	$(top_srcdir)/autoconf/multinest.m4 \
-	$(top_srcdir)/autoconf/psrchive.m4 \
-	$(top_srcdir)/autoconf/qd.m4 $(top_srcdir)/autoconf/tempo2.m4 \
-	$(top_srcdir)/configure.ac
+	$(top_srcdir)/autoconf/tempo2.m4 $(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 am__CONFIG_DISTCLEAN_FILES = config.status config.cache config.log \
@@ -93,24 +90,22 @@ am__base_list = \
   sed '$$!N;$$!N;$$!N;$$!N;s/\n/ /g'
 am__installdirs = "$(DESTDIR)$(plugindir)"
 LTLIBRARIES = $(plugin_LTLIBRARIES)
-temponest_linux_64_plug_la_DEPENDENCIES =
-am__temponest_linux_64_plug_la_SOURCES_DIST = tempo2pred_int.h \
+temponest_linux-gnu_plug_la_DEPENDENCIES =
+am__temponest_linux-gnu_plug_la_SOURCES_DIST = tempo2pred_int.h \
 	T2accel.h tempo2pred.h tempo2Util.h constraints.h TKmatrix.h \
 	TKfit.h T2toolkit.h tempo2.h config.h configfile.h \
 	configfile.cpp qrdecomp.h qrdecomp.cpp dgemm.cpp dgesvd.h \
 	dpotrs.cpp TempoNest.h dgemm.h dpotrf.cpp dpotrs.h \
-	TempoNestLikeFuncs.cpp TempoNestNGLikeFuncs.cpp dgemv.cpp \
-	dpotrf.h multinest.h TempoNestTextOutput.cpp dgemv.h \
-	dpotri.cpp MultiNestParams.cpp dgesvd.cpp dpotri.h \
-	TempoNestPlugin.cpp TempoNestParams.cpp TempoNestUtilities.cpp \
-	GHSLikeFuncs.cpp TempoNestGPUFuncs.cu \
+	TempoNestLikeFuncs.cpp dgemv.cpp dpotrf.h multinest.h \
+	TempoNestTextOutput.cpp dgemv.h dpotri.cpp MultiNestParams.cpp \
+	dgesvd.cpp dpotri.h TempoNestPlugin.cpp TempoNestParams.cpp \
+	TempoNestUtilities.cpp TempoNestGPUFuncs.cu \
 	TempoNestGPULikeFuncs.cpp
-#am_temponest_linux_64_plug_la_OBJECTS =  \
+#am_temponest_linux-gnu_plug_la_OBJECTS =  \
 #	configfile.lo \
 #	qrdecomp.lo dgemm.lo \
 #	dpotrs.lo dpotrf.lo \
 #	TempoNestLikeFuncs.lo \
-#	TempoNestNGLikeFuncs.lo \
 #	dgemv.lo \
 #	TempoNestTextOutput.lo \
 #	dpotri.lo \
@@ -118,9 +113,8 @@ am__temponest_linux_64_plug_la_SOURCES_DIST = tempo2pred_int.h \
 #	dgesvd.lo \
 #	TempoNestPlugin.lo \
 #	TempoNestParams.lo \
-#	TempoNestUtilities.lo \
-#	GHSLikeFuncs.lo
-am_temponest_linux_64_plug_la_OBJECTS =  \
+#	TempoNestUtilities.lo
+am_temponest_linux-gnu_plug_la_OBJECTS =  \
 	configfile.lo dpotrs.lo \
 	dgesvd.lo qrdecomp.lo \
 	dgemm.lo dgemv.lo \
@@ -130,13 +124,11 @@ am_temponest_linux_64_plug_la_OBJECTS =  \
 	TempoNestTextOutput.lo \
 	TempoNestUtilities.lo \
 	TempoNestLikeFuncs.lo \
-	TempoNestNGLikeFuncs.lo \
 	TempoNestGPULikeFuncs.lo \
-	GHSLikeFuncs.lo \
 	TempoNestPlugin.lo
-temponest_linux_64_plug_la_OBJECTS =  \
-	$(am_temponest_linux_64_plug_la_OBJECTS)
-am_temponest_linux_64_plug_la_rpath = -rpath \
+temponest_linux-gnu_plug_la_OBJECTS =  \
+	$(am_temponest_linux-gnu_plug_la_OBJECTS)
+am_temponest_linux-gnu_plug_la_rpath = -rpath \
 	$(plugindir)
 DEFAULT_INCLUDES = -I.
 depcomp = $(SHELL) $(top_srcdir)/config/depcomp
@@ -160,8 +152,8 @@ CCLD = $(CC)
 LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
 	--mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
 	$(LDFLAGS) -o $@
-SOURCES = $(temponest_linux_64_plug_la_SOURCES)
-DIST_SOURCES = $(am__temponest_linux_64_plug_la_SOURCES_DIST)
+SOURCES = $(temponest_linux-gnu_plug_la_SOURCES)
+DIST_SOURCES = $(am__temponest_linux-gnu_plug_la_SOURCES_DIST)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -175,25 +167,25 @@ DIST_ARCHIVES = $(distdir).tar.gz
 GZIP_ENV = --best
 distuninstallcheck_listfiles = find . -type f -print
 distcleancheck_listfiles = find . -type f -print
-ACLOCAL = ${SHELL} /home/llentati/PulsarCode/TempoNest/config/missing --run aclocal-1.11
-AMTAR = ${SHELL} /home/llentati/PulsarCode/TempoNest/config/missing --run tar
+ACLOCAL = ${SHELL} /home/ltl21/PulsarCode/Git/TempoNest/config/missing --run aclocal-1.11
+AMTAR = ${SHELL} /home/ltl21/PulsarCode/Git/TempoNest/config/missing --run tar
 AR = ar
-AUTOCONF = ${SHELL} /home/llentati/PulsarCode/TempoNest/config/missing --run autoconf
-AUTOHEADER = ${SHELL} /home/llentati/PulsarCode/TempoNest/config/missing --run autoheader
-AUTOMAKE = ${SHELL} /home/llentati/PulsarCode/TempoNest/config/missing --run automake-1.11
+AUTOCONF = ${SHELL} /home/ltl21/PulsarCode/Git/TempoNest/config/missing --run autoconf
+AUTOHEADER = ${SHELL} /home/ltl21/PulsarCode/Git/TempoNest/config/missing --run autoheader
+AUTOMAKE = ${SHELL} /home/ltl21/PulsarCode/Git/TempoNest/config/missing --run automake-1.11
 AWK = gawk
-BLAS_LIBS = -lblas
+BLAS_LIBS = -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5 -lpthread
 CC = mpicc
 CCDEPMODE = depmode=gcc3
-CFLAGS = -mtune=native -O2 -ffast-math -pthread
+CFLAGS = -O3
 CPP = mpicc -E
 CPPFLAGS = 
-CULA_CFLAGS = -I/nfs/cluster/pulsar/psrhome/opt/cula/include
-CULA_LIBS = -L/nfs/cluster/pulsar/psrhome/opt/cula/lib64 -lcula_lapack -lcudart 
+CULA_CFLAGS = -I/home/ltl21/PulsarCode/cula/include
+CULA_LIBS = -L/home/ltl21/PulsarCode/cula/lib64 -lcula_lapack -lcudart 
 CXX = mpicxx
 CXXCPP = mpicxx -E
 CXXDEPMODE = depmode=gcc3
-CXXFLAGS = -mtune=native -O2 -ffast-math -pthread -I/nfs/cluster/pulsar/psrhome/opt/cula/include -I/mnt/home/llentati/PulsarCode/T2Runtime/include -I/home/llentati/PulsarCode/PSRCHIVE/psrchive-2012-12/INSTALL//include  
+CXXFLAGS = -O3 -I/home/ltl21/PulsarCode/cula/include -I/home/ltl21/PulsarCode/T2Runtime/include
 CYGPATH_W = echo
 DEFS = -DHAVE_CONFIG_H
 DEPDIR = .deps
@@ -207,14 +199,14 @@ EXEEXT =
 F77 = mpif77
 FC = mpif90
 FCFLAGS = -g -O2
-FCLIBS =  -L/usr/local/x86_64/gnu/openmpi-1.8.3-dlopen/lib -L/opt/torque/lib64 -L/usr/local/cuda-6.0/lib64/../lib64 -L/usr/local/cuda-6.0/lib/../lib64 -L/usr/local/x86_64/gnu/gcc-4.8.2/lib/gcc/x86_64-unknown-linux-gnu/4.8.2 -L/usr/local/x86_64/gnu/gcc-4.8.2/lib/gcc/x86_64-unknown-linux-gnu/4.8.2/../../../../lib64 -L/lib/../lib64 -L/usr/lib/../lib64 -L/usr/local/intel/composer_xe_2011_sp1.7.256/compiler/lib/intel64 -L/usr/local/intel/composer_xe_2011_sp1.7.256/mkl/lib/intel64 -L/usr/local/intel/composer_xe_2011_sp1.7.256/ipp/../compiler/lib/intel64 -L/usr/local/intel/composer_xe_2011_sp1.7.256/ipp/lib/intel64 -L/usr/local/intel/composer_xe_2011_sp1.7.256/tbb/lib/intel64//cc4.1.0_libc2.4_kernel2.6.16.21 -L/usr/local/cuda-6.0/lib64 -L/usr/local/cuda-6.0/lib -L/usr/local/x86_64/gnu/mpc-1.0/lib -L/usr/local/x86_64/gnu/mpfr-3.1.1/lib -L/usr/local/x86_64/gnu/gmp-5.0.5/lib -L/usr/local/intel-15.3.0/composer_xe_2015.3.187/ipp/lib/intel64 -L/usr/local/intel-15.3.0/composer_xe_2015.3.187/compiler/lib/intel64 -L/usr/local/intel-15.3.0/composer_xe_2015.3.187/mkl/lib/intel64 -L/usr/local/intel-15.3.0/composer_xe_2015.3.187/tbb/lib/intel64/gcc4.4 -L/usr/local/x86_64/gnu/cfitsio-3.290/lib -L/usr/local/x86_64/gnu/gcc-4.8.2/lib/gcc/x86_64-unknown-linux-gnu/4.8.2/../../.. -lgfortran -lm -lmpi_usempi -lmpi_mpifh -lmpi -lquadmath -lpthread
+FCLIBS =  -L/usr/local/Cluster-Apps/OpenMPI/gcc/1.8.2/lib -L/usr/local/Cluster-Apps/python/2.7.5/lib/../lib64 -L/usr/local/Cluster-Apps/cuda/6.0/lib64/../lib64 -L/usr/local/Cluster-Apps/cuda/6.0/lib/../lib64 -L/usr/local/Cluster-Apps/cuda/6.0/extras/CUPTI/lib64/../lib64 -L/usr/local/Cluster-Apps/cuda/6.0/nvvm/lib64/../lib64 -L/usr/local/Cluster-Apps/gcc/4.8.1/lib/gcc/x86_64-unknown-linux-gnu/4.8.1 -L/usr/local/Cluster-Apps/gcc/4.8.1/lib/gcc/x86_64-unknown-linux-gnu/4.8.1/../../../../lib64 -L/lib/../lib64 -L/usr/lib/../lib64 -L/usr/local/Cluster-Apps/pgplot -L/usr/local/Cluster-Apps/intel/cce/15.0.1.133/ipp/lib/intel64 -L/usr/local/Cluster-Apps/intel/cce/15.0.1.133/tbb/lib/intel64 -L/usr/local/Cluster-Apps/intel/fce/15.0.1.133/lib/intel64 -L/usr/local/Cluster-Apps/python/2.7.5/lib -L/usr/local/Cluster-Apps/cuda/6.0/lib64 -L/usr/local/Cluster-Apps/cuda/6.0/lib -L/usr/local/Cluster-Apps/cuda/6.0/extras/CUPTI/lib64 -L/usr/local/Cluster-Apps/cuda/6.0/nvvm/lib64 -L/usr/local/Cluster-Apps/cuda/6.0/open64/lib -L/usr/local/Cluster-Apps/fftw/intel/64/3.3.3/lib -L/usr/local/Cluster-Apps/intel/mkl/10.3.10.319/composer_xe_2011_sp1.10.319/mkl/lib/intel64 -L/usr/local/Cluster-Apps/intel/impi/4.1.3.045/lib64 -L/usr/local/Cluster-Users/sjr20/cfitsio/3.03/icc/lib -L/usr/local/Cluster-Apps/gcc/4.8.1/lib/gcc/x86_64-unknown-linux-gnu/4.8.1/../../.. -lgfortran -lm -lmpi_usempi -lmpi_mpifh -lmpi -lquadmath -lpthread
 FFLAGS = -O3 -DHAVE_CONFIG_H
 FGREP = /bin/grep -F
-FLIBS =  -L/usr/local/x86_64/gnu/openmpi-1.8.3-dlopen/lib -L/opt/torque/lib64 -L/usr/local/cuda-6.0/lib64/../lib64 -L/usr/local/cuda-6.0/lib/../lib64 -L/usr/local/x86_64/gnu/gcc-4.8.2/lib/gcc/x86_64-unknown-linux-gnu/4.8.2 -L/usr/local/x86_64/gnu/gcc-4.8.2/lib/gcc/x86_64-unknown-linux-gnu/4.8.2/../../../../lib64 -L/lib/../lib64 -L/usr/lib/../lib64 -L/usr/local/intel/composer_xe_2011_sp1.7.256/compiler/lib/intel64 -L/usr/local/intel/composer_xe_2011_sp1.7.256/mkl/lib/intel64 -L/usr/local/intel/composer_xe_2011_sp1.7.256/ipp/../compiler/lib/intel64 -L/usr/local/intel/composer_xe_2011_sp1.7.256/ipp/lib/intel64 -L/usr/local/intel/composer_xe_2011_sp1.7.256/tbb/lib/intel64//cc4.1.0_libc2.4_kernel2.6.16.21 -L/usr/local/cuda-6.0/lib64 -L/usr/local/cuda-6.0/lib -L/usr/local/x86_64/gnu/mpc-1.0/lib -L/usr/local/x86_64/gnu/mpfr-3.1.1/lib -L/usr/local/x86_64/gnu/gmp-5.0.5/lib -L/usr/local/intel-15.3.0/composer_xe_2015.3.187/ipp/lib/intel64 -L/usr/local/intel-15.3.0/composer_xe_2015.3.187/compiler/lib/intel64 -L/usr/local/intel-15.3.0/composer_xe_2015.3.187/mkl/lib/intel64 -L/usr/local/intel-15.3.0/composer_xe_2015.3.187/tbb/lib/intel64/gcc4.4 -L/usr/local/x86_64/gnu/cfitsio-3.290/lib -L/usr/local/x86_64/gnu/gcc-4.8.2/lib/gcc/x86_64-unknown-linux-gnu/4.8.2/../../.. -lmpi_usempi -lmpi_mpifh -lmpi -lgfortran -lm -lquadmath -lpthread
+FLIBS =  -L/usr/local/Cluster-Apps/OpenMPI/gcc/1.8.2/lib -L/usr/local/Cluster-Apps/python/2.7.5/lib/../lib64 -L/usr/local/Cluster-Apps/cuda/6.0/lib64/../lib64 -L/usr/local/Cluster-Apps/cuda/6.0/lib/../lib64 -L/usr/local/Cluster-Apps/cuda/6.0/extras/CUPTI/lib64/../lib64 -L/usr/local/Cluster-Apps/cuda/6.0/nvvm/lib64/../lib64 -L/usr/local/Cluster-Apps/gcc/4.8.1/lib/gcc/x86_64-unknown-linux-gnu/4.8.1 -L/usr/local/Cluster-Apps/gcc/4.8.1/lib/gcc/x86_64-unknown-linux-gnu/4.8.1/../../../../lib64 -L/lib/../lib64 -L/usr/lib/../lib64 -L/usr/local/Cluster-Apps/pgplot -L/usr/local/Cluster-Apps/intel/cce/15.0.1.133/ipp/lib/intel64 -L/usr/local/Cluster-Apps/intel/cce/15.0.1.133/tbb/lib/intel64 -L/usr/local/Cluster-Apps/intel/fce/15.0.1.133/lib/intel64 -L/usr/local/Cluster-Apps/python/2.7.5/lib -L/usr/local/Cluster-Apps/cuda/6.0/lib64 -L/usr/local/Cluster-Apps/cuda/6.0/lib -L/usr/local/Cluster-Apps/cuda/6.0/extras/CUPTI/lib64 -L/usr/local/Cluster-Apps/cuda/6.0/nvvm/lib64 -L/usr/local/Cluster-Apps/cuda/6.0/open64/lib -L/usr/local/Cluster-Apps/fftw/intel/64/3.3.3/lib -L/usr/local/Cluster-Apps/intel/mkl/10.3.10.319/composer_xe_2011_sp1.10.319/mkl/lib/intel64 -L/usr/local/Cluster-Apps/intel/impi/4.1.3.045/lib64 -L/usr/local/Cluster-Users/sjr20/cfitsio/3.03/icc/lib -L/usr/local/Cluster-Apps/gcc/4.8.1/lib/gcc/x86_64-unknown-linux-gnu/4.8.1/../../.. -lmpi_usempi -lmpi_mpifh -lmpi -lgfortran -lm -lquadmath -lpthread
 GREP = /bin/grep
-GSL_CFLAGS = -I/nfs/cluster/pulsar/psrhome/opt/gsl-1.15/include
-GSL_CONFIG = /nfs/cluster/pulsar/psrhome/opt/gsl-1.15//bin/gsl-config
-GSL_LIBS = -L/nfs/cluster/pulsar/psrhome/opt/gsl-1.15/lib -lgsl -lgslcblas -lm
+GSL_CFLAGS = -I/usr/include
+GSL_CONFIG = /usr/bin/gsl-config
+GSL_LIBS = -lgsl -lgslcblas -lm
 INSTALL = /usr/bin/install -c
 INSTALL_DATA = ${INSTALL} -m 644
 INSTALL_PROGRAM = ${INSTALL}
@@ -227,7 +219,7 @@ LIBADD_DLD_LINK =
 LIBADD_DLOPEN = 
 LIBADD_SHL_LOAD = 
 LIBOBJS = 
-LIBS = -lm -Wl,-rpath -Wl,/usr/local/x86_64/gnu/openmpi-1.8.3-dlopen/lib -Wl,--enable-new-dtags -L/usr/local/x86_64/gnu/openmpi-1.8.3-dlopen/lib -lmpi_usempi -lmpi_mpifh -lmpi -L/nfs/cluster/pulsar/psrhome/opt/cula/lib64 -lcula_lapack -lcudart  -L/mnt/home/llentati/PulsarCode/T2Runtime/lib -ltempo2  -L/home/llentati/PulsarCode/PSRCHIVE/psrchive-2012-12/INSTALL//lib -lpsrbase -lpsrmore -lpsrutil -lstdc++  -lfftw3f -lcfitsio -lgfortran -ltempo2    
+LIBS = -lm  -L/home/ltl21/PulsarCode/cula/lib64 -lcula_lapack -lcudart  -L/home/ltl21/PulsarCode/T2Runtime/lib -ltempo2 
 LIBS_LAPACK = -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5 -lpthread
 LIBTOOL = $(SHELL) $(top_builddir)/libtool
 LIPO = 
@@ -235,12 +227,10 @@ LN_S = ln -s
 LTLIBOBJS = 
 LT_DLLOADERS =  dlopen.la
 LT_DLPREOPEN = -dlpreopen dlopen.la 
-MAKEINFO = ${SHELL} /home/llentati/PulsarCode/TempoNest/config/missing --run makeinfo
+MAKEINFO = ${SHELL} /home/ltl21/PulsarCode/Git/TempoNest/config/missing --run makeinfo
 MKDIR_P = /bin/mkdir -p
-MLAPACK_CFLAGS = 
-MLAPACK_LIBS = 
-MULTINEST_CFLAGS = -I/mnt/home/llentati/PulsarCode/TempoNest/MultiNest
-MULTINEST_LIBS = -L/mnt/home/llentati/PulsarCode/TempoNest/MultiNest -lchord -lnest3 -lellipsis -llbfgs
+MULTINEST_CFLAGS = -I/home/ltl21/PulsarCode/MPIMultiNest3
+MULTINEST_LIBS = -L/home/ltl21/PulsarCode/MPIMultiNest3 -lchord -lnest3
 NM = /usr/bin/nm -B
 NMEDIT = 
 OBJDUMP = objdump
@@ -254,26 +244,22 @@ PACKAGE_STRING = TempoNest 0.1
 PACKAGE_TARNAME = temponest
 PACKAGE_VERSION = 0.1
 PATH_SEPARATOR = :
-PSRCHIVE_CFLAGS = -I/home/llentati/PulsarCode/PSRCHIVE/psrchive-2012-12/INSTALL//include
-PSRCHIVE_LIBS = -L/home/llentati/PulsarCode/PSRCHIVE/psrchive-2012-12/INSTALL//lib -lpsrbase -lpsrmore -lpsrutil -lstdc++  -lfftw3f -lcfitsio -lgfortran -ltempo2
-QDINSTALL_CFLAGS = 
-QDINSTALL_LIBS = 
 RANLIB = ranlib
 SED = /bin/sed
 SET_MAKE = 
 SHELL = /bin/sh
 STRIP = strip
-T2ARCH = linux_64
-TEMPO2 = /mnt/home/llentati/PulsarCode/T2Runtime
-TEMPO2_CFLAGS = -I/mnt/home/llentati/PulsarCode/T2Runtime/include
-TEMPO2_DIR = /mnt/home/llentati/PulsarCode/T2Runtime
-TEMPO2_LIBS = -L/mnt/home/llentati/PulsarCode/T2Runtime/lib -ltempo2 
-TEMPO2_PLUG_INSTALL = /mnt/home/llentati/PulsarCode/T2Runtime/plugins/
+T2ARCH = linux-gnu
+TEMPO2 = /home/ltl21/PulsarCode/T2Runtime
+TEMPO2_CFLAGS = -I/home/ltl21/PulsarCode/T2Runtime/include
+TEMPO2_DIR = /home/ltl21/PulsarCode/T2Runtime
+TEMPO2_LIBS = -L/home/ltl21/PulsarCode/T2Runtime/lib -ltempo2 
+TEMPO2_PLUG_INSTALL = /home/ltl21/PulsarCode/T2Runtime/plugins/
 VERSION = 0.1
-abs_builddir = /home/llentati/PulsarCode/TempoNest
-abs_srcdir = /home/llentati/PulsarCode/TempoNest
-abs_top_builddir = /home/llentati/PulsarCode/TempoNest
-abs_top_srcdir = /home/llentati/PulsarCode/TempoNest
+abs_builddir = /home/ltl21/PulsarCode/Git/TempoNest
+abs_srcdir = /home/ltl21/PulsarCode/Git/TempoNest
+abs_top_builddir = /home/ltl21/PulsarCode/Git/TempoNest
+abs_top_srcdir = /home/ltl21/PulsarCode/Git/TempoNest
 ac_ct_CC = 
 ac_ct_CXX = 
 ac_ct_DUMPBIN = 
@@ -304,7 +290,7 @@ host_vendor = unknown
 htmldir = ${docdir}
 includedir = ${prefix}/include
 infodir = ${datarootdir}/info
-install_sh = ${SHELL} /home/llentati/PulsarCode/TempoNest/config/install-sh
+install_sh = ${SHELL} /home/ltl21/PulsarCode/Git/TempoNest/config/install-sh
 libdir = ${exec_prefix}/lib
 libexecdir = ${exec_prefix}/libexec
 localedir = ${datarootdir}/locale
@@ -314,7 +300,7 @@ mandir = ${datarootdir}/man
 mkdir_p = /bin/mkdir -p
 oldincludedir = /usr/include
 pdfdir = ${docdir}
-prefix = /mnt/home/llentati/PulsarCode/T2Runtime
+prefix = /home/ltl21/PulsarCode/T2Runtime
 program_transform_name = s,x,x,
 psdir = ${docdir}
 sbindir = ${exec_prefix}/sbin
@@ -340,15 +326,15 @@ EXTRA_DIST = $(xtra_dist_sources)
 #	rm -rf $(distdir)/unsupported_plugins/built_plugins/*
 #	rm -rf `find $(distdir)/unsupported_plugins/ -name CVS`
 #	rm -rf `find $(distdir)/unsupported_plugins/ -name '*.o'`
-plugindir = /mnt/home/llentati/PulsarCode/T2Runtime/plugins/
-plugin_LTLIBRARIES = temponest_linux_64_plug.la
-#temponest_linux_64_plug_la_SOURCES = tempo2pred_int.h T2accel.h tempo2pred.h tempo2Util.h constraints.h TKmatrix.h TKfit.h T2toolkit.h tempo2.h config.h configfile.h configfile.cpp qrdecomp.h qrdecomp.cpp  dgemm.cpp dgesvd.h dpotrs.cpp TempoNest.h dgemm.h dpotrf.cpp dpotrs.h TempoNestLikeFuncs.cpp TempoNestNGLikeFuncs.cpp dgemv.cpp dpotrf.h multinest.h TempoNestTextOutput.cpp dgemv.h dpotri.cpp MultiNestParams.cpp  dgesvd.cpp  dpotri.h TempoNestPlugin.cpp TempoNestParams.cpp TempoNestUtilities.cpp GHSLikeFuncs.cpp
-temponest_linux_64_plug_la_SOURCES = tempo2pred_int.h T2accel.h tempo2pred.h tempo2Util.h constraints.h TKmatrix.h TKfit.h T2toolkit.h tempo2.h config.h configfile.h configfile.cpp TempoNestGPUFuncs.cu dpotrs.cpp dgesvd.cpp qrdecomp.h qrdecomp.cpp  dgemm.cpp dgemv.cpp dpotri.cpp dpotrf.cpp TempoNestParams.cpp MultiNestParams.cpp TempoNestTextOutput.cpp TempoNestUtilities.cpp TempoNestLikeFuncs.cpp TempoNestNGLikeFuncs.cpp TempoNestGPULikeFuncs.cpp GHSLikeFuncs.cpp TempoNestPlugin.cpp
-#temponest_linux_64_plug_la_LIBADD = -lgfortran -ltempo2 -lsofa   -L/mnt/home/llentati/PulsarCode/TempoNest/MultiNest -lchord -lnest3 -lellipsis -llbfgs -L/nfs/cluster/pulsar/psrhome/opt/gsl-1.15/lib -lgsl -lgslcblas -lm -lblas -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5 -lpthread -L/mnt/home/llentati/PulsarCode/T2Runtime/lib -ltempo2  -L/home/llentati/PulsarCode/PSRCHIVE/psrchive-2012-12/INSTALL//lib -lpsrbase -lpsrmore -lpsrutil -lstdc++  -lfftw3f -lcfitsio -lgfortran -ltempo2
-temponest_linux_64_plug_la_LIBADD = -ltempo2 -lsofa -lTNGPU    -L/mnt/home/llentati/PulsarCode/TempoNest/MultiNest -lchord -lnest3 -lellipsis -llbfgs -L/nfs/cluster/pulsar/psrhome/opt/cula/lib64 -lcula_lapack -lcudart  -L/nfs/cluster/pulsar/psrhome/opt/gsl-1.15/lib -lgsl -lgslcblas -lm -lblas -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5 -lpthread -L/mnt/home/llentati/PulsarCode/T2Runtime/lib -ltempo2  -L/home/llentati/PulsarCode/PSRCHIVE/psrchive-2012-12/INSTALL//lib -lpsrbase -lpsrmore -lpsrutil -lstdc++  -lfftw3f -lcfitsio -lgfortran -ltempo2
-#temponest_linux_64_plug_la_INCLUDES =   -I/mnt/home/llentati/PulsarCode/TempoNest/MultiNest -I/nfs/cluster/pulsar/psrhome/opt/gsl-1.15/include -I/mnt/home/llentati/PulsarCode/T2Runtime/include -I/home/llentati/PulsarCode/PSRCHIVE/psrchive-2012-12/INSTALL//include
-temponest_linux_64_plug_la_INCLUDES =   -I/mnt/home/llentati/PulsarCode/TempoNest/MultiNest -I/nfs/cluster/pulsar/psrhome/opt/cula/include -I/nfs/cluster/pulsar/psrhome/opt/gsl-1.15/include -I/mnt/home/llentati/PulsarCode/T2Runtime/include -I/home/llentati/PulsarCode/PSRCHIVE/psrchive-2012-12/INSTALL//include
-INCLUDES = -I./   -I/mnt/home/llentati/PulsarCode/TempoNest/lbfgs/INSTALLDIR/include  -I/nfs/cluster/pulsar/psrhome/opt/gsl-1.15/include/
+plugindir = /home/ltl21/PulsarCode/T2Runtime/plugins/
+plugin_LTLIBRARIES = temponest_linux-gnu_plug.la
+#temponest_linux-gnu_plug_la_SOURCES = tempo2pred_int.h T2accel.h tempo2pred.h tempo2Util.h constraints.h TKmatrix.h TKfit.h T2toolkit.h tempo2.h config.h configfile.h configfile.cpp qrdecomp.h qrdecomp.cpp  dgemm.cpp dgesvd.h dpotrs.cpp TempoNest.h dgemm.h dpotrf.cpp dpotrs.h TempoNestLikeFuncs.cpp dgemv.cpp dpotrf.h multinest.h TempoNestTextOutput.cpp dgemv.h dpotri.cpp MultiNestParams.cpp  dgesvd.cpp  dpotri.h TempoNestPlugin.cpp TempoNestParams.cpp TempoNestUtilities.cpp
+temponest_linux-gnu_plug_la_SOURCES = tempo2pred_int.h T2accel.h tempo2pred.h tempo2Util.h constraints.h TKmatrix.h TKfit.h T2toolkit.h tempo2.h config.h configfile.h configfile.cpp TempoNestGPUFuncs.cu dpotrs.cpp dgesvd.cpp qrdecomp.h qrdecomp.cpp  dgemm.cpp dgemv.cpp dpotri.cpp dpotrf.cpp TempoNestParams.cpp MultiNestParams.cpp TempoNestTextOutput.cpp TempoNestUtilities.cpp TempoNestLikeFuncs.cpp TempoNestGPULikeFuncs.cpp TempoNestPlugin.cpp
+#temponest_linux-gnu_plug_la_LIBADD = -lgfortran -ltempo2 -lsofa -L/home/ltl21/PulsarCode/MPIMultiNest3 -lchord -lnest3 -lgsl -lgslcblas -lm -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5 -lpthread -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5 -lpthread -L/home/ltl21/PulsarCode/T2Runtime/lib -ltempo2  
+temponest_linux-gnu_plug_la_LIBADD = -ltempo2 -lsofa -lTNGPU  -L/home/ltl21/PulsarCode/MPIMultiNest3 -lchord -lnest3 -L/home/ltl21/PulsarCode/cula/lib64 -lcula_lapack -lcudart  -lgsl -lgslcblas -lm -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5 -lpthread -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5 -lpthread -L/home/ltl21/PulsarCode/T2Runtime/lib -ltempo2  
+#temponest_linux-gnu_plug_la_INCLUDES = -I/home/ltl21/PulsarCode/MPIMultiNest3 -I/usr/include -I/home/ltl21/PulsarCode/T2Runtime/include 
+temponest_linux-gnu_plug_la_INCLUDES = -I/home/ltl21/PulsarCode/MPIMultiNest3 -I/home/ltl21/PulsarCode/cula/include -I/usr/include -I/home/ltl21/PulsarCode/T2Runtime/include 
+INCLUDES = -I./
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-am
 
@@ -436,8 +422,8 @@ clean-pluginLTLIBRARIES:
 	  echo "rm -f \"$${dir}/so_locations\""; \
 	  rm -f "$${dir}/so_locations"; \
 	done
-temponest_linux_64_plug.la: $(temponest_linux_64_plug_la_OBJECTS) $(temponest_linux_64_plug_la_DEPENDENCIES) 
-	$(CXXLINK) $(am_temponest_linux_64_plug_la_rpath) $(temponest_linux_64_plug_la_OBJECTS) $(temponest_linux_64_plug_la_LIBADD) $(LIBS)
+temponest_linux-gnu_plug.la: $(temponest_linux-gnu_plug_la_OBJECTS) $(temponest_linux-gnu_plug_la_DEPENDENCIES) 
+	$(CXXLINK) $(am_temponest_linux-gnu_plug_la_rpath) $(temponest_linux-gnu_plug_la_OBJECTS) $(temponest_linux-gnu_plug_la_LIBADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -445,11 +431,9 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-include ./$(DEPDIR)/GHSLikeFuncs.Plo
 include ./$(DEPDIR)/MultiNestParams.Plo
 include ./$(DEPDIR)/TempoNestGPULikeFuncs.Plo
 include ./$(DEPDIR)/TempoNestLikeFuncs.Plo
-include ./$(DEPDIR)/TempoNestNGLikeFuncs.Plo
 include ./$(DEPDIR)/TempoNestParams.Plo
 include ./$(DEPDIR)/TempoNestPlugin.Plo
 include ./$(DEPDIR)/TempoNestTextOutput.Plo
@@ -822,9 +806,9 @@ uninstall-am: uninstall-pluginLTLIBRARIES
 
 .PHONY: temponest temponest-install
 
-temponest: temponest_linux_64_plug.la
-temponest-install: temponest_linux_64_plug.la plugdir
-	$(INSTALL) .libs/temponest_linux_64_plug.t2 $(plugindir)
+temponest: temponest_linux-gnu_plug.la
+temponest-install: temponest_linux-gnu_plug.la plugdir
+	$(INSTALL) .libs/temponest_linux-gnu_plug.t2 $(plugindir)
 
 plugdir:
 	mkdir -p $(plugindir)

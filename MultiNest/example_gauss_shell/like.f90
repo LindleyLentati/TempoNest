@@ -33,7 +33,6 @@ subroutine slikelihood(Cube,slhood)
 		loclik=-dist/(2.*(sw(i)**2.))-log(TwoPi*sw(i)**2)/2.
 		slhood=logSumExp(slhood,loclik)
 	end do
-
 end subroutine slikelihood
       
 !=======================================================================

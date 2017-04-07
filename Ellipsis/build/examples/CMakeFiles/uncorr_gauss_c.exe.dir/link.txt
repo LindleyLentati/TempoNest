@@ -1,1 +1,0 @@
-/usr/local/x86_64/gnu/gcc-4.8.2/bin/gcc  -mtune=native -O2 -ffast-math -pthread  -std=c89 -pedantic -Wall -Wextra -Wfatal-errors -O3    CMakeFiles/uncorr_gauss_c.exe.dir/uncorr_gauss_c.c.o  -o uncorr_gauss_c.exe -rdynamic ../ellipsis/libellipsis.a -lm 

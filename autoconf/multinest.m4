@@ -38,7 +38,7 @@ AC_DEFUN([SWIN_LIB_MULTINEST],
     MULTINEST_LIBS="-L$MULTINEST_DIR"
   fi
 
-  MULTINEST_LIBS="$MULTINEST_LIBS -lchord -lnest3 -lellipsis -llbfgs"
+  MULTINEST_LIBS="$MULTINEST_LIBS -lchord -lnest3"
 
   ac_save_CFLAGS="$CFLAGS"
   ac_save_LIBS="$LIBS"

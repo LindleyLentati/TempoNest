@@ -1,4 +1,0 @@
-/home/llentati/PulsarCode/TempoNest/Ellipsis/build/ellipsis/CMakeFiles/ellipsis.dir
-/home/llentati/PulsarCode/TempoNest/Ellipsis/build/examples/CMakeFiles/gauss_f.exe.dir
-/home/llentati/PulsarCode/TempoNest/Ellipsis/build/examples/CMakeFiles/uncorr_gauss_c.exe.dir
-/home/llentati/PulsarCode/TempoNest/Ellipsis/build/examples/CMakeFiles/uncorr_gauss_f.exe.dir

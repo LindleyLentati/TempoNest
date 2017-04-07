@@ -132,9 +132,9 @@ AM_CONDITIONAL(HAVE_LAPACK, [test x"$have_lapack" = xyes])
 SWIN_LIB_MULTINEST
 SWIN_LIB_CULA
 SWIN_LIB_TEMPO2
-SWIN_LIB_PSRCHIVE
-SWIN_LIB_QDINSTALL
-SWIN_LIB_MLAPACK
+#SWIN_LIB_PSRCHIVE
+#SWIN_LIB_QDINSTALL
+#SWIN_LIB_MLAPACK
 
 AC_MSG_CHECKING([for LOGIN_ARCH variable])
 if test -n "$LOGIN_ARCH" ; then
@@ -209,16 +209,16 @@ else
 	AC_MSG_NOTICE(PSRCHIVE library not found, will not compile ToA estimation part of TempoNest)	
 fi
 
-if test X$have_qdinstall = Xyes; then
-        AC_MSG_NOTICE(Using QD library)
-	if test X$have_mlapack = Xyes; then
-		AC_MSG_NOTICE(Using MLAPACK library)
-	else
-		AC_MSG_NOTICE(MLAPACK library not found, will not compile high precision part of TempoNest)
-	fi
-else
-        AC_MSG_NOTICE(QD library not found, will not compile high precision part of TempoNest)
-fi
+#if test X$have_qdinstall = Xyes; then
+#        AC_MSG_NOTICE(Using QD library)
+#	if test X$have_mlapack = Xyes; then
+#		AC_MSG_NOTICE(Using MLAPACK library)
+#	else
+#		AC_MSG_NOTICE(MLAPACK library not found, will not compile high precision part of TempoNest)
+#	fi
+#else
+#        AC_MSG_NOTICE(QD library not found, will not compile high precision part of TempoNest)
+#fi
 
 
 AC_MSG_NOTICE(Tempo2 includes: $TEMPO2_CFLAGS)
