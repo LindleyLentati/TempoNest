@@ -1206,7 +1206,8 @@ void getCustomDVectorLike(void *context, double *TNDM, int Nobs, int TimeToMargi
                 const double x = psr->obsn[iobs].bat - psr->param[param_pepoch].val[0];
 
                 TNDM[iobs + imargin*((MNStruct *)context)->pulse->nobs]=fitinfo->paramDerivs[iparam](psr,0,x,iobs,p,k);
-		printf("TNDM: %i %i %i %g \n", iobs, imargin, iobs+imargin*((MNStruct *)context)->pulse->nobs, fitinfo->paramDerivs[iparam](psr,0,x,iobs,p,k));
+		/// mjk - comment this out to make the code a lot faster
+                //printf("TNDM: %i %i %i %g \n", iobs, imargin, iobs+imargin*((MNStruct *)context)->pulse->nobs, fitinfo->paramDerivs[iparam](psr,0,x,iobs,p,k));
             }
             ++imargin;
         }

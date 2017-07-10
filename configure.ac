@@ -206,7 +206,7 @@ fi
 if test X$have_psrchive = Xyes; then
 	AC_MSG_NOTICE(Using PSRCHIVE library)
 else
-	AC_MSG_NOTICE(PSRCHIVE library not found, will not compile ToA estimation part of TempoNest)	
+	AC_MSG_NOTICE([PSRCHIVE library not found, will not compile ToA estimation part of TempoNest])
 fi
 
 #if test X$have_qdinstall = Xyes; then
